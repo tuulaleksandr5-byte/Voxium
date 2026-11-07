@@ -1,0 +1,13 @@
+[workspace]
+resolver = "2"
+members = [
+    "apps/client",
+    "crates/game_core",
+]
+
+[workspace.package]
+edition = "2024"
+
+[workspace.dependencies]
+bevy = "=0.20.1"
+game_core = { path = "crates/game_core" }

@@ -1,0 +1,9 @@
+[package]
+name = "voxel-client"
+version = "0.1.0"
+edition.workspace = true
+publish = false
+
+[dependencies]
+bevy.workspace = true
+game_core.workspace = true
