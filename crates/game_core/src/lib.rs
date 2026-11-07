@@ -42,8 +42,8 @@ mod tests {
     #[test]
     fn coordinates_round_trip() {
         for block in -1000..1000 {
-            let rebuilt = section_coordinate(block) * SECTION_SIZE
-                + i32::from(local_coordinate(block));
+            let rebuilt =
+                section_coordinate(block) * SECTION_SIZE + i32::from(local_coordinate(block));
             assert_eq!(rebuilt, block);
         }
     }
