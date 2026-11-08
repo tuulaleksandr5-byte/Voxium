@@ -1,14 +1,15 @@
+use crate::{GRASS_BOTTOM, GRASS_TOP, MATERIAL_COUNT, WOOD_END};
 use bevy::{
     asset::RenderAssetUsages,
     mesh::{Indices, PrimitiveTopology},
     prelude::Mesh,
 };
-use game_core::{AIR, BLOCKS, GRASS, SECTION_SIZE, is_opaque};
+use game_core::{AIR, BLOCKS, GRASS, SECTION_SIZE, WOOD, is_opaque};
 
 const SIZE: usize = SECTION_SIZE as usize;
 const PADDED_SIZE: usize = SIZE + 2;
 
-/// Builds at most one greedy mesh per visible block material in a 16³ section.
+/// Builds at most one greedy mesh per visible render material in a 16³ section.
 ///
 /// `sample` receives world block positions, including a one-block border, so
 /// adjacent sections must be present in the caller's snapshot for seam culling.
@@ -37,7 +38,8 @@ pub fn mesh_section(section: [i32; 3], sample: impl Fn([i32; 3]) -> u8) -> Vec<(
         }
     }
 
-    let mut builders: [MeshBuilder; BLOCKS.len()] = std::array::from_fn(|_| MeshBuilder::default());
+    let mut builders: [MeshBuilder; MATERIAL_COUNT] =
+        std::array::from_fn(|_| MeshBuilder::default());
     for axis in 0..3 {
         // Vertical faces use texture v for world y; texture grain and grass
         // layers consequently stay upright on both x and z sides.
@@ -85,7 +87,14 @@ pub fn mesh_section(section: [i32; 3], sample: impl Fn([i32; 3]) -> u8) -> Vec<(
                         {
                             height += 1;
                         }
-                        builders[usize::from(id)].quad(FaceRectangle {
+                        let material = if axis == 1 && id == GRASS {
+                            if positive { GRASS_TOP } else { GRASS_BOTTOM }
+                        } else if axis == 1 && id == WOOD {
+                            WOOD_END
+                        } else {
+                            id
+                        };
+                        builders[usize::from(material)].quad(FaceRectangle {
                             axis,
                             positive,
                             u_axis,
@@ -109,7 +118,7 @@ pub fn mesh_section(section: [i32; 3], sample: impl Fn([i32; 3]) -> u8) -> Vec<(
     builders
         .into_iter()
         .enumerate()
-        .filter_map(|(id, builder)| builder.finish(id as u8).map(|mesh| (id as u8, mesh)))
+        .filter_map(|(id, builder)| builder.finish().map(|mesh| (id as u8, mesh)))
         .collect()
 }
 
@@ -182,42 +191,11 @@ impl MeshBuilder {
         self.indices.extend(indices.map(|index| first + index));
     }
 
-    fn finish(self, id: u8) -> Option<Mesh> {
+    fn finish(self) -> Option<Mesh> {
         if self.positions.is_empty() {
             return None;
         }
-        let mut self_ = self;
-        if id == GRASS {
-            for (normal, uv) in self_.normals.iter().zip(&mut self_.uvs) {
-                // Side textures repeat with v decreasing upwards. Horizontal
-                // faces must not repeat the side's dirt/grass bands.
-                if normal[1] > 0.0 {
-                    uv[1] = 0.12;
-                } else if normal[1] < 0.0 {
-                    uv[1] = 0.82;
-                }
-            }
-        }
-        self_.finish_mesh(id)
-    }
-
-    fn finish_mesh(self, id: u8) -> Option<Mesh> {
-        // The fixed material-per-block API still allows the horizontal grass
-        // surface to read greener than its earthy sides, without an atlas or
-        // extra draws. Every vertex in a merged face gets the same tint.
-        let grass_colors = (id == GRASS).then(|| {
-            self.normals
-                .iter()
-                .map(|normal| {
-                    if normal[1] > 0.0 {
-                        [0.62, 1.0, 0.68, 1.0]
-                    } else {
-                        [1.0; 4]
-                    }
-                })
-                .collect::<Vec<_>>()
-        });
-        let mut mesh = Mesh::new(
+        let mesh = Mesh::new(
             PrimitiveTopology::TriangleList,
             RenderAssetUsages::default(),
         )
@@ -225,9 +203,6 @@ impl MeshBuilder {
         .with_inserted_attribute(Mesh::ATTRIBUTE_NORMAL, self.normals)
         .with_inserted_attribute(Mesh::ATTRIBUTE_UV_0, self.uvs)
         .with_inserted_indices(Indices::U32(self.indices));
-        if let Some(colors) = grass_colors {
-            mesh.insert_attribute(Mesh::ATTRIBUTE_COLOR, colors);
-        }
         Some(mesh)
     }
 }

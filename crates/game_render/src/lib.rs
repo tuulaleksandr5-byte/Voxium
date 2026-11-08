@@ -6,7 +6,7 @@
 mod materials;
 mod meshing;
 
-pub use materials::create_materials;
+pub use materials::{GRASS_BOTTOM, GRASS_TOP, MATERIAL_COUNT, WOOD_END, create_materials};
 pub use meshing::mesh_section;
 
 #[cfg(test)]

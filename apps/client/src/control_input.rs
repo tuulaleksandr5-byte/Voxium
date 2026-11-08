@@ -6,8 +6,30 @@ pub struct ControlInput {
     pub frame_time: f32,
     last_jump: Option<f64>,
     f3_used: bool,
+    last_forward: Option<f64>,
+    forward_running: bool,
 }
 impl ControlInput {
+    pub fn forward_tap(&mut self, now: f64) {
+        if self.last_forward.is_some_and(|last| now - last <= 0.3) {
+            self.forward_running = true;
+            self.last_forward = None;
+        } else {
+            self.last_forward = Some(now);
+        }
+    }
+    pub fn forward_sprint(&mut self, held: bool) -> bool {
+        if !held {
+            self.forward_running = false;
+        }
+        self.forward_running
+    }
+    pub fn clear_movement(&mut self) {
+        self.forward_running = false;
+        self.last_forward = None;
+        self.last_jump = None;
+    }
+
     pub fn jump_tap(&mut self, now: f64) -> bool {
         if self.last_jump.is_some_and(|last| now - last <= 0.3) {
             self.last_jump = None;
@@ -47,6 +69,19 @@ impl ControlInput {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn double_forward_runs_until_forward_is_released() {
+        let mut s = ControlInput::default();
+        s.forward_tap(1.);
+        assert!(!s.forward_sprint(true));
+        assert!(!s.forward_sprint(false));
+        s.forward_tap(1.2);
+        assert!(s.forward_sprint(true));
+        assert!(s.forward_sprint(true));
+        assert!(!s.forward_sprint(false));
+        s.forward_tap(4.);
+        assert!(!s.forward_sprint(true));
+    }
     #[test]
     fn wheel_wraps_and_accumulates_touchpad_steps() {
         let mut s = ControlInput::default();

@@ -37,10 +37,11 @@ pub fn controls(
     mut keyboard: MessageReader<KeyboardInput>,
     mut input: Local<crate::control_input::ControlInput>,
 ) {
-    let jump_presses = keyboard
+    let presses: Vec<_> = keyboard
         .read()
-        .filter(|e| e.key_code == KeyCode::Space && e.state == ButtonState::Pressed && !e.repeat)
-        .count();
+        .filter(|e| e.state == ButtonState::Pressed && !e.repeat)
+        .map(|e| e.key_code)
+        .collect();
     input.frames += 1;
     input.frame_time += time.delta_secs();
     if input.frame_time >= 0.5 {
@@ -98,6 +99,9 @@ pub fn controls(
     } else {
         CursorGrabMode::None
     };
+    if !captured {
+        input.clear_movement();
+    }
     if game.world_id.is_none() {
         return;
     }
@@ -106,8 +110,11 @@ pub fn controls(
     }
     if captured {
         game.selected = input.scroll(game.selected, scroll);
-        for _ in 0..jump_presses {
-            if input.jump_tap(time.elapsed_secs_f64()) {
+        for key in &presses {
+            if *key == KeyCode::KeyW {
+                input.forward_tap(time.elapsed_secs_f64());
+            }
+            if *key == KeyCode::Space && input.jump_tap(time.elapsed_secs_f64()) {
                 game.flying = !game.flying;
                 game.velocity.y = 0.;
                 game.grounded = false;
@@ -147,8 +154,8 @@ pub fn controls(
         if keys.pressed(KeyCode::KeyD) {
             movement.x += 1.;
         }
-        let crouch = !game.flying
-            && (keys.pressed(KeyCode::ControlLeft) || keys.pressed(KeyCode::ControlRight));
+        let crouch =
+            !game.flying && (keys.pressed(KeyCode::ShiftLeft) || keys.pressed(KeyCode::ShiftRight));
         if crouch {
             game.height = 1.3;
         } else if game.height < 1.8 {
@@ -160,7 +167,10 @@ pub fn controls(
                 game.height = 1.8;
             }
         }
-        let sprint = keys.pressed(KeyCode::ShiftLeft) || keys.pressed(KeyCode::ShiftRight);
+        let auto_sprint = input.forward_sprint(keys.pressed(KeyCode::KeyW));
+        let sprint = keys.pressed(KeyCode::ControlLeft)
+            || keys.pressed(KeyCode::ControlRight)
+            || auto_sprint;
         let speed = if game.flying {
             if sprint { 20. } else { 10. }
         } else if game.height < 1.8 {
@@ -184,7 +194,7 @@ pub fn controls(
             if game.flying {
                 game.velocity.y = (i32::from(keys.pressed(KeyCode::Space))
                     - i32::from(
-                        keys.pressed(KeyCode::ControlLeft) || keys.pressed(KeyCode::ControlRight),
+                        keys.pressed(KeyCode::ShiftLeft) || keys.pressed(KeyCode::ShiftRight),
                     )) as f32
                     * speed;
             } else {

@@ -283,6 +283,14 @@ fn actions(
                 game.selected = slot.min(8);
                 game.ui_dirty = true;
             }
+            Action::RandomSeed => {
+                game.seed_input = SystemTime::now()
+                    .duration_since(UNIX_EPOCH)
+                    .map_or(0, |d| d.as_nanos() as u64)
+                    .to_string();
+                game.input_field = 1;
+                game.ui_dirty = true;
+            }
             Action::FocusName => {
                 game.input_field = 0;
                 game.ui_dirty = true;
@@ -300,26 +308,12 @@ fn actions(
                             game.settings.distance + 2
                         }
                     }
-                    Action::CycleSensitivity => {
-                        game.settings.sensitivity = if game.settings.sensitivity >= 0.005 {
-                            0.001
-                        } else {
-                            game.settings.sensitivity + 0.001
-                        }
-                    }
                     Action::ToggleVsync => game.settings.vsync = !game.settings.vsync,
                     Action::ToggleFullscreen => {
                         game.settings.fullscreen = !game.settings.fullscreen
                     }
                     Action::CycleResolution => {
                         game.settings.resolution = (game.settings.resolution + 1) % 3
-                    }
-                    Action::CycleVolume => {
-                        game.settings.volume = if game.settings.volume >= 0.99 {
-                            0.0
-                        } else {
-                            (game.settings.volume + 0.2).min(1.0)
-                        }
                     }
                     _ => {}
                 }

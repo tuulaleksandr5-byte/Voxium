@@ -1,4 +1,5 @@
 //! Native Bevy menus and the in-game overlay. Screen changes are handled by the client.
+mod presentation;
 use crate::session::{Game, Mode};
 use bevy::{
     asset::uuid_handle,
@@ -27,13 +28,13 @@ pub enum Action {
     SelectBlock(u8),
     SelectSlot(usize),
     CycleDistance,
-    CycleSensitivity,
     ToggleVsync,
     ToggleFullscreen,
     CycleResolution,
-    CycleVolume,
     FocusName,
     FocusSeed,
+    RandomSeed,
+    CommitSettings,
 }
 
 #[derive(Resource, Default)]
@@ -49,6 +50,7 @@ fn setup_font(mut fonts: ResMut<Assets<Font>>) {
         .expect("insert UI font");
 }
 pub fn plugin(app: &mut App) {
+    presentation::plugin(app);
     app.add_systems(Startup, setup_font);
     app.init_resource::<UiIntent>().add_systems(
         Update,
@@ -64,13 +66,13 @@ pub fn plugin(app: &mut App) {
 }
 
 const INK: Color = Color::srgb(0.055, 0.075, 0.086);
-const PANEL: Color = Color::srgb(0.095, 0.122, 0.136);
-const SURFACE: Color = Color::srgb(0.145, 0.18, 0.195);
-const LINE: Color = Color::srgb(0.30, 0.37, 0.39);
+const PANEL: Color = Color::srgba(0.025, 0.10, 0.09, 0.98);
+const SURFACE: Color = Color::srgba(0.12, 0.22, 0.20, 0.82);
+const LINE: Color = Color::srgba(0.44, 0.65, 0.59, 0.6);
 const TEXT: Color = Color::srgb(0.94, 0.94, 0.88);
 const MUTED: Color = Color::srgb(0.66, 0.75, 0.75);
-const AMBER: Color = Color::srgb(0.96, 0.68, 0.31);
-const TEAL: Color = Color::srgb(0.35, 0.80, 0.71);
+const AMBER: Color = Color::srgb(1.0, 0.66, 0.20);
+const TEAL: Color = Color::srgb(0.26, 0.91, 0.78);
 
 #[derive(Component)]
 struct UiRoot;
@@ -233,7 +235,17 @@ fn button(
         ))
         .id();
     commands.entity(parent).add_child(child);
-    label(commands, child, value, 17.0, foreground);
+    label(
+        commands,
+        child,
+        value,
+        if matches!(tone, Tone::Primary) {
+            20.
+        } else {
+            17.
+        },
+        foreground,
+    );
     child
 }
 
@@ -376,13 +388,16 @@ fn rebuild(mut commands: Commands, mut game: ResMut<Game>, old: Query<Entity, Wi
                 justify_content: JustifyContent::Center,
                 ..default()
             },
-            BackgroundColor(if playing {
+            BackgroundColor(if playing || game.world_id.is_none() {
                 Color::NONE
             } else {
                 Color::srgba(0.035, 0.055, 0.066, 0.86)
             }),
         ))
         .id();
+    if !playing && game.world_id.is_none() {
+        presentation::background(&mut commands, root);
+    }
     if playing {
         hud(&mut commands, root, &game);
         return;
@@ -391,10 +406,12 @@ fn rebuild(mut commands: Commands, mut game: ResMut<Game>, old: Query<Entity, Wi
         main_menu(&mut commands, root, &game);
         return;
     }
-    let width = if game.mode == Mode::Inventory {
-        790.0
-    } else {
-        540.0
+    let width = match game.mode {
+        Mode::Inventory => 790.,
+        Mode::Create => 840.,
+        Mode::Load => 710.,
+        Mode::Settings => 640.,
+        _ => 540.,
     };
     let panel = card(&mut commands, root, width);
     match game.mode {
@@ -419,7 +436,7 @@ fn card(commands: &mut Commands, parent: Entity, width: f32) -> Entity {
             border: UiRect::all(px(1)),
             border_radius: BorderRadius::all(px(8)),
             flex_direction: FlexDirection::Column,
-            row_gap: px(if width > 700.0 { 12.0 } else { 16.0 }),
+            row_gap: px(if width > 700.0 { 12.0 } else { 10.0 }),
             overflow: Overflow::scroll_y(),
             ..default()
         },
@@ -472,13 +489,10 @@ fn main_menu(commands: &mut Commands, root: Entity, game: &Game) {
         commands,
         root,
         Node {
-            width: percent(92),
-            max_width: px(1030),
+            width: percent(89),
+            max_width: px(1320),
             align_items: AlignItems::Center,
-            flex_wrap: FlexWrap::Wrap,
-            justify_content: JustifyContent::Center,
-            column_gap: px(64),
-            row_gap: px(24),
+            justify_content: JustifyContent::FlexStart,
             ..default()
         },
         Color::NONE,
@@ -487,19 +501,20 @@ fn main_menu(commands: &mut Commands, root: Entity, game: &Game) {
         commands,
         frame,
         Node {
-            width: px(480),
+            width: px(450),
             max_width: percent(100),
+            max_height: Val::Vh(90.),
             flex_direction: FlexDirection::Column,
-            row_gap: px(18),
+            row_gap: px(14),
             ..default()
         },
         Color::NONE,
     );
-    let mark = row(commands, hero, 5.0);
+    let mark = row(commands, hero, 5.);
     for (height, color) in [
-        (22.0, TEAL),
-        (36.0, AMBER),
-        (28.0, Color::srgb(0.52, 0.64, 0.50)),
+        (20., TEAL),
+        (34., AMBER),
+        (26., Color::srgb(0.50, 0.64, 0.47)),
     ] {
         node(
             commands,
@@ -513,46 +528,25 @@ fn main_menu(commands: &mut Commands, root: Entity, game: &Game) {
             color,
         );
     }
-    label(commands, hero, "VOXEL SANDBOX", 14.0, TEAL);
-    label(commands, hero, "Строй свой\nбольшой мир.", 53.0, TEXT);
-    label(commands, hero, "Исследуй мир. Создавай своё.", 18.0, MUTED);
-    let tags = row(commands, hero, 12.0);
-    for value in ["МИРЫ ПО SEED", "ТВОРЧЕСКИЙ РЕЖИМ"] {
-        let tag = node(
-            commands,
-            tags,
-            Node {
-                padding: UiRect::axes(px(10), px(7)),
-                border: UiRect::all(px(1)),
-                ..default()
-            },
-            PANEL,
-        );
-        commands.entity(tag).insert(BorderColor::all(LINE));
-        label(commands, tag, value, 11.0, MUTED);
-    }
-    let menu = card(commands, frame, 370.0);
-    commands.entity(menu).insert(Node {
-        width: px(370),
-        max_width: percent(100),
-        max_height: Val::Vh(88.0),
-        padding: UiRect::all(px(26)),
-        flex_direction: FlexDirection::Column,
-        row_gap: px(12),
-        border: UiRect::all(px(1)),
-        border_radius: BorderRadius::all(px(8)),
-        overflow: Overflow::scroll_y(),
-        ..default()
-    });
-    label(commands, menu, "С ВОЗВРАЩЕНИЕМ", 12.0, MUTED);
-    label(commands, menu, "Твоё приключение", 24.0, TEXT);
+    label(commands, hero, "VOXEL SANDBOX", 18., TEAL);
+    label(commands, hero, "Маленькие блоки.\nБольшой мир.", 40., TEXT);
+    label(commands, hero, "Исследуй. Строй. Создавай своё.", 16., TEXT);
+    node(
+        commands,
+        hero,
+        Node {
+            height: px(6),
+            ..default()
+        },
+        Color::NONE,
+    );
     button(
         commands,
-        menu,
+        hero,
         if game.world_id.is_some() {
-            "Продолжить"
+            "Продолжить игру  →"
         } else {
-            "Играть"
+            "Играть  →"
         },
         if game.world_id.is_some() {
             Action::Resume
@@ -561,23 +555,26 @@ fn main_menu(commands: &mut Commands, root: Entity, game: &Game) {
         },
         Tone::Primary,
     );
-    button(commands, menu, "Создать мир", Action::New, Tone::Normal);
+    button(commands, hero, "Создать мир", Action::New, Tone::Normal);
     button(
         commands,
-        menu,
+        hero,
         "Загрузить мир",
         Action::LoadMenu,
         Tone::Normal,
     );
-    button(commands, menu, "Настройки", Action::Settings, Tone::Normal);
-    button(commands, menu, "Выход", Action::Exit, Tone::Quiet);
-    status(commands, menu, game);
+    let bottom = row(commands, hero, 12.);
+    let settings = button(commands, bottom, "Настройки", Action::Settings, Tone::Quiet);
+    presentation::fit_button(commands, settings, percent(48.));
+    let quit = button(commands, bottom, "Выход", Action::Exit, Tone::Quiet);
+    presentation::fit_button(commands, quit, percent(48.));
+    status(commands, hero, game);
     let footer = node(
         commands,
         root,
         Node {
             position_type: PositionType::Absolute,
-            left: px(28),
+            left: Val::Vw(5.5),
             bottom: px(20),
             ..default()
         },
@@ -586,8 +583,8 @@ fn main_menu(commands: &mut Commands, root: Entity, game: &Game) {
     label(
         commands,
         footer,
-        "Исследуй. Строй. Сохраняй свой мир.",
-        12.0,
+        "Каждый мир начинается с одного блока.",
+        12.,
         MUTED,
     );
 }
@@ -598,10 +595,18 @@ fn create_menu(commands: &mut Commands, panel: Entity, game: &Game) {
         panel,
         "НОВОЕ НАЧАЛО",
         "Создание мира",
-        "Придумай название своему миру.",
+        "Придумай название своему приключению.",
     );
-    let form = column(commands, panel, 9.0);
-    label(commands, form, "Название мира", 14.0, MUTED);
+    let body = row(commands, panel, 24.);
+    let form = column(commands, body, 10.);
+    commands.entity(form).insert(Node {
+        width: percent(55),
+        flex_direction: FlexDirection::Column,
+        row_gap: px(10),
+        flex_shrink: 0.,
+        ..default()
+    });
+    label(commands, form, "Название мира", 14., MUTED);
     let name = if game.input_field == 0 {
         format!("{} |", game.name_input)
     } else {
@@ -618,21 +623,16 @@ fn create_menu(commands: &mut Commands, panel: Entity, game: &Game) {
             Tone::Normal
         },
     );
-    label(commands, form, "Зерно мира (необязательно)", 14.0, MUTED);
+    label(commands, form, "Зерно мира (необязательно)", 14., MUTED);
+    let seeds = row(commands, form, 9.);
     let seed = if game.seed_input.is_empty() {
-        if game.input_field == 1 {
-            "|".into()
-        } else {
-            "Случайный мир".into()
-        }
-    } else if game.input_field == 1 {
-        format!("{} |", game.seed_input)
+        "Случайное зерно".into()
     } else {
         game.seed_input.clone()
     };
-    button(
+    let field = button(
         commands,
-        form,
+        seeds,
         seed,
         Action::FocusSeed,
         if game.input_field == 1 {
@@ -641,22 +641,35 @@ fn create_menu(commands: &mut Commands, panel: Entity, game: &Game) {
             Tone::Normal
         },
     );
+    presentation::fit_button(commands, field, percent(78.));
+    let random = button(commands, seeds, "↻", Action::RandomSeed, Tone::Normal);
+    presentation::fit_button(commands, random, percent(18.));
     label(
         commands,
         form,
-        "Одинаковое зерно создаёт одинаковый мир.\nTab: сменить поле. Enter: создать мир.",
-        13.0,
+        "Одно зерно — один и тот же ландшафт.\nTab: сменить поле. Enter: создать мир.",
+        12.,
         MUTED,
     );
-    status(commands, panel, game);
+    node(
+        commands,
+        form,
+        Node {
+            height: px(4),
+            ..default()
+        },
+        Color::NONE,
+    );
     button(
         commands,
-        panel,
+        form,
         "Создать и исследовать",
         Action::Create,
         Tone::Primary,
     );
-    button(commands, panel, "Назад", Action::Back, Tone::Quiet);
+    button(commands, form, "Назад", Action::Back, Tone::Quiet);
+    presentation::picture(commands, body, percent(41.), 300.);
+    status(commands, panel, game);
 }
 
 fn load_menu(commands: &mut Commands, panel: Entity, game: &Game) {
@@ -690,15 +703,37 @@ fn load_menu(commands: &mut Commands, panel: Entity, game: &Game) {
             13.0,
             MUTED,
         );
-        let list = column(commands, panel, 8.0);
+        let list = column(commands, panel, 10.);
         for (id, name) in &game.worlds {
-            button(
+            let card = row(commands, list, 14.);
+            commands.entity(card).insert((
+                Node {
+                    width: percent(100),
+                    padding: UiRect::all(px(10)),
+                    column_gap: px(16),
+                    align_items: AlignItems::Center,
+                    border: UiRect::all(px(1)),
+                    border_radius: BorderRadius::all(px(8)),
+                    flex_shrink: 0.,
+                    ..default()
+                },
+                BackgroundColor(Color::srgba(0.09, 0.18, 0.16, 0.9)),
+                BorderColor::all(LINE),
+            ));
+            presentation::picture(commands, card, px(110), 68.);
+            let title = label(commands, card, shorten(name, 21), 18., TEXT);
+            commands.entity(title).insert(Node {
+                flex_grow: 1.,
+                ..default()
+            });
+            let open = button(
                 commands,
-                list,
-                format!("{}   /   Открыть", shorten(name, 34)),
+                card,
+                "Открыть",
                 Action::Load(id.clone()),
-                Tone::Normal,
+                Tone::Primary,
             );
+            presentation::fit_button(commands, open, px(120));
         }
         label(commands, panel, "Колёсико: прокрутить список.", 12.0, MUTED);
     }
@@ -743,8 +778,8 @@ fn settings_row(commands: &mut Commands, panel: Entity, name: &str, value: Strin
     });
     let control = button(commands, row, value, action, Tone::Normal);
     commands.entity(control).insert(Node {
-        width: px(184),
-        min_height: px(44),
+        width: px(206),
+        min_height: px(38),
         padding: UiRect::axes(px(10), px(9)),
         border: UiRect::all(px(1)),
         border_radius: BorderRadius::all(px(4)),
@@ -761,43 +796,25 @@ fn settings_menu(commands: &mut Commands, panel: Entity, game: &Game) {
         panel,
         "ИГРАЙ ПО-СВОЕМУ",
         "Настройки",
-        "Нажми на значение, чтобы изменить его.",
+        "Нажимай на значения или перетаскивай ползунки.",
     );
     let settings = &game.settings;
+    presentation::section(commands, panel, "ЭКРАН");
     settings_row(
         commands,
         panel,
         "Дальность прорисовки",
-        format!("{} чанков", settings.distance),
+        format!("{} чанков  ↻", settings.distance),
         Action::CycleDistance,
-    );
-    settings_row(
-        commands,
-        panel,
-        "Чувствительность мыши",
-        format!("{:.0}%", settings.sensitivity / 0.002 * 100.0),
-        Action::CycleSensitivity,
-    );
-    settings_row(
-        commands,
-        panel,
-        "Вертикальная синхронизация",
-        if settings.vsync {
-            "Вкл."
-        } else {
-            "Выкл."
-        }
-        .into(),
-        Action::ToggleVsync,
     );
     settings_row(
         commands,
         panel,
         "Режим экрана",
         if settings.fullscreen {
-            "Полный экран"
+            "Полный экран  ↻"
         } else {
-            "Оконный"
+            "Оконный  ↻"
         }
         .into(),
         Action::ToggleFullscreen,
@@ -806,21 +823,35 @@ fn settings_menu(commands: &mut Commands, panel: Entity, game: &Game) {
         commands,
         panel,
         "Оконное разрешение",
-        ["1280 x 720", "1600 x 900", "1920 x 1080"][settings.resolution % 3].into(),
+        ["1280 × 720  ↻", "1600 × 900  ↻", "1920 × 1080  ↻"][settings.resolution].into(),
         Action::CycleResolution,
+    );
+    presentation::section(commands, panel, "УПРАВЛЕНИЕ");
+    presentation::range(
+        commands,
+        panel,
+        "Чувствительность мыши",
+        presentation::Range::Sensitivity,
     );
     settings_row(
         commands,
         panel,
-        "Громкость",
-        format!("{:.0}%", settings.volume * 100.0),
-        Action::CycleVolume,
+        "Вертикальная синхр.",
+        if settings.vsync {
+            "●  Вкл."
+        } else {
+            "○  Выкл."
+        }
+        .into(),
+        Action::ToggleVsync,
     );
+    presentation::section(commands, panel, "ЗВУК");
+    presentation::range(commands, panel, "Громкость", presentation::Range::Volume);
     label(
         commands,
         panel,
         "Настройки сохраняются автоматически.",
-        12.0,
+        12.,
         MUTED,
     );
     status(commands, panel, game);
@@ -986,7 +1017,7 @@ fn hud(commands: &mut Commands, root: Entity, game: &Game) {
     label(
         commands,
         controls,
-        "WASD: движение / Shift: бег / Space: прыжок",
+        "WASD: движение / Ctrl: бег / Space: прыжок",
         12.0,
         TEXT,
     );
@@ -1000,14 +1031,14 @@ fn hud(commands: &mut Commands, root: Entity, game: &Game) {
     label(
         commands,
         controls,
-        "Space x2: полёт / Ctrl: вниз / Space: вверх",
+        "Space x2: полёт / Shift: вниз / Space: вверх",
         12.0,
         MUTED,
     );
     label(
         commands,
         controls,
-        "F3: данные / F3+G: чанки / Esc: пауза",
+        "W x2: бег / F3: данные / F3+G: чанки",
         12.0,
         MUTED,
     );

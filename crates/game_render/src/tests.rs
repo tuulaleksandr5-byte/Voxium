@@ -65,7 +65,7 @@ fn one_block_has_six_outward_faces() {
 fn adjacent_equal_blocks_merge_with_repeating_uvs() {
     let meshes = mesh_section([0; 3], |[x, y, z]| {
         if (0..2).contains(&x) && y == 0 && z == 0 {
-            7
+            3
         } else {
             0
         }
@@ -164,28 +164,29 @@ fn transparent_opaque_boundary_keeps_visible_solid_face() {
 }
 
 #[test]
-fn materials_have_distinct_pixels_and_repeat_nearest_sampling() {
+fn materials_have_distinct_64px_tiles_mipmaps_and_crisp_magnification() {
     let mut images = Assets::<Image>::default();
     let mut materials = Assets::<StandardMaterial>::default();
     let handles = create_materials(&mut images, &mut materials);
-    assert_eq!(handles.len(), 16);
+    assert_eq!(handles.len(), 19);
     let mut textures = Vec::new();
     for handle in &handles {
         let material = materials.get(handle).unwrap();
         let image = images
             .get(material.base_color_texture.as_ref().unwrap())
             .unwrap();
-        assert_eq!(image.width(), 16);
-        assert_eq!(image.height(), 16);
+        assert_eq!(image.width(), 64);
+        assert_eq!(image.height(), 64);
         let ImageSampler::Descriptor(sampler) = &image.sampler else {
             panic!("each block texture must explicitly request pixel sampling")
         };
         assert_eq!(sampler.address_mode_u, ImageAddressMode::Repeat);
         assert_eq!(sampler.address_mode_v, ImageAddressMode::Repeat);
         assert_eq!(sampler.mag_filter, ImageFilterMode::Nearest);
-        assert_eq!(sampler.min_filter, ImageFilterMode::Nearest);
+        assert_eq!(sampler.min_filter, ImageFilterMode::Linear);
         let data = image.data.as_ref().unwrap();
-        assert_eq!(data.len(), 16 * 16 * 4);
+        assert_eq!(image.texture_descriptor.mip_level_count, 7);
+        assert_eq!(data.len(), 21844);
         textures.push(data.clone());
     }
     for a in 1..16 {
@@ -220,26 +221,39 @@ fn materials_have_distinct_pixels_and_repeat_nearest_sampling() {
 }
 
 #[test]
-fn grass_top_is_green_bottom_is_soil_and_sides_stay_upright() {
-    let meshes = mesh_section([0; 3], |p| if p == [0; 3] { game_core::GRASS } else { 0 });
-    let mesh = &meshes[0].1;
-    let pos = positions(mesh);
-    let uv = uvs(mesh);
-    let n = normals(mesh);
-    for i in (0..pos.len()).step_by(4) {
-        if n[i][1] > 0.0 {
+fn grass_has_separate_turf_and_soil_with_full_2d_repeating_uvs() {
+    let meshes = mesh_section([0; 3], |p| if p == [0; 3] { 1 } else { 0 });
+    let side = &meshes.iter().find(|(id, _)| *id == 1).unwrap().1;
+    assert_quads(side, 4);
+    for i in (0..positions(side).len()).step_by(4) {
+        assert!(positions(side)[i + 2][1] > positions(side)[i][1]);
+        assert!(uvs(side)[i + 2][1] < uvs(side)[i][1]);
+    }
+    for (id, normal) in [(16, [0., 1., 0.]), (17, [0., -1., 0.])] {
+        let mesh = &meshes
+            .iter()
+            .find(|(slot, _)| *slot == id)
+            .expect("dedicated grass face material")
+            .1;
+        assert_quads(mesh, 1);
+        assert_eq!(normals(mesh)[0], normal);
+        for axis in 0..2 {
+            let values: Vec<_> = uvs(mesh).iter().map(|uv| uv[axis]).collect();
             assert!(
-                uv[i..i + 4].iter().all(|v| (0.03..0.25).contains(&v[1])),
-                "grass tops must only sample green turf"
+                values.contains(&0.) && values.contains(&1.),
+                "never flatten a texture coordinate"
             );
-        } else if n[i][1] < 0.0 {
-            assert!(
-                uv[i..i + 4].iter().all(|v| (0.65..0.95).contains(&v[1])),
-                "bottom must sample soil"
-            );
-        } else {
-            assert!(pos[i + 2][1] > pos[i][1]);
-            assert!(uv[i + 2][1] < uv[i][1], "grass must grow at the upper edge");
         }
     }
+}
+#[test]
+fn log_end_is_separate_from_bark() {
+    let meshes = mesh_section([0; 3], |p| if p == [0; 3] { 7 } else { 0 });
+    assert_quads(&meshes.iter().find(|(id, _)| *id == 7).unwrap().1, 4);
+    let ends = &meshes
+        .iter()
+        .find(|(id, _)| *id == 18)
+        .expect("growth rings")
+        .1;
+    assert_quads(ends, 2);
 }
