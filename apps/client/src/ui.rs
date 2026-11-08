@@ -1,6 +1,7 @@
 //! Native Bevy menus and the in-game overlay. Screen changes are handled by the client.
 use crate::session::{Game, Mode};
 use bevy::{
+    asset::uuid_handle,
     input::{
         ButtonState,
         keyboard::KeyboardInput,
@@ -38,7 +39,17 @@ pub enum Action {
 #[derive(Resource, Default)]
 pub struct UiIntent(pub Vec<Action>);
 
+const UI_FONT: Handle<Font> = uuid_handle!("d809b322-114c-4312-b95a-0e57969c514e");
+fn setup_font(mut fonts: ResMut<Assets<Font>>) {
+    fonts
+        .insert(
+            UI_FONT.id(),
+            Font::from_bytes(include_bytes!("../assets/fonts/DejaVuSansMono.ttf").to_vec()),
+        )
+        .expect("insert UI font");
+}
 pub fn plugin(app: &mut App) {
+    app.add_systems(Startup, setup_font);
     app.init_resource::<UiIntent>().add_systems(
         Update,
         (
@@ -110,6 +121,7 @@ fn label(
         .spawn((
             Text::new(value),
             TextFont {
+                font: UI_FONT.clone().into(),
                 font_size: FontSize::Px(size),
                 ..default()
             },
@@ -502,16 +514,10 @@ fn main_menu(commands: &mut Commands, root: Entity, game: &Game) {
         );
     }
     label(commands, hero, "VOXEL SANDBOX", 14.0, TEAL);
-    label(commands, hero, "Small blocks.\nEndless worlds.", 53.0, TEXT);
-    label(
-        commands,
-        hero,
-        "Explore the quiet. Build something your own.",
-        18.0,
-        MUTED,
-    );
+    label(commands, hero, "Строй свой\nбольшой мир.", 53.0, TEXT);
+    label(commands, hero, "Исследуй мир. Создавай своё.", 18.0, MUTED);
     let tags = row(commands, hero, 12.0);
-    for value in ["PROCEDURAL WORLDS", "CREATIVE PLAY"] {
+    for value in ["МИРЫ ПО SEED", "ТВОРЧЕСКИЙ РЕЖИМ"] {
         let tag = node(
             commands,
             tags,
@@ -538,15 +544,15 @@ fn main_menu(commands: &mut Commands, root: Entity, game: &Game) {
         overflow: Overflow::scroll_y(),
         ..default()
     });
-    label(commands, menu, "MAKE YOURSELF AT HOME", 12.0, MUTED);
-    label(commands, menu, "Your next adventure", 24.0, TEXT);
+    label(commands, menu, "С ВОЗВРАЩЕНИЕМ", 12.0, MUTED);
+    label(commands, menu, "Твоё приключение", 24.0, TEXT);
     button(
         commands,
         menu,
         if game.world_id.is_some() {
-            "Continue playing"
+            "Продолжить"
         } else {
-            "Play"
+            "Играть"
         },
         if game.world_id.is_some() {
             Action::Resume
@@ -555,10 +561,16 @@ fn main_menu(commands: &mut Commands, root: Entity, game: &Game) {
         },
         Tone::Primary,
     );
-    button(commands, menu, "New world", Action::New, Tone::Normal);
-    button(commands, menu, "Load world", Action::LoadMenu, Tone::Normal);
-    button(commands, menu, "Settings", Action::Settings, Tone::Normal);
-    button(commands, menu, "Exit game", Action::Exit, Tone::Quiet);
+    button(commands, menu, "Создать мир", Action::New, Tone::Normal);
+    button(
+        commands,
+        menu,
+        "Загрузить мир",
+        Action::LoadMenu,
+        Tone::Normal,
+    );
+    button(commands, menu, "Настройки", Action::Settings, Tone::Normal);
+    button(commands, menu, "Выход", Action::Exit, Tone::Quiet);
     status(commands, menu, game);
     let footer = node(
         commands,
@@ -574,7 +586,7 @@ fn main_menu(commands: &mut Commands, root: Entity, game: &Game) {
     label(
         commands,
         footer,
-        "A little curiosity goes a long way.  /  Native Rust + Bevy",
+        "Исследуй. Строй. Сохраняй свой мир.",
         12.0,
         MUTED,
     );
@@ -584,12 +596,12 @@ fn create_menu(commands: &mut Commands, panel: Entity, game: &Game) {
     heading(
         commands,
         panel,
-        "A FRESH START",
-        "Create a world",
-        "Give your next adventure a name.",
+        "НОВОЕ НАЧАЛО",
+        "Создание мира",
+        "Придумай название своему миру.",
     );
     let form = column(commands, panel, 9.0);
-    label(commands, form, "World name", 14.0, MUTED);
+    label(commands, form, "Название мира", 14.0, MUTED);
     let name = if game.input_field == 0 {
         format!("{} |", game.name_input)
     } else {
@@ -606,12 +618,12 @@ fn create_menu(commands: &mut Commands, panel: Entity, game: &Game) {
             Tone::Normal
         },
     );
-    label(commands, form, "Seed (optional)", 14.0, MUTED);
+    label(commands, form, "Зерно мира (необязательно)", 14.0, MUTED);
     let seed = if game.seed_input.is_empty() {
         if game.input_field == 1 {
             "|".into()
         } else {
-            "Random world".into()
+            "Случайный мир".into()
         }
     } else if game.input_field == 1 {
         format!("{} |", game.seed_input)
@@ -632,7 +644,7 @@ fn create_menu(commands: &mut Commands, panel: Entity, game: &Game) {
     label(
         commands,
         form,
-        "The same seed creates the same landscape.\nTab switches fields. Enter creates your world.",
+        "Одинаковое зерно создаёт одинаковый мир.\nTab: сменить поле. Enter: создать мир.",
         13.0,
         MUTED,
     );
@@ -640,33 +652,33 @@ fn create_menu(commands: &mut Commands, panel: Entity, game: &Game) {
     button(
         commands,
         panel,
-        "Create & explore",
+        "Создать и исследовать",
         Action::Create,
         Tone::Primary,
     );
-    button(commands, panel, "Back", Action::Back, Tone::Quiet);
+    button(commands, panel, "Назад", Action::Back, Tone::Quiet);
 }
 
 fn load_menu(commands: &mut Commands, panel: Entity, game: &Game) {
     heading(
         commands,
         panel,
-        "PICK UP WHERE YOU LEFT OFF",
-        "Your worlds",
-        "Every world has a story. Keep yours going.",
+        "ПРОДОЛЖИ СВОЮ ИСТОРИЮ",
+        "Твои миры",
+        "Твои постройки ждут тебя.",
     );
     if game.worlds.is_empty() {
         label(
             commands,
             panel,
-            "No saved worlds yet.\nCreate a world and start exploring.",
+            "Сохранённых миров пока нет.\nСоздай свой первый мир.",
             18.0,
             TEXT,
         );
         button(
             commands,
             panel,
-            "Create your first world",
+            "Создать первый мир",
             Action::New,
             Tone::Primary,
         );
@@ -674,11 +686,7 @@ fn load_menu(commands: &mut Commands, panel: Entity, game: &Game) {
         label(
             commands,
             panel,
-            format!(
-                "{} saved world{}",
-                game.worlds.len(),
-                if game.worlds.len() == 1 { "" } else { "s" }
-            ),
+            format!("Миров: {}{}", game.worlds.len(), ""),
             13.0,
             MUTED,
         );
@@ -687,37 +695,43 @@ fn load_menu(commands: &mut Commands, panel: Entity, game: &Game) {
             button(
                 commands,
                 list,
-                format!("{}   /   Open", shorten(name, 34)),
+                format!("{}   /   Открыть", shorten(name, 34)),
                 Action::Load(id.clone()),
                 Tone::Normal,
             );
         }
-        label(commands, panel, "Scroll to see more worlds.", 12.0, MUTED);
+        label(commands, panel, "Колёсико: прокрутить список.", 12.0, MUTED);
     }
     status(commands, panel, game);
-    button(commands, panel, "Back", Action::Back, Tone::Quiet);
+    button(commands, panel, "Назад", Action::Back, Tone::Quiet);
 }
 
 fn pause_menu(commands: &mut Commands, panel: Entity, game: &Game) {
     heading(
         commands,
         panel,
-        "TAKE A BREATHER",
-        "Game paused",
+        "ВРЕМЯ ПЕРЕДОХНУТЬ",
+        "Игра на паузе",
         &shorten(&game.name_input, 40),
     );
     button(
         commands,
         panel,
-        "Resume exploring",
+        "Продолжить игру",
         Action::Resume,
         Tone::Primary,
     );
-    button(commands, panel, "Save world", Action::Save, Tone::Normal);
-    button(commands, panel, "Settings", Action::Settings, Tone::Normal);
-    button(commands, panel, "Main menu", Action::MainMenu, Tone::Quiet);
+    button(commands, panel, "Сохранить мир", Action::Save, Tone::Normal);
+    button(commands, panel, "Настройки", Action::Settings, Tone::Normal);
+    button(
+        commands,
+        panel,
+        "Главное меню",
+        Action::MainMenu,
+        Tone::Quiet,
+    );
     status(commands, panel, game);
-    label(commands, panel, "Esc to resume", 12.0, MUTED);
+    label(commands, panel, "Esc: продолжить", 12.0, MUTED);
 }
 
 fn settings_row(commands: &mut Commands, panel: Entity, name: &str, value: String, action: Action) {
@@ -745,40 +759,45 @@ fn settings_menu(commands: &mut Commands, panel: Entity, game: &Game) {
     heading(
         commands,
         panel,
-        "MAKE IT FEEL RIGHT",
-        "Settings",
-        "Click a value to cycle through the options.",
+        "ИГРАЙ ПО-СВОЕМУ",
+        "Настройки",
+        "Нажми на значение, чтобы изменить его.",
     );
     let settings = &game.settings;
     settings_row(
         commands,
         panel,
-        "View distance",
-        format!("{} chunks", settings.distance),
+        "Дальность прорисовки",
+        format!("{} чанков", settings.distance),
         Action::CycleDistance,
     );
     settings_row(
         commands,
         panel,
-        "Mouse sensitivity",
+        "Чувствительность мыши",
         format!("{:.0}%", settings.sensitivity / 0.002 * 100.0),
         Action::CycleSensitivity,
     );
     settings_row(
         commands,
         panel,
-        "Vertical sync",
-        if settings.vsync { "On" } else { "Off" }.into(),
+        "Вертикальная синхронизация",
+        if settings.vsync {
+            "Вкл."
+        } else {
+            "Выкл."
+        }
+        .into(),
         Action::ToggleVsync,
     );
     settings_row(
         commands,
         panel,
-        "Display mode",
+        "Режим экрана",
         if settings.fullscreen {
-            "Fullscreen"
+            "Полный экран"
         } else {
-            "Windowed"
+            "Оконный"
         }
         .into(),
         Action::ToggleFullscreen,
@@ -786,35 +805,35 @@ fn settings_menu(commands: &mut Commands, panel: Entity, game: &Game) {
     settings_row(
         commands,
         panel,
-        "Resolution",
+        "Оконное разрешение",
         ["1280 x 720", "1600 x 900", "1920 x 1080"][settings.resolution % 3].into(),
         Action::CycleResolution,
     );
     settings_row(
         commands,
         panel,
-        "Volume",
+        "Громкость",
         format!("{:.0}%", settings.volume * 100.0),
         Action::CycleVolume,
     );
     label(
         commands,
         panel,
-        "Your preferences are saved automatically.",
+        "Настройки сохраняются автоматически.",
         12.0,
         MUTED,
     );
     status(commands, panel, game);
-    button(commands, panel, "Done", Action::Back, Tone::Primary);
+    button(commands, panel, "Готово", Action::Back, Tone::Primary);
 }
 
 fn inventory_menu(commands: &mut Commands, panel: Entity, game: &Game) {
     heading(
         commands,
         panel,
-        "YOUR BUILDING PALETTE",
-        "Every block, a possibility",
-        "Choose a hotbar slot, then a block to fill it.",
+        "МАТЕРИАЛЫ ДЛЯ СТРОИТЕЛЬСТВА",
+        "Творческий инвентарь",
+        "Выбери слот, затем блок для него.",
     );
     let slots = row(commands, panel, 6.0);
     for index in 0..9 {
@@ -844,7 +863,7 @@ fn inventory_menu(commands: &mut Commands, panel: Entity, game: &Game) {
         commands,
         panel,
         format!(
-            "SLOT {}  /  {}",
+            "СЛОТ {}  /  {}",
             game.selected + 1,
             block_name(game.hotbar[game.selected.min(8)])
         ),
@@ -908,14 +927,14 @@ fn inventory_menu(commands: &mut Commands, panel: Entity, game: &Game) {
     button(
         commands,
         panel,
-        "Back to your world",
+        "Вернуться в мир",
         Action::Resume,
         Tone::Primary,
     );
     label(
         commands,
         panel,
-        "E or Esc to close  /  1-9 selects a slot in your world",
+        "E / Esc: закрыть. В мире: 1-9 или колёсико.",
         12.0,
         MUTED,
     );
@@ -941,7 +960,7 @@ fn hud(commands: &mut Commands, root: Entity, game: &Game) {
     label(
         commands,
         info,
-        "VOXEL SANDBOX   /   EXPLORE & BUILD",
+        "VOXEL SANDBOX   /   СТРОЙ И ИССЛЕДУЙ",
         11.0,
         TEAL,
     );
@@ -967,14 +986,28 @@ fn hud(commands: &mut Commands, root: Entity, game: &Game) {
     label(
         commands,
         controls,
-        "WASD move  /  Space jump  /  Shift sprint",
+        "WASD: движение / Shift: бег / Space: прыжок",
         12.0,
         TEXT,
     );
     label(
         commands,
         controls,
-        "LMB break  /  RMB place  /  E blocks  /  Esc pause",
+        "ЛКМ: сломать / ПКМ: поставить / E: блоки",
+        12.0,
+        MUTED,
+    );
+    label(
+        commands,
+        controls,
+        "Space x2: полёт / Ctrl: вниз / Space: вверх",
+        12.0,
+        MUTED,
+    );
+    label(
+        commands,
+        controls,
+        "F3: данные / F3+G: чанки / Esc: пауза",
         12.0,
         MUTED,
     );
@@ -1123,14 +1156,31 @@ fn update_hud(
     for (mut value, marker, slot) in &mut text {
         let next = if let Some(marker) = marker {
             match marker.0 {
-                HudKind::Position => format!(
-                    "X {:.0}   Y {:.0}   Z {:.0}",
-                    game.feet.x, game.feet.y, game.feet.z
-                ),
+                HudKind::Position => {
+                    if game.debug_open {
+                        format!(
+                            "X {:.2}  Y {:.2}  Z {:.2}\nFPS: {:.0}  |  Чанк: {} / {}\nПолёт: {}  |  Сетка: {}",
+                            game.feet.x,
+                            game.feet.y,
+                            game.feet.z,
+                            game.fps,
+                            (game.feet.x.floor() as i32).div_euclid(16),
+                            (game.feet.z.floor() as i32).div_euclid(16),
+                            if game.flying { "вкл." } else { "выкл." },
+                            if game.chunk_grid {
+                                "вкл."
+                            } else {
+                                "выкл."
+                            }
+                        )
+                    } else {
+                        String::new()
+                    }
+                }
                 HudKind::Status => {
                     if game.status.is_empty() {
                         format!(
-                            "Seed {}  /  View {} chunks",
+                            "Зерно {} / Видимость: {} чанков",
                             game.world.seed, game.settings.distance
                         )
                     } else {
@@ -1188,32 +1238,32 @@ fn shorten(value: &str, limit: usize) -> String {
 
 fn block_name(id: u8) -> &'static str {
     [
-        "Air",
-        "Grass",
-        "Dirt",
-        "Stone",
-        "Deep stone",
-        "Sand",
-        "Gravel",
-        "Wood",
-        "Leaves",
-        "Planks",
-        "Cobblestone",
-        "Glass",
-        "Water",
-        "Bedrock",
-        "Snow",
-        "Sandstone",
+        "Воздух",
+        "Трава",
+        "Земля",
+        "Камень",
+        "Глуб. камень",
+        "Песок",
+        "Гравий",
+        "Дерево",
+        "Листва",
+        "Доски",
+        "Булыжник",
+        "Стекло",
+        "Вода",
+        "Коренная порода",
+        "Снег",
+        "Песчаник",
     ]
     .get(id as usize)
     .copied()
-    .unwrap_or("Unknown")
+    .unwrap_or("Неизвестно")
 }
 fn block_short_name(id: u8) -> &'static str {
     match id {
-        4 => "Deep stone",
-        10 => "Cobble",
-        15 => "Sandstone",
+        4 => "Глуб.",
+        10 => "Булыж.",
+        15 => "Песчан.",
         _ => block_name(id),
     }
 }

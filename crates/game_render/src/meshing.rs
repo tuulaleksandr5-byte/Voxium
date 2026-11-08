@@ -186,6 +186,22 @@ impl MeshBuilder {
         if self.positions.is_empty() {
             return None;
         }
+        let mut self_ = self;
+        if id == GRASS {
+            for (normal, uv) in self_.normals.iter().zip(&mut self_.uvs) {
+                // Side textures repeat with v decreasing upwards. Horizontal
+                // faces must not repeat the side's dirt/grass bands.
+                if normal[1] > 0.0 {
+                    uv[1] = 0.12;
+                } else if normal[1] < 0.0 {
+                    uv[1] = 0.82;
+                }
+            }
+        }
+        self_.finish_mesh(id)
+    }
+
+    fn finish_mesh(self, id: u8) -> Option<Mesh> {
         // The fixed material-per-block API still allows the horizontal grass
         // surface to read greener than its earthy sides, without an atlas or
         // extra draws. Every vertex in a merged face gets the same tint.

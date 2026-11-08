@@ -218,3 +218,28 @@ fn materials_have_distinct_pixels_and_repeat_nearest_sampling() {
             .any(|pixel| pixel[3] == 0)
     );
 }
+
+#[test]
+fn grass_top_is_green_bottom_is_soil_and_sides_stay_upright() {
+    let meshes = mesh_section([0; 3], |p| if p == [0; 3] { game_core::GRASS } else { 0 });
+    let mesh = &meshes[0].1;
+    let pos = positions(mesh);
+    let uv = uvs(mesh);
+    let n = normals(mesh);
+    for i in (0..pos.len()).step_by(4) {
+        if n[i][1] > 0.0 {
+            assert!(
+                uv[i..i + 4].iter().all(|v| (0.03..0.25).contains(&v[1])),
+                "grass tops must only sample green turf"
+            );
+        } else if n[i][1] < 0.0 {
+            assert!(
+                uv[i..i + 4].iter().all(|v| (0.65..0.95).contains(&v[1])),
+                "bottom must sample soil"
+            );
+        } else {
+            assert!(pos[i + 2][1] > pos[i][1]);
+            assert!(uv[i + 2][1] < uv[i][1], "grass must grow at the upper edge");
+        }
+    }
+}

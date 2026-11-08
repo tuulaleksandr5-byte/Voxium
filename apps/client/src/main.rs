@@ -1,6 +1,7 @@
 //! Native creative voxel sandbox. See README for implemented scope and validation.
 #![cfg_attr(target_os = "windows", windows_subsystem = "windows")]
 
+mod control_input;
 mod player;
 mod session;
 mod settings;
@@ -95,17 +96,30 @@ fn setup(
 }
 fn apply_window(s: &settings::Settings, window: &mut Window) {
     let size = [(1280, 720), (1600, 900), (1920, 1080)][s.resolution];
-    window.resolution.set(size.0 as f32, size.1 as f32);
-    window.present_mode = if s.vsync {
-        PresentMode::AutoVsync
-    } else {
-        PresentMode::AutoNoVsync
-    };
-    window.mode = if s.fullscreen {
+    // Resizing a borderless fullscreen surface makes some Windows drivers
+    // leave fullscreen. Keep its monitor-owned size and only change actual options.
+    let mode = if s.fullscreen {
         WindowMode::BorderlessFullscreen(MonitorSelection::Current)
     } else {
         WindowMode::Windowed
     };
+    if window.mode != mode {
+        window.mode = mode;
+    }
+    if !s.fullscreen
+        && (window.resolution.width() != size.0 as f32
+            || window.resolution.height() != size.1 as f32)
+    {
+        window.resolution.set(size.0 as f32, size.1 as f32);
+    }
+    let present = if s.vsync {
+        PresentMode::AutoVsync
+    } else {
+        PresentMode::AutoNoVsync
+    };
+    if window.present_mode != present {
+        window.present_mode = present;
+    }
 }
 fn save(game: &mut Game) -> bool {
     let Some(id) = game.world_id.as_ref() else {
@@ -113,12 +127,12 @@ fn save(game: &mut Game) -> bool {
     };
     match save_world(&settings::save_root(), id, &game.save_data()) {
         Ok(()) => {
-            game.status = "World saved".into();
+            game.status = "Мир сохранён".into();
             game.autosave = 0.;
             true
         }
         Err(error) => {
-            game.status = format!("Save failed: {error}");
+            game.status = format!("Ошибка сохранения: {error}");
             game.ui_dirty = true;
             false
         }
@@ -141,12 +155,13 @@ fn open(
     game.velocity = Vec3::ZERO;
     game.grounded = false;
     game.height = 1.3;
+    game.flying = false;
     game.yaw = data.yaw;
     game.pitch = data.pitch;
     game.clock = data.time;
     game.autosave = 0.;
     game.revision += 1;
-    game.status = "Loading terrain...".into();
+    game.status = "Загрузка мира...".into();
     game.screen(Mode::Playing);
 }
 #[allow(clippy::too_many_arguments)]
@@ -169,7 +184,7 @@ fn actions(
             }
             Action::Create => {
                 if game.name_input.trim().is_empty() {
-                    game.status = "Enter a world name".into();
+                    game.status = "Введите название мира".into();
                     game.ui_dirty = true;
                     continue;
                 }
@@ -182,8 +197,7 @@ fn actions(
                     match game.seed_input.trim().parse::<u64>() {
                         Ok(seed) => seed,
                         Err(_) => {
-                            game.status =
-                                "Seed must be a whole number from 0 to 18446744073709551615".into();
+                            game.status = "Зерно: целое число от 0 до 18446744073709551615".into();
                             game.ui_dirty = true;
                             continue;
                         }
@@ -223,7 +237,7 @@ fn actions(
             Action::Load(id) => match load_world(&settings::save_root(), &id) {
                 Ok(data) => open(&mut game, id, data, &mut stream, &mut commands, &mut meshes),
                 Err(e) => {
-                    game.status = format!("Cannot load world: {e}");
+                    game.status = format!("Не удалось загрузить мир: {e}");
                     game.ui_dirty = true;
                 }
             },
@@ -314,7 +328,7 @@ fn actions(
                     game.settings.volume,
                 ));
                 if let Err(e) = game.settings.save() {
-                    game.status = format!("Settings save failed: {e}");
+                    game.status = format!("Не удалось сохранить настройки: {e}");
                 }
                 game.ui_dirty = true;
             }
@@ -369,5 +383,30 @@ mod tests {
         let ground = surface_height(971, spawn[0].floor() as i32, spawn[2].floor() as i32);
         assert!(ground > SEA_LEVEL);
         assert_eq!(spawn[1], (ground + 10) as f32);
+    }
+}
+
+#[cfg(test)]
+mod window_regressions {
+    use super::*;
+    #[test]
+    fn applying_settings_does_not_resize_fullscreen_surface() {
+        let settings = settings::Settings {
+            fullscreen: true,
+            resolution: 0,
+            ..Default::default()
+        };
+        let mut window = Window {
+            mode: WindowMode::BorderlessFullscreen(MonitorSelection::Current),
+            resolution: (1920, 1080).into(),
+            ..default()
+        };
+        apply_window(&settings, &mut window);
+        assert_eq!(window.resolution.physical_width(), 1920);
+        assert_eq!(window.resolution.physical_height(), 1080);
+        assert_eq!(
+            window.mode,
+            WindowMode::BorderlessFullscreen(MonitorSelection::Current)
+        );
     }
 }

@@ -3,7 +3,11 @@ use crate::{
     ui::{Action, UiIntent},
 };
 use bevy::{
-    input::mouse::AccumulatedMouseMotion,
+    input::{
+        ButtonState,
+        keyboard::KeyboardInput,
+        mouse::{AccumulatedMouseMotion, MouseScrollUnit, MouseWheel},
+    },
     prelude::*,
     window::{CursorGrabMode, CursorOptions},
 };
@@ -20,7 +24,7 @@ pub struct Sun;
 // Bevy injects each input/resource independently into this system.
 #[allow(clippy::too_many_arguments)]
 pub fn controls(
-    time: Res<Time>,
+    time: Res<Time<Real>>,
     keys: Res<ButtonInput<KeyCode>>,
     mouse: Res<ButtonInput<MouseButton>>,
     motion: Res<AccumulatedMouseMotion>,
@@ -29,7 +33,45 @@ pub fn controls(
     mut window: Single<(&Window, &mut CursorOptions)>,
     mut intents: ResMut<UiIntent>,
     mut gizmos: Gizmos,
+    mut wheel: MessageReader<MouseWheel>,
+    mut keyboard: MessageReader<KeyboardInput>,
+    mut input: Local<crate::control_input::ControlInput>,
 ) {
+    let jump_presses = keyboard
+        .read()
+        .filter(|e| e.key_code == KeyCode::Space && e.state == ButtonState::Pressed && !e.repeat)
+        .count();
+    input.frames += 1;
+    input.frame_time += time.delta_secs();
+    if input.frame_time >= 0.5 {
+        game.fps = input.frames as f32 / input.frame_time;
+        input.frames = 0;
+        input.frame_time = 0.;
+    }
+    let (debug, grid) = input.debug_keys(
+        keys.just_pressed(KeyCode::F3),
+        keys.pressed(KeyCode::F3),
+        keys.just_released(KeyCode::F3),
+        keys.just_pressed(KeyCode::KeyG),
+    );
+    if game.world_id.is_some() {
+        if debug {
+            game.debug_open = !game.debug_open;
+        }
+        if grid {
+            game.chunk_grid = !game.chunk_grid;
+        }
+    }
+    let scroll: f32 = wheel
+        .read()
+        .map(|w| {
+            if w.unit == MouseScrollUnit::Pixel {
+                w.y / 40.
+            } else {
+                w.y
+            }
+        })
+        .sum();
     let (window, cursor) = &mut *window;
     if game.mode == Mode::Playing && !window.focused {
         game.screen(Mode::Paused);
@@ -63,6 +105,14 @@ pub fn controls(
         intents.0.push(Action::Save);
     }
     if captured {
+        game.selected = input.scroll(game.selected, scroll);
+        for _ in 0..jump_presses {
+            if input.jump_tap(time.elapsed_secs_f64()) {
+                game.flying = !game.flying;
+                game.velocity.y = 0.;
+                game.grounded = false;
+            }
+        }
         game.yaw -= motion.delta.x * game.settings.sensitivity;
         game.pitch = (game.pitch - motion.delta.y * game.settings.sensitivity).clamp(-1.54, 1.54);
         let slot_keys = [
@@ -97,7 +147,8 @@ pub fn controls(
         if keys.pressed(KeyCode::KeyD) {
             movement.x += 1.;
         }
-        let crouch = keys.pressed(KeyCode::ControlLeft) || keys.pressed(KeyCode::ControlRight);
+        let crouch = !game.flying
+            && (keys.pressed(KeyCode::ControlLeft) || keys.pressed(KeyCode::ControlRight));
         if crouch {
             game.height = 1.3;
         } else if game.height < 1.8 {
@@ -109,9 +160,12 @@ pub fn controls(
                 game.height = 1.8;
             }
         }
-        let speed = if game.height < 1.8 {
+        let sprint = keys.pressed(KeyCode::ShiftLeft) || keys.pressed(KeyCode::ShiftRight);
+        let speed = if game.flying {
+            if sprint { 20. } else { 10. }
+        } else if game.height < 1.8 {
             2.2
-        } else if keys.pressed(KeyCode::ShiftLeft) {
+        } else if sprint {
             8.0
         } else {
             4.8
@@ -124,10 +178,18 @@ pub fn controls(
             (game.feet.z.floor() as i32).div_euclid(16),
         ];
         if game.world.chunks.contains_key(&chunk) {
-            if keys.just_pressed(KeyCode::Space) && game.grounded {
+            if !game.flying && keys.just_pressed(KeyCode::Space) && game.grounded {
                 game.velocity.y = 8.0;
             }
-            game.velocity.y = (game.velocity.y - 24.0 * dt).max(-45.0);
+            if game.flying {
+                game.velocity.y = (i32::from(keys.pressed(KeyCode::Space))
+                    - i32::from(
+                        keys.pressed(KeyCode::ControlLeft) || keys.pressed(KeyCode::ControlRight),
+                    )) as f32
+                    * speed;
+            } else {
+                game.velocity.y = (game.velocity.y - 24.0 * dt).max(-45.0);
+            }
             let result = move_player(
                 game.feet.to_array(),
                 game.velocity.to_array(),
@@ -165,6 +227,9 @@ pub fn controls(
                 game.revision += 1;
             }
         }
+    }
+    if game.chunk_grid {
+        draw_chunk_grid(game.feet, &mut gizmos);
     }
     camera.translation = game.feet + Vec3::Y * (game.height - 0.15);
     camera.rotation = Quat::from_rotation_y(game.yaw) * Quat::from_rotation_x(game.pitch);
@@ -212,6 +277,42 @@ fn collision_block(world: &World, p: [i32; 3]) -> u8 {
         world.block(p)
     }
 }
+
+fn draw_chunk_grid(feet: Vec3, gizmos: &mut Gizmos) {
+    let cx = (feet.x.floor() as i32).div_euclid(16);
+    let cz = (feet.z.floor() as i32).div_euclid(16);
+    let x0 = ((cx - 1) * 16) as f32;
+    let x1 = ((cx + 2) * 16) as f32;
+    let z0 = ((cz - 1) * 16) as f32;
+    let z1 = ((cz + 2) * 16) as f32;
+    let color = Color::srgb(1., 0.75, 0.12);
+    for x in cx - 1..=cx + 2 {
+        for z in cz - 1..=cz + 2 {
+            gizmos.line(
+                Vec3::new((x * 16) as f32, -64., (z * 16) as f32),
+                Vec3::new((x * 16) as f32, 321., (z * 16) as f32),
+                color,
+            );
+        }
+    }
+    for y in (-64..=320).step_by(16).chain(std::iter::once(321)) {
+        for x in cx - 1..=cx + 2 {
+            gizmos.line(
+                Vec3::new((x * 16) as f32, y as f32, z0),
+                Vec3::new((x * 16) as f32, y as f32, z1),
+                color,
+            );
+        }
+        for z in cz - 1..=cz + 2 {
+            gizmos.line(
+                Vec3::new(x0, y as f32, (z * 16) as f32),
+                Vec3::new(x1, y as f32, (z * 16) as f32),
+                color,
+            );
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

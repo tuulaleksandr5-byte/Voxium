@@ -83,7 +83,8 @@ pub fn stream_world(
             i += 1;
         }
     }
-    if game.status.starts_with("Loading terrain") && game.world.chunks.contains_key(&center) {
+    if game.status.starts_with("Загрузка мира") && game.world.chunks.contains_key(&center)
+    {
         game.status.clear();
     }
     let in_flight: HashSet<_> = stream.generation.iter().map(|v| v.0).collect();
