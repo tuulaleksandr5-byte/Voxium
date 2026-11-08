@@ -12,7 +12,8 @@ pub struct Streaming {
     generation: Vec<([i32; 2], Task<Chunk>)>,
     meshing: Vec<([i32; 3], Task<MeshResult>)>,
     visuals: HashMap<[i32; 3], Vec<(Entity, Handle<Mesh>)>>,
-    pub materials: Vec<Handle<StandardMaterial>>,
+    pub materials: Vec<Handle<game_render::VoxelMaterial>>,
+    pub textures: game_render::BlockTextures,
     pub generation_count: usize,
 }
 impl Streaming {
@@ -139,6 +140,9 @@ pub fn stream_world(
                         ),
                     ))
                     .id();
+                if matches!(id, 12 | 13) {
+                    commands.entity(entity).insert(bevy::light::NotShadowCaster);
+                }
                 tiles.push((entity, handle));
             }
             stream.visuals.insert(key, tiles);
@@ -176,17 +180,22 @@ pub fn stream_world(
             continue;
         }
         let chunks = game.world.chunks.clone();
+        let textures = stream.textures.clone();
         stream.meshing.push((
             key,
             AsyncComputeTaskPool::get().spawn(async move {
-                game_render::mesh_section(key, |p| {
-                    if !valid_world_height(p[1]) {
-                        return AIR;
-                    }
-                    chunks
-                        .get(&[p[0].div_euclid(16), p[2].div_euclid(16)])
-                        .map_or(AIR, |chunk| chunk.block(p))
-                })
+                game_render::mesh_section_with_textures(
+                    key,
+                    |p| {
+                        if !valid_world_height(p[1]) {
+                            return AIR;
+                        }
+                        chunks
+                            .get(&[p[0].div_euclid(16), p[2].div_euclid(16)])
+                            .map_or(AIR, |chunk| chunk.block(p))
+                    },
+                    &textures,
+                )
             }),
         ));
     }

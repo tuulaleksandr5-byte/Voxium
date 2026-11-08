@@ -213,13 +213,19 @@ impl World {
         Arc::make_mut(chunk).write(position, id);
         self.edits.insert(position, id);
         let section = position.map(section_coordinate);
-        self.dirty.insert(section);
-        for axis in 0..3 {
-            let local = local_coordinate(position[axis]);
-            if local == 0 || local == 15 {
-                let mut neighbor = section;
-                neighbor[axis] += if local == 0 { -1 } else { 1 };
-                self.dirty.insert(neighbor);
+        // AO samples diagonals too: an edit at a section corner can affect
+        // eight sections, not just the three face-adjacent neighbors.
+        let offsets = position.map(|p| match local_coordinate(p) {
+            0 => vec![0, -1],
+            15 => vec![0, 1],
+            _ => vec![0],
+        });
+        for &dx in &offsets[0] {
+            for &dy in &offsets[1] {
+                for &dz in &offsets[2] {
+                    self.dirty
+                        .insert([section[0] + dx, section[1] + dy, section[2] + dz]);
+                }
             }
         }
         true
@@ -251,13 +257,16 @@ impl World {
     fn dirty_chunk(&mut self, chunk: &Chunk) {
         for &y in chunk.sections.keys() {
             let section = [chunk.position[0], y, chunk.position[1]];
-            self.dirty.insert(section);
-            for axis in 0..3 {
-                for direction in [-1, 1] {
-                    let mut neighbor = section;
-                    if let Some(value) = neighbor[axis].checked_add(direction) {
-                        neighbor[axis] = value;
-                        self.dirty.insert(neighbor);
+            for dx in -1..=1 {
+                for dy in -1..=1 {
+                    for dz in -1..=1 {
+                        if let (Some(x), Some(y), Some(z)) = (
+                            section[0].checked_add(dx),
+                            section[1].checked_add(dy),
+                            section[2].checked_add(dz),
+                        ) {
+                            self.dirty.insert([x, y, z]);
+                        }
                     }
                 }
             }
@@ -510,7 +519,16 @@ mod tests {
         assert_eq!(world.block([-1, 15, -1]), GLASS);
         assert_eq!(
             world.dirty,
-            HashSet::from([[-1, 0, -1], [0, 0, -1], [-1, 1, -1], [-1, 0, 0]])
+            HashSet::from([
+                [-1, 0, -1],
+                [0, 0, -1],
+                [-1, 1, -1],
+                [-1, 0, 0],
+                [0, 1, -1],
+                [0, 0, 0],
+                [-1, 1, 0],
+                [0, 1, 0]
+            ])
         );
         world.dirty.clear();
         assert!(world.set([-8, 8, -8], STONE));
@@ -560,8 +578,16 @@ mod tests {
         world.insert(chunk);
         assert!(world.dirty.contains(&[0, 4, 0]));
         assert!(world.dirty.contains(&[1, 4, 0]));
+        assert!(
+            world.dirty.contains(&[1, 5, -1]),
+            "loading changes diagonal AO"
+        );
         world.dirty.clear();
         world.unload([0, 0]);
         assert!(world.dirty.contains(&[1, 4, 0]));
+        assert!(
+            world.dirty.contains(&[1, 5, -1]),
+            "unloading changes diagonal AO"
+        );
     }
 }

@@ -2,6 +2,7 @@
 #![cfg_attr(target_os = "windows", windows_subsystem = "windows")]
 
 mod control_input;
+mod graphics_assets;
 mod player;
 mod session;
 mod settings;
@@ -34,6 +35,7 @@ fn main() {
         close_when_requested: false,
         ..default()
     }))
+    .add_plugins(game_render::VoxelRenderPlugin)
     .init_resource::<Game>()
     .init_resource::<Streaming>()
     .init_resource::<UiIntent>()
@@ -63,15 +65,30 @@ fn setup(
     mut commands: Commands,
     mut stream: ResMut<Streaming>,
     mut images: ResMut<Assets<Image>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
+    mut materials: ResMut<Assets<game_render::VoxelMaterial>>,
     game: Res<Game>,
     mut window: Single<&mut Window>,
     mut volume: ResMut<bevy::audio::GlobalVolume>,
 ) {
-    stream.materials = game_render::create_materials(&mut images, &mut materials);
+    let atlas = graphics_assets::load_atlas();
+    stream.materials = game_render::create_materials(&mut images, &mut materials, atlas.as_deref())
+        .unwrap_or_else(|error| {
+            error!("Invalid atlas: {error}; using temporary artwork");
+            game_render::create_materials(&mut images, &mut materials, None)
+                .expect("valid fallback atlas")
+        });
+    stream.textures = graphics_assets::load_face_textures();
+    let sky_image = images.add(game_render::gradient_sky());
     commands.spawn((
         Camera3d::default(),
         player::PlayerCamera,
+        bevy::camera::Exposure::default(),
+        bevy::light::ShadowFilteringMethod::Gaussian,
+        bevy::light::Skybox {
+            image: Some(sky_image),
+            brightness: 900.,
+            ..default()
+        },
         Transform::from_xyz(0.5, 85., 0.5),
         DistanceFog {
             color: Color::srgb(0.5, 0.7, 0.85),
@@ -85,11 +102,21 @@ fn setup(
     commands.spawn((
         DirectionalLight {
             illuminance: 12000.0,
-            shadow_maps_enabled: false,
+            shadow_maps_enabled: true,
+            shadow_normal_bias: 0.6,
+            shadow_depth_bias: 0.02,
             ..default()
         },
         Transform::from_rotation(Quat::from_euler(EulerRot::XYZ, -1.0, 0.4, 0.0)),
         player::Sun,
+        bevy::light::CascadeShadowConfigBuilder {
+            num_cascades: 2,
+            maximum_distance: 96.,
+            first_cascade_far_bound: 24.,
+            overlap_proportion: 0.2,
+            ..default()
+        }
+        .build(),
     ));
     apply_window(&game.settings, &mut window);
     *volume = bevy::audio::GlobalVolume::new(bevy::audio::Volume::Linear(game.settings.volume));

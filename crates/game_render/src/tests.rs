@@ -37,6 +37,48 @@ fn air_produces_no_meshes() {
 }
 
 #[test]
+fn exposed_concave_corner_has_soft_ambient_occlusion() {
+    let meshes = mesh_section([0; 3], |p| match p {
+        [1, 1, 1] | [0, 2, 1] | [1, 2, 0] => 3,
+        _ => 0,
+    });
+    let mesh = &meshes[0].1;
+    let Some(VertexAttributeValues::Float32x4(colors)) = mesh.attribute(Mesh::ATTRIBUTE_COLOR)
+    else {
+        panic!("voxel corners need ambient occlusion colors");
+    };
+    assert!(colors.iter().any(|c| c[0] < 0.9));
+    assert!(colors.iter().all(|c| c[0] >= 0.72 && c[3] == 1.));
+    assert!(colors.iter().any(|c| c[0] == 1.));
+}
+
+#[test]
+fn ambient_occlusion_agrees_at_shared_section_vertices() {
+    let sample = |p: [i32; 3]| match p {
+        [15, 0, 0] | [16, 0, 0] | [15, 1, 1] => 3,
+        _ => 0,
+    };
+    let brightness = |section, point: [f32; 3]| {
+        let meshes = mesh_section(section, sample);
+        let mesh = &meshes[0].1;
+        let Some(VertexAttributeValues::Float32x4(colors)) = mesh.attribute(Mesh::ATTRIBUTE_COLOR)
+        else {
+            panic!("AO required");
+        };
+        let i = positions(mesh)
+            .iter()
+            .zip(normals(mesh))
+            .position(|(p, n)| *p == point && *n == [0., 1., 0.])
+            .unwrap();
+        colors[i][0]
+    };
+    let left = brightness([0, 0, 0], [16., 1., 1.]);
+    let right = brightness([1, 0, 0], [0., 1., 1.]);
+    assert_eq!(left, right);
+    assert!(left < 1.);
+}
+
+#[test]
 fn one_block_has_six_outward_faces() {
     let meshes = mesh_section([0; 3], |p| if p == [0; 3] { 3 } else { 0 });
     assert_eq!(meshes.len(), 1);
@@ -159,64 +201,51 @@ fn transparent_opaque_boundary_keeps_visible_solid_face() {
     assert_eq!(meshes.len(), 2);
     assert_eq!(meshes[0].0, 3);
     assert_quads(&meshes[0].1, 6);
-    assert_eq!(meshes[1].0, 11);
+    assert_eq!(meshes[1].0, 12);
     assert_quads(&meshes[1].1, 5);
 }
 
 #[test]
-fn materials_have_distinct_64px_tiles_mipmaps_and_crisp_magnification() {
+fn array_materials_share_image_and_use_linear_anisotropic_filtering() {
     let mut images = Assets::<Image>::default();
-    let mut materials = Assets::<StandardMaterial>::default();
-    let handles = create_materials(&mut images, &mut materials);
-    assert_eq!(handles.len(), 19);
-    let mut textures = Vec::new();
-    for handle in &handles {
-        let material = materials.get(handle).unwrap();
-        let image = images
-            .get(material.base_color_texture.as_ref().unwrap())
-            .unwrap();
-        assert_eq!(image.width(), 64);
-        assert_eq!(image.height(), 64);
-        let ImageSampler::Descriptor(sampler) = &image.sampler else {
-            panic!("each block texture must explicitly request pixel sampling")
-        };
-        assert_eq!(sampler.address_mode_u, ImageAddressMode::Repeat);
-        assert_eq!(sampler.address_mode_v, ImageAddressMode::Repeat);
-        assert_eq!(sampler.mag_filter, ImageFilterMode::Nearest);
-        assert_eq!(sampler.min_filter, ImageFilterMode::Linear);
-        let data = image.data.as_ref().unwrap();
-        assert_eq!(image.texture_descriptor.mip_level_count, 7);
-        assert_eq!(data.len(), 21844);
-        textures.push(data.clone());
+    let mut materials = Assets::<VoxelMaterial>::default();
+    let handles = create_materials(&mut images, &mut materials, None).unwrap();
+    assert_eq!(handles.len(), 18);
+    let first = materials.get(&handles[0]).unwrap().extension.image.clone();
+    for (layer, handle) in handles.iter().enumerate() {
+        let m = materials.get(handle).unwrap();
+        assert_eq!(m.extension.image, first);
+        assert_eq!(m.extension.layer, layer as u32);
     }
-    for a in 1..16 {
-        for b in a + 1..16 {
-            assert_ne!(textures[a], textures[b], "block textures must differ");
-        }
-    }
-    for id in [11, 12] {
+    let image = images.get(&first).unwrap();
+    assert_eq!((image.width(), image.height()), (128, 128));
+    assert_eq!(image.texture_descriptor.size.depth_or_array_layers, 18);
+    assert_eq!(image.texture_descriptor.mip_level_count, 8);
+    let ImageSampler::Descriptor(s) = &image.sampler else {
+        panic!("explicit sampler required");
+    };
+    assert_eq!(
+        (s.mag_filter, s.min_filter, s.mipmap_filter),
+        (
+            ImageFilterMode::Linear,
+            ImageFilterMode::Linear,
+            ImageFilterMode::Linear
+        )
+    );
+    assert_eq!(s.anisotropy_clamp, 8);
+    assert_eq!(
+        (s.address_mode_u, s.address_mode_v),
+        (ImageAddressMode::Repeat, ImageAddressMode::Repeat)
+    );
+    for layer in [12, 13] {
         assert_eq!(
-            materials.get(&handles[id]).unwrap().alpha_mode,
+            materials.get(&handles[layer]).unwrap().base.alpha_mode,
             AlphaMode::Blend
-        );
-        assert!(
-            textures[id]
-                .as_chunks::<4>()
-                .0
-                .iter()
-                .any(|pixel| pixel[3] > 0 && pixel[3] < 255)
         );
     }
     assert_eq!(
-        materials.get(&handles[8]).unwrap().alpha_mode,
-        AlphaMode::Mask(0.5)
-    );
-    assert!(
-        textures[8]
-            .as_chunks::<4>()
-            .0
-            .iter()
-            .any(|pixel| pixel[3] == 0)
+        materials.get(&handles[9]).unwrap().base.alpha_mode,
+        AlphaMode::Mask(0.45)
     );
 }
 
@@ -229,7 +258,7 @@ fn grass_has_separate_turf_and_soil_with_full_2d_repeating_uvs() {
         assert!(positions(side)[i + 2][1] > positions(side)[i][1]);
         assert!(uvs(side)[i + 2][1] < uvs(side)[i][1]);
     }
-    for (id, normal) in [(16, [0., 1., 0.]), (17, [0., -1., 0.])] {
+    for (id, normal) in [(0, [0., 1., 0.]), (2, [0., -1., 0.])] {
         let mesh = &meshes
             .iter()
             .find(|(slot, _)| *slot == id)
@@ -252,7 +281,7 @@ fn log_end_is_separate_from_bark() {
     assert_quads(&meshes.iter().find(|(id, _)| *id == 7).unwrap().1, 4);
     let ends = &meshes
         .iter()
-        .find(|(id, _)| *id == 18)
+        .find(|(id, _)| *id == 8)
         .expect("growth rings")
         .1;
     assert_quads(ends, 2);

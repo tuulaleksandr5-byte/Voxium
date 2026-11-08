@@ -54,10 +54,8 @@ fn constructions_and_player_survive_a_new_world_instance() {
         assert_eq!(world.block(pos), PLANKS);
     }
     let meshes = game_render::mesh_section([0, y.div_euclid(16), 0], |p| world.block(p));
-    assert!(
-        meshes
-            .iter()
-            .any(|(id, mesh)| *id == PLANKS && mesh.count_vertices() > 0)
-    );
+    assert!(meshes.iter().any(|(id, mesh)| *id
+        == game_render::BlockTextures::default().layer(PLANKS, 0, true)
+        && mesh.count_vertices() > 0));
     std::fs::remove_dir_all(root).unwrap();
 }

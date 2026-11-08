@@ -1,10 +1,10 @@
-use crate::{GRASS_BOTTOM, GRASS_TOP, MATERIAL_COUNT, WOOD_END};
+use crate::{BlockTextures, MATERIAL_COUNT};
 use bevy::{
     asset::RenderAssetUsages,
     mesh::{Indices, PrimitiveTopology},
     prelude::Mesh,
 };
-use game_core::{AIR, BLOCKS, GRASS, SECTION_SIZE, WOOD, is_opaque};
+use game_core::{AIR, BLOCKS, SECTION_SIZE, is_opaque};
 
 const SIZE: usize = SECTION_SIZE as usize;
 const PADDED_SIZE: usize = SIZE + 2;
@@ -17,6 +17,14 @@ const PADDED_SIZE: usize = SIZE + 2;
 /// matching transparent neighbors also hide their shared internal faces.
 #[must_use]
 pub fn mesh_section(section: [i32; 3], sample: impl Fn([i32; 3]) -> u8) -> Vec<(u8, Mesh)> {
+    mesh_section_with_textures(section, sample, &BlockTextures::default())
+}
+
+pub fn mesh_section_with_textures(
+    section: [i32; 3],
+    sample: impl Fn([i32; 3]) -> u8,
+    textures: &BlockTextures,
+) -> Vec<(u8, Mesh)> {
     // Cache the border once: the six sweeps reuse every block many times, while
     // a world sample can involve a hash lookup and an edited-block lookup.
     let mut blocks = [AIR; PADDED_SIZE * PADDED_SIZE * PADDED_SIZE];
@@ -50,7 +58,7 @@ pub fn mesh_section(section: [i32; 3], sample: impl Fn([i32; 3]) -> u8) -> Vec<(
         };
         for positive in [false, true] {
             for slice in 0..SECTION_SIZE {
-                let mut mask = [AIR; SIZE * SIZE];
+                let mut mask = [FaceCell::default(); SIZE * SIZE];
                 for v in 0..SIZE {
                     for u in 0..SIZE {
                         let mut local = [0; 3];
@@ -64,7 +72,10 @@ pub fn mesh_section(section: [i32; 3], sample: impl Fn([i32; 3]) -> u8) -> Vec<(
                         local[axis] += if positive { 1 } else { -1 };
                         let neighbor = blocks[padded_index(local)];
                         if !is_opaque(neighbor) && neighbor != id {
-                            mask[u + v * SIZE] = id;
+                            mask[u + v * SIZE] = FaceCell {
+                                id,
+                                ao: corner_ao(&blocks, local, u_axis, v_axis),
+                            };
                         }
                     }
                 }
@@ -72,28 +83,28 @@ pub fn mesh_section(section: [i32; 3], sample: impl Fn([i32; 3]) -> u8) -> Vec<(
                 for v in 0..SIZE {
                     let mut u = 0;
                     while u < SIZE {
-                        let id = mask[u + v * SIZE];
+                        let cell = mask[u + v * SIZE];
+                        let id = cell.id;
                         if id == AIR {
                             u += 1;
                             continue;
                         }
                         let mut width = 1;
-                        while u + width < SIZE && mask[u + width + v * SIZE] == id {
+                        while cell.uniform()
+                            && u + width < SIZE
+                            && mask[u + width + v * SIZE] == cell
+                        {
                             width += 1;
                         }
                         let mut height = 1;
-                        while v + height < SIZE
-                            && (0..width).all(|offset| mask[u + offset + (v + height) * SIZE] == id)
+                        while cell.uniform()
+                            && v + height < SIZE
+                            && (0..width)
+                                .all(|offset| mask[u + offset + (v + height) * SIZE] == cell)
                         {
                             height += 1;
                         }
-                        let material = if axis == 1 && id == GRASS {
-                            if positive { GRASS_TOP } else { GRASS_BOTTOM }
-                        } else if axis == 1 && id == WOOD {
-                            WOOD_END
-                        } else {
-                            id
-                        };
+                        let material = textures.layer(id, axis, positive);
                         builders[usize::from(material)].quad(FaceRectangle {
                             axis,
                             positive,
@@ -104,9 +115,10 @@ pub fn mesh_section(section: [i32; 3], sample: impl Fn([i32; 3]) -> u8) -> Vec<(
                             v,
                             width,
                             height,
+                            ao: cell.ao,
                         });
                         for row in v..v + height {
-                            mask[u + row * SIZE..u + width + row * SIZE].fill(AIR);
+                            mask[u + row * SIZE..u + width + row * SIZE].fill(FaceCell::default());
                         }
                         u += width;
                     }
@@ -120,6 +132,32 @@ pub fn mesh_section(section: [i32; 3], sample: impl Fn([i32; 3]) -> u8) -> Vec<(
         .enumerate()
         .filter_map(|(id, builder)| builder.finish().map(|mesh| (id as u8, mesh)))
         .collect()
+}
+
+#[derive(Clone, Copy, Default, PartialEq, Eq)]
+struct FaceCell {
+    id: u8,
+    ao: [u8; 4],
+}
+impl FaceCell {
+    fn uniform(self) -> bool {
+        self.ao.iter().all(|a| *a == self.ao[0])
+    }
+}
+
+fn corner_ao(blocks: &[u8], outside: [i32; 3], u: usize, v: usize) -> [u8; 4] {
+    [(-1, -1), (1, -1), (1, 1), (-1, 1)].map(|(du, dv)| {
+        let mut side_u = outside;
+        side_u[u] += du;
+        let mut side_v = outside;
+        side_v[v] += dv;
+        let mut corner = side_u;
+        corner[v] += dv;
+        let a = u8::from(is_opaque(blocks[padded_index(side_u)]));
+        let b = u8::from(is_opaque(blocks[padded_index(side_v)]));
+        let c = u8::from(is_opaque(blocks[padded_index(corner)]));
+        if a == 1 && b == 1 { 0 } else { 3 - a - b - c }
+    })
 }
 
 fn padded_index([x, y, z]: [i32; 3]) -> usize {
@@ -136,6 +174,7 @@ struct FaceRectangle {
     v: usize,
     width: usize,
     height: usize,
+    ao: [u8; 4],
 }
 
 #[derive(Default)]
@@ -143,6 +182,7 @@ struct MeshBuilder {
     positions: Vec<[f32; 3]>,
     normals: Vec<[f32; 3]>,
     uvs: Vec<[f32; 2]>,
+    colors: Vec<[f32; 4]>,
     indices: Vec<u32>,
 }
 
@@ -158,6 +198,7 @@ impl MeshBuilder {
             v,
             width,
             height,
+            ao,
         } = rectangle;
         let first = self.positions.len() as u32;
         let mut point = [0.0; 3];
@@ -181,13 +222,22 @@ impl MeshBuilder {
             [width as f32, 0.0],
             [0.0, 0.0],
         ]);
+        self.colors.extend(ao.map(|a| {
+            let light = 0.76 + f32::from(a) * 0.08;
+            [light, light, light, 1.]
+        }));
         // cross(u,v) is -X, -Y, +Z for the bases above. Reverse triangle
         // winding exactly when that basis points into the block.
-        let indices = if positive == (axis == 2) {
-            [0, 1, 2, 0, 2, 3]
-        } else {
-            [0, 2, 1, 0, 3, 2]
-        };
+        let mut indices =
+            if u16::from(ao[0]) + u16::from(ao[2]) > u16::from(ao[1]) + u16::from(ao[3]) {
+                [0, 1, 3, 1, 2, 3]
+            } else {
+                [0, 1, 2, 0, 2, 3]
+            };
+        if positive != (axis == 2) {
+            indices.swap(1, 2);
+            indices.swap(4, 5);
+        }
         self.indices.extend(indices.map(|index| first + index));
     }
 
@@ -202,6 +252,7 @@ impl MeshBuilder {
         .with_inserted_attribute(Mesh::ATTRIBUTE_POSITION, self.positions)
         .with_inserted_attribute(Mesh::ATTRIBUTE_NORMAL, self.normals)
         .with_inserted_attribute(Mesh::ATTRIBUTE_UV_0, self.uvs)
+        .with_inserted_attribute(Mesh::ATTRIBUTE_COLOR, self.colors)
         .with_inserted_indices(Indices::U32(self.indices));
         Some(mesh)
     }

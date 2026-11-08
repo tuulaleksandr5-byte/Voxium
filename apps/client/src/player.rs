@@ -250,29 +250,42 @@ pub fn sky(
     mut clear: ResMut<ClearColor>,
     mut ambient: ResMut<GlobalAmbientLight>,
     mut sun: Single<(&mut DirectionalLight, &mut Transform), With<Sun>>,
-    mut camera: Single<&mut DistanceFog, With<PlayerCamera>>,
+    mut camera: Single<
+        (
+            &mut DistanceFog,
+            &mut bevy::light::Skybox,
+            &bevy::camera::Exposure,
+        ),
+        With<PlayerCamera>,
+    >,
 ) {
     let angle = (game.clock as f32 / 1200.0) * std::f32::consts::TAU;
     let daylight = angle.sin().clamp(0.0, 1.0);
-    let color = Color::srgb(
-        0.025 + 0.46 * daylight,
-        0.035 + 0.65 * daylight,
-        0.075 + 0.76 * daylight,
-    );
+    let color = Color::srgb(0.72, 0.84, 0.90);
+    let brightness = 0.025 + daylight * 0.975;
     clear.0 = if game.world_id.is_some() {
         color
     } else {
         Color::srgb(0.035, 0.05, 0.07)
     };
-    sun.0.illuminance = 100.0 + 12000.0 * daylight;
+    sun.0.illuminance = 100.0 + 10000.0 * daylight;
+    sun.0.color = Color::srgb(1., 0.94 + daylight * 0.04, 0.85 + daylight * 0.13);
     sun.1.rotation = Quat::from_euler(EulerRot::XYZ, -angle, 0.45, 0.0);
-    ambient.brightness = 80.0 + daylight * 220.0;
-    camera.color = color;
+    ambient.brightness = 100.0 + daylight * 260.0;
+    // Fog and sky share linear radiance and camera exposure, including at night.
+    let horizon = color.to_linear();
+    let intensity = 900. * brightness * camera.2.exposure();
+    camera.0.color = Color::linear_rgb(
+        horizon.red * intensity,
+        horizon.green * intensity,
+        horizon.blue * intensity,
+    );
     let end = (game.settings.distance * 16) as f32;
-    camera.falloff = FogFalloff::Linear {
+    camera.0.falloff = FogFalloff::Linear {
         start: end * 0.55,
         end,
     };
+    camera.1.brightness = 900. * brightness;
 }
 
 // Unknown terrain is solid for movement and standing, including adjacent chunks.

@@ -1,0 +1,19 @@
+// Stable block IDs; texture layers are row-major in the 6×3 atlas.
+[
+    (top: 17, side: 17, bottom: 17), // air (never meshed)
+    (top: 0, side: 1, bottom: 2),    // grass
+    (top: 2, side: 2, bottom: 2),    // dirt
+    (top: 3, side: 3, bottom: 3),    // stone
+    (top: 4, side: 4, bottom: 4),    // deep stone
+    (top: 5, side: 5, bottom: 5),    // sand
+    (top: 6, side: 6, bottom: 6),    // gravel
+    (top: 8, side: 7, bottom: 8),    // log
+    (top: 9, side: 9, bottom: 9),    // leaves
+    (top: 10, side: 10, bottom: 10), // planks
+    (top: 6, side: 6, bottom: 6),    // cobblestone (11 = mossy alternative)
+    (top: 12, side: 12, bottom: 12), // glass
+    (top: 13, side: 13, bottom: 13), // water
+    (top: 4, side: 4, bottom: 4),    // bedrock
+    (top: 14, side: 14, bottom: 14), // snow/ice
+    (top: 16, side: 15, bottom: 16), // sandstone
+]

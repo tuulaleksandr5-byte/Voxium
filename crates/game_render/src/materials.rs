@@ -1,340 +1,327 @@
+use crate::{MATERIAL_COUNT, painted_fallback};
 use bevy::{
-    asset::RenderAssetUsages,
+    asset::{RenderAssetUsages, embedded_asset},
     image::{ImageAddressMode, ImageFilterMode, ImageSampler, ImageSamplerDescriptor},
+    pbr::{ExtendedMaterial, MaterialExtension},
     prelude::*,
-    render::render_resource::{Extent3d, TextureDimension, TextureFormat},
+    render::render_resource::{
+        AsBindGroup, Extent3d, TextureDataOrder, TextureDimension, TextureFormat,
+        TextureViewDescriptor, TextureViewDimension,
+    },
+    shader::ShaderRef,
 };
-use game_core::{AIR, GLASS, LEAVES, WATER};
+use std::io::Cursor;
 
-pub const TEXTURE_SIZE: u32 = 64;
-pub const GRASS_TOP: u8 = 16;
-pub const GRASS_BOTTOM: u8 = 17;
-pub const WOOD_END: u8 = 18;
-pub const MATERIAL_COUNT: usize = 19;
+pub const TEXTURE_SIZE: u32 = 128;
+const ATLAS_WIDTH: u32 = TEXTURE_SIZE * 6;
+const ATLAS_HEIGHT: u32 = TEXTURE_SIZE * 3;
 
-/// Creates original, deterministic 64×64 pixel textures and per-block materials.
-///
-/// The first 16 handles are indexed by stable block ID, including a transparent air
-/// placeholder; three extra render-only slots select turf, soil and log ends.
-/// Nearest magnification, filtered mipmaps and repeat addressing preserve texture scale
-/// across greedy quads. No external assets or GPU/window initialization is needed.
-#[must_use]
-pub fn create_materials(
-    images: &mut Assets<Image>,
-    materials: &mut Assets<StandardMaterial>,
-) -> Vec<Handle<StandardMaterial>> {
-    (0..MATERIAL_COUNT as u8)
-        .map(|id| {
-            let mut pixels = Vec::with_capacity((TEXTURE_SIZE * TEXTURE_SIZE * 4) as usize);
-            for y in 0..TEXTURE_SIZE {
-                for x in 0..TEXTURE_SIZE {
-                    pixels.extend(pixel(id, x, y));
-                }
-            }
-            let mut image = Image::new(
-                Extent3d {
-                    width: TEXTURE_SIZE,
-                    height: TEXTURE_SIZE,
-                    depth_or_array_layers: 1,
-                },
-                TextureDimension::D2,
-                pixels,
-                TextureFormat::Rgba8UnormSrgb,
-                RenderAssetUsages::default(),
-            );
-            image.data = Some(with_mipmaps(
-                image.data.take().expect("RGBA pixels"),
-                TEXTURE_SIZE as usize,
-            ));
-            image.texture_descriptor.mip_level_count = 7;
-            image.sampler = ImageSampler::Descriptor(ImageSamplerDescriptor {
-                min_filter: ImageFilterMode::Linear,
-                mipmap_filter: ImageFilterMode::Linear,
-                address_mode_u: ImageAddressMode::Repeat,
-                address_mode_v: ImageAddressMode::Repeat,
-                address_mode_w: ImageAddressMode::Repeat,
-                ..ImageSamplerDescriptor::nearest()
-            });
-            materials.add(StandardMaterial {
-                base_color_texture: Some(images.add(image)),
-                perceptual_roughness: if id == WATER || id == GLASS {
-                    0.22
-                } else {
-                    0.93
-                },
-                reflectance: if id == WATER || id == GLASS {
-                    0.35
-                } else {
-                    0.15
-                },
-                alpha_mode: match id {
-                    AIR | GLASS | WATER => AlphaMode::Blend,
-                    LEAVES => AlphaMode::Mask(0.5),
-                    _ => AlphaMode::Opaque,
-                },
-                ..default()
-            })
-        })
-        .collect()
+pub type VoxelMaterial = ExtendedMaterial<StandardMaterial, TileArray>;
+
+#[derive(Asset, AsBindGroup, Reflect, Debug, Clone)]
+pub struct TileArray {
+    #[texture(100, dimension = "2d_array")]
+    #[sampler(101)]
+    pub image: Handle<Image>,
+    #[uniform(102)]
+    pub layer: u32,
 }
-
-fn pixel(id: u8, x: u32, y: u32) -> [u8; 4] {
-    let fine = (noise_at(id, x, y) % 11) as i16 - 5;
-    let xf = x as f32;
-    let yf = y as f32;
-    let tau = std::f32::consts::TAU;
-    match id {
-        AIR => [0; 4],
-        1 => {
-            let depth = 12 + noise_at(1, x / 3, 0) % 9;
-            if y < depth { turf(x, y) } else { soil(x, y) }
-        }
-        2 | GRASS_BOTTOM => soil(x, y),
-        GRASS_TOP => turf(x, y),
-        3 | 4 | 6 | 10 | 13 => {
-            let scale = if id == 6 { 8. } else { 16. };
-            let (edge, dx, dy, h) = cells(xf, yf, scale, id);
-            let base = match id {
-                3 => [119, 124, 132],
-                4 => [52, 55, 72],
-                6 => [131, 129, 119],
-                10 => [106, 110, 102],
-                _ => [36, 35, 44],
-            };
-            let seam = if edge < if id == 10 { 1.9 } else { 0.9 } {
-                -35
-            } else {
-                0
-            };
-            let bevel = if edge < 2.7 && dy < 0. { 16 } else { 0 };
-            shade(
-                base,
-                (h % 27) as i16 - 13 + fine + seam + bevel + ((-dx - dy) * 0.6) as i16,
-                255,
-            )
-        }
-        5 => {
-            let wave = (yf / 64. * tau * 4. + (xf / 64. * tau * 2.).sin() * 0.8).sin();
-            shade([219, 197, 144], fine / 2 + (wave * 10.) as i16, 255)
-        }
-        7 => {
-            let knot = ((xf - 31.) / 5.).powi(2) + ((yf - 34.) / 12.).powi(2);
-            let bend = (yf / 64. * tau).sin() * 1.3;
-            let grain = (xf / 64. * tau * 7. + bend).sin();
-            let rings = if knot < 3.2 {
-                (knot.sqrt() * 6.).sin() * 14.
-            } else {
-                0.
-            };
-            shade(
-                [119, 79, 41],
-                fine / 2 + (grain * 20. + rings) as i16 - if knot < 0.3 { 30 } else { 0 },
-                255,
-            )
-        }
-        WOOD_END => {
-            let dx = xf - 31.5;
-            let dy = yf - 31.5;
-            let a = dy.atan2(dx);
-            let r = (dx * dx + dy * dy).sqrt() + (a * 7.).sin() * 1.1;
-            let ring = (r / 4.1).fract();
-            let crack = r > 13. && ((a - 0.55).abs() < 0.035 || (a + 2.3).abs() < 0.025);
-            let bark = dx.abs().max(dy.abs()) > 28.;
-            shade(
-                if bark { [102, 63, 31] } else { [181, 136, 74] },
-                fine / 2
-                    + if crack {
-                        -65
-                    } else if ring < 0.21 {
-                        -29
-                    } else {
-                        8
-                    },
-                255,
-            )
-        }
-        LEAVES => {
-            let (_, dx, dy, h) = cells(xf, yf, 8., 8);
-            let shape = dx.abs() / 4.4 + dy.abs() / 3.5;
-            let alpha = if shape > 1.38 { 0 } else { 255 };
-            shade(
-                [52, 106, 36],
-                fine + (h % 31) as i16 - 12 + ((-dx - dy) * 3.) as i16,
-                alpha,
-            )
-        }
-        9 => {
-            let board = y / 16;
-            let local = y % 16;
-            let join = (x + board * 21) % 64;
-            let grain = (xf * 0.29 + (yf * 0.17).sin()).sin() * 4.;
-            let seam = local < 2 || join < 2;
-            shade(
-                [157, 112, 62],
-                fine / 2
-                    + (grain as i16)
-                    + if seam {
-                        -43
-                    } else if local == 2 {
-                        17
-                    } else {
-                        0
-                    },
-                255,
-            )
-        }
-        GLASS => {
-            let rim = x < 2 || y < 2 || x > 61 || y > 61;
-            let shine = (xf - yf - 18.).abs() < 1.6 || (xf - yf + 24.).abs() < 0.8;
-            if rim {
-                [143, 215, 227, 190]
-            } else if shine {
-                [212, 245, 250, 115]
-            } else {
-                [135, 208, 225, 28]
-            }
-        }
-        WATER => {
-            let (edge, dx, dy, h) = cells(xf, yf, 16., 12);
-            shade(
-                [19, 119, 173],
-                fine / 3
-                    + (h % 13) as i16
-                    + if edge < 0.7 {
-                        57
-                    } else {
-                        ((-dx - dy) * 0.8) as i16
-                    },
-                155,
-            )
-        }
-        14 => shade(
-            [227, 239, 246],
-            fine / 2
-                + if noise_at(14, x / 3, y / 3) % 23 < 2 {
-                    -13
-                } else {
-                    0
-                },
-            255,
-        ),
-        15 => {
-            let row = y / 16;
-            let joint = (x + row * 24) % 32;
-            shade(
-                [205, 182, 128],
-                fine / 2
-                    + if y % 16 < 2 || joint < 2 {
-                        -28
-                    } else if y % 16 == 2 {
-                        13
-                    } else {
-                        0
-                    },
-                255,
-            )
-        }
-        _ => [255, 0, 255, 255],
+impl MaterialExtension for TileArray {
+    fn fragment_shader() -> ShaderRef {
+        "embedded://game_render/shaders/voxel.wesl".into()
+    }
+    fn prepass_fragment_shader() -> ShaderRef {
+        "embedded://game_render/shaders/voxel_prepass.wesl".into()
     }
 }
-fn turf(x: u32, y: u32) -> [u8; 4] {
-    let h = noise_at(16, x / 4, y / 8);
-    let blade_x = (x % 4) as f32;
-    let blade_y = (y % 8) as f32;
-    let curve = 1.3 + ((blade_y * 0.55) + (h % 9) as f32).sin() * 0.7;
-    let blade = (blade_x - curve).abs() < 1.1 * (1. - blade_y / 10.);
-    let fine = (noise_at(16, x, y) % 13) as i16 - 6;
-    shade(
-        if blade { [111, 151, 48] } else { [65, 115, 36] },
-        fine + (h % 23) as i16 - 9 + if blade && blade_x < curve { 14 } else { 0 },
-        255,
-    )
+
+pub struct VoxelRenderPlugin;
+impl Plugin for VoxelRenderPlugin {
+    fn build(&self, app: &mut App) {
+        embedded_asset!(app, "shaders/voxel.wesl");
+        embedded_asset!(app, "shaders/voxel_prepass.wesl");
+        app.add_plugins(MaterialPlugin::<VoxelMaterial>::default());
+    }
 }
-fn soil(x: u32, y: u32) -> [u8; 4] {
-    let (edge, dx, dy, h) = cells(x as f32, y as f32, 8., 2);
-    let fine = (noise_at(2, x, y) % 13) as i16 - 6;
-    let pebble = h.is_multiple_of(5) && dx * dx + dy * dy < 3.5;
-    shade(
-        if pebble {
-            [156, 146, 119]
-        } else {
-            [111, 77, 46]
+
+/// Decode only the specified 768×384 PNG; never silently resize or flip the art.
+pub fn atlas_png(bytes: &[u8]) -> Result<Image, String> {
+    let dimensions = image::ImageReader::with_format(Cursor::new(bytes), image::ImageFormat::Png)
+        .into_dimensions()
+        .map_err(|e| e.to_string())?;
+    if dimensions != (ATLAS_WIDTH, ATLAS_HEIGHT) {
+        return Err(format!(
+            "atlas must be {ATLAS_WIDTH}×{ATLAS_HEIGHT}, got {}×{}",
+            dimensions.0, dimensions.1
+        ));
+    }
+    let rgba = image::load_from_memory_with_format(bytes, image::ImageFormat::Png)
+        .map_err(|e| e.to_string())?
+        .into_rgba8();
+    atlas_array(rgba.as_raw())
+}
+
+/// Row-major RGBA atlas -> layer-major GPU image, with an independent mip chain per tile.
+/// UVs stay unbounded: hardware repeat works inside a layer, including anisotropic taps.
+pub fn atlas_array(rgba: &[u8]) -> Result<Image, String> {
+    if rgba.len() != (ATLAS_WIDTH * ATLAS_HEIGHT * 4) as usize {
+        return Err("atlas RGBA byte count does not match 768×384".into());
+    }
+    let mut data = Vec::new();
+    for layer in 0..MATERIAL_COUNT {
+        let mut tile = Vec::with_capacity((TEXTURE_SIZE * TEXTURE_SIZE * 4) as usize);
+        for y in 0..TEXTURE_SIZE as usize {
+            let start = (((layer / 6) * TEXTURE_SIZE as usize + y) * ATLAS_WIDTH as usize
+                + (layer % 6) * TEXTURE_SIZE as usize)
+                * 4;
+            tile.extend_from_slice(&rgba[start..start + TEXTURE_SIZE as usize * 4]);
+        }
+        append_mips(&mut data, tile, TEXTURE_SIZE as usize);
+    }
+    let mut image = Image::new(
+        Extent3d {
+            width: TEXTURE_SIZE,
+            height: TEXTURE_SIZE,
+            depth_or_array_layers: MATERIAL_COUNT as u32,
         },
-        fine + (h % 21) as i16 - 10 + if edge < 0.7 { -8 } else { 0 },
-        255,
-    )
+        TextureDimension::D2,
+        // Image::new checks the base-level length; assign mip data afterwards.
+        vec![0; (TEXTURE_SIZE * TEXTURE_SIZE * MATERIAL_COUNT as u32 * 4) as usize],
+        TextureFormat::Rgba8UnormSrgb,
+        RenderAssetUsages::default(),
+    );
+    image.data = Some(data);
+    image.data_order = TextureDataOrder::LayerMajor;
+    image.texture_descriptor.mip_level_count = 8;
+    image.texture_view_descriptor = Some(TextureViewDescriptor {
+        dimension: Some(TextureViewDimension::D2Array),
+        ..default()
+    });
+    image.sampler = ImageSampler::Descriptor(ImageSamplerDescriptor {
+        address_mode_u: ImageAddressMode::Repeat,
+        address_mode_v: ImageAddressMode::Repeat,
+        mag_filter: ImageFilterMode::Linear,
+        min_filter: ImageFilterMode::Linear,
+        mipmap_filter: ImageFilterMode::Linear,
+        anisotropy_clamp: 8,
+        ..default()
+    });
+    Ok(image)
 }
-// Periodic jittered Voronoi cells give individually shaded pebbles/rock facets.
-fn cells(x: f32, y: f32, scale: f32, id: u8) -> (f32, f32, f32, u32) {
-    let gx = (x / scale).floor() as i32;
-    let gy = (y / scale).floor() as i32;
-    let period = 64 / (scale as i32);
-    let mut first = f32::INFINITY;
-    let mut second = f32::INFINITY;
-    let mut found = (0., 0., 0);
-    for oy in -1..=1 {
-        for ox in -1..=1 {
-            let cx = gx + ox;
-            let cy = gy + oy;
-            let h = noise_at(
-                id,
-                cx.rem_euclid(period) as u32,
-                cy.rem_euclid(period) as u32,
-            );
-            let px = (cx as f32 + 0.25 + (h % 101) as f32 / 200.) * scale;
-            let py = (cy as f32 + 0.25 + ((h >> 8) % 101) as f32 / 200.) * scale;
-            let dx = x - px;
-            let dy = y - py;
-            let d = dx * dx + dy * dy;
-            if d < first {
-                second = first;
-                first = d;
-                found = (dx, dy, h);
-            } else if d < second {
-                second = d;
-            }
+
+fn append_mips(data: &mut Vec<u8>, mut level: Vec<u8>, mut width: usize) {
+    loop {
+        data.extend_from_slice(&level);
+        if width == 1 {
+            break;
         }
-    }
-    (second.sqrt() - first.sqrt(), found.0, found.1, found.2)
-}
-
-fn shade(base: [u8; 3], amount: i16, alpha: u8) -> [u8; 4] {
-    let [r, g, b] = base.map(|channel| (i16::from(channel) + amount).clamp(0, 255) as u8);
-    [r, g, b, alpha]
-}
-
-fn noise_at(id: u8, x: u32, y: u32) -> u32 {
-    let mut hash = x.wrapping_mul(0x8da6_b343)
-        ^ y.wrapping_mul(0xd816_3841)
-        ^ u32::from(id).wrapping_mul(0xcb1a_b31f);
-    hash ^= hash >> 13;
-    hash = hash.wrapping_mul(0x85eb_ca6b);
-    hash ^ (hash >> 16)
-}
-
-// Keep crisp magnification while filtering distant tiles to avoid moiré.
-fn with_mipmaps(base: Vec<u8>, mut width: usize) -> Vec<u8> {
-    let mut data = base.clone();
-    let mut level = base;
-    while width > 1 {
         let next_width = width / 2;
         let mut next = vec![0; next_width * next_width * 4];
         for y in 0..next_width {
             for x in 0..next_width {
-                for c in 0..4 {
-                    let mut sum = 0_u16;
-                    for dy in 0..2 {
-                        for dx in 0..2 {
-                            sum += u16::from(level[((y * 2 + dy) * width + x * 2 + dx) * 4 + c]);
+                let mut sum = [0.; 4];
+                for dy in 0..2 {
+                    for dx in 0..2 {
+                        let p = &level[((y * 2 + dy) * width + x * 2 + dx) * 4..][..4];
+                        let a = f32::from(p[3]) / 255.;
+                        for c in 0..3 {
+                            sum[c] += srgb_to_linear(f32::from(p[c]) / 255.) * a;
                         }
+                        sum[3] += a;
                     }
-                    next[(y * next_width + x) * 4 + c] = (sum / 4) as u8;
                 }
+                let dst = &mut next[(y * next_width + x) * 4..][..4];
+                for c in 0..3 {
+                    dst[c] = if sum[3] > 0. {
+                        (linear_to_srgb(sum[c] / sum[3]) * 255.).round() as u8
+                    } else {
+                        0
+                    };
+                }
+                dst[3] = (sum[3] * 255. / 4.).round() as u8;
             }
         }
-        data.extend_from_slice(&next);
         level = next;
         width = next_width;
     }
-    data
+}
+fn srgb_to_linear(v: f32) -> f32 {
+    if v <= 0.04045 {
+        v / 12.92
+    } else {
+        ((v + 0.055) / 1.055).powf(2.4)
+    }
+}
+fn linear_to_srgb(v: f32) -> f32 {
+    if v <= 0.0031308 {
+        v * 12.92
+    } else {
+        1.055 * v.powf(1. / 2.4) - 0.055
+    }
+}
+
+pub fn create_materials(
+    images: &mut Assets<Image>,
+    materials: &mut Assets<VoxelMaterial>,
+    atlas: Option<&[u8]>,
+) -> Result<Vec<Handle<VoxelMaterial>>, String> {
+    let array = match atlas {
+        Some(bytes) => atlas_png(bytes)?,
+        None => atlas_array(&painted_fallback::atlas())?,
+    };
+    let data = array.data.as_ref().expect("initialized texture array");
+    let layer_stride = data.len() / MATERIAL_COUNT;
+    let has_alpha: [bool; MATERIAL_COUNT] = std::array::from_fn(|layer| {
+        data[layer * layer_stride..][..(TEXTURE_SIZE * TEXTURE_SIZE * 4) as usize]
+            .as_chunks::<4>()
+            .0
+            .iter()
+            .any(|p| p[3] < 255)
+    });
+    let image = images.add(array);
+    Ok((0..MATERIAL_COUNT)
+        .map(|layer| {
+            materials.add(ExtendedMaterial {
+                base: StandardMaterial {
+                    // Preserve authored alpha. RGB glass/water get a fallback opacity.
+                    base_color: Color::srgba(
+                        1.,
+                        1.,
+                        1.,
+                        match layer {
+                            _ if has_alpha[layer] => 1.,
+                            12 => 0.35,
+                            13 => 0.65,
+                            _ => 1.,
+                        },
+                    ),
+                    perceptual_roughness: if matches!(layer, 12 | 13) { 0.28 } else { 0.92 },
+                    reflectance: 0.12,
+                    alpha_mode: match layer {
+                        12 | 13 => AlphaMode::Blend,
+                        9 => AlphaMode::Mask(0.45),
+                        _ => AlphaMode::Opaque,
+                    },
+                    ..default()
+                },
+                extension: TileArray {
+                    image: image.clone(),
+                    layer: layer as u32,
+                },
+            })
+        })
+        .collect())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn layers_and_all_mips_never_mix_neighboring_tiles() {
+        let mut rgba = vec![0; (ATLAS_WIDTH * ATLAS_HEIGHT * 4) as usize];
+        for y in 0..ATLAS_HEIGHT as usize {
+            for x in 0..ATLAS_WIDTH as usize {
+                let layer = (y / 128) * 6 + x / 128;
+                rgba[(y * ATLAS_WIDTH as usize + x) * 4..][..4].copy_from_slice(&[
+                    layer as u8 * 13,
+                    30,
+                    90,
+                    255,
+                ]);
+            }
+        }
+        let image = atlas_array(&rgba).unwrap();
+        let data = image.data.as_ref().unwrap();
+        let layer_bytes = (0..8)
+            .map(|mip| (128_usize >> mip).pow(2) * 4)
+            .sum::<usize>();
+        assert_eq!(data.len(), layer_bytes * 18);
+        for layer in 0..18 {
+            assert!(
+                data[layer * layer_bytes..(layer + 1) * layer_bytes]
+                    .as_chunks::<4>()
+                    .0
+                    .iter()
+                    .all(|p| *p == [layer as u8 * 13, 30, 90, 255])
+            );
+        }
+        assert!(atlas_array(&[]).is_err());
+    }
+    #[test]
+    fn mipmaps_filter_in_linear_light_with_premultiplied_alpha() {
+        let mut data = Vec::new();
+        append_mips(
+            &mut data,
+            vec![255, 255, 255, 255, 0, 0, 0, 255, 255, 0, 0, 0, 0, 0, 0, 0],
+            2,
+        );
+        assert_eq!(&data[16..], &[188, 188, 188, 128]);
+    }
+    #[test]
+    fn png_dimensions_are_checked_before_decoding_pixels() {
+        let mut bytes = Cursor::new(Vec::new());
+        image::RgbaImage::new(6, 3)
+            .write_to(&mut bytes, image::ImageFormat::Png)
+            .unwrap();
+        assert!(atlas_png(bytes.get_ref()).unwrap_err().contains("768×384"));
+        assert!(atlas_png(b"not a PNG").is_err());
+    }
+
+    #[test]
+    fn png_decode_preserves_top_left_tile_and_row_order() {
+        let mut rgba = image::RgbaImage::new(ATLAS_WIDTH, ATLAS_HEIGHT);
+        for (x, y, pixel) in rgba.enumerate_pixels_mut() {
+            *pixel = image::Rgba([
+                ((y / 128) * 6 + x / 128) as u8 * 13,
+                (y % 128) as u8,
+                80,
+                255,
+            ]);
+        }
+        let mut bytes = Cursor::new(Vec::new());
+        rgba.write_to(&mut bytes, image::ImageFormat::Png).unwrap();
+        let actual = atlas_png(bytes.get_ref()).unwrap();
+        let data = actual.data.unwrap();
+        let layer_bytes = (0..8).map(|m| (128_usize >> m).pow(2) * 4).sum::<usize>();
+        for layer in 0..18 {
+            assert_eq!(
+                &data[layer * layer_bytes..][..4],
+                &[layer as u8 * 13, 0, 80, 255]
+            );
+            assert_eq!(
+                &data[layer * layer_bytes + 127 * 128 * 4..][..4],
+                &[layer as u8 * 13, 127, 80, 255]
+            );
+        }
+    }
+
+    #[test]
+    fn source_glass_alpha_is_not_reduced_a_second_time() {
+        let mut pixels = image::RgbaImage::from_pixel(
+            ATLAS_WIDTH,
+            ATLAS_HEIGHT,
+            image::Rgba([150, 200, 220, 255]),
+        );
+        // Layer 12 is the first tile in the third row.
+        for y in 256..384 {
+            for x in 0..128 {
+                pixels.get_pixel_mut(x, y)[3] = 100;
+            }
+        }
+        let mut bytes = Cursor::new(Vec::new());
+        pixels
+            .write_to(&mut bytes, image::ImageFormat::Png)
+            .unwrap();
+        let mut images = Assets::default();
+        let mut materials = Assets::default();
+        let handles = create_materials(&mut images, &mut materials, Some(bytes.get_ref())).unwrap();
+        assert_eq!(
+            materials.get(&handles[12]).unwrap().base.base_color.alpha(),
+            1.
+        );
+        assert_eq!(
+            materials.get(&handles[13]).unwrap().base.base_color.alpha(),
+            0.65
+        );
+    }
 }
