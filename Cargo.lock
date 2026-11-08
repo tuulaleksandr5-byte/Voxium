@@ -5498,11 +5498,14 @@ name = "voxel-client"
 version = "0.1.0"
 dependencies = [
  "bevy",
+ "find-msvc-tools",
  "game_core",
  "game_render",
+ "image",
  "rodio",
  "serde",
  "serde_json",
+ "winit",
 ]
 
 [[package]]

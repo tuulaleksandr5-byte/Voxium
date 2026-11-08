@@ -1,6 +1,6 @@
 //! CPU-baked hotbar cubes using only pixels from the supplied original atlas.
 
-use crate::{BlockTextures, MATERIAL_COUNT};
+use crate::{BlockAtlas, BlockTextures, MATERIAL_COUNT};
 use bevy::{
     asset::RenderAssetUsages,
     image::ImageSampler,
@@ -9,12 +9,9 @@ use bevy::{
 };
 use game_core::{AIR, BLOCKS};
 use image::RgbaImage;
-use std::io::Cursor;
 
 const ICON_SIZE: u32 = 128;
 const TILE_SIZE: u32 = 128;
-const ATLAS_WIDTH: u32 = TILE_SIZE * 6;
-const ATLAS_HEIGHT: u32 = TILE_SIZE * 3;
 const SAMPLES: u32 = 4;
 type Point = [f32; 2];
 
@@ -48,16 +45,16 @@ const EDGES: [(Point, Point); 9] = [
 /// Call once when loading the atlas, add the results to `Assets<Image>`, and
 /// reuse the resulting handles whenever the hotbar selection changes.
 pub fn bake_block_icons(atlas_png: &[u8], textures: &BlockTextures) -> Result<Vec<Image>, String> {
-    let dimensions =
-        image::ImageReader::with_format(Cursor::new(atlas_png), image::ImageFormat::Png)
-            .into_dimensions()
-            .map_err(|e| format!("cannot read icon atlas PNG: {e}"))?;
-    if dimensions != (ATLAS_WIDTH, ATLAS_HEIGHT) {
-        return Err(format!(
-            "icon atlas must be {ATLAS_WIDTH}×{ATLAS_HEIGHT}, got {}×{}",
-            dimensions.0, dimensions.1
-        ));
-    }
+    bake_atlas_icons(&BlockAtlas::from_png(atlas_png)?, textures)
+}
+
+/// Bake reusable icons directly from the same decoded atlas as world materials.
+/// Accepts either an original whole atlas or the original seventeen tile PNGs
+/// assembled by `BlockAtlas::from_tiles`, without re-encoding any source image.
+pub fn bake_atlas_icons(
+    atlas: &BlockAtlas,
+    textures: &BlockTextures,
+) -> Result<Vec<Image>, String> {
     if textures.0.iter().any(|faces| {
         [faces.top, faces.side, faces.bottom]
             .into_iter()
@@ -65,15 +62,12 @@ pub fn bake_block_icons(atlas_png: &[u8], textures: &BlockTextures) -> Result<Ve
     }) {
         return Err("icon texture layer must be in 0..18".into());
     }
-    let atlas = image::load_from_memory_with_format(atlas_png, image::ImageFormat::Png)
-        .map_err(|e| format!("cannot decode icon atlas PNG: {e}"))?
-        .into_rgba8();
     Ok((0..BLOCKS.len())
         .map(|block| {
             let pixels = if block == AIR as usize {
                 vec![0; (ICON_SIZE * ICON_SIZE * 4) as usize]
             } else {
-                bake_cube(&atlas, textures, block as u8)
+                bake_cube(&atlas.rgba, textures, block as u8)
             };
             let mut image = Image::new(
                 Extent3d {
@@ -203,6 +197,10 @@ fn sample_tile(atlas: &RgbaImage, layer: u8, uv: Point) -> [f32; 4] {
 mod tests {
     use super::*;
     use crate::FaceTextures;
+    use std::io::Cursor;
+
+    const ATLAS_WIDTH: u32 = TILE_SIZE * 6;
+    const ATLAS_HEIGHT: u32 = TILE_SIZE * 3;
 
     // Deliberately simple test colors, never used as production block artwork.
     fn fixture(alpha: u8) -> (Vec<u8>, BlockTextures) {

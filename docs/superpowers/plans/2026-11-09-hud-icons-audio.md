@@ -12,4 +12,6 @@
 - [x] Generate saved WAV variants, implement cached positional audio with missing-file handling.
 - [x] Hook successful break/place and movement step events, preserving collisions and sprint controls.
 - [x] Verify native/Windows builds, tests, graphical smoke and offline sound assets; publish source.
-- [ ] Integrate and compare exact original PNG: awaiting a ZIP upload containing the image, which is currently only visible inline in chat.
+- [x] Integrate and compare exact original PNG: awaiting a ZIP upload containing the image, which is currently only visible inline in chat.
+
+Resolved9 November: the user supplied17 cut PNG files in textures_cut.zip. They are loaded directly with unchanged source bytes; a combined PNG is unnecessary. See ORIGINAL_TEXTURES.md.

@@ -30,3 +30,6 @@ Run `cargo test -p game_render icons::tests` to verify face selection, stable
 IDs, exact shading, alpha, transparent margins, tile-safe filtering, invalid
 inputs, and closed shared-face seams. The colored PNGs in those tests are
 synthetic fixtures used only to make incorrect sampling detectable.
+
+
+The uploaded17 cut PNG files are now supported by `BlockAtlas::from_tiles` and `bake_atlas_icons`. These entry points reuse the decoded original pixels; `bake_block_icons` remains the whole-PNG compatibility wrapper. Neither path modifies the input files.

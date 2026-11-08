@@ -1,0 +1,23 @@
+{
+  "archive": "textures_cut.zip",
+  "archive_sha256": "4d2beee7aaf2bb8efc4368c6733866351169be4fa6c287ea348a8d75d5dd077d",
+  "files": {
+    "cobblestone.png": "9c386870b5cd202ea8a3dc3163e8cfa1c2fe515900f11f3408e2e95492872abb",
+    "deepslate.png": "864fa0a81f9cfd93468d60d1e4aac6da1315bf289b1a4f2829eb2276af9c7c9c",
+    "dirt.png": "f4cc2ac8d8ca26d7bcbb0313dc41d34577d07d632be3e3cc377f1d9a6146fc09",
+    "glass.png": "c4d5bd825a1b7e26f22a68765f15a39b38a7eda5cfc8d24a20d5735ec0da94b5",
+    "grass_side.png": "cf7b5157d093f6c251303acd32f922ea771e6dd2ae45a4511de40835da1fd80d",
+    "grass_top.png": "f6c89fd550964896bce21d26ad14488f6a2b8b8e83ad498f396a02ade6b4336f",
+    "gravel.png": "9b021f88c7f1c91b59c37ab4fde31d426a7e4fba3c3e961cfc7bf50eaec0db8e",
+    "oak_leaves.png": "a8a0763c6e2d8d2fdc5fb333a05533b207a14b303cd59c68c196ac5d171ca21c",
+    "oak_log.png": "2e03ee85acb67d60bc66171ebf284c6e453044bbf1cacdf9d315536c9063fe8c",
+    "oak_log_top.png": "90f85fb0f0ced8591ca864e86430ef238d643e082b3f3e0f49ca6012cbc486d2",
+    "oak_planks.png": "1e8526e2de2cc5e6bc83807ad2731080ae4f20d7aee36af473182568ffc77d72",
+    "sand.png": "80169508a702f86ea8d432e74393136b1cc403ffec4c43fdc5e04d974b7e951f",
+    "sandstone.png": "0a174b2618d95ba86772f1060fa7349f1a53b3497e5aa776316bfdab78bd178b",
+    "sandstone_top.png": "5939631e7bb6f8de1994e38c0cb652a074cf7049ad3562f134731f3f7fa2859d",
+    "snow.png": "a2ba819874a69586b09f004e20ab85e94d3ef3f558a54900651ffd6ce463000f",
+    "stone.png": "95d795b4d153794ddded4ad04956d9a575e10c827b87fe64b10775319ccb8d7a",
+    "water.png": "3e30b1fc9c1338ce110b034f8c8ea98bbb829424397b70afccde4756f5825e88"
+  }
+}

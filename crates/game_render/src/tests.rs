@@ -289,3 +289,24 @@ fn log_end_is_separate_from_bark() {
         .1;
     assert_quads(ends, 2);
 }
+
+#[test]
+fn uploaded_cobblestone_and_gravel_have_distinct_face_layers() {
+    let textures = BlockTextures::default();
+    for axis in 0..3 {
+        for positive in [false, true] {
+            assert_eq!(textures.layer(6, axis, positive), 6);
+            assert_eq!(textures.layer(10, axis, positive), 11);
+        }
+    }
+    let meshes = mesh_section([0; 3], |p| match p {
+        [0, 0, 0] => 6,
+        [1, 0, 0] => 10,
+        _ => 0,
+    });
+    assert_eq!(meshes.len(), 2);
+    for (layer, mesh) in meshes {
+        assert!([6, 11].contains(&layer));
+        assert_quads(&mesh, 5);
+    }
+}

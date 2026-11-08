@@ -1,9 +1,9 @@
-# Original block artwork and sounds
+# Original artwork and sounds
 
-The original `assets/atlas_128x128.png` has not been supplied as a filesystem attachment yet. Inline chat images are visible as references, but their original PNG bytes are not present in this checkout.
+The supplied `textures_cut.zip` contains17 original128×128 RGBA PNG tiles. They are preserved byte-for-byte in `textures/`; `textures/source-hashes.json` records their SHA-256 values and the uploaded archive's checksum.
 
-Required atlas: PNG, **768×384**, six columns and three rows of **128×128** tiles. Put the original file here unchanged. It is decoded for GPU layers and icon baking; the source PNG is never redrawn, resized, or re-encoded. A build with the file embeds those exact bytes. A packaged copy is also kept byte-for-byte unchanged.
+The client decodes those original pixels and assembles18 GPU layers in memory, leaving the unused last layer transparent. It never resizes, redraws or re-encodes the input PNG files. The same decoded pixels produce the cached hotbar cube icons. All17 original PNG byte arrays are embedded in the EXE, so no external atlas is required to run.
 
-Without this atlas, the client displays an asset error in the menu and prevents entering a world. There are no procedural block textures or substitute artwork. `VOXEL_ATLAS` can point to the original PNG elsewhere; the older `assets/textures/atlas_128x128.png` path remains supported.
+Optional overrides: a complete `assets/atlas_128x128.png` (768×384) or the older `assets/textures/atlas_128x128.png` path; `VOXEL_ATLAS` may point elsewhere. A complete `assets/textures/` cut set beside the EXE can also replace the embedded set. Invalid explicit overrides report an error rather than silently substituting unrelated artwork.
 
-`blocks.ron` assigns top/side/bottom layers to stable block IDs. `sounds/` contains 135 original, offline-generated WAV clips (15 blocks × 3 actions × 3 variants). See [audio notes](../docs/BLOCK_AUDIO.md) and [icon notes](../docs/HOTBAR_ICONS.md).
+`blocks.ron` assigns top/side/bottom layers to stable block IDs. `sounds/` contains135 original offline-generated WAV clips, also embedded. `icons/` contains the application icon prepared from the supplied inline logo reference. See [original texture integration](../docs/ORIGINAL_TEXTURES.md), [audio notes](../docs/BLOCK_AUDIO.md) and [icon notes](../docs/HOTBAR_ICONS.md).

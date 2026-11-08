@@ -10,7 +10,7 @@
     (top: 8, side: 7, bottom: 8),    // log
     (top: 9, side: 9, bottom: 9),    // leaves
     (top: 10, side: 10, bottom: 10), // planks
-    (top: 6, side: 6, bottom: 6),    // cobblestone (11 = mossy alternative)
+    (top: 11, side: 11, bottom: 11), // supplied cobblestone texture
     (top: 12, side: 12, bottom: 12), // glass
     (top: 13, side: 13, bottom: 13), // water
     (top: 4, side: 4, bottom: 4),    // bedrock

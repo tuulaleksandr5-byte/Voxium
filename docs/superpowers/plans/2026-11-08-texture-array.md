@@ -15,4 +15,6 @@
 - [x] Run workspace checks and native graphical smoke test.
 - [x] Build/test Windows executable, document the missing original PNG, publish source and verified ZIP.
 
-- [ ] Connect the exact original user PNG and compare visual fidelity: blocked on receiving `atlas_128x128.png` as a file. The fallback is explicitly documented in the build and download instructions.
+- [x] Connect the exact original user PNG and compare visual fidelity: blocked on receiving `atlas_128x128.png` as a file. The fallback is explicitly documented in the build and download instructions.
+
+Resolved9 November: the user supplied17 cut PNG files in textures_cut.zip. They are loaded directly with unchanged source bytes; a combined PNG is unnecessary. See ORIGINAL_TEXTURES.md.

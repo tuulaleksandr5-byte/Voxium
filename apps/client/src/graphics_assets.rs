@@ -1,4 +1,4 @@
-//! The original PNG is required for worlds; menus remain usable if it is missing.
+//! Original, unchanged PNG assets: a whole atlas override or the supplied cut tiles.
 use bevy::prelude::*;
 use std::path::PathBuf;
 include!(concat!(env!("OUT_DIR"), "/atlas_asset.rs"));
@@ -28,7 +28,56 @@ fn asset_path(relative: &str) -> Option<PathBuf> {
     p.is_file().then_some(p)
 }
 
-pub fn load_atlas() -> Result<Vec<u8>, String> {
+const TILE_NAMES: [&str; 17] = [
+    "grass_top",
+    "grass_side",
+    "dirt",
+    "stone",
+    "deepslate",
+    "sand",
+    "gravel",
+    "oak_log",
+    "oak_log_top",
+    "oak_leaves",
+    "oak_planks",
+    "cobblestone",
+    "glass",
+    "water",
+    "snow",
+    "sandstone",
+    "sandstone_top",
+];
+macro_rules! original_tile {
+    ($name:literal) => {
+        include_bytes!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../assets/textures/",
+            $name,
+            ".png"
+        )) as &'static [u8]
+    };
+}
+const ORIGINAL_TILES: [&[u8]; 17] = [
+    original_tile!("grass_top"),
+    original_tile!("grass_side"),
+    original_tile!("dirt"),
+    original_tile!("stone"),
+    original_tile!("deepslate"),
+    original_tile!("sand"),
+    original_tile!("gravel"),
+    original_tile!("oak_log"),
+    original_tile!("oak_log_top"),
+    original_tile!("oak_leaves"),
+    original_tile!("oak_planks"),
+    original_tile!("cobblestone"),
+    original_tile!("glass"),
+    original_tile!("water"),
+    original_tile!("snow"),
+    original_tile!("sandstone"),
+    original_tile!("sandstone_top"),
+];
+
+pub fn load_atlas() -> Result<game_render::BlockAtlas, String> {
     let path = std::env::var_os("VOXEL_ATLAS")
         .map(PathBuf::from)
         .or_else(|| asset_path("assets/atlas_128x128.png"))
@@ -40,10 +89,31 @@ pub fn load_atlas() -> Result<Vec<u8>, String> {
             "Loading original atlas without modifying PNG: {}",
             path.display()
         );
-        return Ok(bytes);
+        return game_render::BlockAtlas::from_png(&bytes);
     }
-    EMBEDDED_ATLAS.map(<[u8]>::to_vec).ok_or_else(||
-        "Нужен assets/atlas_128x128.png (768×384). Положите PNG рядом с игрой по этому пути и перезапустите её.".into())
+    if let Some(first) = asset_path("assets/textures/grass_top.png") {
+        let folder = first.parent().expect("tile has a parent directory");
+        let mut files = Vec::with_capacity(TILE_NAMES.len());
+        for name in TILE_NAMES {
+            let path = folder.join(format!("{name}.png"));
+            files.push(
+                std::fs::read(&path).map_err(|e| {
+                    format!("Не удалось прочитать текстуру {}: {e}", path.display())
+                })?,
+            );
+        }
+        let tiles = files.iter().map(Vec::as_slice).collect::<Vec<_>>();
+        info!(
+            "Loading 17 original cut PNG textures unchanged from {}",
+            folder.display()
+        );
+        return game_render::BlockAtlas::from_tiles(&tiles);
+    }
+    if let Some(bytes) = EMBEDDED_ATLAS {
+        return game_render::BlockAtlas::from_png(bytes);
+    }
+    info!("Loading 17 original user PNG textures embedded byte-for-byte in EXE");
+    game_render::BlockAtlas::from_tiles(&ORIGINAL_TILES)
 }
 
 pub fn load_face_textures() -> game_render::BlockTextures {

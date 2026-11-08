@@ -1,6 +1,7 @@
 //! Native creative voxel sandbox. See README for implemented scope and validation.
 #![cfg_attr(target_os = "windows", windows_subsystem = "windows")]
 
+mod app_icon;
 mod block_audio;
 mod control_input;
 mod footsteps;
@@ -51,6 +52,7 @@ fn main() {
         ..default()
     })
     .add_systems(Startup, setup)
+    .add_systems(Update, app_icon::set_icon)
     .add_systems(
         Update,
         (
@@ -80,8 +82,9 @@ fn setup(
 ) {
     stream.textures = graphics_assets::load_face_textures();
     let loaded = graphics_assets::load_atlas().and_then(|atlas| {
-        let baked = game_render::bake_block_icons(&atlas, &stream.textures)?;
-        let handles = game_render::create_materials(&mut images, &mut materials, &atlas)?;
+        let baked = game_render::bake_atlas_icons(&atlas, &stream.textures)?;
+        let handles =
+            game_render::create_materials_from_atlas(&mut images, &mut materials, &atlas)?;
         Ok((baked, handles))
     });
     match loaded {

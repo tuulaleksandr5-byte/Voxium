@@ -1,4 +1,4 @@
-use crate::MATERIAL_COUNT;
+use crate::{BlockAtlas, MATERIAL_COUNT};
 use bevy::{
     asset::{RenderAssetUsages, embedded_asset},
     image::{ImageAddressMode, ImageFilterMode, ImageSampler, ImageSamplerDescriptor},
@@ -10,7 +10,6 @@ use bevy::{
     },
     shader::ShaderRef,
 };
-use std::io::Cursor;
 
 pub const TEXTURE_SIZE: u32 = 128;
 const ATLAS_WIDTH: u32 = TEXTURE_SIZE * 6;
@@ -46,19 +45,7 @@ impl Plugin for VoxelRenderPlugin {
 
 /// Decode only the specified 768×384 PNG; never silently resize or flip the art.
 pub fn atlas_png(bytes: &[u8]) -> Result<Image, String> {
-    let dimensions = image::ImageReader::with_format(Cursor::new(bytes), image::ImageFormat::Png)
-        .into_dimensions()
-        .map_err(|e| e.to_string())?;
-    if dimensions != (ATLAS_WIDTH, ATLAS_HEIGHT) {
-        return Err(format!(
-            "atlas must be {ATLAS_WIDTH}×{ATLAS_HEIGHT}, got {}×{}",
-            dimensions.0, dimensions.1
-        ));
-    }
-    let rgba = image::load_from_memory_with_format(bytes, image::ImageFormat::Png)
-        .map_err(|e| e.to_string())?
-        .into_rgba8();
-    atlas_array(rgba.as_raw())
+    atlas_array(BlockAtlas::from_png(bytes)?.rgba.as_raw())
 }
 
 /// Row-major RGBA atlas -> layer-major GPU image, with an independent mip chain per tile.
@@ -165,7 +152,16 @@ pub fn create_materials(
     materials: &mut Assets<VoxelMaterial>,
     atlas: &[u8],
 ) -> Result<Vec<Handle<VoxelMaterial>>, String> {
-    let array = atlas_png(atlas)?;
+    create_materials_from_atlas(images, materials, &BlockAtlas::from_png(atlas)?)
+}
+
+/// Create world materials from the same decoded original pixels used by icons.
+pub fn create_materials_from_atlas(
+    images: &mut Assets<Image>,
+    materials: &mut Assets<VoxelMaterial>,
+    atlas: &BlockAtlas,
+) -> Result<Vec<Handle<VoxelMaterial>>, String> {
+    let array = atlas_array(atlas.rgba.as_raw())?;
     let data = array.data.as_ref().expect("initialized texture array");
     let layer_stride = data.len() / MATERIAL_COUNT;
     let has_alpha: [bool; MATERIAL_COUNT] = std::array::from_fn(|layer| {
@@ -213,6 +209,7 @@ pub fn create_materials(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::io::Cursor;
     #[test]
     fn layers_and_all_mips_never_mix_neighboring_tiles() {
         let mut rgba = vec![0; (ATLAS_WIDTH * ATLAS_HEIGHT * 4) as usize];

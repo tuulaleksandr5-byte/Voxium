@@ -1,3 +1,5 @@
+**Исторический отчёт до получения архива.** Текстуры теперь получены и встроены без изменений; актуальная сборка запускается без внешнего атласа. См. [исходные текстуры и значок](ORIGINAL_TEXTURES.md).
+
 # HUD, unchanged atlas, cube icons and block sounds — 9 November 2026
 
 The default playing HUD contains only the crosshair and nine-slot hotbar. The title/save notification and control-help corner panels were removed. F3 reveals coordinates/FPS/flight/chunk information and hides the entire debug panel again; diagnostics also reset to hidden when opening another world.
