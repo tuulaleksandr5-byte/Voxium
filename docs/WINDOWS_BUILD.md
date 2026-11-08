@@ -12,7 +12,7 @@
 SHA-256 EXE:
 
 ```text
-d44c46b9223b2fcf7380d5edd5532e9e0d7e22152e1a1ea2a3eb1735191ad96a
+ebb7186e14be5048403be74bbdad0b8c67adba927505566879fd76e2d4e214a0
 ```
 
 ## Проверка
@@ -38,3 +38,5 @@ bash /workspace/.voxel-env/build-windows.sh
 На другой Linux-машине установите Rust target `x86_64-pc-windows-gnu` и MinGW-w64; задайте `CARGO_TARGET_X86_64_PC_WINDOWS_GNU_LINKER`, target-specific `CC`/`AR` и запустите ту же Cargo-команду. На Windows предпочтителен обычный MSVC toolchain с C++ Build Tools; его сборка пока не выполнялась.
 
 Разархивируйте пакет в доступную для записи папку. Мир хранится в `saves/` относительно рабочей директории. `Start-with-log.bat` сохраняет лог запуска; `Start-Vulkan.bat` явно выбирает Vulkan вместо автоматического выбора backend.
+
+Обновление управления/русского интерфейса: [текущий отчёт](CONTROLS_UPDATE.md). Указанная выше SHA-256 относится к обновлённому EXE.
