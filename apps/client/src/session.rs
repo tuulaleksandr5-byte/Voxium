@@ -1,0 +1,89 @@
+use crate::settings::Settings;
+use bevy::prelude::*;
+use game_core::{World, persistence::SaveData};
+
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum Mode {
+    Menu,
+    Create,
+    Load,
+    Settings,
+    Playing,
+    Paused,
+    Inventory,
+}
+
+#[derive(Resource)]
+pub struct Game {
+    pub mode: Mode,
+    pub return_to: Mode,
+    pub ui_dirty: bool,
+    pub status: String,
+    pub world: World,
+    pub world_id: Option<String>,
+    pub name_input: String,
+    pub seed_input: String,
+    pub input_field: usize,
+    pub worlds: Vec<(String, String)>,
+    pub feet: Vec3,
+    pub velocity: Vec3,
+    pub yaw: f32,
+    pub pitch: f32,
+    pub grounded: bool,
+    pub height: f32,
+    pub hotbar: [u8; 9],
+    pub selected: usize,
+    pub clock: f64,
+    pub autosave: f32,
+    pub settings: Settings,
+    pub revision: u64,
+}
+impl Default for Game {
+    fn default() -> Self {
+        Self {
+            mode: Mode::Menu,
+            return_to: Mode::Menu,
+            ui_dirty: true,
+            status: String::new(),
+            world: World::new(0),
+            world_id: None,
+            name_input: "My world".into(),
+            seed_input: String::new(),
+            input_field: 0,
+            worlds: Vec::new(),
+            feet: Vec3::new(0.5, 85.0, 0.5),
+            velocity: Vec3::ZERO,
+            yaw: 0.0,
+            pitch: -0.2,
+            grounded: false,
+            height: 1.8,
+            hotbar: [1, 2, 3, 5, 7, 9, 10, 11, 14],
+            selected: 0,
+            clock: 240.0,
+            autosave: 0.0,
+            settings: Settings::load(),
+            revision: 0,
+        }
+    }
+}
+impl Game {
+    pub fn screen(&mut self, mode: Mode) {
+        self.mode = mode;
+        self.ui_dirty = true;
+    }
+    pub fn save_data(&self) -> SaveData {
+        let mut edits: Vec<_> = self.world.edits.iter().map(|(p, b)| (*p, *b)).collect();
+        edits.sort_unstable();
+        SaveData {
+            format_version: 1,
+            generator_version: 1,
+            name: self.name_input.clone(),
+            seed: self.world.seed,
+            player: self.feet.to_array(),
+            yaw: self.yaw,
+            pitch: self.pitch,
+            time: self.clock,
+            edits,
+        }
+    }
+}

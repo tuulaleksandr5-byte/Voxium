@@ -7,3 +7,6 @@ publish = false
 [dependencies]
 bevy.workspace = true
 game_core.workspace = true
+game_render.workspace = true
+serde.workspace = true
+serde_json.workspace = true

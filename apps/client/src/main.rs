@@ -1,6 +1,371 @@
-//! Bootstrap entry point. Game world and interactions are not implemented yet.
-use bevy::prelude::*;
+//! Native creative voxel sandbox. See README for implemented scope and validation.
+mod player;
+mod session;
+mod settings;
+mod streaming;
+mod ui;
+
+use bevy::{
+    app::AppExit,
+    prelude::*,
+    window::{MonitorSelection, PresentMode, WindowCloseRequested, WindowMode},
+};
+use game_core::{
+    SEA_LEVEL, World,
+    persistence::{SaveData, list_worlds, load_world, save_world},
+    surface_height,
+};
+use session::{Game, Mode};
+use std::time::{SystemTime, UNIX_EPOCH};
+use streaming::Streaming;
+use ui::{Action, UiIntent};
 
 fn main() {
-    App::new().add_plugins(DefaultPlugins).run();
+    let mut app = App::new();
+    app.add_plugins(DefaultPlugins.set(WindowPlugin {
+        primary_window: Some(Window {
+            title: "Voxel Sandbox — Creative Foundation".into(),
+            resolution: (1280, 720).into(),
+            ..default()
+        }),
+        close_when_requested: false,
+        ..default()
+    }))
+    .init_resource::<Game>()
+    .init_resource::<Streaming>()
+    .init_resource::<UiIntent>()
+    .insert_resource(GlobalAmbientLight {
+        color: Color::WHITE,
+        brightness: 300.0,
+        ..default()
+    })
+    .add_systems(Startup, setup)
+    .add_systems(
+        Update,
+        (
+            actions,
+            streaming::stream_world,
+            player::controls,
+            player::sky,
+            autosave,
+            close_save,
+        )
+            .chain(),
+    );
+    ui::plugin(&mut app);
+    app.run();
+}
+
+fn setup(
+    mut commands: Commands,
+    mut stream: ResMut<Streaming>,
+    mut images: ResMut<Assets<Image>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+    game: Res<Game>,
+    mut window: Single<&mut Window>,
+    mut volume: ResMut<bevy::audio::GlobalVolume>,
+) {
+    stream.materials = game_render::create_materials(&mut images, &mut materials);
+    commands.spawn((
+        Camera3d::default(),
+        player::PlayerCamera,
+        Transform::from_xyz(0.5, 85., 0.5),
+        DistanceFog {
+            color: Color::srgb(0.5, 0.7, 0.85),
+            falloff: FogFalloff::Linear {
+                start: 35.,
+                end: 64.,
+            },
+            ..default()
+        },
+    ));
+    commands.spawn((
+        DirectionalLight {
+            illuminance: 12000.0,
+            shadow_maps_enabled: false,
+            ..default()
+        },
+        Transform::from_rotation(Quat::from_euler(EulerRot::XYZ, -1.0, 0.4, 0.0)),
+        player::Sun,
+    ));
+    apply_window(&game.settings, &mut window);
+    *volume = bevy::audio::GlobalVolume::new(bevy::audio::Volume::Linear(game.settings.volume));
+}
+fn apply_window(s: &settings::Settings, window: &mut Window) {
+    let size = [(1280, 720), (1600, 900), (1920, 1080)][s.resolution];
+    window.resolution.set(size.0 as f32, size.1 as f32);
+    window.present_mode = if s.vsync {
+        PresentMode::AutoVsync
+    } else {
+        PresentMode::AutoNoVsync
+    };
+    window.mode = if s.fullscreen {
+        WindowMode::BorderlessFullscreen(MonitorSelection::Current)
+    } else {
+        WindowMode::Windowed
+    };
+}
+fn save(game: &mut Game) -> bool {
+    let Some(id) = game.world_id.as_ref() else {
+        return true;
+    };
+    match save_world(&settings::save_root(), id, &game.save_data()) {
+        Ok(()) => {
+            game.status = "World saved".into();
+            game.autosave = 0.;
+            true
+        }
+        Err(error) => {
+            game.status = format!("Save failed: {error}");
+            game.ui_dirty = true;
+            false
+        }
+    }
+}
+fn open(
+    game: &mut Game,
+    id: String,
+    data: SaveData,
+    stream: &mut Streaming,
+    commands: &mut Commands,
+    meshes: &mut Assets<Mesh>,
+) {
+    stream.clear(commands, meshes);
+    game.world = World::new(data.seed);
+    game.world.edits = data.edits.into_iter().collect();
+    game.world_id = Some(id);
+    game.name_input = data.name;
+    game.feet = Vec3::from_array(data.player);
+    game.velocity = Vec3::ZERO;
+    game.grounded = false;
+    game.height = 1.3;
+    game.yaw = data.yaw;
+    game.pitch = data.pitch;
+    game.clock = data.time;
+    game.autosave = 0.;
+    game.revision += 1;
+    game.status = "Loading terrain...".into();
+    game.screen(Mode::Playing);
+}
+#[allow(clippy::too_many_arguments)]
+fn actions(
+    mut commands: Commands,
+    mut intents: ResMut<UiIntent>,
+    mut game: ResMut<Game>,
+    mut stream: ResMut<Streaming>,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut window: Single<&mut Window>,
+    mut volume: ResMut<bevy::audio::GlobalVolume>,
+    mut exit: MessageWriter<AppExit>,
+) {
+    for action in std::mem::take(&mut intents.0) {
+        match action {
+            Action::New => {
+                game.input_field = 0;
+                game.status.clear();
+                game.screen(Mode::Create);
+            }
+            Action::Create => {
+                if game.name_input.trim().is_empty() {
+                    game.status = "Enter a world name".into();
+                    game.ui_dirty = true;
+                    continue;
+                }
+                let nanos = SystemTime::now()
+                    .duration_since(UNIX_EPOCH)
+                    .map_or(0, |d| d.as_nanos());
+                let seed = if game.seed_input.trim().is_empty() {
+                    nanos as u64
+                } else {
+                    match game.seed_input.trim().parse::<u64>() {
+                        Ok(seed) => seed,
+                        Err(_) => {
+                            game.status =
+                                "Seed must be a whole number from 0 to 18446744073709551615".into();
+                            game.ui_dirty = true;
+                            continue;
+                        }
+                    }
+                };
+                let id = format!("world-{nanos:x}");
+                let spawn = spawn_position(seed);
+                let data = SaveData {
+                    format_version: 1,
+                    generator_version: 1,
+                    name: game.name_input.trim().into(),
+                    seed,
+                    player: spawn,
+                    yaw: 0.4,
+                    pitch: -0.15,
+                    time: 240.,
+                    edits: Vec::new(),
+                };
+                match save_world(&settings::save_root(), &id, &data) {
+                    Ok(()) => open(&mut game, id, data, &mut stream, &mut commands, &mut meshes),
+                    Err(e) => {
+                        game.status = e;
+                        game.ui_dirty = true;
+                    }
+                }
+            }
+            Action::LoadMenu => {
+                match list_worlds(&settings::save_root()) {
+                    Ok(worlds) => {
+                        game.worlds = worlds;
+                        game.status.clear();
+                    }
+                    Err(e) => game.status = e,
+                }
+                game.screen(Mode::Load);
+            }
+            Action::Load(id) => match load_world(&settings::save_root(), &id) {
+                Ok(data) => open(&mut game, id, data, &mut stream, &mut commands, &mut meshes),
+                Err(e) => {
+                    game.status = format!("Cannot load world: {e}");
+                    game.ui_dirty = true;
+                }
+            },
+            Action::Resume => game.screen(Mode::Playing),
+            Action::Save => {
+                save(&mut game);
+            }
+            Action::MainMenu => {
+                if save(&mut game) {
+                    stream.clear(&mut commands, &mut meshes);
+                    game.world = World::new(0);
+                    game.world_id = None;
+                    game.screen(Mode::Menu);
+                }
+            }
+            Action::Exit => {
+                if save(&mut game) {
+                    exit.write(AppExit::Success);
+                }
+            }
+            Action::Settings => {
+                game.return_to = game.mode;
+                game.screen(Mode::Settings);
+            }
+            Action::Back => {
+                let mode = if game.mode == Mode::Settings {
+                    game.return_to
+                } else if game.world_id.is_some() {
+                    Mode::Paused
+                } else {
+                    Mode::Menu
+                };
+                game.screen(mode);
+            }
+            Action::SelectBlock(block) => {
+                if (1..=15).contains(&block) && block != 13 {
+                    let selected = game.selected;
+                    game.hotbar[selected] = block;
+                    game.ui_dirty = true;
+                }
+            }
+            Action::SelectSlot(slot) => {
+                game.selected = slot.min(8);
+                game.ui_dirty = true;
+            }
+            Action::FocusName => {
+                game.input_field = 0;
+                game.ui_dirty = true;
+            }
+            Action::FocusSeed => {
+                game.input_field = 1;
+                game.ui_dirty = true;
+            }
+            action => {
+                match action {
+                    Action::CycleDistance => {
+                        game.settings.distance = if game.settings.distance >= 16 {
+                            4
+                        } else {
+                            game.settings.distance + 2
+                        }
+                    }
+                    Action::CycleSensitivity => {
+                        game.settings.sensitivity = if game.settings.sensitivity >= 0.005 {
+                            0.001
+                        } else {
+                            game.settings.sensitivity + 0.001
+                        }
+                    }
+                    Action::ToggleVsync => game.settings.vsync = !game.settings.vsync,
+                    Action::ToggleFullscreen => {
+                        game.settings.fullscreen = !game.settings.fullscreen
+                    }
+                    Action::CycleResolution => {
+                        game.settings.resolution = (game.settings.resolution + 1) % 3
+                    }
+                    Action::CycleVolume => {
+                        game.settings.volume = if game.settings.volume >= 0.99 {
+                            0.0
+                        } else {
+                            (game.settings.volume + 0.2).min(1.0)
+                        }
+                    }
+                    _ => {}
+                }
+                apply_window(&game.settings, &mut window);
+                *volume = bevy::audio::GlobalVolume::new(bevy::audio::Volume::Linear(
+                    game.settings.volume,
+                ));
+                if let Err(e) = game.settings.save() {
+                    game.status = format!("Settings save failed: {e}");
+                }
+                game.ui_dirty = true;
+            }
+        }
+    }
+}
+fn autosave(time: Res<Time>, mut game: ResMut<Game>) {
+    if game.mode == Mode::Playing {
+        game.autosave += time.delta_secs();
+        if game.autosave >= 30. {
+            game.autosave = 0.; // Back off on failures too; never retry disk IO every frame.
+            save(&mut game);
+        }
+    }
+}
+fn close_save(mut events: MessageReader<WindowCloseRequested>, mut intents: ResMut<UiIntent>) {
+    if events.read().next().is_some() {
+        intents.0.push(Action::Exit);
+    }
+}
+
+/// Search near the origin for dry land before dropping the player above it.
+fn spawn_position(seed: u64) -> [f32; 3] {
+    for radius in 0_i32..=32 {
+        for dx in -radius..=radius {
+            for dz in -radius..=radius {
+                if dx.abs() != radius && dz.abs() != radius {
+                    continue;
+                }
+                let x = 8 + dx * 16;
+                let z = 8 + dz * 16;
+                let y = surface_height(seed, x, z);
+                if y > SEA_LEVEL {
+                    return [x as f32 + 0.5, (y + 10) as f32, z as f32 + 0.5];
+                }
+            }
+        }
+    }
+    [
+        8.5,
+        (surface_height(seed, 8, 8).max(SEA_LEVEL) + 10) as f32,
+        8.5,
+    ]
+}
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn spawn_uses_deterministic_dry_land_for_ocean_origin() {
+        let spawn = spawn_position(971);
+        assert_eq!(spawn, spawn_position(971));
+        let ground = surface_height(971, spawn[0].floor() as i32, spawn[2].floor() as i32);
+        assert!(ground > SEA_LEVEL);
+        assert_eq!(spawn[1], (ground + 10) as f32);
+    }
 }
