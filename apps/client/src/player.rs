@@ -36,6 +36,8 @@ pub fn controls(
     mut wheel: MessageReader<MouseWheel>,
     mut keyboard: MessageReader<KeyboardInput>,
     mut input: Local<crate::control_input::ControlInput>,
+    mut steps: Local<crate::footsteps::StepCadence>,
+    mut sounds: MessageWriter<crate::block_audio::BlockSound>,
 ) {
     let presses: Vec<_> = keyboard
         .read()
@@ -100,9 +102,11 @@ pub fn controls(
         CursorGrabMode::None
     };
     if !captured {
+        steps.reset();
         input.clear_movement();
     }
     if game.world_id.is_none() {
+        steps.reset();
         return;
     }
     if keys.just_pressed(KeyCode::F5) {
@@ -139,6 +143,7 @@ pub fn controls(
                 game.ui_dirty = true;
             }
         }
+        let previous_feet = game.feet;
         let dt = time.delta_secs().min(0.1);
         let rotation = Quat::from_rotation_y(game.yaw);
         let mut movement = Vec3::ZERO;
@@ -213,6 +218,25 @@ pub fn controls(
         } else {
             game.velocity = Vec3::ZERO;
         }
+        let traveled = (game.feet - previous_feet).xz().length();
+        if steps.advance(
+            time.delta_secs(),
+            traveled,
+            game.grounded,
+            game.flying,
+            sprint && game.height >= 1.8,
+        ) {
+            let p = [
+                game.feet.x.floor() as i32,
+                (game.feet.y - 0.05).floor() as i32,
+                game.feet.z.floor() as i32,
+            ];
+            sounds.write(crate::block_audio::BlockSound {
+                block: game.world.block(p),
+                kind: crate::block_audio::SoundKind::Step,
+                position: Vec3::from_array(p.map(|v| v as f32)) + Vec3::splat(0.5),
+            });
+        }
         game.clock += time.delta_secs_f64();
         let eye = game.feet + Vec3::Y * (game.height - 0.15);
         let look = rotation * Quat::from_rotation_x(game.pitch);
@@ -227,14 +251,25 @@ pub fn controls(
                 Color::srgb(1.0, 0.85, 0.25),
             );
             let selected = game.hotbar[game.selected];
+            let broken = game.world.block(hit.block);
             if mouse.just_pressed(MouseButton::Left) && game.world.set(hit.block, 0) {
                 game.revision += 1;
+                sounds.write(crate::block_audio::BlockSound {
+                    block: broken,
+                    kind: crate::block_audio::SoundKind::Break,
+                    position: Vec3::from_array(hit.block.map(|v| v as f32)) + Vec3::splat(0.5),
+                });
             }
             if mouse.just_pressed(MouseButton::Right)
                 && !player_intersects_block(game.feet.to_array(), game.height, hit.previous)
                 && game.world.set(hit.previous, selected)
             {
                 game.revision += 1;
+                sounds.write(crate::block_audio::BlockSound {
+                    block: selected,
+                    kind: crate::block_audio::SoundKind::Place,
+                    position: Vec3::from_array(hit.previous.map(|v| v as f32)) + Vec3::splat(0.5),
+                });
             }
         }
     }

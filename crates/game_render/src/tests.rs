@@ -209,7 +209,10 @@ fn transparent_opaque_boundary_keeps_visible_solid_face() {
 fn array_materials_share_image_and_use_linear_anisotropic_filtering() {
     let mut images = Assets::<Image>::default();
     let mut materials = Assets::<VoxelMaterial>::default();
-    let handles = create_materials(&mut images, &mut materials, None).unwrap();
+    let fixture = image::RgbaImage::from_pixel(768, 384, image::Rgba([120, 150, 180, 255]));
+    let mut png = std::io::Cursor::new(Vec::new());
+    fixture.write_to(&mut png, image::ImageFormat::Png).unwrap();
+    let handles = create_materials(&mut images, &mut materials, png.get_ref()).unwrap();
     assert_eq!(handles.len(), 18);
     let first = materials.get(&handles[0]).unwrap().extension.image.clone();
     for (layer, handle) in handles.iter().enumerate() {

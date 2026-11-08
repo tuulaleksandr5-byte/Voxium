@@ -10,3 +10,4 @@ game_core.workspace = true
 game_render.workspace = true
 serde.workspace = true
 serde_json.workspace = true
+rodio = { version = "=0.22.2", default-features = false }

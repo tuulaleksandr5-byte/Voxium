@@ -1,4 +1,4 @@
-use crate::{MATERIAL_COUNT, painted_fallback};
+use crate::MATERIAL_COUNT;
 use bevy::{
     asset::{RenderAssetUsages, embedded_asset},
     image::{ImageAddressMode, ImageFilterMode, ImageSampler, ImageSamplerDescriptor},
@@ -163,12 +163,9 @@ fn linear_to_srgb(v: f32) -> f32 {
 pub fn create_materials(
     images: &mut Assets<Image>,
     materials: &mut Assets<VoxelMaterial>,
-    atlas: Option<&[u8]>,
+    atlas: &[u8],
 ) -> Result<Vec<Handle<VoxelMaterial>>, String> {
-    let array = match atlas {
-        Some(bytes) => atlas_png(bytes)?,
-        None => atlas_array(&painted_fallback::atlas())?,
-    };
+    let array = atlas_png(atlas)?;
     let data = array.data.as_ref().expect("initialized texture array");
     let layer_stride = data.len() / MATERIAL_COUNT;
     let has_alpha: [bool; MATERIAL_COUNT] = std::array::from_fn(|layer| {
@@ -314,7 +311,7 @@ mod tests {
             .unwrap();
         let mut images = Assets::default();
         let mut materials = Assets::default();
-        let handles = create_materials(&mut images, &mut materials, Some(bytes.get_ref())).unwrap();
+        let handles = create_materials(&mut images, &mut materials, bytes.get_ref()).unwrap();
         assert_eq!(
             materials.get(&handles[12]).unwrap().base.base_color.alpha(),
             1.

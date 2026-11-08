@@ -1,7 +1,10 @@
 use std::{env, fs, path::PathBuf};
 fn main() {
-    let path = PathBuf::from(env::var_os("CARGO_MANIFEST_DIR").unwrap())
-        .join("../../assets/textures/atlas_128x128.png");
+    let assets = PathBuf::from(env::var_os("CARGO_MANIFEST_DIR").unwrap()).join("../../assets");
+    let primary = assets.join("atlas_128x128.png");
+    let legacy = assets.join("textures/atlas_128x128.png");
+    let path = if primary.is_file() { primary } else { legacy };
+    println!("cargo:rerun-if-changed={}", assets.display());
     // Track creation of the optional file without an always-missing dependency
     // that would otherwise force every Cargo invocation to rebuild the client.
     println!(

@@ -1,7 +1,9 @@
 //! Native creative voxel sandbox. See README for implemented scope and validation.
 #![cfg_attr(target_os = "windows", windows_subsystem = "windows")]
 
+mod block_audio;
 mod control_input;
+mod footsteps;
 mod graphics_assets;
 mod player;
 mod session;
@@ -35,9 +37,13 @@ fn main() {
         close_when_requested: false,
         ..default()
     }))
-    .add_plugins(game_render::VoxelRenderPlugin)
+    .add_plugins((
+        game_render::VoxelRenderPlugin,
+        block_audio::BlockAudioPlugin,
+    ))
     .init_resource::<Game>()
     .init_resource::<Streaming>()
+    .init_resource::<graphics_assets::BlockIcons>()
     .init_resource::<UiIntent>()
     .insert_resource(GlobalAmbientLight {
         color: Color::WHITE,
@@ -61,27 +67,40 @@ fn main() {
     app.run();
 }
 
+#[allow(clippy::too_many_arguments)]
 fn setup(
     mut commands: Commands,
     mut stream: ResMut<Streaming>,
     mut images: ResMut<Assets<Image>>,
     mut materials: ResMut<Assets<game_render::VoxelMaterial>>,
-    game: Res<Game>,
+    mut game: ResMut<Game>,
+    mut icons: ResMut<graphics_assets::BlockIcons>,
     mut window: Single<&mut Window>,
     mut volume: ResMut<bevy::audio::GlobalVolume>,
 ) {
-    let atlas = graphics_assets::load_atlas();
-    stream.materials = game_render::create_materials(&mut images, &mut materials, atlas.as_deref())
-        .unwrap_or_else(|error| {
-            error!("Invalid atlas: {error}; using temporary artwork");
-            game_render::create_materials(&mut images, &mut materials, None)
-                .expect("valid fallback atlas")
-        });
     stream.textures = graphics_assets::load_face_textures();
+    let loaded = graphics_assets::load_atlas().and_then(|atlas| {
+        let baked = game_render::bake_block_icons(&atlas, &stream.textures)?;
+        let handles = game_render::create_materials(&mut images, &mut materials, &atlas)?;
+        Ok((baked, handles))
+    });
+    match loaded {
+        Ok((baked, handles)) => {
+            icons.handles = baked.into_iter().map(|image| images.add(image)).collect();
+            stream.materials = handles;
+        }
+        Err(error) => {
+            error!("Original atlas unavailable: {error}");
+            icons.error = Some(error.clone());
+            game.status = error;
+            game.ui_dirty = true;
+        }
+    }
     let sky_image = images.add(game_render::gradient_sky());
     commands.spawn((
         Camera3d::default(),
         player::PlayerCamera,
+        bevy::audio::SpatialListener::new(0.3),
         bevy::camera::Exposure::default(),
         bevy::light::ShadowFilteringMethod::Gaussian,
         bevy::light::Skybox {
@@ -183,6 +202,7 @@ fn open(
     game.grounded = false;
     game.height = 1.3;
     game.flying = false;
+    game.debug_open = false;
     game.yaw = data.yaw;
     game.pitch = data.pitch;
     game.clock = data.time;
@@ -200,6 +220,7 @@ fn actions(
     mut meshes: ResMut<Assets<Mesh>>,
     mut window: Single<&mut Window>,
     mut volume: ResMut<bevy::audio::GlobalVolume>,
+    icons: Res<graphics_assets::BlockIcons>,
     mut exit: MessageWriter<AppExit>,
 ) {
     for action in std::mem::take(&mut intents.0) {
@@ -210,6 +231,11 @@ fn actions(
                 game.screen(Mode::Create);
             }
             Action::Create => {
+                if let Some(error) = &icons.error {
+                    game.status.clone_from(error);
+                    game.ui_dirty = true;
+                    continue;
+                }
                 if game.name_input.trim().is_empty() {
                     game.status = "Введите название мира".into();
                     game.ui_dirty = true;
@@ -261,13 +287,20 @@ fn actions(
                 }
                 game.screen(Mode::Load);
             }
-            Action::Load(id) => match load_world(&settings::save_root(), &id) {
-                Ok(data) => open(&mut game, id, data, &mut stream, &mut commands, &mut meshes),
-                Err(e) => {
-                    game.status = format!("Не удалось загрузить мир: {e}");
+            Action::Load(id) => {
+                if let Some(error) = &icons.error {
+                    game.status.clone_from(error);
                     game.ui_dirty = true;
+                    continue;
                 }
-            },
+                match load_world(&settings::save_root(), &id) {
+                    Ok(data) => open(&mut game, id, data, &mut stream, &mut commands, &mut meshes),
+                    Err(e) => {
+                        game.status = format!("Не удалось загрузить мир: {e}");
+                        game.ui_dirty = true;
+                    }
+                }
+            }
             Action::Resume => game.screen(Mode::Playing),
             Action::Save => {
                 save(&mut game);

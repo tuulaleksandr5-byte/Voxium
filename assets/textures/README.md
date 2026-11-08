@@ -1,9 +1,5 @@
-# Исходный атлас
+# Previous atlas location
 
-`atlas_128x128.png` пока **не предоставлен как файл** и отсутствует в репозитории. Картинки в переписке служат референсом; резервная процедурная картинка не является этим атласом.
+The primary path is now `assets/atlas_128x128.png`, as requested. This older `assets/textures/atlas_128x128.png` path is accepted for compatibility.
 
-Поместите оригинальный PNG сюда: `assets/textures/atlas_128x128.png`. Размер всего изображения — **768×384**, сетка **6×3**, каждый тайл **128×128**. Порядок слоёв описан в [blocks.ron](../blocks.ron) и [руководстве рендерера](../../docs/ATLAS_RENDERER.md).
-
-При сборке PNG встраивается в EXE. Готовый EXE также загружает этот путь относительно своей папки; пересборка для такой замены не требуется. Дополнительный путь можно задать переменной `VOXEL_ATLAS`. После замены перезапустите игру.
-
-Без исходного PNG игра запускается с оригинальной временной гладкой процедурной графикой из `crates/game_render/src/painted_fallback.rs`; предупреждение записывается в журнал.
+The original PNG is still missing from received file attachments. There is no procedural block-art fallback. See [asset instructions](../README.md).

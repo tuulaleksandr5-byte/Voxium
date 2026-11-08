@@ -1,6 +1,9 @@
 //! Native Bevy menus and the in-game overlay. Screen changes are handled by the client.
 mod presentation;
-use crate::session::{Game, Mode};
+use crate::{
+    graphics_assets::BlockIcons,
+    session::{Game, Mode},
+};
 use bevy::{
     asset::uuid_handle,
     input::{
@@ -71,6 +74,7 @@ const SURFACE: Color = Color::srgba(0.12, 0.22, 0.20, 0.82);
 const LINE: Color = Color::srgba(0.44, 0.65, 0.59, 0.6);
 const TEXT: Color = Color::srgb(0.94, 0.94, 0.88);
 const MUTED: Color = Color::srgb(0.66, 0.75, 0.75);
+const HOTBAR_EDGE: Color = Color::srgba(0.07, 0.04, 0.11, 0.95);
 const AMBER: Color = Color::srgb(1.0, 0.66, 0.20);
 const TEAL: Color = Color::srgb(0.26, 0.91, 0.78);
 
@@ -93,18 +97,13 @@ struct UiButton {
 #[derive(Component)]
 struct HotbarTile(usize);
 #[derive(Component)]
-struct SlotLabel(usize);
+struct HotbarIcon(usize);
 #[derive(Component)]
-struct SlotSwatch(usize);
-#[derive(Component)]
-struct HudText(HudKind);
+struct DebugText;
 #[derive(Component)]
 struct PanelStatus;
-enum HudKind {
-    Position,
-    Status,
-    Block,
-}
+#[derive(Component)]
+struct DebugPanel;
 
 fn node(commands: &mut Commands, parent: Entity, layout: Node, color: Color) -> Entity {
     let child = commands.spawn((layout, BackgroundColor(color))).id();
@@ -369,7 +368,12 @@ fn scroll_panels(
     }
 }
 
-fn rebuild(mut commands: Commands, mut game: ResMut<Game>, old: Query<Entity, With<UiRoot>>) {
+fn rebuild(
+    mut commands: Commands,
+    mut game: ResMut<Game>,
+    icons: Res<BlockIcons>,
+    old: Query<Entity, With<UiRoot>>,
+) {
     if !game.ui_dirty {
         return;
     }
@@ -399,7 +403,7 @@ fn rebuild(mut commands: Commands, mut game: ResMut<Game>, old: Query<Entity, Wi
         presentation::background(&mut commands, root);
     }
     if playing {
-        hud(&mut commands, root, &game);
+        hud(&mut commands, root, &game, &icons);
         return;
     }
     if game.mode == Mode::Menu {
@@ -971,77 +975,31 @@ fn inventory_menu(commands: &mut Commands, panel: Entity, game: &Game) {
     );
 }
 
-fn hud(commands: &mut Commands, root: Entity, game: &Game) {
+fn hud(commands: &mut Commands, root: Entity, game: &Game, icons: &BlockIcons) {
     commands.entity(root).insert(Pickable::IGNORE);
+    // No permanent corner panels. F3 alone reveals this diagnostics panel.
     let info = node(
         commands,
         root,
         Node {
+            display: if game.debug_open {
+                Display::Flex
+            } else {
+                Display::None
+            },
             position_type: PositionType::Absolute,
             left: px(22),
             top: px(20),
             flex_direction: FlexDirection::Column,
-            row_gap: px(5),
             padding: UiRect::axes(px(14), px(10)),
             border_radius: BorderRadius::all(px(4)),
             ..default()
         },
         Color::srgba(0.045, 0.07, 0.08, 0.74),
     );
-    label(
-        commands,
-        info,
-        "VOXEL SANDBOX   /   СТРОЙ И ИССЛЕДУЙ",
-        11.0,
-        TEAL,
-    );
+    commands.entity(info).insert(DebugPanel);
     let position = label(commands, info, "", 14.0, TEXT);
-    commands.entity(position).insert(HudText(HudKind::Position));
-    let status = label(commands, info, "", 12.0, MUTED);
-    commands.entity(status).insert(HudText(HudKind::Status));
-    let controls = node(
-        commands,
-        root,
-        Node {
-            position_type: PositionType::Absolute,
-            right: px(22),
-            top: px(20),
-            flex_direction: FlexDirection::Column,
-            row_gap: px(4),
-            padding: UiRect::axes(px(14), px(10)),
-            border_radius: BorderRadius::all(px(4)),
-            ..default()
-        },
-        Color::srgba(0.045, 0.07, 0.08, 0.68),
-    );
-    label(
-        commands,
-        controls,
-        "WASD: движение / Ctrl: бег / Space: прыжок",
-        12.0,
-        TEXT,
-    );
-    label(
-        commands,
-        controls,
-        "ЛКМ: сломать / ПКМ: поставить / E: блоки",
-        12.0,
-        MUTED,
-    );
-    label(
-        commands,
-        controls,
-        "Space x2: полёт / Shift: вниз / Space: вверх",
-        12.0,
-        MUTED,
-    );
-    label(
-        commands,
-        controls,
-        "W x2: бег / F3: данные / F3+G: чанки",
-        12.0,
-        MUTED,
-    );
+    commands.entity(position).insert(DebugText);
     let crosshair = node(
         commands,
         root,
@@ -1096,10 +1054,6 @@ fn hud(commands: &mut Commands, root: Entity, game: &Game) {
         },
         Color::NONE,
     );
-    let selected = label(commands, bar_frame, "", 15.0, TEXT);
-    commands
-        .entity(selected)
-        .insert((HudText(HudKind::Block), TextShadow::default()));
     let bar = node(
         commands,
         bar_frame,
@@ -1110,16 +1064,16 @@ fn hud(commands: &mut Commands, root: Entity, game: &Game) {
             border: UiRect::all(px(1)),
             ..default()
         },
-        Color::srgba(0.045, 0.065, 0.075, 0.9),
+        Color::srgba(0.16, 0.07, 0.23, 0.92),
     );
-    commands.entity(bar).insert(BorderColor::all(LINE));
+    commands.entity(bar).insert(BorderColor::all(HOTBAR_EDGE));
     for index in 0..9 {
         let tile = node(
             commands,
             bar,
             Node {
-                width: px(58),
-                height: px(61),
+                width: px(64),
+                height: px(68),
                 border: UiRect::all(px(2)),
                 border_radius: BorderRadius::all(px(3)),
                 flex_direction: FlexDirection::Column,
@@ -1128,11 +1082,11 @@ fn hud(commands: &mut Commands, root: Entity, game: &Game) {
                 row_gap: px(4),
                 ..default()
             },
-            SURFACE,
+            Color::srgba(0.22, 0.12, 0.30, 0.82),
         );
         commands
             .entity(tile)
-            .insert((HotbarTile(index), BorderColor::all(LINE)));
+            .insert((HotbarTile(index), BorderColor::all(HOTBAR_EDGE)));
         let badge = label(commands, tile, (index + 1).to_string(), 11.0, MUTED);
         commands.entity(badge).insert(Node {
             position_type: PositionType::Absolute,
@@ -1140,41 +1094,30 @@ fn hud(commands: &mut Commands, root: Entity, game: &Game) {
             top: px(2),
             ..default()
         });
-        let swatch = node(
-            commands,
-            tile,
-            Node {
-                width: px(24),
-                height: px(19),
-                margin: UiRect::top(px(5)),
-                ..default()
-            },
-            block_color(game.hotbar[index]),
-        );
-        commands.entity(swatch).insert(SlotSwatch(index));
-        let name = label(
-            commands,
-            tile,
-            block_short_name(game.hotbar[index]),
-            10.0,
-            TEXT,
-        );
-        commands.entity(name).insert(SlotLabel(index));
+        let icon = commands
+            .spawn((
+                HotbarIcon(index),
+                ImageNode::new(icons.get(game.hotbar[index])),
+                Node {
+                    width: px(56),
+                    height: px(56),
+                    ..default()
+                },
+                Pickable::IGNORE,
+            ))
+            .id();
+        commands.entity(tile).add_child(icon);
     }
 }
 
-type HudTextData = (
-    &'static mut Text,
-    Option<&'static HudText>,
-    Option<&'static SlotLabel>,
-);
-
 fn update_hud(
     game: Res<Game>,
-    mut text: Query<HudTextData, Without<PanelStatus>>,
+    icons: Res<BlockIcons>,
+    mut debug_text: Query<&mut Text, (With<DebugText>, Without<PanelStatus>)>,
     mut panel_status: Query<&mut Text, With<PanelStatus>>,
-    mut tiles: Query<(&HotbarTile, &mut BorderColor, &mut BackgroundColor), Without<SlotSwatch>>,
-    mut swatches: Query<(&SlotSwatch, &mut BackgroundColor), Without<HotbarTile>>,
+    mut tiles: Query<(&HotbarTile, &mut BorderColor, &mut BackgroundColor)>,
+    mut icon_nodes: Query<(&HotbarIcon, &mut ImageNode)>,
+    mut debug_panels: Query<&mut Node, With<DebugPanel>>,
 ) {
     for mut text in &mut panel_status {
         if text.0 != game.status {
@@ -1184,50 +1127,35 @@ fn update_hud(
     if game.mode != Mode::Playing {
         return;
     }
-    for (mut value, marker, slot) in &mut text {
-        let next = if let Some(marker) = marker {
-            match marker.0 {
-                HudKind::Position => {
-                    if game.debug_open {
-                        format!(
-                            "X {:.2}  Y {:.2}  Z {:.2}\nFPS: {:.0}  |  Чанк: {} / {}\nПолёт: {}  |  Сетка: {}",
-                            game.feet.x,
-                            game.feet.y,
-                            game.feet.z,
-                            game.fps,
-                            (game.feet.x.floor() as i32).div_euclid(16),
-                            (game.feet.z.floor() as i32).div_euclid(16),
-                            if game.flying { "вкл." } else { "выкл." },
-                            if game.chunk_grid {
-                                "вкл."
-                            } else {
-                                "выкл."
-                            }
-                        )
-                    } else {
-                        String::new()
-                    }
-                }
-                HudKind::Status => {
-                    if game.status.is_empty() {
-                        format!(
-                            "Зерно {} / Видимость: {} чанков",
-                            game.world.seed, game.settings.distance
-                        )
-                    } else {
-                        game.status.clone()
-                    }
-                }
-                HudKind::Block => format!(
-                    "{}   /   {}",
-                    game.selected + 1,
-                    block_name(game.hotbar[game.selected.min(8)])
-                ),
-            }
-        } else if let Some(slot) = slot {
-            block_short_name(game.hotbar[slot.0]).into()
+    for mut panel in &mut debug_panels {
+        let display = if game.debug_open {
+            Display::Flex
         } else {
-            continue;
+            Display::None
+        };
+        if panel.display != display {
+            panel.display = display;
+        }
+    }
+    for mut value in &mut debug_text {
+        let next = if game.debug_open {
+            format!(
+                "X {:.2}  Y {:.2}  Z {:.2}\nFPS: {:.0}  |  Чанк: {} / {}\nПолёт: {}  |  Сетка: {}",
+                game.feet.x,
+                game.feet.y,
+                game.feet.z,
+                game.fps,
+                (game.feet.x.floor() as i32).div_euclid(16),
+                (game.feet.z.floor() as i32).div_euclid(16),
+                if game.flying { "вкл." } else { "выкл." },
+                if game.chunk_grid {
+                    "вкл."
+                } else {
+                    "выкл."
+                }
+            )
+        } else {
+            String::new()
         };
         if value.0 != next {
             value.0 = next;
@@ -1235,20 +1163,23 @@ fn update_hud(
     }
     for (tile, mut border, mut background) in &mut tiles {
         let selected = tile.0 == game.selected;
-        border.set_all(if selected { AMBER } else { LINE });
+        let color = if selected { AMBER } else { HOTBAR_EDGE };
+        if *border != BorderColor::all(color) {
+            border.set_all(color);
+        }
         let next = if selected {
-            Color::srgb(0.28, 0.25, 0.18)
+            Color::srgba(0.31, 0.22, 0.34, 0.90)
         } else {
-            SURFACE
+            Color::srgba(0.22, 0.12, 0.30, 0.82)
         };
         if background.0 != next {
             background.0 = next;
         }
     }
-    for (slot, mut background) in &mut swatches {
-        let next = block_color(game.hotbar[slot.0]);
-        if background.0 != next {
-            background.0 = next;
+    for (slot, mut node) in &mut icon_nodes {
+        let image = icons.get(game.hotbar[slot.0]);
+        if node.image != image {
+            node.image = image;
         }
     }
 }
@@ -1289,14 +1220,6 @@ fn block_name(id: u8) -> &'static str {
     .get(id as usize)
     .copied()
     .unwrap_or("Неизвестно")
-}
-fn block_short_name(id: u8) -> &'static str {
-    match id {
-        4 => "Глуб.",
-        10 => "Булыж.",
-        15 => "Песчан.",
-        _ => block_name(id),
-    }
 }
 fn block_color(id: u8) -> Color {
     let rgb = match id {

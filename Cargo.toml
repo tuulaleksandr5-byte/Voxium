@@ -10,7 +10,7 @@ members = [
 edition = "2024"
 
 [workspace.dependencies]
-bevy = "=0.20.1"
+bevy = { version = "=0.20.1", features = ["wav"] }
 game_core = { path = "crates/game_core" }
 game_render = { path = "crates/game_render" }
 serde = { version = "=1.0.229", features = ["derive"] }

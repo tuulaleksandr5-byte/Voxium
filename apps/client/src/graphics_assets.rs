@@ -1,36 +1,49 @@
-//! Optional user artwork overrides embedded defaults; no external assets required to launch.
+//! The original PNG is required for worlds; menus remain usable if it is missing.
 use bevy::prelude::*;
 use std::path::PathBuf;
 include!(concat!(env!("OUT_DIR"), "/atlas_asset.rs"));
 
-fn asset_path(relative: &str) -> Option<PathBuf> {
-    let next_to_exe = std::env::current_exe().ok()?.parent()?.join(relative);
-    if next_to_exe.is_file() {
-        Some(next_to_exe)
-    } else {
-        let p = PathBuf::from(relative);
-        p.is_file().then_some(p)
+#[derive(Resource, Default)]
+pub struct BlockIcons {
+    pub handles: Vec<Handle<Image>>,
+    pub error: Option<String>,
+}
+impl BlockIcons {
+    pub fn get(&self, block: u8) -> Handle<Image> {
+        self.handles
+            .get(block as usize)
+            .cloned()
+            .unwrap_or_default()
     }
 }
 
-pub fn load_atlas() -> Option<Vec<u8>> {
+fn asset_path(relative: &str) -> Option<PathBuf> {
+    let next_to_exe = std::env::current_exe()
+        .ok()
+        .and_then(|p| p.parent().map(|p| p.join(relative)));
+    if let Some(p) = next_to_exe.filter(|p| p.is_file()) {
+        return Some(p);
+    }
+    let p = PathBuf::from(relative);
+    p.is_file().then_some(p)
+}
+
+pub fn load_atlas() -> Result<Vec<u8>, String> {
     let path = std::env::var_os("VOXEL_ATLAS")
         .map(PathBuf::from)
+        .or_else(|| asset_path("assets/atlas_128x128.png"))
         .or_else(|| asset_path("assets/textures/atlas_128x128.png"));
     if let Some(path) = path {
-        match std::fs::read(&path) {
-            Ok(bytes) => {
-                info!("Loading atlas {}", path.display());
-                return Some(bytes);
-            }
-            Err(e) => error!("Cannot read atlas {}: {e}", path.display()),
-        }
+        let bytes = std::fs::read(&path)
+            .map_err(|e| format!("Не удалось прочитать атлас {}: {e}", path.display()))?;
+        info!(
+            "Loading original atlas without modifying PNG: {}",
+            path.display()
+        );
+        return Ok(bytes);
     }
-    if let Some(bytes) = EMBEDDED_ATLAS {
-        return Some(bytes.to_vec());
-    }
-    warn!("Original atlas_128x128.png was not supplied; using smooth temporary artwork");
-    None
+    EMBEDDED_ATLAS.map(<[u8]>::to_vec).ok_or_else(||
+        "Нужен assets/atlas_128x128.png (768×384). Положите PNG рядом с игрой по этому пути и перезапустите её.".into())
 }
 
 pub fn load_face_textures() -> game_render::BlockTextures {
