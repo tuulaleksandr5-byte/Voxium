@@ -18,7 +18,7 @@ cargo run --locked -p voxel-client
 cargo run --release --locked -p voxel-client
 ```
 
-На Debian/Ubuntu нужны `pkg-config`, `libasound2-dev`, `libudev-dev`, `libwayland-dev`, `libxkbcommon-dev`, `libx11-dev`, `libxcursor-dev`, `libxi-dev`, `libxrandr-dev` и Vulkan-драйвер видеокарты. На Windows нужен Rust MSVC toolchain с C++ build tools; создание и запуск Windows-сборки в этой Linux-среде **не проверены**.
+На Debian/Ubuntu нужны `pkg-config`, `libasound2-dev`, `libudev-dev`, `libwayland-dev`, `libxkbcommon-dev`, `libx11-dev`, `libxcursor-dev`, `libxi-dev`, `libxrandr-dev` и Vulkan-драйвер видеокарты. На Windows нужен Rust MSVC toolchain с C++ build tools; Windows GNU x64 EXE собран кросс-компиляцией; меню проверено через Wine/Vulkan, но запуск на настоящей Windows **не проверен**. Подробности: [Windows-сборка](docs/WINDOWS_BUILD.md).
 
 В подготовленной облачной среде перед командами:
 
@@ -81,7 +81,7 @@ cargo build --locked -p voxel-client
 
 ## До полноценного v1.0
 
-- Проверка и упаковка Windows x64 release-сборки на подходящей машине.
+- Проверка уже собранного Windows GNU x64 EXE на настоящей Windows-машине и подготовка MSVC release-сборки.
 - Профилирование на GTX 1660/1920×1080, длительные переходы через чанки и большой объём построек. **60 FPS не измерены и не гарантируются.**
 - Масштабирование сохранений большого мира: сейчас сериализация и синхронизация файла выполняются на основном потоке; нужны фоновая запись и региональные данные.
 - Floating origin для точности игрока/камеры на очень больших координатах.

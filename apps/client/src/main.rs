@@ -1,4 +1,6 @@
 //! Native creative voxel sandbox. See README for implemented scope and validation.
+#![cfg_attr(target_os = "windows", windows_subsystem = "windows")]
+
 mod player;
 mod session;
 mod settings;
