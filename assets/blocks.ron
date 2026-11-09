@@ -16,4 +16,5 @@
     (top: 4, side: 4, bottom: 4),    // bedrock
     (top: 14, side: 14, bottom: 14), // snow/ice
     (top: 16, side: 15, bottom: 16), // sandstone
+    (top: 10, side: 10, bottom: 10), // TODO(art): сундук, исходные доски без изменений
 ]

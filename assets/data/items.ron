@@ -1,0 +1,27 @@
+// Действующий каталог этапа 3; свойства инструментов, броня и еда будут добавлены позже.
+[
+    (id: "foundation:grass", name: "Дёрн", max_stack: 64, kind: Block(block: "foundation:grass"), break_drop: Item("foundation:dirt")),
+    (id: "foundation:dirt", name: "Земля", max_stack: 64, kind: Block(block: "foundation:dirt")),
+    (id: "foundation:stone", name: "Камень", max_stack: 64, kind: Block(block: "foundation:stone"), break_drop: Item("foundation:cobblestone")),
+    (id: "foundation:deepslate", name: "Глубинный камень", max_stack: 64, kind: Block(block: "foundation:deepslate")),
+    (id: "foundation:sand", name: "Песок", max_stack: 64, kind: Block(block: "foundation:sand")),
+    (id: "foundation:gravel", name: "Гравий", max_stack: 64, kind: Block(block: "foundation:gravel")),
+    (id: "foundation:oak_log", name: "Дубовое бревно", max_stack: 64, kind: Block(block: "foundation:oak_log")),
+    (id: "foundation:oak_leaves", name: "Дубовая листва", max_stack: 64, kind: Block(block: "foundation:oak_leaves")),
+    (id: "foundation:oak_planks", name: "Дубовые доски", max_stack: 64, kind: Block(block: "foundation:oak_planks")),
+    (id: "foundation:cobblestone", name: "Булыжник", max_stack: 64, kind: Block(block: "foundation:cobblestone")),
+    (id: "foundation:glass", name: "Стекло", max_stack: 64, kind: Block(block: "foundation:glass"), break_drop: Nothing),
+    (id: "foundation:water", name: "Вода", max_stack: 64, kind: Block(block: "foundation:water"), break_drop: Nothing),
+    (id: "foundation:snow", name: "Снег", max_stack: 64, kind: Block(block: "foundation:snow")),
+    (id: "foundation:sandstone", name: "Песчаник", max_stack: 64, kind: Block(block: "foundation:sandstone")),
+    (id: "survival:chest", name: "Сундук", max_stack: 64, kind: Block(block: "survival:chest")),
+    (id: "survival:stick", name: "Палка", max_stack: 64, kind: Material),
+    (id: "survival:coal", name: "Уголь", max_stack: 64, kind: Material),
+    (id: "survival:egg", name: "Яйцо", max_stack: 16, kind: Material),
+    // Только образцы Creative: эффекты и получение появятся на последующих этапах.
+    (id: "survival:wooden_pickaxe", name: "Деревянная кирка (образец)", max_stack: 1, kind: Tool),
+    (id: "survival:leather_helmet", name: "Кожаный шлем (образец)", max_stack: 1, kind: Armor(slot: Head)),
+    (id: "survival:leather_chestplate", name: "Кожаная куртка (образец)", max_stack: 1, kind: Armor(slot: Chest)),
+    (id: "survival:leather_leggings", name: "Кожаные штаны (образец)", max_stack: 1, kind: Armor(slot: Legs)),
+    (id: "survival:leather_boots", name: "Кожаные ботинки (образец)", max_stack: 1, kind: Armor(slot: Feet)),
+]

@@ -1,0 +1,10 @@
+// Баланс предметов в мире; новая конфигурация применяется только целиком.
+(
+    pickup_delay: 0.5,
+    pickup_radius: 1.5,
+    lifetime: 300.0,
+    max_drops: 512,
+    gravity: 20.0,
+    attraction_speed: 8.0,
+    merge_radius: 0.5,
+)

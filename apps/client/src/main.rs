@@ -7,6 +7,9 @@ mod console;
 mod control_input;
 mod footsteps;
 mod graphics_assets;
+mod inventory_client;
+mod inventory_render;
+mod item_icons;
 mod player;
 mod session;
 mod settings;
@@ -33,7 +36,7 @@ fn main() {
     let mut app = App::new();
     app.add_plugins(DefaultPlugins.set(WindowPlugin {
         primary_window: Some(Window {
-            title: "Voxel Sandbox — 2.0 Survival · этап 2".into(),
+            title: "Voxel Sandbox — 2.0 Survival · этап 3".into(),
             resolution: (1280, 720).into(),
             ..default()
         }),
@@ -74,6 +77,9 @@ fn main() {
             .chain(),
     );
     console::plugin(&mut app);
+    inventory_client::plugin(&mut app);
+    item_icons::plugin(&mut app);
+    inventory_render::plugin(&mut app);
     ui::plugin(&mut app);
     app.run();
 }
@@ -208,6 +214,7 @@ fn open(
     game.world = World::new(data.seed);
     game.world.edits = data.edits.into_iter().collect();
     game.world_id = Some(id);
+    inventory_client::reset_session(game, false);
     game.name_input = data.name;
     game.feet = Vec3::from_array(data.player);
     game.velocity = Vec3::ZERO;
@@ -308,6 +315,8 @@ fn actions(
                     Ok(()) => {
                         open(&mut game, id, data, &mut stream, &mut commands, &mut meshes);
                         game.game_mode = game.creation_mode;
+                        let creative = game.game_mode == game_core::survival::GameMode::Creative;
+                        inventory_client::reset_session(&mut game, creative);
                         // Ждём чанк и ставим на безопасную поверхность без стартового урона.
                         game.pending_respawn = true;
                     }
@@ -348,6 +357,8 @@ fn actions(
             Action::MainMenu => {
                 if save(&mut game) {
                     stream.clear(&mut commands, &mut meshes);
+                    inventory_client::close_inventory(&mut game);
+                    inventory_client::reset_session(&mut game, false);
                     game.world = World::new(0);
                     game.world_id = None;
                     game.screen(Mode::Menu);
@@ -371,13 +382,6 @@ fn actions(
                     Mode::Menu
                 };
                 game.screen(mode);
-            }
-            Action::SelectBlock(block) => {
-                if (1..=15).contains(&block) && block != 13 {
-                    let selected = game.selected;
-                    game.hotbar[selected] = block;
-                    game.ui_dirty = true;
-                }
             }
             Action::SelectSlot(slot) => {
                 game.selected = slot.min(8);

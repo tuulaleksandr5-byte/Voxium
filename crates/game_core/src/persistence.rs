@@ -226,7 +226,8 @@ fn validate_data(data: &SaveData) -> Result<(), String> {
                 "Edit at {position:?} is outside world height bounds"
             ));
         }
-        if usize::from(block) >= crate::BLOCKS.len() {
+        // Формат 1 содержит только исходные Foundation ID 0…15.
+        if block >= crate::CHEST {
             return Err(format!(
                 "Edit at {position:?} contains unknown block ID {block}"
             ));

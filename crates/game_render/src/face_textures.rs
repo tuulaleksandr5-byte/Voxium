@@ -25,7 +25,15 @@ impl Default for BlockTextures {
 
 impl BlockTextures {
     pub fn from_ron(source: &str) -> Result<Self, String> {
-        let faces: Vec<FaceTextures> = ron::from_str(source).map_err(|e| e.to_string())?;
+        let mut faces: Vec<FaceTextures> = ron::from_str(source).map_err(|e| e.to_string())?;
+        // Старый пользовательский mapping сохраняет все шестнадцать назначений.
+        if faces.len() == 16 && BLOCKS.len() == 17 {
+            faces.push(FaceTextures {
+                top: 10,
+                side: 10,
+                bottom: 10,
+            });
+        }
         if faces.len() != BLOCKS.len() {
             return Err(format!(
                 "expected {} block entries, got {}",

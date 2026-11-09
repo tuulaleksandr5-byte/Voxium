@@ -27,6 +27,7 @@ pub const WATER: u8 = 12;
 pub const BEDROCK: u8 = 13;
 pub const SNOW: u8 = 14;
 pub const SANDSTONE: u8 = 15;
+pub const CHEST: u8 = 16;
 
 const fn block(
     id: u8,
@@ -47,7 +48,7 @@ const fn block(
     }
 }
 
-pub const BLOCKS: [BlockDef; 16] = [
+pub const BLOCKS: [BlockDef; 17] = [
     block(AIR, "Air", "air", 0.0, false, false),
     block(GRASS, "Grass", "grass", 0.6, true, true),
     block(DIRT, "Dirt", "dirt", 0.5, true, true),
@@ -64,6 +65,8 @@ pub const BLOCKS: [BlockDef; 16] = [
     block(BEDROCK, "Bedrock", "bedrock", -1.0, true, true),
     block(SNOW, "Snow", "snow", 0.2, true, true),
     block(SANDSTONE, "Sandstone", "sandstone", 0.8, true, true),
+    // TODO(art): временно используем исходную текстуру досок, не изменяя PNG.
+    block(CHEST, "Chest", "oak_planks", 2.5, true, true),
 ];
 
 #[must_use]
@@ -84,6 +87,16 @@ mod tests {
     use super::*;
 
     #[test]
+    fn chest_extends_registry_without_changing_foundation_ids() {
+        assert_eq!(BLOCKS.len(), 17);
+        let chest = BLOCKS.get(16).expect("сундук зарегистрирован");
+        assert_eq!(chest.name, "Chest");
+        assert!(is_solid(16));
+        assert!(is_opaque(16));
+        assert_eq!(BLOCKS.get(15).unwrap().name, "Sandstone");
+    }
+
+    #[test]
     fn registry_ids_and_properties_are_stable() {
         let names = [
             "Air",
@@ -102,6 +115,7 @@ mod tests {
             "Bedrock",
             "Snow",
             "Sandstone",
+            "Chest",
         ];
         for (id, block) in BLOCKS.iter().enumerate() {
             assert_eq!(block.id as usize, id);

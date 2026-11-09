@@ -13,7 +13,7 @@ use bevy::{
 };
 use game_core::{
     BEDROCK, World,
-    interaction::{can_stand, move_player, player_intersects_block, raycast},
+    interaction::{can_stand, move_player, raycast},
     survival::{DamageSource, GameMode, fall_damage},
     valid_world_height,
 };
@@ -40,6 +40,7 @@ pub fn controls(
     mut steps: Local<crate::footsteps::StepCadence>,
     mut sounds: MessageWriter<crate::block_audio::BlockSound>,
     mut player_actions: MessageWriter<crate::survival_client::PlayerActionMessage>,
+    mut inventory_actions: MessageWriter<crate::inventory_client::InventoryActionMessage>,
 ) {
     let presses: Vec<_> = keyboard
         .read()
@@ -91,7 +92,12 @@ pub fn controls(
     if keys.just_pressed(KeyCode::Escape) {
         match game.mode {
             Mode::Playing => game.screen(Mode::Paused),
-            Mode::Paused | Mode::Inventory => game.screen(Mode::Playing),
+            Mode::Paused => game.screen(Mode::Playing),
+            Mode::Inventory => {
+                inventory_actions.write(crate::inventory_client::InventoryActionMessage(
+                    crate::inventory_client::InventoryAction::Close,
+                ));
+            }
             Mode::Menu => {}
             _ => intents.0.push(Action::Back),
         }
@@ -99,7 +105,11 @@ pub fn controls(
     if keys.just_pressed(KeyCode::KeyE) {
         match game.mode {
             Mode::Playing => game.screen(Mode::Inventory),
-            Mode::Inventory => game.screen(Mode::Playing),
+            Mode::Inventory => {
+                inventory_actions.write(crate::inventory_client::InventoryActionMessage(
+                    crate::inventory_client::InventoryAction::Close,
+                ));
+            }
             _ => {}
         }
     }
@@ -120,6 +130,34 @@ pub fn controls(
     }
     if keys.just_pressed(KeyCode::F5) {
         intents.0.push(Action::Save);
+    }
+    if game.mode == Mode::Inventory {
+        for (index, key) in [
+            KeyCode::Digit1,
+            KeyCode::Digit2,
+            KeyCode::Digit3,
+            KeyCode::Digit4,
+            KeyCode::Digit5,
+            KeyCode::Digit6,
+            KeyCode::Digit7,
+            KeyCode::Digit8,
+            KeyCode::Digit9,
+        ]
+        .into_iter()
+        .enumerate()
+        {
+            if keys.just_pressed(key) {
+                game.selected = index;
+                game.ui_dirty = true;
+            }
+        }
+    }
+    if captured && keys.just_pressed(KeyCode::KeyQ) {
+        inventory_actions.write(crate::inventory_client::InventoryActionMessage(
+            crate::inventory_client::InventoryAction::DropSelected {
+                all: keys.pressed(KeyCode::ControlLeft) || keys.pressed(KeyCode::ControlRight),
+            },
+        ));
     }
     if captured {
         game.selected = input.scroll(game.selected, scroll);
@@ -300,29 +338,29 @@ pub fn controls(
                 .with_scale(Vec3::splat(1.006)),
                 Color::srgb(1.0, 0.85, 0.25),
             );
-            let selected = game.hotbar[game.selected];
-            let broken = game.world.block(hit.block);
-            if mouse.just_pressed(MouseButton::Left) && game.world.set(hit.block, 0) {
-                game.revision += 1;
-                player_actions.write(crate::survival_client::PlayerActionMessage(
-                    crate::survival_client::PlayerAction::MinedBlock,
-                ));
-                sounds.write(crate::block_audio::BlockSound {
-                    block: broken,
-                    kind: crate::block_audio::SoundKind::Break,
-                    position: Vec3::from_array(hit.block.map(|v| v as f32)) + Vec3::splat(0.5),
-                });
+            use crate::inventory_client::{InventoryAction, InventoryActionMessage};
+            if mouse.just_pressed(MouseButton::Left) {
+                inventory_actions.write(InventoryActionMessage(InventoryAction::Break {
+                    position: hit.block,
+                }));
             }
-            if mouse.just_pressed(MouseButton::Right)
-                && !player_intersects_block(game.feet.to_array(), game.height, hit.previous)
-                && game.world.set(hit.previous, selected)
-            {
-                game.revision += 1;
-                sounds.write(crate::block_audio::BlockSound {
-                    block: selected,
-                    kind: crate::block_audio::SoundKind::Place,
-                    position: Vec3::from_array(hit.previous.map(|v| v as f32)) + Vec3::splat(0.5),
-                });
+            if mouse.just_pressed(MouseButton::Right) {
+                let action = if game.world.block(hit.block) == game_core::CHEST
+                    && !(keys.pressed(KeyCode::ShiftLeft) || keys.pressed(KeyCode::ShiftRight))
+                {
+                    Some(InventoryAction::OpenContainer {
+                        position: hit.block,
+                    })
+                } else if game.selected_block() != game_core::AIR {
+                    Some(InventoryAction::Place {
+                        position: hit.previous,
+                    })
+                } else {
+                    None
+                };
+                if let Some(action) = action {
+                    inventory_actions.write(InventoryActionMessage(action));
+                }
             }
         }
     }

@@ -1,8 +1,10 @@
 //! Native Bevy menus and the in-game overlay. Screen changes are handled by the client.
+mod inventory;
 mod presentation;
 use crate::{
     console::ConsoleState,
     graphics_assets::BlockIcons,
+    item_icons::ItemIcons,
     session::{Game, Mode},
 };
 use bevy::{
@@ -30,7 +32,6 @@ pub enum Action {
     Exit,
     Settings,
     Back,
-    SelectBlock(u8),
     SelectSlot(usize),
     CycleDistance,
     ToggleVsync,
@@ -58,6 +59,7 @@ fn setup_font(mut fonts: ResMut<Assets<Font>>) {
 }
 pub fn plugin(app: &mut App) {
     presentation::plugin(app);
+    inventory::plugin(app);
     app.add_systems(Startup, setup_font);
     app.init_resource::<UiIntent>().add_systems(
         Update,
@@ -104,6 +106,8 @@ struct UiButton {
 struct HotbarTile(usize);
 #[derive(Component)]
 struct HotbarIcon(usize);
+#[derive(Component)]
+struct HotbarCount(usize);
 #[derive(Component)]
 struct DebugText;
 #[derive(Component)]
@@ -396,17 +400,40 @@ fn scroll_panels(
     }
 }
 
+#[derive(PartialEq, Eq)]
+struct InventoryScrollContext {
+    world_id: Option<String>,
+    world_seed: u64,
+    container: Option<[i32; 3]>,
+}
+
+#[allow(clippy::too_many_arguments)]
 fn rebuild(
     mut commands: Commands,
     mut game: ResMut<Game>,
     icons: Res<BlockIcons>,
+    item_icons: Res<ItemIcons>,
     console: Res<ConsoleState>,
     old: Query<Entity, With<UiRoot>>,
+    old_scroll: Query<&ScrollPosition, With<ScrollArea>>,
+    mut previous_inventory: Local<Option<InventoryScrollContext>>,
 ) {
     if !game.ui_dirty {
         return;
     }
     game.ui_dirty = false;
+    let inventory_context = (game.mode == Mode::Inventory).then(|| InventoryScrollContext {
+        world_id: game.world_id.clone(),
+        world_seed: game.world.seed,
+        container: game.open_container,
+    });
+    // Прокрутка принадлежит текущему экрану, миру и открытому контейнеру.
+    let scroll = if inventory_context.is_some() && *previous_inventory == inventory_context {
+        old_scroll.iter().next().cloned().unwrap_or_default()
+    } else {
+        ScrollPosition::default()
+    };
+    *previous_inventory = inventory_context;
     for entity in &old {
         commands.entity(entity).despawn();
     }
@@ -432,7 +459,7 @@ fn rebuild(
         presentation::background(&mut commands, root);
     }
     if playing {
-        hud(&mut commands, root, &game, &icons);
+        hud(&mut commands, root, &game, &icons, &item_icons);
         return;
     }
     if game.mode == Mode::Menu {
@@ -440,7 +467,7 @@ fn rebuild(
         return;
     }
     let width = match game.mode {
-        Mode::Inventory => 790.,
+        Mode::Inventory => 820.,
         Mode::Create | Mode::Console => 840.,
         Mode::Load => 710.,
         Mode::Settings => 640.,
@@ -458,7 +485,11 @@ fn rebuild(
         Mode::Load => load_menu(&mut commands, panel, &game),
         Mode::Settings => settings_menu(&mut commands, panel, &game),
         Mode::Paused => pause_menu(&mut commands, panel, &game),
-        Mode::Inventory => inventory_menu(&mut commands, panel, &game),
+        Mode::Inventory => {
+            commands.entity(panel).insert(scroll);
+            inventory::menu(&mut commands, panel, &game, &item_icons, &icons);
+            inventory::overlay(&mut commands, root, &game, &item_icons, &icons);
+        }
         Mode::Dead => death_menu(&mut commands, panel, &game),
         Mode::Console => console_menu(&mut commands, panel, &console),
         Mode::Menu | Mode::Playing => {}
@@ -977,120 +1008,13 @@ fn settings_menu(commands: &mut Commands, panel: Entity, game: &Game) {
     button(commands, panel, "Готово", Action::Back, Tone::Primary);
 }
 
-fn inventory_menu(commands: &mut Commands, panel: Entity, game: &Game) {
-    heading(
-        commands,
-        panel,
-        "МАТЕРИАЛЫ ДЛЯ СТРОИТЕЛЬСТВА",
-        "Творческий инвентарь",
-        "Выбери слот, затем блок для него.",
-    );
-    let slots = row(commands, panel, 6.0);
-    for index in 0..9 {
-        let child = button(
-            commands,
-            slots,
-            (index + 1).to_string(),
-            Action::SelectSlot(index),
-            if index == game.selected {
-                Tone::Selected
-            } else {
-                Tone::Normal
-            },
-        );
-        commands.entity(child).insert(Node {
-            flex_grow: 1.0,
-            min_width: px(34),
-            min_height: px(42),
-            border: UiRect::all(px(1)),
-            border_radius: BorderRadius::all(px(4)),
-            align_items: AlignItems::Center,
-            justify_content: JustifyContent::Center,
-            ..default()
-        });
-    }
-    label(
-        commands,
-        panel,
-        format!(
-            "СЛОТ {}  /  {}",
-            game.selected + 1,
-            block_name(game.hotbar[game.selected.min(8)])
-        ),
-        13.0,
-        TEAL,
-    );
-    let grid = node(
-        commands,
-        panel,
-        Node {
-            width: percent(100),
-            flex_wrap: FlexWrap::Wrap,
-            column_gap: px(8),
-            row_gap: px(8),
-            flex_shrink: 0.0,
-            ..default()
-        },
-        Color::NONE,
-    );
-    for id in 1..=15 {
-        if id == 13 {
-            continue; // The world boundary is not an obtainable building block.
-        }
-        let selected = game.hotbar[game.selected.min(8)] == id;
-        let child = button(
-            commands,
-            grid,
-            block_name(id),
-            Action::SelectBlock(id),
-            if selected {
-                Tone::Selected
-            } else {
-                Tone::Normal
-            },
-        );
-        commands.entity(child).insert(Node {
-            width: percent(18.8),
-            min_height: px(70),
-            padding: UiRect::all(px(6)),
-            flex_direction: FlexDirection::Column,
-            row_gap: px(7),
-            border: UiRect::all(px(1)),
-            border_radius: BorderRadius::all(px(4)),
-            align_items: AlignItems::Center,
-            justify_content: JustifyContent::Center,
-            flex_shrink: 0.0,
-            ..default()
-        });
-        let swatch = node(
-            commands,
-            child,
-            Node {
-                width: px(27),
-                height: px(18),
-                ..default()
-            },
-            block_color(id),
-        );
-        commands.entity(swatch).insert(Pickable::IGNORE);
-    }
-    button(
-        commands,
-        panel,
-        "Вернуться в мир",
-        Action::Resume,
-        Tone::Primary,
-    );
-    label(
-        commands,
-        panel,
-        "E / Esc: закрыть. В мире: 1-9 или колёсико.",
-        12.0,
-        MUTED,
-    );
-}
-
-fn hud(commands: &mut Commands, root: Entity, game: &Game, icons: &BlockIcons) {
+fn hud(
+    commands: &mut Commands,
+    root: Entity,
+    game: &Game,
+    icons: &BlockIcons,
+    item_icons: &ItemIcons,
+) {
     commands.entity(root).insert(Pickable::IGNORE);
     // No permanent corner panels. F3 alone reveals this diagnostics panel.
     let info = node(
@@ -1215,7 +1139,11 @@ fn hud(commands: &mut Commands, root: Entity, game: &Game, icons: &BlockIcons) {
         let icon = commands
             .spawn((
                 HotbarIcon(index),
-                ImageNode::new(icons.get(game.hotbar[index])),
+                ImageNode::new(
+                    game.item_for_slot(index)
+                        .map(|stack| item_icons.get(stack.item, &game.content, icons))
+                        .unwrap_or_else(|| icons.get(0)),
+                ),
                 Node {
                     width: px(56),
                     height: px(56),
@@ -1225,6 +1153,24 @@ fn hud(commands: &mut Commands, root: Entity, game: &Game, icons: &BlockIcons) {
             ))
             .id();
         commands.entity(tile).add_child(icon);
+        let count = label(
+            commands,
+            tile,
+            game.item_for_slot(index)
+                .map(|stack| stack.count.to_string())
+                .unwrap_or_default(),
+            13.,
+            TEXT,
+        );
+        commands.entity(count).insert((
+            HotbarCount(index),
+            Node {
+                position_type: PositionType::Absolute,
+                right: px(4),
+                bottom: px(2),
+                ..default()
+            },
+        ));
     }
 }
 
@@ -1408,11 +1354,14 @@ fn update_vitals(
     }
 }
 
+#[allow(clippy::type_complexity, clippy::too_many_arguments)]
 fn update_hud(
     game: Res<Game>,
     icons: Res<BlockIcons>,
-    mut debug_text: Query<&mut Text, (With<DebugText>, Without<PanelStatus>)>,
-    mut panel_status: Query<&mut Text, With<PanelStatus>>,
+    item_icons: Res<ItemIcons>,
+    mut counts: Query<(&HotbarCount, &mut Text), (Without<DebugText>, Without<PanelStatus>)>,
+    mut debug_text: Query<&mut Text, (With<DebugText>, Without<PanelStatus>, Without<HotbarCount>)>,
+    mut panel_status: Query<&mut Text, (With<PanelStatus>, Without<HotbarCount>)>,
     mut tiles: Query<(&HotbarTile, &mut BorderColor, &mut BackgroundColor)>,
     mut icon_nodes: Query<(&HotbarIcon, &mut ImageNode)>,
     mut debug_panels: Query<&mut Node, With<DebugPanel>>,
@@ -1474,8 +1423,20 @@ fn update_hud(
             background.0 = next;
         }
     }
+    for (slot, mut text) in &mut counts {
+        let count = game
+            .item_for_slot(slot.0)
+            .map(|stack| stack.count.to_string())
+            .unwrap_or_default();
+        if text.0 != count {
+            text.0 = count;
+        }
+    }
     for (slot, mut node) in &mut icon_nodes {
-        let image = icons.get(game.hotbar[slot.0]);
+        let image = game
+            .item_for_slot(slot.0)
+            .map(|stack| item_icons.get(stack.item, &game.content, &icons))
+            .unwrap_or_else(|| icons.get(0));
         if node.image != image {
             node.image = image;
         }
@@ -1494,49 +1455,4 @@ fn shorten(value: &str, limit: usize) -> String {
                 .collect::<String>()
         )
     }
-}
-
-fn block_name(id: u8) -> &'static str {
-    [
-        "Воздух",
-        "Трава",
-        "Земля",
-        "Камень",
-        "Глуб. камень",
-        "Песок",
-        "Гравий",
-        "Дерево",
-        "Листва",
-        "Доски",
-        "Булыжник",
-        "Стекло",
-        "Вода",
-        "Коренная порода",
-        "Снег",
-        "Песчаник",
-    ]
-    .get(id as usize)
-    .copied()
-    .unwrap_or("Неизвестно")
-}
-fn block_color(id: u8) -> Color {
-    let rgb = match id {
-        1 => [0.40, 0.63, 0.28],
-        2 => [0.51, 0.34, 0.23],
-        3 => [0.55, 0.58, 0.59],
-        4 => [0.26, 0.29, 0.34],
-        5 => [0.87, 0.79, 0.51],
-        6 => [0.54, 0.50, 0.44],
-        7 => [0.48, 0.33, 0.20],
-        8 => [0.24, 0.53, 0.27],
-        9 => [0.70, 0.51, 0.30],
-        10 => [0.42, 0.46, 0.45],
-        11 => [0.65, 0.85, 0.87],
-        12 => [0.25, 0.52, 0.78],
-        13 => [0.24, 0.25, 0.26],
-        14 => [0.91, 0.95, 0.95],
-        15 => [0.78, 0.66, 0.40],
-        _ => [0.2, 0.2, 0.2],
-    };
-    Color::srgb(rgb[0], rgb[1], rgb[2])
 }

@@ -370,7 +370,12 @@ fn play_block_sounds(
         if event.block == 0 || !event.position.is_finite() || remaining == 0 {
             continue;
         }
-        let Some(material) = library.0.get(event.block as usize - 1) else {
+        let block = if event.block == game_core::CHEST {
+            game_core::PLANKS
+        } else {
+            event.block
+        };
+        let Some(material) = library.0.get(block as usize - 1) else {
             continue;
         };
         let distance = event.position.distance(listener);

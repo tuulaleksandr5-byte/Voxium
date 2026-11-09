@@ -106,10 +106,11 @@ fn publish(
                     DamageSource::Mob => "атака",
                 }
             );
-            // Предметов пока нет: физическое выпадение подключается на этапе 3.
+            crate::inventory_client::on_death(game);
+            // Дроп вычисляется логикой до перехода на экран смерти.
             info!(
                 keep_inventory = game.game_rules.keep_inventory,
-                "Событие смерти для будущей системы предметов"
+                "Применено правило инвентаря при смерти"
             );
             game.screen(Mode::Dead);
         }
@@ -141,6 +142,18 @@ pub fn apply_actions(
                 game.fall_peak = None;
                 if mode == GameMode::Creative {
                     game.vitals.respawn(&cfg);
+                    if game.inventory.hotbar.iter().all(Option::is_none) {
+                        let catalog = game.content.clone();
+                        for (index, block) in [1, 2, 3, 5, 7, 9, 10, 11, 14].into_iter().enumerate()
+                        {
+                            if let Some(item) = catalog.item_for_block(block) {
+                                game.inventory.hotbar[index] = Some(
+                                    game_core::items::ItemStack::new(item, catalog.max_stack(item)),
+                                );
+                            }
+                        }
+                        crate::inventory_client::sync_hotbar(&mut game);
+                    }
                 }
                 console.feedback = format!(
                     "Режим: {}",
