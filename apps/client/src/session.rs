@@ -52,6 +52,7 @@ pub struct Game {
     pub ui_dirty: bool,
     pub status: String,
     pub world: World,
+    pub generator: game_core::ores::WorldGenerator,
     pub world_id: Option<String>,
     pub name_input: String,
     pub seed_input: String,
@@ -100,6 +101,7 @@ impl Default for Game {
             ui_dirty: true,
             status: String::new(),
             world: World::new(0),
+            generator: Default::default(),
             world_id: None,
             name_input: "Мой мир".into(),
             seed_input: String::new(),
@@ -161,8 +163,9 @@ impl Game {
             .collect();
         edits.sort_unstable();
         SaveData {
-            format_version: 1,
-            generator_version: 1,
+            format_version: game_core::persistence::CURRENT_FORMAT_VERSION,
+            generator_version: self.generator.version(),
+            ore_config: self.generator.snapshot().cloned(),
             name: self.name_input.clone(),
             seed: self.world.seed,
             player: if self.vitals.is_dead() {
@@ -181,6 +184,24 @@ impl Game {
 #[cfg(test)]
 mod inventory_save_tests {
     use super::*;
+
+    #[test]
+    fn saved_generation_retains_the_world_snapshot_and_legacy_stays_snapshot_free() {
+        let mut game = Game::default();
+        let legacy = game.save_data();
+        assert_eq!(legacy.format_version, 2);
+        assert_eq!(legacy.generator_version, 1);
+        assert!(legacy.ore_config.is_none());
+        let config = game_core::ores::OreConfig::from_ron(
+            &include_str!("../../../assets/data/ores.ron").replace("veins: 20", "veins: 1"),
+        )
+        .unwrap();
+        game.generator =
+            game_core::ores::WorldGenerator::from_snapshot(2, Some(config.clone())).unwrap();
+        let snapshot = game.save_data();
+        assert_eq!(snapshot.generator_version, 2);
+        assert_eq!(snapshot.ore_config, Some(config));
+    }
 
     #[test]
     fn runtime_chest_keeps_its_excavated_air_in_legacy_snapshot() {

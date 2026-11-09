@@ -37,15 +37,22 @@ use ui::{Action, UiIntent};
 
 fn main() {
     let mut app = App::new();
-    app.add_plugins(DefaultPlugins.set(WindowPlugin {
-        primary_window: Some(Window {
-            title: "Voxel Sandbox — 2.0 Survival · этап 3".into(),
-            resolution: (1280, 720).into(),
+    app.add_plugins(
+        DefaultPlugins.set(WindowPlugin {
+            primary_window: Some(Window {
+                title: concat!(
+                    "Voxel Sandbox — ",
+                    env!("CARGO_PKG_VERSION"),
+                    " · добыча и крафт"
+                )
+                .into(),
+                resolution: (1280, 720).into(),
+                ..default()
+            }),
+            close_when_requested: false,
             ..default()
         }),
-        close_when_requested: false,
-        ..default()
-    }))
+    )
     .add_plugins((
         game_render::VoxelRenderPlugin,
         block_audio::BlockAudioPlugin,
@@ -213,8 +220,11 @@ fn open(
     stream: &mut Streaming,
     commands: &mut Commands,
     meshes: &mut Assets<Mesh>,
-) {
+) -> Result<(), String> {
+    let generator =
+        game_core::ores::WorldGenerator::from_snapshot(data.generator_version, data.ore_config)?;
     stream.clear(commands, meshes);
+    game.generator = generator;
     game.world = World::new(data.seed);
     game.world.edits = data.edits.into_iter().collect();
     game.world_id = Some(id);
@@ -239,6 +249,7 @@ fn open(
     game.revision += 1;
     game.status = "Загрузка мира...".into();
     game.screen(Mode::Playing);
+    Ok(())
 }
 #[allow(clippy::too_many_arguments)]
 fn actions(
@@ -302,11 +313,28 @@ fn actions(
                         }
                     }
                 };
+                let ore_source = inventory_client::config_source(
+                    "VOXEL_ORES_CONFIG",
+                    "ores.ron",
+                    include_str!("../../../assets/data/ores.ron"),
+                )
+                .1;
+                let ore_config = match ore_source
+                    .and_then(|source| game_core::ores::OreConfig::from_ron(&source))
+                {
+                    Ok(config) => config,
+                    Err(error) => {
+                        game.status = format!("Не удалось создать мир: {error}");
+                        game.ui_dirty = true;
+                        continue;
+                    }
+                };
                 let id = format!("world-{nanos:x}");
                 let spawn = spawn_position(seed);
                 let data = SaveData {
-                    format_version: 1,
-                    generator_version: 1,
+                    format_version: game_core::persistence::CURRENT_FORMAT_VERSION,
+                    generator_version: game_core::persistence::CURRENT_GENERATOR_VERSION,
+                    ore_config: Some(ore_config),
                     name: game.name_input.trim().into(),
                     seed,
                     player: spawn,
@@ -317,7 +345,13 @@ fn actions(
                 };
                 match save_world(&settings::save_root(), &id, &data) {
                     Ok(()) => {
-                        open(&mut game, id, data, &mut stream, &mut commands, &mut meshes);
+                        if let Err(error) =
+                            open(&mut game, id, data, &mut stream, &mut commands, &mut meshes)
+                        {
+                            game.status = error;
+                            game.ui_dirty = true;
+                            continue;
+                        }
                         game.game_mode = game.creation_mode;
                         let creative = game.game_mode == game_core::survival::GameMode::Creative;
                         inventory_client::reset_session(&mut game, creative);
@@ -346,8 +380,10 @@ fn actions(
                     game.ui_dirty = true;
                     continue;
                 }
-                match load_world(&settings::save_root(), &id) {
-                    Ok(data) => open(&mut game, id, data, &mut stream, &mut commands, &mut meshes),
+                match load_world(&settings::save_root(), &id).and_then(|data| {
+                    open(&mut game, id, data, &mut stream, &mut commands, &mut meshes)
+                }) {
+                    Ok(()) => {}
                     Err(e) => {
                         game.status = format!("Не удалось загрузить мир: {e}");
                         game.ui_dirty = true;
@@ -364,6 +400,7 @@ fn actions(
                     inventory_client::close_inventory(&mut game);
                     inventory_client::reset_session(&mut game, false);
                     game.world = World::new(0);
+                    game.generator = Default::default();
                     game.world_id = None;
                     game.screen(Mode::Menu);
                 }
@@ -478,6 +515,66 @@ fn spawn_position(seed: u64) -> [f32; 3] {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn opening_world_uses_its_snapshot_and_invalid_snapshot_keeps_current_session() {
+        let config = game_core::ores::OreConfig::from_ron(
+            &include_str!("../../../assets/data/ores.ron").replace("veins: 20", "veins: 1"),
+        )
+        .unwrap();
+        let mut data = SaveData {
+            seed: 42,
+            ore_config: Some(config.clone()),
+            ..Default::default()
+        };
+        let mut game = Game::default();
+        let mut stream = Streaming::default();
+        let mut meshes = Assets::<Mesh>::default();
+        let ecs_world = bevy::ecs::world::World::new();
+        let mut queue = bevy::ecs::world::CommandQueue::default();
+        let mut commands = Commands::new(&mut queue, &ecs_world);
+        open(
+            &mut game,
+            "snapshot".into(),
+            data.clone(),
+            &mut stream,
+            &mut commands,
+            &mut meshes,
+        )
+        .unwrap();
+        assert_eq!(game.generator.snapshot(), Some(&config));
+        assert_eq!(game.save_data().ore_config, Some(config));
+        let previous = game.save_data();
+        let revision = game.revision;
+        data.ore_config = None;
+        assert!(
+            open(
+                &mut game,
+                "invalid".into(),
+                data.clone(),
+                &mut stream,
+                &mut commands,
+                &mut meshes,
+            )
+            .is_err()
+        );
+        assert_eq!(game.save_data(), previous);
+        assert_eq!(game.world_id.as_deref(), Some("snapshot"));
+        assert_eq!(game.revision, revision);
+        data.generator_version = 1;
+        open(
+            &mut game,
+            "legacy".into(),
+            data,
+            &mut stream,
+            &mut commands,
+            &mut meshes,
+        )
+        .unwrap();
+        assert_eq!(game.generator.version(), 1);
+        assert!(game.save_data().ore_config.is_none());
+    }
+
     #[test]
     fn spawn_uses_deterministic_dry_land_for_ocean_origin() {
         let spawn = spawn_position(971);

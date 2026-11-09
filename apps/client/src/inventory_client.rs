@@ -415,7 +415,7 @@ struct ReloadState {
     mining: FileState,
 }
 
-fn config_source(
+pub(crate) fn config_source(
     variable: &str,
     filename: &str,
     embedded: &str,

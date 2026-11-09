@@ -1,0 +1,9 @@
+// Снимок этих параметров записывается только в новые миры генератора 2.
+(
+    ores: [
+        (block: 17, min_y: 0, max_y: 192, veins: 20, blocks: 17),
+        (block: 18, min_y: -64, max_y: 72, veins: 12, blocks: 9),
+        (block: 19, min_y: -64, max_y: 32, veins: 4, blocks: 9),
+        (block: 20, min_y: -64, max_y: 16, veins: 7, blocks: 8),
+    ],
+)

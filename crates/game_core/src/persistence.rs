@@ -10,15 +10,17 @@ use std::{
 };
 
 /// Increase when the save schema changes, with an explicit migration before loading it.
-pub const CURRENT_FORMAT_VERSION: u32 = 1;
+pub const CURRENT_FORMAT_VERSION: u32 = 2;
 /// Generation must remain deterministic for every supported generator version.
-pub const CURRENT_GENERATOR_VERSION: u32 = 1;
+pub const CURRENT_GENERATOR_VERSION: u32 = 2;
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct SaveData {
     pub format_version: u32,
     pub generator_version: u32,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub ore_config: Option<crate::ores::OreConfig>,
     pub name: String,
     pub seed: u64,
     pub player: [f32; 3],
@@ -33,6 +35,7 @@ impl Default for SaveData {
         Self {
             format_version: CURRENT_FORMAT_VERSION,
             generator_version: CURRENT_GENERATOR_VERSION,
+            ore_config: Some(crate::ores::OreConfig::default()),
             name: "New World".to_owned(),
             seed: 0,
             player: [0.5, 100.0, 0.5],
@@ -196,12 +199,7 @@ fn validate_data(data: &SaveData) -> Result<(), String> {
             data.format_version
         ));
     }
-    if data.generator_version != CURRENT_GENERATOR_VERSION {
-        return Err(format!(
-            "Unsupported generator version {}",
-            data.generator_version
-        ));
-    }
+    crate::ores::WorldGenerator::from_snapshot(data.generator_version, data.ore_config.clone())?;
     if data.name.trim().is_empty()
         || data.name.chars().count() > 128
         || data.name.chars().any(char::is_control)
@@ -226,8 +224,8 @@ fn validate_data(data: &SaveData) -> Result<(), String> {
                 "Edit at {position:?} is outside world height bounds"
             ));
         }
-        // Формат 1 содержит только исходные Foundation ID 0…15.
-        if block >= crate::CHEST {
+        // Runtime-сундук не сохраняется до реализации состояния контейнеров.
+        if usize::from(block) >= crate::BLOCKS.len() || block == crate::CHEST {
             return Err(format!(
                 "Edit at {position:?} contains unknown block ID {block}"
             ));
@@ -296,7 +294,7 @@ fn read_candidate(path: &Path) -> SaveCandidate {
         ("generator_version", CURRENT_GENERATOR_VERSION),
     ] {
         if let Some(version) = header.get(field).and_then(serde_json::Value::as_u64)
-            && version != u64::from(supported)
+            && !(1..=u64::from(supported)).contains(&version)
         {
             return Err(ReadFailure::Protected(format!(
                 "Unsupported {field} {version} in {}; save was left unchanged",
@@ -304,12 +302,59 @@ fn read_candidate(path: &Path) -> SaveCandidate {
             )));
         }
     }
-    let data = serde_json::from_str(&envelope.payload).map_err(|error| {
+    let data = if header
+        .get("format_version")
+        .and_then(serde_json::Value::as_u64)
+        == Some(1)
+    {
+        migrate_legacy(&envelope.payload)
+    } else {
+        serde_json::from_str(&envelope.payload).map_err(|error| error.to_string())
+    }
+    .map_err(|error| {
         ReadFailure::Corrupt(format!("Invalid world data {}: {error}", path.display()))
     })?;
     validate_data(&data)
         .map_err(|error| ReadFailure::Corrupt(format!("{}: {error}", path.display())))?;
     Ok(Some(CheckedSave { data, bytes }))
+}
+
+// Строгая старая схема проверяется до миграции, без добавления снимка руд.
+#[derive(Deserialize)]
+#[serde(deny_unknown_fields)]
+struct LegacySaveData {
+    format_version: u32,
+    generator_version: u32,
+    name: String,
+    seed: u64,
+    player: [f32; 3],
+    yaw: f32,
+    pitch: f32,
+    time: f64,
+    edits: Vec<([i32; 3], u8)>,
+}
+fn migrate_legacy(payload: &str) -> Result<SaveData, String> {
+    let old: LegacySaveData = serde_json::from_str(payload).map_err(|error| error.to_string())?;
+    if old.format_version != 1
+        || old.generator_version != 1
+        || old.edits.iter().any(|(_, block)| *block >= crate::CHEST)
+    {
+        return Err("Некорректное сохранение старого формата 1".into());
+    }
+    let data = SaveData {
+        format_version: CURRENT_FORMAT_VERSION,
+        generator_version: 1,
+        ore_config: None,
+        name: old.name,
+        seed: old.seed,
+        player: old.player,
+        yaw: old.yaw,
+        pitch: old.pitch,
+        time: old.time,
+        edits: old.edits,
+    };
+    validate_data(&data)?;
+    Ok(data)
 }
 
 fn candidate_status(candidate: &SaveCandidate) -> &str {
@@ -435,6 +480,122 @@ mod tests {
             edits: vec![([-17, -64, 16], 0), ([16, 320, -1], 15)],
             ..SaveData::default()
         }
+    }
+
+    #[test]
+    fn legacy_checksum_migrates_without_rewriting_and_backs_up_exact_bytes() {
+        let root = TestRoot::new();
+        let original = include_bytes!("../tests/fixtures/legacy-v1.json");
+        let primary = root.0.join("legacy.json");
+        fs::write(&primary, original).unwrap();
+        let mut data = load_world(&root.0, "legacy").unwrap();
+        assert_eq!(data.format_version, 2);
+        assert_eq!(data.generator_version, 1);
+        assert_eq!(data.seed, 1_794_214_108_883_539_500);
+        assert_eq!(fs::read(&primary).unwrap(), original);
+        assert!(!root.0.join("legacy.json.bak").exists());
+        data.edits.push(([8, 200, 8], crate::DIAMOND_BLOCK));
+        save_world(&root.0, "legacy", &data).unwrap();
+        assert_eq!(fs::read(root.0.join("legacy.json.bak")).unwrap(), original);
+        let loaded = load_world(&root.0, "legacy").unwrap();
+        assert_eq!(loaded, data);
+        let generator =
+            crate::ores::WorldGenerator::from_snapshot(loaded.generator_version, loaded.ore_config)
+                .unwrap();
+        let mut world = crate::World::new(loaded.seed);
+        world.edits = loaded.edits.into_iter().collect();
+        world.insert(generator.generate(loaded.seed, [0, 0]));
+        assert_eq!(world.block([8, 200, 8]), crate::DIAMOND_BLOCK);
+        let envelope: SaveEnvelope = serde_json::from_slice(&fs::read(primary).unwrap()).unwrap();
+        let payload: serde_json::Value = serde_json::from_str(&envelope.payload).unwrap();
+        assert_eq!(payload["format_version"], 2);
+        assert!(
+            payload
+                .get("ore_config")
+                .is_none_or(serde_json::Value::is_null)
+        );
+    }
+
+    #[test]
+    fn legacy_schema_rejects_snapshot_new_ids_and_mismatched_generator() {
+        let root = TestRoot::new();
+        let original: SaveEnvelope =
+            serde_json::from_slice(include_bytes!("../tests/fixtures/legacy-v1.json")).unwrap();
+        let value: serde_json::Value = serde_json::from_str(&original.payload).unwrap();
+        let mut with_snapshot = value.clone();
+        with_snapshot["ore_config"] =
+            serde_json::to_value(crate::ores::OreConfig::default()).unwrap();
+        let mut with_new_id = value.clone();
+        with_new_id["edits"] = serde_json::json!([[[8, 200, 8], crate::DIAMOND_BLOCK]]);
+        let mut with_generator_two = value;
+        with_generator_two["generator_version"] = 2.into();
+        for invalid in [with_snapshot, with_new_id, with_generator_two] {
+            let payload = serde_json::to_string(&invalid).unwrap();
+            let bytes = serde_json::to_vec(&SaveEnvelope {
+                checksum: checksum(payload.as_bytes()),
+                payload,
+            })
+            .unwrap();
+            let path = root.0.join("invalid.json");
+            fs::write(&path, &bytes).unwrap();
+            assert!(load_world(&root.0, "invalid").is_err());
+            assert_eq!(fs::read(path).unwrap(), bytes);
+            assert!(!root.0.join("invalid.json.bak").exists());
+        }
+    }
+
+    #[test]
+    fn generator_two_requires_snapshot_and_round_trips_changed_world_defaults() {
+        let root = TestRoot::new();
+        let mut value = serde_json::to_value(example()).unwrap();
+        assert_eq!(value["format_version"], 2);
+        assert_eq!(value["generator_version"], 2);
+        value["ore_config"]["ores"][0]["veins"] = 1.into();
+        let data: SaveData = serde_json::from_value(value.clone()).unwrap();
+        save_world(&root.0, "snapshot", &data).unwrap();
+        let loaded = load_world(&root.0, "snapshot").unwrap();
+        let generator = crate::ores::WorldGenerator::from_snapshot(
+            loaded.generator_version,
+            loaded.ore_config.clone(),
+        )
+        .unwrap();
+        let current_defaults =
+            crate::ores::WorldGenerator::from_snapshot(2, Some(crate::ores::OreConfig::default()))
+                .unwrap();
+        assert_ne!(
+            generator.generate(data.seed, [-1, 0]),
+            current_defaults.generate(data.seed, [-1, 0])
+        );
+        assert_eq!(serde_json::to_value(loaded).unwrap(), value);
+        for invalid in [serde_json::Value::Null, serde_json::json!({"ores": []})] {
+            value["ore_config"] = invalid;
+            let payload = serde_json::to_string(&value).unwrap();
+            let bytes = serde_json::to_vec(&SaveEnvelope {
+                checksum: checksum(payload.as_bytes()),
+                payload,
+            })
+            .unwrap();
+            fs::write(root.0.join("invalid.json"), bytes).unwrap();
+            assert!(load_world(&root.0, "invalid").is_err());
+        }
+    }
+
+    #[test]
+    fn checksum_is_checked_before_legacy_migration_or_future_version_guard() {
+        let root = TestRoot::new();
+        let original = include_bytes!("../tests/fixtures/legacy-v1.json");
+        let mut envelope: SaveEnvelope = serde_json::from_slice(original).unwrap();
+        envelope.payload = envelope
+            .payload
+            .replace("\"format_version\":1", "\"format_version\":100");
+        fs::write(
+            root.0.join("world.json"),
+            serde_json::to_vec(&envelope).unwrap(),
+        )
+        .unwrap();
+        let error = load_world(&root.0, "world").unwrap_err();
+        assert!(error.contains("checksum"), "{error}");
+        assert!(!error.contains("Unsupported"), "{error}");
     }
 
     #[test]

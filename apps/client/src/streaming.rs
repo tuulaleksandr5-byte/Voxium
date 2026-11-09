@@ -105,9 +105,10 @@ pub fn stream_world(
         candidates.sort_by_key(|p| distance(*p, center));
         for pos in candidates.into_iter().take(2 - stream.generation.len()) {
             let seed = game.world.seed;
+            let generator = game.generator.clone();
             stream.generation.push((
                 pos,
-                AsyncComputeTaskPool::get().spawn(async move { Chunk::generate(seed, pos) }),
+                AsyncComputeTaskPool::get().spawn(async move { generator.generate(seed, pos) }),
             ));
         }
     }
@@ -198,5 +199,52 @@ pub fn stream_world(
                 )
             }),
         ));
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn background_generation_captures_world_snapshot_and_clear_cancels_queues() {
+        let config = game_core::ores::OreConfig::from_ron(
+            &include_str!("../../../assets/data/ores.ron").replace("veins: 20", "veins: 1"),
+        )
+        .unwrap();
+        let generator = game_core::ores::WorldGenerator::from_snapshot(2, Some(config)).unwrap();
+        let game = Game {
+            generator: generator.clone(),
+            world: game_core::World::new(42),
+            world_id: Some("snapshot".into()),
+            feet: Vec3::new(-0.5, 100., -0.5),
+            ..Default::default()
+        };
+        let mut app = App::new();
+        app.add_plugins(MinimalPlugins)
+            .insert_resource(game)
+            .init_resource::<Streaming>()
+            .init_resource::<Assets<Mesh>>()
+            .add_systems(Update, stream_world);
+        app.update();
+        let tasks = std::mem::take(&mut app.world_mut().resource_mut::<Streaming>().generation);
+        assert_eq!(tasks.len(), 2);
+        app.world_mut().resource_mut::<Game>().generator = Default::default();
+        for (pos, task) in tasks {
+            assert_eq!(block_on(task), generator.generate(42, pos));
+        }
+        app.update();
+        let mut stream = app.world_mut().remove_resource::<Streaming>().unwrap();
+        assert!(!stream.generation.is_empty());
+        stream.meshing.push((
+            [0, 0, 0],
+            AsyncComputeTaskPool::get().spawn(std::future::pending()),
+        ));
+        let mut meshes = app.world_mut().remove_resource::<Assets<Mesh>>().unwrap();
+        let mut queue = bevy::ecs::world::CommandQueue::default();
+        let mut commands = Commands::new(&mut queue, app.world());
+        stream.clear(&mut commands, &mut meshes);
+        assert!(stream.generation.is_empty());
+        assert!(stream.meshing.is_empty());
     }
 }

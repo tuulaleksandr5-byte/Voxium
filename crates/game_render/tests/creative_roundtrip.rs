@@ -4,9 +4,11 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 #[test]
 fn constructions_and_player_survive_a_new_world_instance() {
+    let generator =
+        ores::WorldGenerator::from_snapshot(2, Some(ores::OreConfig::default())).unwrap();
     let mut world = World::new(971);
     for pos in [[-1, -1], [-1, 0], [0, -1], [0, 0]] {
-        world.insert(Chunk::generate(world.seed, pos));
+        world.insert(generator.generate(world.seed, pos));
     }
     let y = surface_height(world.seed, 0, 0).max(SEA_LEVEL) + 12;
     // Build across a negative-coordinate chunk corner.
@@ -45,9 +47,11 @@ fn constructions_and_player_survive_a_new_world_instance() {
     let loaded = load_world(&root, "build").unwrap();
     assert_eq!(loaded, data);
     let mut world = World::new(loaded.seed);
+    let generator =
+        ores::WorldGenerator::from_snapshot(loaded.generator_version, loaded.ore_config).unwrap();
     world.edits = loaded.edits.into_iter().collect();
     for pos in [[-1, -1], [-1, 0], [0, -1], [0, 0]] {
-        world.insert(Chunk::generate(world.seed, pos));
+        world.insert(generator.generate(world.seed, pos));
     }
     assert_eq!(world.block([0, y, 0]), AIR);
     for pos in [[-1, y, -1], [0, y, -1], [-1, y, 0], [1, y, 1]] {

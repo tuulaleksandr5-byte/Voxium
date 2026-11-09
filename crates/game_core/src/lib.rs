@@ -11,6 +11,7 @@ pub mod interaction;
 pub mod inventory;
 pub mod items;
 pub mod mining;
+pub mod ores;
 pub mod persistence;
 pub mod survival;
 

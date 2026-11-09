@@ -7,7 +7,7 @@ use std::{
 };
 
 pub const SEA_LEVEL: i32 = 63;
-/// Bump when terrain, structures, or noise change; saves reject other versions.
+/// Версия неизменяемого базового ландшафта Chunk::generate.
 pub const GENERATOR_VERSION: u32 = 1;
 pub const SECTION_VOLUME: usize = 16 * 16 * 16;
 
@@ -120,7 +120,7 @@ impl Chunk {
             .get(&section_coordinate(position[1]))
             .map_or(AIR, |section| section.block(position.map(local_coordinate)))
     }
-    fn write(&mut self, position: [i32; 3], id: u8) {
+    pub(crate) fn write(&mut self, position: [i32; 3], id: u8) {
         let sy = section_coordinate(position[1]);
         if id == AIR {
             if let Some(section) = self.sections.get_mut(&sy) {
@@ -488,6 +488,27 @@ mod tests {
         assert_eq!(section.block([0, 1, 0]), GLASS);
         assert_eq!(section.block([0, 0, 1]), WOOD);
         assert_eq!(section.block([0, 0, 0]), AIR);
+    }
+
+    #[test]
+    fn legacy_generator_matches_independent_foundation_fingerprints() {
+        for (seed, pos, expected) in [
+            (1, [0, 0], 0x9cdc8677c85fa51b),
+            (42, [-1, 0], 0xf8cd49d7c5d1be9a),
+            (3, [-1, -1], 0x864f28e2bf98744f),
+        ] {
+            let chunk = Chunk::generate(seed, pos);
+            let mut hash = 0xcbf29ce484222325_u64;
+            for y in -64..=320 {
+                for z in 0..16 {
+                    for x in 0..16 {
+                        let id = chunk.block([pos[0] * 16 + x, y, pos[1] * 16 + z]);
+                        hash = (hash ^ u64::from(id)).wrapping_mul(0x100000001b3);
+                    }
+                }
+            }
+            assert_eq!(hash, expected, "seed={seed}, pos={pos:?}");
+        }
     }
 
     #[test]
