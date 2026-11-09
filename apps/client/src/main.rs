@@ -15,6 +15,7 @@ mod session;
 mod settings;
 mod streaming;
 mod survival_client;
+mod tool_textures;
 mod ui;
 
 use bevy::{

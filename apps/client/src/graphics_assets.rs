@@ -17,7 +17,7 @@ impl BlockIcons {
     }
 }
 
-fn asset_path(relative: &str) -> Option<PathBuf> {
+pub(crate) fn asset_path(relative: &str) -> Option<PathBuf> {
     let next_to_exe = std::env::current_exe()
         .ok()
         .and_then(|p| p.parent().map(|p| p.join(relative)));

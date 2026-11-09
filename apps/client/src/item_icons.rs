@@ -1,4 +1,4 @@
-//! Кэш значков: исходные кубики блоков и временные рисунки новых предметов.
+//! Кэш значков: исходные кубики, PNG инструментов и временные рисунки остальных предметов.
 use crate::{graphics_assets::BlockIcons, session::Game};
 use bevy::{
     asset::RenderAssetUsages,
@@ -43,7 +43,7 @@ fn cache_icons(
         if game.content.block_for_item(id).is_some() || icons.handles.contains_key(&id) {
             continue;
         }
-        // TODO art: заменить только новые предметы; исходные PNG не изменяются.
+        // PNG из tools.zip имеет приоритет; другие новые предметы пока TODO(art).
         let mut image = Image::new(
             Extent3d {
                 width: 128,
@@ -51,7 +51,8 @@ fn cache_icons(
                 depth_or_array_layers: 1,
             },
             TextureDimension::D2,
-            placeholder_pixels(&definition.id, &definition.kind),
+            crate::tool_textures::pixels(&definition.id)
+                .unwrap_or_else(|| placeholder_pixels(&definition.id, &definition.kind)),
             TextureFormat::Rgba8UnormSrgb,
             RenderAssetUsages::default(),
         );
@@ -140,6 +141,33 @@ fn placeholder_pixels(id: &str, kind: &ItemKind) -> Vec<u8> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn wooden_pickaxe_uses_uploaded_png_pixels_instead_of_placeholder() {
+        let mut app = App::new();
+        app.init_resource::<Game>()
+            .init_resource::<Assets<Image>>()
+            .init_resource::<ItemIcons>()
+            .add_systems(Update, cache_icons);
+        app.update();
+        let item = app
+            .world()
+            .resource::<Game>()
+            .content
+            .find("survival:wooden_pickaxe")
+            .unwrap();
+        let handle = &app.world().resource::<ItemIcons>().handles[&item];
+        let actual = app.world().resource::<Assets<Image>>().get(handle).unwrap();
+        let expected = image::load_from_memory_with_format(
+            include_bytes!("../../../assets/textures/tools/128x128/wooden_pickaxe.png"),
+            image::ImageFormat::Png,
+        )
+        .unwrap()
+        .into_rgba8();
+        assert!(
+            actual.data.as_deref() == Some(expected.as_raw().as_slice()),
+            "Значок деревянной кирки должен точно совпадать с PNG пользователя"
+        );
+    }
     #[test]
     fn new_item_art_has_transparent_margin_and_visible_silhouette() {
         let pixels = placeholder_pixels("survival:stick", &ItemKind::Material);
