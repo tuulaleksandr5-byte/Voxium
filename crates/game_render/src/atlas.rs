@@ -104,17 +104,27 @@ impl BlockAtlas {
             ));
         }
         for (offset, bytes) in tiles.iter().enumerate() {
-            let layer = offset + 18;
-            let tile = decode_png(bytes, (TILE_SIZE, TILE_SIZE), ADDITIONAL_TILE_NAMES[offset])?;
-            self.rgba
-                .copy_from(
-                    &tile,
-                    (layer as u32 % 6) * TILE_SIZE,
-                    (layer as u32 / 6) * TILE_SIZE,
-                )
-                .map_err(|e| format!("cannot copy tile {layer}: {e}"))?;
+            self.replace_additional_tile(offset, bytes)?;
         }
         Ok(self)
+    }
+
+    /// Заменить один дополнительный PNG; индекс 0…14 соответствует слоям 18…32.
+    /// Проверка индекса и полное декодирование предшествуют изменению атласа.
+    /// При ошибке текущие пиксели, включая все исходные слои, сохраняются.
+    pub fn replace_additional_tile(&mut self, offset: usize, bytes: &[u8]) -> Result<(), String> {
+        let name = ADDITIONAL_TILE_NAMES
+            .get(offset)
+            .ok_or_else(|| format!("additional tile index must be in 0..15, got {offset}"))?;
+        let tile = decode_png(bytes, (TILE_SIZE, TILE_SIZE), name)?;
+        let layer = offset + 18;
+        self.rgba
+            .copy_from(
+                &tile,
+                (layer as u32 % 6) * TILE_SIZE,
+                (layer as u32 / 6) * TILE_SIZE,
+            )
+            .map_err(|e| format!("cannot copy tile {layer}: {e}"))
     }
 }
 
@@ -157,6 +167,30 @@ mod tests {
         include_bytes!("../../../assets/textures/sandstone.png"),
         include_bytes!("../../../assets/textures/sandstone_top.png"),
     ];
+
+    #[test]
+    fn single_additional_replacement_rejects_invalid_input_without_mutating_any_layer() {
+        let mut atlas = BlockAtlas::from_tiles(&ORIGINAL_TILES).unwrap();
+        let before = atlas.rgba.clone();
+        for offset in [15, 18, 36, usize::MAX] {
+            assert!(
+                atlas
+                    .replace_additional_tile(offset, ADDITIONAL_TILES[0])
+                    .is_err()
+            );
+            assert_eq!(atlas.rgba, before);
+        }
+        let mut wrong_size = Cursor::new(Vec::new());
+        RgbaImage::new(128, 127)
+            .write_to(&mut wrong_size, image::ImageFormat::Png)
+            .unwrap();
+        for offset in [0, 14] {
+            for invalid in [b"invalid PNG".as_slice(), wrong_size.get_ref()] {
+                assert!(atlas.replace_additional_tile(offset, invalid).is_err());
+                assert_eq!(atlas.rgba, before);
+            }
+        }
+    }
 
     #[test]
     fn legacy_whole_atlas_and_raw_rgba_preserve_all_eighteen_source_layers() {
