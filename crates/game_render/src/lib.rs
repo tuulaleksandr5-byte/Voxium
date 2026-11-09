@@ -10,7 +10,7 @@ mod icons;
 mod materials;
 mod meshing;
 
-pub use atlas::BlockAtlas;
+pub use atlas::{ADDITIONAL_TILE_NAMES, BlockAtlas};
 pub use environment::gradient_sky;
 pub use face_textures::{
     BlockTextures, FaceTextures, GRASS_BOTTOM, GRASS_TOP, MATERIAL_COUNT, WOOD_END,

@@ -213,7 +213,7 @@ fn array_materials_share_image_and_use_linear_anisotropic_filtering() {
     let mut png = std::io::Cursor::new(Vec::new());
     fixture.write_to(&mut png, image::ImageFormat::Png).unwrap();
     let handles = create_materials(&mut images, &mut materials, png.get_ref()).unwrap();
-    assert_eq!(handles.len(), 18);
+    assert_eq!(handles.len(), 36);
     let first = materials.get(&handles[0]).unwrap().extension.image.clone();
     for (layer, handle) in handles.iter().enumerate() {
         let m = materials.get(handle).unwrap();
@@ -222,7 +222,7 @@ fn array_materials_share_image_and_use_linear_anisotropic_filtering() {
     }
     let image = images.get(&first).unwrap();
     assert_eq!((image.width(), image.height()), (128, 128));
-    assert_eq!(image.texture_descriptor.size.depth_or_array_layers, 18);
+    assert_eq!(image.texture_descriptor.size.depth_or_array_layers, 36);
     assert_eq!(image.texture_descriptor.mip_level_count, 8);
     let ImageSampler::Descriptor(s) = &image.sampler else {
         panic!("explicit sampler required");
@@ -308,5 +308,26 @@ fn uploaded_cobblestone_and_gravel_have_distinct_face_layers() {
     for (layer, mesh) in meshes {
         assert!([6, 11].contains(&layer));
         assert_quads(&mesh, 5);
+    }
+}
+
+#[test]
+fn workstation_front_faces_are_meshed_on_negative_z() {
+    for (block, front, side) in [
+        (game_core::CRAFTING_TABLE, 26, 27),
+        (game_core::FURNACE, 29, 31),
+    ] {
+        let meshes = mesh_section([0; 3], |p| if p == [0; 3] { block } else { 0 });
+        let front_mesh = &meshes
+            .iter()
+            .find(|(layer, _)| *layer == front)
+            .expect("front material")
+            .1;
+        assert_quads(front_mesh, 1);
+        assert!(normals(front_mesh).iter().all(|n| *n == [0., 0., -1.]));
+        assert_quads(
+            &meshes.iter().find(|(layer, _)| *layer == side).unwrap().1,
+            3,
+        );
     }
 }

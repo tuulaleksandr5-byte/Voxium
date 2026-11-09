@@ -353,6 +353,19 @@ fn expire_emitters(
     }
 }
 
+// Original families occupy IDs 1…15; appended blocks reuse their material Foley.
+fn sound_family(block: u8) -> Option<usize> {
+    use game_core::*;
+    let material = match block {
+        CHEST | CRAFTING_TABLE => PLANKS,
+        COAL_ORE | IRON_ORE | GOLD_ORE | DIAMOND_ORE | IRON_BLOCK | GOLD_BLOCK | DIAMOND_BLOCK
+        | FURNACE => STONE,
+        1..=15 => block,
+        _ => return None,
+    };
+    Some(usize::from(material - 1))
+}
+
 fn play_block_sounds(
     mut commands: Commands,
     mut events: MessageReader<BlockSound>,
@@ -370,12 +383,8 @@ fn play_block_sounds(
         if event.block == 0 || !event.position.is_finite() || remaining == 0 {
             continue;
         }
-        let block = if event.block == game_core::CHEST {
-            game_core::PLANKS
-        } else {
-            event.block
-        };
-        let Some(material) = library.0.get(block as usize - 1) else {
+        let Some(material) = sound_family(event.block).and_then(|index| library.0.get(index))
+        else {
             continue;
         };
         let distance = event.position.distance(listener);
@@ -412,6 +421,32 @@ fn play_block_sounds(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn stable_blocks_route_to_original_material_families() {
+        use game_core::*;
+        for block in 1..=15 {
+            assert_eq!(sound_family(block), Some(block as usize - 1));
+        }
+        for block in [CHEST, CRAFTING_TABLE] {
+            assert_eq!(sound_family(block), Some(PLANKS as usize - 1));
+        }
+        for block in [
+            COAL_ORE,
+            IRON_ORE,
+            GOLD_ORE,
+            DIAMOND_ORE,
+            IRON_BLOCK,
+            GOLD_BLOCK,
+            DIAMOND_BLOCK,
+            FURNACE,
+        ] {
+            assert_eq!(sound_family(block), Some(STONE as usize - 1));
+        }
+        assert_eq!(sound_family(AIR), None);
+        assert_eq!(sound_family(26), None);
+        assert_eq!(sound_family(u8::MAX), None);
+    }
 
     #[test]
     fn all_embedded_materials_have_three_distinct_decodable_variants_per_event() {

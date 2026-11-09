@@ -1,4 +1,4 @@
-//! CPU-baked hotbar cubes using only pixels from the supplied original atlas.
+//! CPU-baked hotbar cubes using the supplied block atlas pixels.
 
 use crate::{BlockAtlas, BlockTextures, MATERIAL_COUNT};
 use bevy::{
@@ -38,7 +38,8 @@ const EDGES: [(Point, Point); 9] = [
 /// Bake one reusable UI image per stable block ID, including transparent AIR.
 ///
 /// The input must be the original 768×384 PNG (6×3 tiles of 128 pixels).
-/// Top and side layers come from `textures`; the hidden bottom is never drawn.
+/// Top, negative-Z front, and positive-X side layers come from `textures`;
+/// the hidden bottom is never drawn.
 /// Left/right RGB channels are multiplied by exactly 0.85/0.70, respectively.
 /// Source alpha is retained, including for glass and water. Bilinear sampling
 /// clamps within each tile, and 4× supersampling antialiases the cube outline.
@@ -56,11 +57,17 @@ pub fn bake_atlas_icons(
     textures: &BlockTextures,
 ) -> Result<Vec<Image>, String> {
     if textures.0.iter().any(|faces| {
-        [faces.top, faces.side, faces.bottom]
-            .into_iter()
-            .any(|layer| layer as usize >= MATERIAL_COUNT)
+        [
+            Some(faces.top),
+            Some(faces.side),
+            Some(faces.bottom),
+            faces.front,
+        ]
+        .into_iter()
+        .flatten()
+        .any(|layer| layer as usize >= MATERIAL_COUNT)
     }) {
-        return Err("icon texture layer must be in 0..18".into());
+        return Err("icon texture layer must be in 0..36".into());
     }
     Ok((0..BLOCKS.len())
         .map(|block| {
@@ -101,7 +108,7 @@ fn bake_cube(atlas: &RgbaImage, textures: &BlockTextures, block: u8) -> Vec<u8> 
                         .map(|uv| (uv, textures.layer(block, 1, true), 1.))
                         .or_else(|| {
                             face_uv(point, B, C, E)
-                                .map(|uv| (uv, textures.layer(block, 2, true), 0.85))
+                                .map(|uv| (uv, textures.layer(block, 2, false), 0.85))
                         })
                         .or_else(|| {
                             face_uv(point, C, D, F)
@@ -222,6 +229,7 @@ mod tests {
                     top: 0,
                     side: 7,
                     bottom: 17,
+                    front: None,
                 }; BLOCKS.len()],
             ),
         )
@@ -232,12 +240,23 @@ mod tests {
     }
 
     #[test]
+    fn declared_front_is_visible_on_left_icon_face_only() {
+        let (bytes, _) = fixture(255);
+        let entries = vec!["(top: 0, side: 7, bottom: 17, front: Some(0))"; BLOCKS.len()];
+        let textures = BlockTextures::from_ron(&format!("[{}]", entries.join(","))).unwrap();
+        let icons = bake_block_icons(&bytes, &textures).unwrap();
+        assert_eq!(pixel(&icons[24], 40, 75), [204, 34, 17, 255]);
+        assert_eq!(pixel(&icons[24], 88, 75), [28, 140, 70, 255]);
+    }
+
+    #[test]
     fn ron_faces_and_exact_side_shading_are_baked_in_block_id_order() {
         let (bytes, mut textures) = fixture(255);
         textures.0[7] = FaceTextures {
             top: 7,
             side: 0,
             bottom: 17,
+            front: None,
         };
         let icons = bake_block_icons(&bytes, &textures).unwrap();
         assert_eq!(icons.len(), BLOCKS.len());
@@ -343,11 +362,14 @@ mod tests {
         );
         assert!(bake_block_icons(b"not a PNG", &BlockTextures::default()).is_err());
         let (bytes, mut textures) = fixture(255);
-        textures.0[1].side = 18;
-        assert!(
-            bake_block_icons(&bytes, &textures)
-                .unwrap_err()
-                .contains("0..18")
-        );
+        for (side, front) in [(36, None), (7, Some(36))] {
+            textures.0[1].side = side;
+            textures.0[1].front = front;
+            assert!(
+                bake_block_icons(&bytes, &textures)
+                    .unwrap_err()
+                    .contains("0..36")
+            );
+        }
     }
 }

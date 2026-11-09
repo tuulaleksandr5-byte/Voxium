@@ -1,4 +1,4 @@
-//! Original, unchanged PNG assets: a whole atlas override or the supplied cut tiles.
+//! Unchanged PNG assets: legacy atlas/cut tiles plus the supplied new block tiles.
 use bevy::prelude::*;
 use std::path::PathBuf;
 include!(concat!(env!("OUT_DIR"), "/atlas_asset.rs"));
@@ -78,6 +78,26 @@ const ORIGINAL_TILES: [&[u8]; 17] = [
 ];
 
 pub fn load_atlas() -> Result<game_render::BlockAtlas, String> {
+    let atlas = load_original_atlas()?;
+    let Some(first) = asset_path("assets/textures/blocks/128x128/gold_ore.png") else {
+        // The renderer already appended embedded new PNGs for standalone builds
+        // and legacy whole-atlas overrides.
+        return Ok(atlas);
+    };
+    let folder = first.parent().expect("tile has a parent directory");
+    let files = game_render::ADDITIONAL_TILE_NAMES
+        .iter()
+        .map(|name| {
+            let path = folder.join(format!("{name}.png"));
+            std::fs::read(&path)
+                .map_err(|e| format!("Не удалось прочитать текстуру {}: {e}", path.display()))
+        })
+        .collect::<Result<Vec<_>, _>>()?;
+    let tiles = files.iter().map(Vec::as_slice).collect::<Vec<_>>();
+    atlas.with_additional_tiles(&tiles)
+}
+
+fn load_original_atlas() -> Result<game_render::BlockAtlas, String> {
     let path = std::env::var_os("VOXEL_ATLAS")
         .map(PathBuf::from)
         .or_else(|| asset_path("assets/atlas_128x128.png"))

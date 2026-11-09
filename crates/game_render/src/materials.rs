@@ -13,7 +13,7 @@ use bevy::{
 
 pub const TEXTURE_SIZE: u32 = 128;
 const ATLAS_WIDTH: u32 = TEXTURE_SIZE * 6;
-const ATLAS_HEIGHT: u32 = TEXTURE_SIZE * 3;
+const ATLAS_HEIGHT: u32 = TEXTURE_SIZE * 6;
 
 pub type VoxelMaterial = ExtendedMaterial<StandardMaterial, TileArray>;
 
@@ -51,8 +51,15 @@ pub fn atlas_png(bytes: &[u8]) -> Result<Image, String> {
 /// Row-major RGBA atlas -> layer-major GPU image, with an independent mip chain per tile.
 /// UVs stay unbounded: hardware repeat works inside a layer, including anisotropic taps.
 pub fn atlas_array(rgba: &[u8]) -> Result<Image, String> {
+    // Keep the original public 18-layer RGBA input working alongside the
+    // internal 36-layer atlas. Legacy source pixels are copied without changes.
+    if rgba.len() == (ATLAS_WIDTH * TEXTURE_SIZE * 3 * 4) as usize {
+        let source = image::RgbaImage::from_raw(ATLAS_WIDTH, TEXTURE_SIZE * 3, rgba.to_vec())
+            .expect("legacy RGBA length checked");
+        return atlas_array(BlockAtlas::from_legacy_rgba(&source)?.rgba.as_raw());
+    }
     if rgba.len() != (ATLAS_WIDTH * ATLAS_HEIGHT * 4) as usize {
-        return Err("atlas RGBA byte count does not match 768×384".into());
+        return Err("atlas RGBA byte count does not match 768×384 or 768×768".into());
     }
     let mut data = Vec::new();
     for layer in 0..MATERIAL_COUNT {
@@ -217,7 +224,7 @@ mod tests {
             for x in 0..ATLAS_WIDTH as usize {
                 let layer = (y / 128) * 6 + x / 128;
                 rgba[(y * ATLAS_WIDTH as usize + x) * 4..][..4].copy_from_slice(&[
-                    layer as u8 * 13,
+                    layer as u8 * 7,
                     30,
                     90,
                     255,
@@ -229,14 +236,14 @@ mod tests {
         let layer_bytes = (0..8)
             .map(|mip| (128_usize >> mip).pow(2) * 4)
             .sum::<usize>();
-        assert_eq!(data.len(), layer_bytes * 18);
-        for layer in 0..18 {
+        assert_eq!(data.len(), layer_bytes * MATERIAL_COUNT);
+        for layer in 0..MATERIAL_COUNT {
             assert!(
                 data[layer * layer_bytes..(layer + 1) * layer_bytes]
                     .as_chunks::<4>()
                     .0
                     .iter()
-                    .all(|p| *p == [layer as u8 * 13, 30, 90, 255])
+                    .all(|p| *p == [layer as u8 * 7, 30, 90, 255])
             );
         }
         assert!(atlas_array(&[]).is_err());
@@ -263,7 +270,7 @@ mod tests {
 
     #[test]
     fn png_decode_preserves_top_left_tile_and_row_order() {
-        let mut rgba = image::RgbaImage::new(ATLAS_WIDTH, ATLAS_HEIGHT);
+        let mut rgba = image::RgbaImage::new(ATLAS_WIDTH, TEXTURE_SIZE * 3);
         for (x, y, pixel) in rgba.enumerate_pixels_mut() {
             *pixel = image::Rgba([
                 ((y / 128) * 6 + x / 128) as u8 * 13,
@@ -293,7 +300,7 @@ mod tests {
     fn source_glass_alpha_is_not_reduced_a_second_time() {
         let mut pixels = image::RgbaImage::from_pixel(
             ATLAS_WIDTH,
-            ATLAS_HEIGHT,
+            TEXTURE_SIZE * 3,
             image::Rgba([150, 200, 220, 255]),
         );
         // Layer 12 is the first tile in the third row.

@@ -5,14 +5,53 @@ use std::io::Cursor;
 
 const TILE_SIZE: u32 = 128;
 const ATLAS_WIDTH: u32 = TILE_SIZE * 6;
-const ATLAS_HEIGHT: u32 = TILE_SIZE * 3;
+const SOURCE_HEIGHT: u32 = TILE_SIZE * 3;
+const ATLAS_HEIGHT: u32 = TILE_SIZE * 6;
 const SOURCE_TILE_COUNT: usize = 17;
+
+/// Layer order for the fifteen additional 128×128 PNGs (layers 18…32).
+pub const ADDITIONAL_TILE_NAMES: [&str; 15] = [
+    "gold_ore",
+    "coal_ore",
+    "diamond_ore",
+    "gold_block",
+    "diamond_block",
+    "iron_ore",
+    "iron_block",
+    "crafting_table_top",
+    "crafting_table_front",
+    "crafting_table_side",
+    "crafting_table_bottom",
+    "furnace_front",
+    "furnace_front_on",
+    "furnace_side",
+    "furnace_top",
+];
+const ADDITIONAL_TILES: [&[u8]; 15] = [
+    include_bytes!("../../../assets/textures/blocks/128x128/gold_ore.png"),
+    include_bytes!("../../../assets/textures/blocks/128x128/coal_ore.png"),
+    include_bytes!("../../../assets/textures/blocks/128x128/diamond_ore.png"),
+    include_bytes!("../../../assets/textures/blocks/128x128/gold_block.png"),
+    include_bytes!("../../../assets/textures/blocks/128x128/diamond_block.png"),
+    include_bytes!("../../../assets/textures/blocks/128x128/iron_ore.png"),
+    include_bytes!("../../../assets/textures/blocks/128x128/iron_block.png"),
+    include_bytes!("../../../assets/textures/blocks/128x128/crafting_table_top.png"),
+    include_bytes!("../../../assets/textures/blocks/128x128/crafting_table_front.png"),
+    include_bytes!("../../../assets/textures/blocks/128x128/crafting_table_side.png"),
+    include_bytes!("../../../assets/textures/blocks/128x128/crafting_table_bottom.png"),
+    include_bytes!("../../../assets/textures/blocks/128x128/furnace_front.png"),
+    include_bytes!("../../../assets/textures/blocks/128x128/furnace_front_on.png"),
+    include_bytes!("../../../assets/textures/blocks/128x128/furnace_side.png"),
+    include_bytes!("../../../assets/textures/blocks/128x128/furnace_top.png"),
+];
 
 /// Decoded original block artwork, shared by world materials and hotbar icons.
 ///
 /// Assembly copies decoded RGBA pixels without resizing, flipping, repainting,
-/// or re-encoding the source PNG files. Tile assembly leaves the eighteenth
-/// tile transparent; whole-atlas loading preserves all eighteen source tiles.
+/// or re-encoding the source PNG files. The internal 6×6 atlas appends the
+/// embedded additional tiles at layers 18…32. Tile assembly leaves layer 17
+/// transparent; whole-atlas loading preserves all eighteen source tiles.
+/// Layers 33…35 remain transparent.
 #[derive(Clone, Debug)]
 pub struct BlockAtlas {
     pub(crate) rgba: RgbaImage,
@@ -21,9 +60,7 @@ pub struct BlockAtlas {
 impl BlockAtlas {
     /// Decode an original 768×384 PNG with six columns and three rows.
     pub fn from_png(bytes: &[u8]) -> Result<Self, String> {
-        Ok(Self {
-            rgba: decode_png(bytes, (ATLAS_WIDTH, ATLAS_HEIGHT), "atlas")?,
-        })
+        Self::from_legacy_rgba(&decode_png(bytes, (ATLAS_WIDTH, SOURCE_HEIGHT), "atlas")?)
     }
 
     /// Assemble exactly seventeen original 128×128 PNGs in this layer order:
@@ -47,7 +84,37 @@ impl BlockAtlas {
             )
             .map_err(|e| format!("cannot copy tile {layer}: {e}"))?;
         }
-        Ok(Self { rgba })
+        Self { rgba }.with_additional_tiles(&ADDITIONAL_TILES)
+    }
+
+    pub(crate) fn from_legacy_rgba(source: &RgbaImage) -> Result<Self, String> {
+        let mut rgba = RgbaImage::new(ATLAS_WIDTH, ATLAS_HEIGHT);
+        rgba.copy_from(source, 0, 0).map_err(|e| e.to_string())?;
+        Self { rgba }.with_additional_tiles(&ADDITIONAL_TILES)
+    }
+
+    /// Replace layers 18…32 with exactly fifteen supplied 128×128 PNGs.
+    /// Source layers 0…17 are preserved, and all PNG pixels are copied exactly.
+    /// The returned atlas can be shared by GPU materials and UI icon baking.
+    pub fn with_additional_tiles(mut self, tiles: &[&[u8]]) -> Result<Self, String> {
+        if tiles.len() != ADDITIONAL_TILE_NAMES.len() {
+            return Err(format!(
+                "expected 15 additional block texture PNGs, got {}",
+                tiles.len()
+            ));
+        }
+        for (offset, bytes) in tiles.iter().enumerate() {
+            let layer = offset + 18;
+            let tile = decode_png(bytes, (TILE_SIZE, TILE_SIZE), ADDITIONAL_TILE_NAMES[offset])?;
+            self.rgba
+                .copy_from(
+                    &tile,
+                    (layer as u32 % 6) * TILE_SIZE,
+                    (layer as u32 / 6) * TILE_SIZE,
+                )
+                .map_err(|e| format!("cannot copy tile {layer}: {e}"))?;
+        }
+        Ok(self)
     }
 }
 
@@ -92,6 +159,158 @@ mod tests {
     ];
 
     #[test]
+    fn legacy_whole_atlas_and_raw_rgba_preserve_all_eighteen_source_layers() {
+        let source = RgbaImage::from_fn(768, 384, |x, y| {
+            image::Rgba([
+                (x % 256) as u8,
+                (y % 256) as u8,
+                ((x + y) % 256) as u8,
+                ((x * 3 + y) % 256) as u8,
+            ])
+        });
+        let mut png = Cursor::new(Vec::new());
+        source.write_to(&mut png, image::ImageFormat::Png).unwrap();
+        let atlas = BlockAtlas::from_png(png.get_ref()).unwrap();
+        assert_eq!(
+            image::imageops::crop_imm(&atlas.rgba, 0, 0, 768, 384).to_image(),
+            source
+        );
+        let legacy_gpu = atlas_array(source.as_raw()).unwrap();
+        let expanded_gpu = atlas_array(atlas.rgba.as_raw()).unwrap();
+        assert_eq!(legacy_gpu.data, expanded_gpu.data);
+        let data = expanded_gpu.data.unwrap();
+        let stride = data.len() / 36;
+        for layer in 0..18 {
+            let expected =
+                image::imageops::crop_imm(&source, (layer % 6) * 128, (layer / 6) * 128, 128, 128)
+                    .to_image();
+            assert_eq!(
+                &data[layer as usize * stride..][..128 * 128 * 4],
+                expected.as_raw(),
+                "legacy layer {layer}"
+            );
+        }
+    }
+
+    #[test]
+    fn supplied_additional_tiles_replace_defaults_without_touching_originals() {
+        let atlas = BlockAtlas::from_tiles(&ORIGINAL_TILES).unwrap();
+        let mut png = Cursor::new(Vec::new());
+        let source = RgbaImage::from_fn(128, 128, |x, y| image::Rgba([x as u8, y as u8, 42, 100]));
+        source.write_to(&mut png, image::ImageFormat::Png).unwrap();
+        let updated = atlas
+            .clone()
+            .with_additional_tiles(&[png.get_ref().as_slice(); 15])
+            .unwrap();
+        assert_eq!(
+            image::imageops::crop_imm(&updated.rgba, 0, 0, 768, 384).to_image(),
+            image::imageops::crop_imm(&atlas.rgba, 0, 0, 768, 384).to_image()
+        );
+        for layer in 18..33 {
+            assert_eq!(
+                image::imageops::crop_imm(
+                    &updated.rgba,
+                    (layer % 6) * 128,
+                    (layer / 6) * 128,
+                    128,
+                    128
+                )
+                .to_image(),
+                source
+            );
+        }
+        assert!(atlas.clone().with_additional_tiles(&[]).is_err());
+        assert!(
+            atlas
+                .clone()
+                .with_additional_tiles(&ADDITIONAL_TILES[..14])
+                .is_err()
+        );
+        assert!(
+            atlas
+                .clone()
+                .with_additional_tiles(&[ADDITIONAL_TILES[0]; 16])
+                .is_err()
+        );
+        assert!(
+            atlas
+                .clone()
+                .with_additional_tiles(&[b"invalid PNG".as_slice(); 15])
+                .unwrap_err()
+                .contains("gold_ore")
+        );
+        let mut wrong_size = Cursor::new(Vec::new());
+        RgbaImage::new(127, 128)
+            .write_to(&mut wrong_size, image::ImageFormat::Png)
+            .unwrap();
+        assert!(
+            atlas
+                .with_additional_tiles(&[wrong_size.get_ref().as_slice(); 15])
+                .unwrap_err()
+                .contains("128×128")
+        );
+    }
+
+    #[test]
+    fn legacy_apis_append_new_tiles_with_exact_rgba_and_empty_reserved_layers() {
+        let mut source = Cursor::new(Vec::new());
+        RgbaImage::from_pixel(768, 384, image::Rgba([23, 45, 67, 89]))
+            .write_to(&mut source, image::ImageFormat::Png)
+            .unwrap();
+        let tiles: [&[u8]; 15] = [
+            include_bytes!("../../../assets/textures/blocks/128x128/gold_ore.png"),
+            include_bytes!("../../../assets/textures/blocks/128x128/coal_ore.png"),
+            include_bytes!("../../../assets/textures/blocks/128x128/diamond_ore.png"),
+            include_bytes!("../../../assets/textures/blocks/128x128/gold_block.png"),
+            include_bytes!("../../../assets/textures/blocks/128x128/diamond_block.png"),
+            include_bytes!("../../../assets/textures/blocks/128x128/iron_ore.png"),
+            include_bytes!("../../../assets/textures/blocks/128x128/iron_block.png"),
+            include_bytes!("../../../assets/textures/blocks/128x128/crafting_table_top.png"),
+            include_bytes!("../../../assets/textures/blocks/128x128/crafting_table_front.png"),
+            include_bytes!("../../../assets/textures/blocks/128x128/crafting_table_side.png"),
+            include_bytes!("../../../assets/textures/blocks/128x128/crafting_table_bottom.png"),
+            include_bytes!("../../../assets/textures/blocks/128x128/furnace_front.png"),
+            include_bytes!("../../../assets/textures/blocks/128x128/furnace_front_on.png"),
+            include_bytes!("../../../assets/textures/blocks/128x128/furnace_side.png"),
+            include_bytes!("../../../assets/textures/blocks/128x128/furnace_top.png"),
+        ];
+        for atlas in [
+            BlockAtlas::from_tiles(&ORIGINAL_TILES).unwrap(),
+            BlockAtlas::from_png(source.get_ref()).unwrap(),
+        ] {
+            assert_eq!(atlas.rgba.dimensions(), (768, 768));
+            let gpu = atlas_array(atlas.rgba.as_raw()).unwrap();
+            let data = gpu.data.unwrap();
+            let stride = data.len() / 36;
+            for (offset, png) in tiles.iter().enumerate() {
+                let layer = offset + 18;
+                let expected = image::load_from_memory(png).unwrap().into_rgba8();
+                let actual = image::imageops::crop_imm(
+                    &atlas.rgba,
+                    (layer as u32 % 6) * 128,
+                    (layer as u32 / 6) * 128,
+                    128,
+                    128,
+                )
+                .to_image();
+                assert_eq!(actual, expected, "atlas layer {layer}");
+                assert_eq!(
+                    &data[layer * stride..][..128 * 128 * 4],
+                    expected.as_raw(),
+                    "GPU layer {layer}"
+                );
+            }
+            for layer in [33, 34, 35] {
+                assert!(
+                    data[layer * stride..(layer + 1) * stride]
+                        .iter()
+                        .all(|&b| b == 0)
+                );
+            }
+        }
+    }
+
+    #[test]
     fn uploaded_tiles_preserve_every_rgba_pixel_in_atlas_and_gpu_base_layers() {
         let atlas = BlockAtlas::from_tiles(&ORIGINAL_TILES).unwrap();
         let gpu = atlas_array(atlas.rgba.as_raw()).unwrap();
@@ -119,7 +338,7 @@ mod tests {
             );
         }
         assert!(
-            gpu_bytes[SOURCE_TILE_COUNT * layer_stride..]
+            gpu_bytes[SOURCE_TILE_COUNT * layer_stride..18 * layer_stride]
                 .iter()
                 .all(|&v| v == 0)
         );
@@ -130,7 +349,7 @@ mod tests {
         let atlas = BlockAtlas::from_tiles(&ORIGINAL_TILES).unwrap();
         let combined = atlas_array(atlas.rgba.as_raw()).unwrap();
         let combined_bytes = combined.data.as_ref().unwrap();
-        let layer_stride = combined_bytes.len() / 18;
+        let layer_stride = combined_bytes.len() / 36;
         for (layer, bytes) in ORIGINAL_TILES.iter().enumerate() {
             // Repeat just this source tile into every slot. Its mip chain must
             // match the chain built among the seventeen different real images,
