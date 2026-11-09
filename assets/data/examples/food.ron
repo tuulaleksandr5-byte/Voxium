@@ -1,0 +1,11 @@
+// Насыщение — абсолютная прибавка, не множитель. Это пока только схема.
+[
+    (item: "survival:raw_beef", hunger: 3.0, saturation: 1.8, eat_seconds: 1.6),
+    (item: "survival:cooked_beef", hunger: 8.0, saturation: 12.8, eat_seconds: 1.6),
+    (item: "survival:raw_pork", hunger: 3.0, saturation: 1.8, eat_seconds: 1.6),
+    (item: "survival:cooked_pork", hunger: 8.0, saturation: 12.8, eat_seconds: 1.6),
+    (item: "survival:raw_mutton", hunger: 2.0, saturation: 1.2, eat_seconds: 1.6),
+    (item: "survival:cooked_mutton", hunger: 6.0, saturation: 9.6, eat_seconds: 1.6),
+    (item: "survival:raw_chicken", hunger: 2.0, saturation: 1.2, eat_seconds: 1.6),
+    (item: "survival:cooked_chicken", hunger: 6.0, saturation: 7.2, eat_seconds: 1.6),
+]

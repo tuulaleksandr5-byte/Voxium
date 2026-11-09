@@ -1,0 +1,15 @@
+// Предложение схемы этапа 1. Клиент этот файл пока не загружает.
+(
+    id: "survival:cow", name: "Корова",
+    max_health: 10.0, speed: 1.5,
+    hitbox: (width: 0.9, height: 1.4),
+    model: "survival:cow_model",
+    biome_weights: {Plains: 1.0, Forest: 1.0, Desert: 0.0, Mountains: 0.0, Ocean: 0.0},
+    drops: [
+        (item: "survival:leather", min: 1, max: 3, chance: 1.0),
+        (item: "survival:raw_beef", min: 1, max: 3, chance: 1.0),
+    ],
+    xp: (min: 1, max: 3),
+    // Веса гор/океана — предложенные нули, не заданные пользователем значения.
+    fall_damage: true, shearing: None, egg_interval_seconds: None,
+)

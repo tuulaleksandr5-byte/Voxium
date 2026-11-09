@@ -1,0 +1,19 @@
+// Общие предлагаемые правила. Все времена — активное время симуляции.
+(
+    initial_spawn: (group_min: 2, group_max: 4, group_chance: 0.10,
+                    ground: "foundation:grass", require_open_sky: true),
+    // Вероятность 0.10 и лимит A* 256 — мои начальные значения, не числа из ТЗ.
+    additional_spawn: (interval_seconds: 30.0, per_species_cap: 10,
+                       count_radius: 64.0, min_player_distance: 24.0,
+                       max_player_distance: 64.0),
+    wander: (decision_min_seconds: 3.0, decision_max_seconds: 8.0,
+             radius: 8.0, max_step_up: 1, max_drop: 3, astar_node_limit: 256),
+    panic: (seconds: 5.0, speed_multiplier: 2.0),
+    sheep: (wool_item: "survival:wool", shear_min: 1, shear_max: 3,
+            regrow_seconds: 120.0, shear_durability_cost: 1),
+    chicken: (egg_item: "survival:egg", egg_min_seconds: 300.0,
+              egg_max_seconds: 600.0, fall_damage: false,
+              flutter_max_fall_speed: 1.5),
+    // Скорость Flutter 1.5 и износ ножниц 1 — предлагаемые допущения.
+    freeze_dormant_timers: true,
+)

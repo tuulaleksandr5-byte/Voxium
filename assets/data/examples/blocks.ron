@@ -8,4 +8,13 @@
         drops: [(item: "foundation:cobblestone", min: 1, max: 1, chance: 1.0)],
         xp: 0, collision: true, opacity: true, light_emission: 0,
     ),
+    // TODO(art): новое содержимое; слой 17 остаётся пустым, 18 занят угольным оверлеем.
+    // Твёрдость шерсти 0.8 — предложенное начальное значение, а не число из ТЗ.
+    (
+        id: "survival:wool", name: "Шерсть",
+        textures: (top: 19, side: 19, bottom: 19),
+        hardness: 0.8, tool_type: Hand, min_tier: 0, requires_tool: false,
+        drops: [(item: "survival:wool", min: 1, max: 1, chance: 1.0)],
+        xp: 0, collision: true, opacity: true, light_emission: 0,
+    ),
 ]

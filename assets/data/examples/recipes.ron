@@ -6,4 +6,17 @@
         inputs: [(item: "foundation:oak_log", count: 1)],
         output: (item: "foundation:oak_planks", count: 4),
     ),
+    // Предложенные рецепты для этапа 7. Идентификаторы еды объявлены в items.ron.
+    (id: "survival:cooked_beef", kind: Smelting,
+     inputs: [(item: "survival:raw_beef", count: 1)],
+     output: (item: "survival:cooked_beef", count: 1), seconds: 10.0, xp: 0.35),
+    (id: "survival:cooked_pork", kind: Smelting,
+     inputs: [(item: "survival:raw_pork", count: 1)],
+     output: (item: "survival:cooked_pork", count: 1), seconds: 10.0, xp: 0.35),
+    (id: "survival:cooked_mutton", kind: Smelting,
+     inputs: [(item: "survival:raw_mutton", count: 1)],
+     output: (item: "survival:cooked_mutton", count: 1), seconds: 10.0, xp: 0.35),
+    (id: "survival:cooked_chicken", kind: Smelting,
+     inputs: [(item: "survival:raw_chicken", count: 1)],
+     output: (item: "survival:cooked_chicken", count: 1), seconds: 10.0, xp: 0.35),
 ]

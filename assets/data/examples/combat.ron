@@ -1,0 +1,8 @@
+// Предложение схемы для этапа 5; не включает враждебных мобов.
+(
+    attack_range: 3.0, cooldown_seconds: 0.5,
+    hand_damage: 1.0, other_tool_damage: 2.0,
+    sharpness_per_level: 0.5, attack_exhaustion: 0.1,
+    sword_durability_cost: 1, other_tool_durability_cost: 2,
+    knockback_distance: 0.4, hurt_flash_seconds: 0.3, dying_seconds: 0.5,
+)
