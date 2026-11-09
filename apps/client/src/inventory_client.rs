@@ -63,6 +63,8 @@ pub fn plugin(app: &mut App) {
 }
 
 pub fn reset_session(game: &mut Game, creative: bool) {
+    game.mining.reset();
+    game.world_mouse.disarm();
     game.inventory = Inventory::default();
     game.containers.clear();
     game.open_container = None;
@@ -102,6 +104,8 @@ pub fn close_inventory(game: &mut Game) {
 }
 
 pub fn on_death(game: &mut Game) {
+    game.mining.reset();
+    game.world_mouse.disarm();
     if game.game_rules.keep_inventory {
         game.inventory.cursor = game.inventory.close_cursor(&game.content);
         game.inventory.crafting = game.inventory.close_crafting(&game.content);
@@ -132,6 +136,7 @@ struct Effects {
 fn process_action(game: &mut Game, action: &InventoryAction) -> Effects {
     let mut effects = Effects::default();
     if game.world_id.is_none() || game.vitals.is_dead() || game.pending_respawn {
+        game.mining.reset();
         return effects;
     }
     match action {
@@ -195,33 +200,56 @@ fn process_action(game: &mut Game, action: &InventoryAction) -> Effects {
                 game.ui_dirty = true;
             }
         }
-        InventoryAction::Break { position } if game.mode == Mode::Playing => {
-            if visible_hit(game).is_some_and(|hit| hit.block == *position) {
-                let block = game.world.block(*position);
-                if game.world.set(*position, AIR) {
-                    let center = block_center(*position);
-                    if let Some(container) = game.containers.remove(position) {
-                        for stack in container.slots.into_iter().flatten() {
-                            spawn_drop(game, stack, center, Vec3::Y * 1.5);
-                        }
-                    }
-                    if game.game_mode == GameMode::Survival {
-                        if let Some(item) = game.content.drop_for_block(block) {
-                            spawn_drop(game, ItemStack::new(item, 1), center, Vec3::Y * 1.5);
-                        }
-                        effects.mined = true;
-                    }
-                    effects.sounds.push(BlockSound {
-                        block,
-                        kind: crate::block_audio::SoundKind::Break,
-                        position: center,
-                    });
-                    game.revision += 1;
-                    game.ui_dirty = true;
+        InventoryAction::Break { position }
+            if game.mode == Mode::Playing && game.world_mouse.allowed() =>
+        {
+            if !visible_hit(game).is_some_and(|hit| hit.block == *position) {
+                game.mining.reset();
+                return effects;
+            }
+            let block = game.world.block(*position);
+            let tool = crate::mining_client::chosen_tool(game);
+            let target = crate::mining_client::target(game, *position);
+            let can_harvest = game.mining_config.can_harvest(block, tool);
+            if block == BEDROCK || block == AIR {
+                game.mining.reset();
+                return effects;
+            }
+            if game.game_mode == GameMode::Survival {
+                let Some(duration) = game.mining_config.duration(block, tool) else {
+                    game.mining.reset();
+                    return effects;
+                };
+                if !game.mining.consume(target, duration) {
+                    game.mining.reset();
+                    return effects;
                 }
             }
+            if game.world.set(*position, AIR) {
+                let center = block_center(*position);
+                if let Some(container) = game.containers.remove(position) {
+                    for stack in container.slots.into_iter().flatten() {
+                        spawn_drop(game, stack, center, Vec3::Y * 1.5);
+                    }
+                }
+                if game.game_mode == GameMode::Survival {
+                    if can_harvest && let Some(item) = game.content.drop_for_block(block) {
+                        spawn_drop(game, ItemStack::new(item, 1), center, Vec3::Y * 1.5);
+                    }
+                    effects.mined = true;
+                }
+                effects.sounds.push(BlockSound {
+                    block,
+                    kind: crate::block_audio::SoundKind::Break,
+                    position: center,
+                });
+                game.revision += 1;
+                game.ui_dirty = true;
+            }
         }
-        InventoryAction::Place { position } if game.mode == Mode::Playing => {
+        InventoryAction::Place { position }
+            if game.mode == Mode::Playing && game.world_mouse.allowed() =>
+        {
             let block = game.selected_block();
             if block != AIR
                 && visible_hit(game).is_some_and(|hit| hit.previous == *position)
@@ -248,6 +276,7 @@ fn process_action(game: &mut Game, action: &InventoryAction) -> Effects {
         }
         InventoryAction::OpenContainer { position }
             if game.mode == Mode::Playing
+                && game.world_mouse.allowed()
                 && loaded_block(&game.world, *position) == Some(CHEST)
                 && visible_hit(game).is_some_and(|hit| hit.block == *position) =>
         {
@@ -279,7 +308,7 @@ fn loaded_block(world: &World, position: [i32; 3]) -> Option<u8> {
     .then(|| world.block(position))
 }
 
-fn visible_hit(game: &Game) -> Option<game_core::interaction::RayHit> {
+pub(crate) fn visible_hit(game: &Game) -> Option<game_core::interaction::RayHit> {
     let eye = game.feet + Vec3::Y * (game.height - 0.15);
     let hit = raycast(
         eye.to_array(),
@@ -383,6 +412,7 @@ struct ReloadState {
     items: FileState,
     drops: FileState,
     recipes: FileState,
+    mining: FileState,
 }
 
 fn config_source(
@@ -437,6 +467,19 @@ fn reload_config(time: Res<Time<Real>>, mut game: ResMut<Game>, mut state: Local
         let candidate = RecipeBook::from_ron(source, &game.content)?;
         game.recipes = candidate;
         game.ui_dirty = true;
+        Ok(())
+    });
+    let mining = config_source(
+        "VOXEL_MINING_CONFIG",
+        "mining.ron",
+        include_str!("../../../assets/data/mining.ron"),
+    );
+    reload_file(&mut state.mining, mining, |source| {
+        let candidate = game_core::mining::MiningConfig::from_ron(source)?;
+        if game.mining_config != candidate {
+            game.mining_config = candidate;
+            game.mining.reset();
+        }
         Ok(())
     });
     let drops = config_source(
@@ -494,8 +537,28 @@ mod tests {
                 sections: Default::default(),
             }),
         );
+        game.world_mouse.update(true, false, false);
         assert!(game.world.set([8, 101, 5], game_core::STONE));
         game
+    }
+    fn equip(game: &mut Game, name: &str) {
+        game.inventory.hotbar[game.selected] =
+            Some(ItemStack::new(game.content.find(name).unwrap(), 1));
+    }
+    fn finish_mining(game: &mut Game) {
+        game.world_mouse.update(true, false, false);
+        let block = visible_hit(game).unwrap().block;
+        let duration = game
+            .mining_config
+            .duration(
+                game.world.block(block),
+                crate::mining_client::chosen_tool(game),
+            )
+            .unwrap();
+        assert_eq!(
+            crate::mining_client::advance(game, true, duration),
+            Some(block)
+        );
     }
     fn stack(game: &Game, block: u8, count: u16) -> ItemStack {
         ItemStack::new(game.content.item_for_block(block).unwrap(), count)
@@ -673,8 +736,38 @@ mod tests {
     }
 
     #[test]
+    fn early_survival_break_does_not_change_world_or_emit_effects() {
+        let mut game = world();
+        let before = game.inventory.clone();
+        let effects = process_action(
+            &mut game,
+            &InventoryAction::Break {
+                position: [8, 101, 5],
+            },
+        );
+        assert_eq!(game.world.block([8, 101, 5]), game_core::STONE);
+        assert!(!effects.mined);
+        assert!(effects.sounds.is_empty());
+        assert_eq!(total_drops(&game), 0);
+        assert_eq!(game.inventory.hotbar, before.hotbar);
+        let target = crate::mining_client::target(&game, [8, 101, 5]);
+        assert!(game.mining.advance(target, 0.1, 0.1));
+        let effects = process_action(
+            &mut game,
+            &InventoryAction::Break {
+                position: [8, 101, 5],
+            },
+        );
+        assert_eq!(game.world.block([8, 101, 5]), game_core::STONE);
+        assert!(!effects.mined);
+        assert!(effects.sounds.is_empty());
+        assert_eq!(total_drops(&game), 0);
+    }
+
+    #[test]
     fn duplicated_break_only_drops_and_exhausts_once() {
         let mut game = world();
+        equip(&mut game, "survival:wooden_pickaxe");
         assert!(
             !process_action(
                 &mut game,
@@ -684,6 +777,7 @@ mod tests {
             )
             .mined
         );
+        finish_mining(&mut game);
         let effects = process_action(
             &mut game,
             &InventoryAction::Break {
@@ -707,6 +801,157 @@ mod tests {
             .mined
         );
         assert_eq!(total_drops(&game), 1);
+    }
+
+    #[test]
+    fn golden_pickaxe_breaks_iron_at_table_time_without_a_drop() {
+        let mut game = world();
+        equip(&mut game, "survival:golden_pickaxe");
+        game.world.set([8, 101, 5], game_core::IRON_ORE);
+        assert_eq!(crate::mining_client::advance(&mut game, true, 1.29), None);
+        assert_eq!(game.world.block([8, 101, 5]), game_core::IRON_ORE);
+        assert_eq!(
+            crate::mining_client::advance(&mut game, true, 0.02),
+            Some([8, 101, 5])
+        );
+        let effects = process_action(
+            &mut game,
+            &InventoryAction::Break {
+                position: [8, 101, 5],
+            },
+        );
+        assert!(effects.mined);
+        assert_eq!(effects.sounds.len(), 1);
+        assert_eq!(game.world.block([8, 101, 5]), AIR);
+        assert_eq!(total_drops(&game), 0);
+        assert_eq!(game.inventory.hotbar[0].as_ref().unwrap().count, 1);
+    }
+
+    #[test]
+    fn completion_revalidates_ray_block_tool_slot_and_loaded_chunk() {
+        for change in 0..5 {
+            let mut game = world();
+            equip(&mut game, "survival:wooden_pickaxe");
+            finish_mining(&mut game);
+            match change {
+                0 => game.yaw = 1.,
+                1 => {
+                    game.world.set([8, 101, 5], game_core::COBBLE);
+                }
+                2 => equip(&mut game, "survival:diamond_pickaxe"),
+                3 => {
+                    game.inventory.hotbar[1] = game.inventory.hotbar[0].clone();
+                    game.selected = 1;
+                }
+                _ => game.world.chunks.clear(),
+            }
+            let effects = process_action(
+                &mut game,
+                &InventoryAction::Break {
+                    position: [8, 101, 5],
+                },
+            );
+            assert!(!effects.mined, "изменение {change}");
+            assert!(effects.sounds.is_empty());
+            assert_eq!(total_drops(&game), 0);
+            assert!(game.mining.target().is_none());
+        }
+    }
+
+    #[test]
+    fn hold_uses_real_seconds_and_resets_for_target_tool_release_and_ui() {
+        let mut game = world();
+        assert_eq!(crate::mining_client::advance(&mut game, true, 0.5), None);
+        let (_, fraction) = crate::mining_client::progress(&game).unwrap();
+        assert!((fraction - 0.5 / 7.5).abs() < 0.00001);
+        game.world.set([8, 101, 6], game_core::STONE);
+        crate::mining_client::advance(&mut game, true, 0.25);
+        assert_eq!(game.mining.target().unwrap().position, [8, 101, 6]);
+        assert!((crate::mining_client::progress(&game).unwrap().1 - 0.25 / 7.5).abs() < 0.00001);
+        equip(&mut game, "survival:wooden_pickaxe");
+        crate::mining_client::advance(&mut game, true, 0.25);
+        assert!((crate::mining_client::progress(&game).unwrap().1 - 0.25 / 1.15).abs() < 0.00001);
+        crate::mining_client::advance(&mut game, false, 0.5);
+        assert!(game.mining.target().is_none());
+        for mode in [
+            Mode::Paused,
+            Mode::Inventory,
+            Mode::Console,
+            Mode::Dead,
+            Mode::Menu,
+        ] {
+            game.screen(Mode::Playing);
+            game.world_mouse.update(true, false, false);
+            crate::mining_client::advance(&mut game, true, 0.5);
+            game.screen(mode);
+            assert!(game.mining.target().is_none());
+            assert!(crate::mining_client::progress(&game).is_none());
+            game.screen(Mode::Playing);
+            assert!(!game.world_mouse.update(true, true, false));
+            assert!(game.world_mouse.update(true, false, false));
+        }
+    }
+
+    #[test]
+    fn bedrock_is_never_breakable_and_water_is_creative_only() {
+        for mode in [GameMode::Survival, GameMode::Creative] {
+            for block in [game_core::BEDROCK, game_core::WATER] {
+                let mut game = world();
+                game.game_mode = mode;
+                game.world.set([8, 101, 5], block);
+                assert_eq!(crate::mining_client::advance(&mut game, true, 1000.), None);
+                let effects = process_action(
+                    &mut game,
+                    &InventoryAction::Break {
+                        position: [8, 101, 5],
+                    },
+                );
+                let allowed = mode == GameMode::Creative && block == game_core::WATER;
+                assert_eq!(!effects.sounds.is_empty(), allowed);
+                assert_eq!(
+                    game.world.block([8, 101, 5]),
+                    if allowed { AIR } else { block }
+                );
+                assert_eq!(total_drops(&game), 0);
+                assert!(!effects.mined);
+            }
+        }
+    }
+
+    #[test]
+    fn returning_from_inventory_requires_release_before_any_world_mouse_action() {
+        let mut game = world();
+        game.game_mode = GameMode::Creative;
+        game.inventory.hotbar[0] = Some(stack(&game, game_core::DIRT, 2));
+        game.screen(Mode::Inventory);
+        process_action(&mut game, &InventoryAction::Close);
+        assert_eq!(game.mode, Mode::Playing);
+        assert!(!game.world_mouse.update(true, true, true));
+        for action in [
+            InventoryAction::Break {
+                position: [8, 101, 5],
+            },
+            InventoryAction::Place {
+                position: [8, 101, 6],
+            },
+        ] {
+            assert!(process_action(&mut game, &action).sounds.is_empty());
+        }
+        assert!(game.world_mouse.update(true, false, false));
+        assert_eq!(
+            process_action(
+                &mut game,
+                &InventoryAction::Break {
+                    position: [8, 101, 5]
+                }
+            )
+            .sounds
+            .len(),
+            1
+        );
+        reset_session(&mut game, true);
+        assert!(!game.world_mouse.update(true, true, false));
+        assert!(game.world_mouse.update(true, false, false));
     }
 
     #[test]
@@ -799,6 +1044,7 @@ mod tests {
         game.containers.get_mut(&[8, 101, 5]).unwrap().slots[0] = Some(value);
         close_inventory(&mut game);
         game.mode = Mode::Playing;
+        finish_mining(&mut game);
         process_action(
             &mut game,
             &InventoryAction::Break {
@@ -949,6 +1195,11 @@ mod tests {
             .add_message::<crate::survival_client::SurvivalStateChanged>();
         plugin(&mut app);
         app.add_systems(Update, crate::survival_client::apply_actions);
+        {
+            let mut game = app.world_mut().resource_mut::<Game>();
+            equip(&mut game, "survival:wooden_pickaxe");
+            finish_mining(&mut game);
+        }
         let message = InventoryActionMessage(InventoryAction::Break {
             position: [8, 101, 5],
         });

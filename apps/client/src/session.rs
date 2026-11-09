@@ -31,6 +31,9 @@ pub enum Mode {
 pub struct Game {
     pub content: ContentRegistry,
     pub recipes: RecipeBook,
+    pub mining_config: game_core::mining::MiningConfig,
+    pub mining: game_core::mining::MiningState,
+    pub world_mouse: crate::control_input::WorldMouseGate,
     pub inventory: Inventory,
     pub containers: HashMap<[i32; 3], Container>,
     pub open_container: Option<[i32; 3]>,
@@ -76,6 +79,9 @@ impl Default for Game {
         Self {
             content: ContentRegistry::default(),
             recipes: RecipeBook::default(),
+            mining_config: Default::default(),
+            mining: Default::default(),
+            world_mouse: Default::default(),
             inventory: Inventory::default(),
             containers: HashMap::new(),
             open_container: None,
@@ -128,6 +134,8 @@ impl Game {
             .unwrap_or(game_core::AIR)
     }
     pub fn screen(&mut self, mode: Mode) {
+        self.mining.reset();
+        self.world_mouse.disarm();
         if self.mode == Mode::Inventory && mode != Mode::Inventory {
             crate::inventory_client::close_inventory(self);
         }

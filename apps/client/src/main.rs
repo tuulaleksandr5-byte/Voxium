@@ -11,6 +11,7 @@ mod inventory_client;
 mod inventory_render;
 mod item_icons;
 mod item_textures;
+mod mining_client;
 mod player;
 mod session;
 mod settings;
@@ -80,6 +81,7 @@ fn main() {
     );
     console::plugin(&mut app);
     inventory_client::plugin(&mut app);
+    mining_client::plugin(&mut app);
     item_icons::plugin(&mut app);
     inventory_render::plugin(&mut app);
     ui::plugin(&mut app);

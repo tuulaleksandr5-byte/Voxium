@@ -84,6 +84,8 @@ pub fn controls(
         cursor.grab_mode = CursorGrabMode::None;
         steps.reset();
         input.clear_movement();
+        game.mining.reset();
+        game.world_mouse.disarm();
         return;
     }
     if game.mode == Mode::Playing && !window.focused {
@@ -113,7 +115,12 @@ pub fn controls(
             _ => {}
         }
     }
-    let captured = game.mode == Mode::Playing && window.focused;
+    let captured = game.mode == Mode::Playing && window.focused && game.world_id.is_some();
+    let world_mouse = game.world_mouse.update(
+        captured,
+        mouse.pressed(MouseButton::Left),
+        mouse.pressed(MouseButton::Right),
+    );
     cursor.visible = !captured;
     cursor.grab_mode = if captured {
         CursorGrabMode::Locked
@@ -121,6 +128,7 @@ pub fn controls(
         CursorGrabMode::None
     };
     if !captured {
+        game.mining.reset();
         steps.reset();
         input.clear_movement();
     }
@@ -339,12 +347,15 @@ pub fn controls(
                 Color::srgb(1.0, 0.85, 0.25),
             );
             use crate::inventory_client::{InventoryAction, InventoryActionMessage};
-            if mouse.just_pressed(MouseButton::Left) {
+            if world_mouse
+                && game.game_mode == GameMode::Creative
+                && mouse.just_pressed(MouseButton::Left)
+            {
                 inventory_actions.write(InventoryActionMessage(InventoryAction::Break {
                     position: hit.block,
                 }));
             }
-            if mouse.just_pressed(MouseButton::Right) {
+            if world_mouse && mouse.just_pressed(MouseButton::Right) {
                 let action = if game.world.block(hit.block) == game_core::CHEST
                     && !(keys.pressed(KeyCode::ShiftLeft) || keys.pressed(KeyCode::ShiftRight))
                 {
@@ -363,6 +374,19 @@ pub fn controls(
                 }
             }
         }
+    }
+    if captured {
+        // Добыча использует всё реальное время, а не ограниченный dt движения.
+        if let Some(position) = crate::mining_client::advance(
+            &mut game,
+            mouse.pressed(MouseButton::Left),
+            time.delta_secs(),
+        ) {
+            inventory_actions.write(crate::inventory_client::InventoryActionMessage(
+                crate::inventory_client::InventoryAction::Break { position },
+            ));
+        }
+        crate::mining_client::draw_cracks(&game, &mut gizmos);
     }
     if game.chunk_grid {
         draw_chunk_grid(game.feet, &mut gizmos);

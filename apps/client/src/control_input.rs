@@ -114,3 +114,43 @@ mod tests {
         assert_eq!(s.debug_keys(false, false, true, false), (true, false));
     }
 }
+
+// После интерфейса мир получает мышь только после отпускания обеих кнопок.
+#[derive(Default)]
+pub struct WorldMouseGate {
+    armed: bool,
+}
+impl WorldMouseGate {
+    pub fn disarm(&mut self) {
+        self.armed = false;
+    }
+    pub fn update(&mut self, captured: bool, left: bool, right: bool) -> bool {
+        if !captured {
+            self.disarm();
+        } else if !left && !right {
+            self.armed = true;
+        }
+        self.armed
+    }
+    pub fn allowed(&self) -> bool {
+        self.armed
+    }
+}
+#[cfg(test)]
+mod mouse_gate_tests {
+    use super::*;
+    #[test]
+    fn held_menu_click_stays_blocked_until_both_buttons_are_released() {
+        let mut gate = WorldMouseGate::default();
+        assert!(!gate.update(true, true, false));
+        assert!(gate.update(true, false, false));
+        assert!(gate.update(true, true, false));
+        assert!(!gate.update(false, true, false));
+        assert!(!gate.update(true, true, false));
+        assert!(!gate.update(true, false, true));
+        assert!(gate.update(true, false, false));
+        assert!(gate.update(true, true, false));
+        gate.disarm();
+        assert!(!gate.update(true, true, false));
+    }
+}

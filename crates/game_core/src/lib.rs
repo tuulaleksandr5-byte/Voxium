@@ -10,6 +10,7 @@ pub mod drops;
 pub mod interaction;
 pub mod inventory;
 pub mod items;
+pub mod mining;
 pub mod persistence;
 pub mod survival;
 

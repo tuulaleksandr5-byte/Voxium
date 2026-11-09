@@ -137,6 +137,8 @@ pub fn apply_actions(
         }
         match message.0 {
             PlayerAction::SetMode(mode) => {
+                game.mining.reset();
+                game.world_mouse.disarm();
                 game.game_mode = mode;
                 game.flying = false;
                 game.fall_peak = None;
@@ -319,6 +321,34 @@ mod tests {
         assert!(!g.vitals.is_dead());
         assert!(g.pending_respawn);
         assert_eq!(g.mode, Mode::Playing);
+    }
+
+    #[test]
+    fn changing_game_mode_clears_mining_and_requires_mouse_release() {
+        let mut app = app();
+        {
+            let mut game = app.world_mut().resource_mut::<Game>();
+            game.world_mouse.update(true, false, false);
+            game.mining.advance(
+                game_core::mining::MiningTarget {
+                    position: [0, 1, 0],
+                    block: game_core::STONE,
+                    item: None,
+                    slot: 0,
+                },
+                1.,
+                2.,
+            );
+        }
+        app.world_mut()
+            .write_message(PlayerActionMessage(PlayerAction::SetMode(
+                GameMode::Creative,
+            )));
+        app.update();
+        let mut game = app.world_mut().resource_mut::<Game>();
+        assert!(game.mining.target().is_none());
+        assert!(!game.world_mouse.update(true, true, false));
+        assert!(game.world_mouse.update(true, false, false));
     }
 
     #[test]
