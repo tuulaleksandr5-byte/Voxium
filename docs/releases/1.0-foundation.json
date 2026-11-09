@@ -1,0 +1,12 @@
+{
+  "name": "Voxel Sandbox 1.0 Foundation",
+  "git_tag": "v1.0.0",
+  "source_commit": "74d34332a587131d3b462c1a99fa21b5769ec13b",
+  "windows_download_commit": "9a34e8fdf7dbbca1d9d1ae55a12fe1234355cbba",
+  "windows_exe_sha256": "fdc0ec271060ebc5ff015df232a38884a46bb741da91432068bba23570dae4ff",
+  "windows_zip_sha256": "08dc91506e468513aa08261126356729660f1255e33835fc9adff91487bc6986",
+  "native_tests": 92,
+  "windows_wine_tests": 51,
+  "native_windows_hardware_verified": false,
+  "note": "User accepted the previously delivered build as 1.0 Foundation; original binary/source are preserved without rebuilding or changing their internal early Cargo package versions."
+}

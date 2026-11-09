@@ -14,6 +14,7 @@ use bevy::{
 use game_core::{
     BEDROCK, World,
     interaction::{can_stand, move_player, player_intersects_block, raycast},
+    survival::{DamageSource, GameMode, fall_damage},
     valid_world_height,
 };
 #[derive(Component)]
@@ -38,6 +39,7 @@ pub fn controls(
     mut input: Local<crate::control_input::ControlInput>,
     mut steps: Local<crate::footsteps::StepCadence>,
     mut sounds: MessageWriter<crate::block_audio::BlockSound>,
+    mut player_actions: MessageWriter<crate::survival_client::PlayerActionMessage>,
 ) {
     let presses: Vec<_> = keyboard
         .read()
@@ -76,6 +78,13 @@ pub fn controls(
         })
         .sum();
     let (window, cursor) = &mut *window;
+    if matches!(game.mode, Mode::Console | Mode::Dead) || game.pending_respawn {
+        cursor.visible = true;
+        cursor.grab_mode = CursorGrabMode::None;
+        steps.reset();
+        input.clear_movement();
+        return;
+    }
     if game.mode == Mode::Playing && !window.focused {
         game.screen(Mode::Paused);
     }
@@ -118,7 +127,10 @@ pub fn controls(
             if *key == KeyCode::KeyW {
                 input.forward_tap(time.elapsed_secs_f64());
             }
-            if *key == KeyCode::Space && input.jump_tap(time.elapsed_secs_f64()) {
+            if *key == KeyCode::Space
+                && game.game_mode == GameMode::Creative
+                && input.jump_tap(time.elapsed_secs_f64())
+            {
                 game.flying = !game.flying;
                 game.velocity.y = 0.;
                 game.grounded = false;
@@ -144,6 +156,7 @@ pub fn controls(
             }
         }
         let previous_feet = game.feet;
+        let was_grounded = game.grounded;
         let dt = time.delta_secs().min(0.1);
         let rotation = Quat::from_rotation_y(game.yaw);
         let mut movement = Vec3::ZERO;
@@ -195,6 +208,9 @@ pub fn controls(
         if game.world.chunks.contains_key(&chunk) {
             if !game.flying && keys.just_pressed(KeyCode::Space) && game.grounded {
                 game.velocity.y = 8.0;
+                player_actions.write(crate::survival_client::PlayerActionMessage(
+                    crate::survival_client::PlayerAction::Jump { sprinting: sprint },
+                ));
             }
             if game.flying {
                 game.velocity.y = (i32::from(keys.pressed(KeyCode::Space))
@@ -219,6 +235,40 @@ pub fn controls(
             game.velocity = Vec3::ZERO;
         }
         let traveled = (game.feet - previous_feet).xz().length();
+        player_actions.write(crate::survival_client::PlayerActionMessage(
+            crate::survival_client::PlayerAction::Travel {
+                meters: traveled,
+                sprinting: sprint && game.height >= 1.8,
+            },
+        ));
+        if game.game_mode == GameMode::Survival {
+            let wet = game.world.block(game.feet.floor().as_ivec3().to_array()) == game_core::WATER;
+            if wet {
+                game.fall_peak = None;
+            } else if game.grounded {
+                if !was_grounded && let Some(peak) = game.fall_peak {
+                    let amount = fall_damage(peak - game.feet.y, &game.survival_config);
+                    if amount > 0. {
+                        player_actions.write(crate::survival_client::PlayerActionMessage(
+                            crate::survival_client::PlayerAction::Damage {
+                                amount,
+                                source: DamageSource::Fall,
+                            },
+                        ));
+                    }
+                }
+                game.fall_peak = None;
+            } else {
+                game.fall_peak = Some(
+                    game.fall_peak
+                        .unwrap_or(previous_feet.y)
+                        .max(previous_feet.y)
+                        .max(game.feet.y),
+                );
+            }
+        } else {
+            game.fall_peak = None;
+        }
         if steps.advance(
             time.delta_secs(),
             traveled,
@@ -254,6 +304,9 @@ pub fn controls(
             let broken = game.world.block(hit.block);
             if mouse.just_pressed(MouseButton::Left) && game.world.set(hit.block, 0) {
                 game.revision += 1;
+                player_actions.write(crate::survival_client::PlayerActionMessage(
+                    crate::survival_client::PlayerAction::MinedBlock,
+                ));
                 sounds.write(crate::block_audio::BlockSound {
                     block: broken,
                     kind: crate::block_audio::SoundKind::Break,

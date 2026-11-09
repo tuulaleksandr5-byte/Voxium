@@ -1,6 +1,7 @@
 //! Native Bevy menus and the in-game overlay. Screen changes are handled by the client.
 mod presentation;
 use crate::{
+    console::ConsoleState,
     graphics_assets::BlockIcons,
     session::{Game, Mode},
 };
@@ -15,6 +16,7 @@ use bevy::{
     prelude::*,
     ui_widgets::Button,
 };
+use game_core::survival::GameMode;
 
 #[derive(Clone, Debug)]
 pub enum Action {
@@ -37,6 +39,8 @@ pub enum Action {
     FocusName,
     FocusSeed,
     RandomSeed,
+    CycleGameMode,
+    Respawn,
     CommitSettings,
 }
 
@@ -63,6 +67,7 @@ pub fn plugin(app: &mut App) {
             scroll_panels,
             rebuild,
             update_hud,
+            update_vitals,
         )
             .chain(),
     );
@@ -88,6 +93,7 @@ enum Tone {
     Normal,
     Quiet,
     Selected,
+    Gold,
 }
 #[derive(Component)]
 struct UiButton {
@@ -104,6 +110,19 @@ struct DebugText;
 struct PanelStatus;
 #[derive(Component)]
 struct DebugPanel;
+#[derive(Clone, Copy)]
+enum VitalKind {
+    Health,
+    Hunger,
+    Air,
+}
+#[derive(Component)]
+struct VitalText(VitalKind);
+#[derive(Component)]
+enum VitalNode {
+    Fill(VitalKind, usize),
+    AirPanel,
+}
 
 fn node(commands: &mut Commands, parent: Entity, layout: Node, color: Color) -> Entity {
     let child = commands.spawn((layout, BackgroundColor(color))).id();
@@ -186,6 +205,15 @@ fn colors(tone: Tone, hover: bool) -> (Color, Color, Color) {
                 Color::srgb(0.10, 0.27, 0.25)
             },
             TEAL,
+            TEXT,
+        ),
+        Tone::Gold => (
+            if hover {
+                Color::srgb(0.29, 0.17, 0.36)
+            } else {
+                Color::srgba(0.16, 0.07, 0.23, 0.96)
+            },
+            AMBER,
             TEXT,
         ),
         Tone::Normal => (
@@ -372,6 +400,7 @@ fn rebuild(
     mut commands: Commands,
     mut game: ResMut<Game>,
     icons: Res<BlockIcons>,
+    console: Res<ConsoleState>,
     old: Query<Entity, With<UiRoot>>,
 ) {
     if !game.ui_dirty {
@@ -412,18 +441,26 @@ fn rebuild(
     }
     let width = match game.mode {
         Mode::Inventory => 790.,
-        Mode::Create => 840.,
+        Mode::Create | Mode::Console => 840.,
         Mode::Load => 710.,
         Mode::Settings => 640.,
         _ => 540.,
     };
     let panel = card(&mut commands, root, width);
+    if matches!(game.mode, Mode::Dead | Mode::Console) {
+        commands.entity(panel).insert((
+            BackgroundColor(Color::srgba(0.10, 0.045, 0.16, 0.98)),
+            BorderColor::all(AMBER),
+        ));
+    }
     match game.mode {
         Mode::Create => create_menu(&mut commands, panel, &game),
         Mode::Load => load_menu(&mut commands, panel, &game),
         Mode::Settings => settings_menu(&mut commands, panel, &game),
         Mode::Paused => pause_menu(&mut commands, panel, &game),
         Mode::Inventory => inventory_menu(&mut commands, panel, &game),
+        Mode::Dead => death_menu(&mut commands, panel, &game),
+        Mode::Console => console_menu(&mut commands, panel, &console),
         Mode::Menu | Mode::Playing => {}
     }
 }
@@ -655,6 +692,16 @@ fn create_menu(commands: &mut Commands, panel: Entity, game: &Game) {
         12.,
         MUTED,
     );
+    button(
+        commands,
+        form,
+        match game.creation_mode {
+            GameMode::Survival => "Режим: Выживание  ↻",
+            GameMode::Creative => "Режим: Творческий  ↻",
+        },
+        Action::CycleGameMode,
+        Tone::Gold,
+    );
     node(
         commands,
         form,
@@ -771,6 +818,74 @@ fn pause_menu(commands: &mut Commands, panel: Entity, game: &Game) {
     );
     status(commands, panel, game);
     label(commands, panel, "Esc: продолжить", 12.0, MUTED);
+}
+
+fn death_menu(commands: &mut Commands, panel: Entity, game: &Game) {
+    heading(
+        commands,
+        panel,
+        "ПРИКЛЮЧЕНИЕ ПРОДОЛЖАЕТСЯ",
+        "Вы погибли",
+        "Возродитесь у точки появления мира.",
+    );
+    button(
+        commands,
+        panel,
+        "Возродиться",
+        Action::Respawn,
+        Tone::Primary,
+    );
+    button(
+        commands,
+        panel,
+        "Главное меню",
+        Action::MainMenu,
+        Tone::Gold,
+    );
+    status(commands, panel, game);
+}
+
+fn console_menu(commands: &mut Commands, panel: Entity, console: &ConsoleState) {
+    heading(
+        commands,
+        panel,
+        "КОМАНДЫ МИРА",
+        "Консоль",
+        "Enter: выполнить команду. Esc: вернуться в мир.",
+    );
+    let field = node(
+        commands,
+        panel,
+        Node {
+            width: percent(100),
+            min_height: px(52),
+            padding: UiRect::all(px(14)),
+            border: UiRect::all(px(1)),
+            border_radius: BorderRadius::all(px(4)),
+            flex_shrink: 0.0,
+            ..default()
+        },
+        Color::srgba(0.16, 0.07, 0.23, 0.96),
+    );
+    commands.entity(field).insert(BorderColor::all(AMBER));
+    label(commands, field, format!("{} |", console.input), 17., TEXT);
+    if !console.feedback.is_empty() {
+        label(commands, panel, &console.feedback, 14., AMBER);
+    }
+    label(
+        commands,
+        panel,
+        "/gamemode survival | creative\n/gamerule keepInventory true | false",
+        14.,
+        MUTED,
+    );
+    button(
+        commands,
+        panel,
+        "Вернуться в мир",
+        Action::Resume,
+        Tone::Gold,
+    );
 }
 
 fn settings_row(commands: &mut Commands, panel: Entity, name: &str, value: String, action: Action) {
@@ -1054,6 +1169,9 @@ fn hud(commands: &mut Commands, root: Entity, game: &Game, icons: &BlockIcons) {
         },
         Color::NONE,
     );
+    if game.game_mode == GameMode::Survival {
+        survival_hud(commands, bar_frame, game);
+    }
     let bar = node(
         commands,
         bar_frame,
@@ -1107,6 +1225,186 @@ fn hud(commands: &mut Commands, root: Entity, game: &Game, icons: &BlockIcons) {
             ))
             .id();
         commands.entity(tile).add_child(icon);
+    }
+}
+
+fn survival_hud(commands: &mut Commands, parent: Entity, game: &Game) {
+    let air = vital_meter(commands, parent, game, VitalKind::Air, 304.);
+    commands.entity(air).insert(VitalNode::AirPanel);
+    let meters = node(
+        commands,
+        parent,
+        Node {
+            width: px(628),
+            column_gap: px(12),
+            ..default()
+        },
+        Color::NONE,
+    );
+    vital_meter(commands, meters, game, VitalKind::Health, 308.);
+    vital_meter(commands, meters, game, VitalKind::Hunger, 308.);
+}
+
+fn vital_meter(
+    commands: &mut Commands,
+    parent: Entity,
+    game: &Game,
+    kind: VitalKind,
+    width: f32,
+) -> Entity {
+    let (title, glyph, color) = match kind {
+        VitalKind::Health => ("Здоровье", "♥", Color::srgb(1.0, 0.40, 0.46)),
+        VitalKind::Hunger => ("Голод", "◆", AMBER),
+        VitalKind::Air => ("Воздух", "●", Color::srgb(0.46, 0.80, 1.0)),
+    };
+    let panel = node(
+        commands,
+        parent,
+        Node {
+            width: px(width),
+            padding: UiRect::axes(px(10), px(5)),
+            border: UiRect::all(px(1)),
+            border_radius: BorderRadius::all(px(4)),
+            flex_direction: FlexDirection::Column,
+            row_gap: px(1),
+            ..default()
+        },
+        Color::srgba(0.12, 0.055, 0.19, 0.92),
+    );
+    commands
+        .entity(panel)
+        .insert(BorderColor::all(Color::srgba(0.79, 0.54, 0.22, 0.80)));
+    let header = row(commands, panel, 6.);
+    let caption = label(commands, header, title, 11., MUTED);
+    commands.entity(caption).insert(Node {
+        flex_grow: 1.,
+        ..default()
+    });
+    let count = label(commands, header, vital_label(game, kind), 11., TEXT);
+    commands.entity(count).insert(VitalText(kind));
+    let cells = node(
+        commands,
+        panel,
+        Node {
+            width: percent(100),
+            justify_content: JustifyContent::SpaceBetween,
+            ..default()
+        },
+        Color::NONE,
+    );
+    let (current, max) = vital_value(game, kind);
+    for index in 0..10 {
+        let cell = node(
+            commands,
+            cells,
+            Node {
+                width: px(24),
+                height: px(22),
+                flex_shrink: 0.,
+                ..default()
+            },
+            Color::NONE,
+        );
+        let empty = label(
+            commands,
+            cell,
+            glyph,
+            21.,
+            Color::srgba(0.58, 0.45, 0.65, 0.48),
+        );
+        commands.entity(empty).insert(Node {
+            position_type: PositionType::Absolute,
+            left: px(5),
+            top: px(-2),
+            ..default()
+        });
+        // Обрезка глифа показывает половинки сердец и оставшуюся долю воздуха.
+        let fill = node(
+            commands,
+            cell,
+            Node {
+                position_type: PositionType::Absolute,
+                width: percent(vital_fraction(current, max, index) * 100.),
+                height: percent(100),
+                overflow: Overflow::clip(),
+                ..default()
+            },
+            Color::NONE,
+        );
+        commands.entity(fill).insert(VitalNode::Fill(kind, index));
+        let icon = label(commands, fill, glyph, 21., color);
+        commands.entity(icon).insert(Node {
+            position_type: PositionType::Absolute,
+            left: px(5),
+            top: px(-2),
+            width: px(24),
+            flex_shrink: 0.,
+            ..default()
+        });
+    }
+    panel
+}
+
+fn vital_value(game: &Game, kind: VitalKind) -> (f32, f32) {
+    let (value, max) = match kind {
+        VitalKind::Health => (game.vitals.health, game.survival_config.max_health),
+        VitalKind::Hunger => (game.vitals.hunger, game.survival_config.max_hunger),
+        VitalKind::Air => (game.vitals.air_seconds, game.survival_config.air_seconds),
+    };
+    let max = max.max(f32::EPSILON);
+    (value.clamp(0., max), max)
+}
+
+fn vital_fraction(value: f32, max: f32, index: usize) -> f32 {
+    (value / max * 10. - index as f32).clamp(0., 1.)
+}
+
+fn vital_label(game: &Game, kind: VitalKind) -> String {
+    let (value, max) = vital_value(game, kind);
+    match kind {
+        VitalKind::Air => format!("{:.0} с", value.ceil()),
+        VitalKind::Health | VitalKind::Hunger => format!("{:.0} / {max:.0}", value.ceil()),
+    }
+}
+
+fn update_vitals(
+    game: Res<Game>,
+    mut nodes: Query<(&VitalNode, &mut Node)>,
+    mut texts: Query<(&VitalText, &mut Text)>,
+) {
+    if game.mode != Mode::Playing {
+        return;
+    }
+    let eye = game.feet + Vec3::Y * (game.height - 0.15);
+    let underwater = game.world.block(eye.floor().as_ivec3().to_array()) == game_core::WATER;
+    for (vital, mut node) in &mut nodes {
+        match *vital {
+            VitalNode::Fill(kind, index) => {
+                let (value, max) = vital_value(&game, kind);
+                let width = percent(vital_fraction(value, max, index) * 100.);
+                if node.width != width {
+                    node.width = width;
+                }
+            }
+            VitalNode::AirPanel => {
+                let display = if game.game_mode == GameMode::Survival
+                    && (underwater || game.vitals.air_seconds < game.survival_config.air_seconds)
+                {
+                    Display::Flex
+                } else {
+                    Display::None
+                };
+                if node.display != display {
+                    node.display = display;
+                }
+            }
+        }
+    }
+    for (kind, mut text) in &mut texts {
+        let value = vital_label(&game, kind.0);
+        if text.0 != value {
+            text.0 = value;
+        }
     }
 }
 

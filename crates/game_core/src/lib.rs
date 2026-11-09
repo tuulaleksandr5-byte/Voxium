@@ -6,6 +6,7 @@ pub mod world;
 pub use world::*;
 pub mod interaction;
 pub mod persistence;
+pub mod survival;
 
 /// Inclusive lower bound of the overworld.
 pub const WORLD_MIN_Y: i32 = -64;

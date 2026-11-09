@@ -1,6 +1,10 @@
 use crate::settings::Settings;
 use bevy::prelude::*;
-use game_core::{World, persistence::SaveData};
+use game_core::{
+    World,
+    persistence::SaveData,
+    survival::{GameMode, GameRules, SurvivalConfig, Vitals},
+};
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum Mode {
@@ -11,11 +15,21 @@ pub enum Mode {
     Playing,
     Paused,
     Inventory,
+    Dead,
+    Console,
 }
 
 #[derive(Resource)]
 pub struct Game {
     pub mode: Mode,
+    pub game_mode: GameMode,
+    pub creation_mode: GameMode,
+    pub vitals: Vitals,
+    pub game_rules: GameRules,
+    pub survival_config: SurvivalConfig,
+    pub spawn: Vec3,
+    pub pending_respawn: bool,
+    pub fall_peak: Option<f32>,
     pub return_to: Mode,
     pub ui_dirty: bool,
     pub status: String,
@@ -46,6 +60,14 @@ impl Default for Game {
     fn default() -> Self {
         Self {
             mode: Mode::Menu,
+            game_mode: GameMode::Survival,
+            creation_mode: GameMode::Survival,
+            vitals: Vitals::new(&SurvivalConfig::default()),
+            game_rules: GameRules::default(),
+            survival_config: SurvivalConfig::default(),
+            spawn: Vec3::new(0.5, 85., 0.5),
+            pending_respawn: false,
+            fall_peak: None,
             return_to: Mode::Menu,
             ui_dirty: true,
             status: String::new(),
@@ -87,7 +109,11 @@ impl Game {
             generator_version: 1,
             name: self.name_input.clone(),
             seed: self.world.seed,
-            player: self.feet.to_array(),
+            player: if self.vitals.is_dead() {
+                self.spawn.to_array()
+            } else {
+                self.feet.to_array()
+            },
             yaw: self.yaw,
             pitch: self.pitch,
             time: self.clock,

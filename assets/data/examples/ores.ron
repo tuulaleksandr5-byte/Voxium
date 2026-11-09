@@ -1,0 +1,14 @@
+// Предложение схемы; запись объявляет рудный блок по своему строковому ID.
+[
+    (
+        id: "survival:coal_ore",
+        replaces: ["foundation:stone", "foundation:deepslate"],
+        y_min: 0, y_max: 192, distribution: Triangular,
+        veins_per_chunk: 20, max_vein_size: 17,
+        hardness: 3.0, tool_type: Pickaxe, min_tier: 0, requires_tool: true,
+        drops: [(item: "survival:coal", min: 1, max: 1, chance: 1.0)],
+        xp: (min: 0, max: 2),
+        textures: (stone_layer: 3, deepslate_layer: 4, deepslate_below_y: 0,
+                   overlay_layer: 18), // TODO(art): новый оверлей; слой 17 пуст.
+    ),
+]

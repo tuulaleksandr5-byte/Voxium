@@ -1,0 +1,11 @@
+// Предложение схемы этапа 1; это не действующий каталог блоков.
+[
+    (
+        id: "foundation:stone", name: "Камень",
+        textures: (top: 3, side: 3, bottom: 3),
+        hardness: 1.5, tool_type: Pickaxe, min_tier: 0,
+        requires_tool: true,
+        drops: [(item: "foundation:cobblestone", min: 1, max: 1, chance: 1.0)],
+        xp: 0, collision: true, opacity: true, light_emission: 0,
+    ),
+]

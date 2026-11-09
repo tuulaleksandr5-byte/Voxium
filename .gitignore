@@ -7,4 +7,5 @@ Thumbs.db
 *.swp
 *.tmp
 saves/
+saves-v2/
 logs/

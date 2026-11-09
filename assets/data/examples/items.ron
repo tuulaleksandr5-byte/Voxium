@@ -1,0 +1,19 @@
+// Предложение схемы; все предметные ссылки остальных примеров объявлены здесь.
+// Базовые блоки разрешаются через таблицу Foundation в SURVIVAL_V2_PLAN.md.
+[
+    (id: "foundation:stone", name: "Камень", max_stack: 64,
+     kind: Block(block: "foundation:stone")),
+    (id: "foundation:deepslate", name: "Глубинный камень", max_stack: 64,
+     kind: Block(block: "foundation:deepslate")),
+    (id: "foundation:cobblestone", name: "Булыжник", max_stack: 64,
+     kind: Block(block: "foundation:cobblestone")),
+    (id: "foundation:oak_log", name: "Бревно", max_stack: 64,
+     kind: Block(block: "foundation:oak_log")),
+    (id: "foundation:oak_planks", name: "Доски", max_stack: 64,
+     kind: Block(block: "foundation:oak_planks")),
+    (id: "survival:coal_ore", name: "Угольная руда", max_stack: 64,
+     kind: Block(block: "survival:coal_ore")),
+    (id: "survival:coal", name: "Уголь", max_stack: 64, kind: Material),
+    (id: "survival:wooden_pickaxe", name: "Деревянная кирка", max_stack: 1,
+     kind: Tool),
+]

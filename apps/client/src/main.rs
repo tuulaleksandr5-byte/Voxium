@@ -3,6 +3,7 @@
 
 mod app_icon;
 mod block_audio;
+mod console;
 mod control_input;
 mod footsteps;
 mod graphics_assets;
@@ -10,6 +11,7 @@ mod player;
 mod session;
 mod settings;
 mod streaming;
+mod survival_client;
 mod ui;
 
 use bevy::{
@@ -31,7 +33,7 @@ fn main() {
     let mut app = App::new();
     app.add_plugins(DefaultPlugins.set(WindowPlugin {
         primary_window: Some(Window {
-            title: "Voxel Sandbox — Creative Foundation".into(),
+            title: "Voxel Sandbox — 2.0 Survival · этап 2".into(),
             resolution: (1280, 720).into(),
             ..default()
         }),
@@ -51,7 +53,10 @@ fn main() {
         brightness: 300.0,
         ..default()
     })
+    .add_message::<survival_client::PlayerActionMessage>()
+    .add_message::<survival_client::SurvivalStateChanged>()
     .add_systems(Startup, setup)
+    .add_systems(Update, survival_client::reload_config.before(actions))
     .add_systems(Update, app_icon::set_icon)
     .add_systems(
         Update,
@@ -59,12 +64,16 @@ fn main() {
             actions,
             streaming::stream_world,
             player::controls,
+            survival_client::apply_actions,
+            survival_client::simulate,
+            survival_client::observe_changes,
             player::sky,
             autosave,
             close_save,
         )
             .chain(),
     );
+    console::plugin(&mut app);
     ui::plugin(&mut app);
     app.run();
 }
@@ -205,6 +214,12 @@ fn open(
     game.grounded = false;
     game.height = 1.3;
     game.flying = false;
+    game.game_mode = game_core::survival::GameMode::Survival;
+    game.game_rules = game_core::survival::GameRules::default();
+    game.vitals = game_core::survival::Vitals::new(&game.survival_config);
+    game.spawn = Vec3::from_array(spawn_position(game.world.seed));
+    game.pending_respawn = false;
+    game.fall_peak = None;
     game.debug_open = false;
     game.yaw = data.yaw;
     game.pitch = data.pitch;
@@ -224,10 +239,27 @@ fn actions(
     mut window: Single<&mut Window>,
     mut volume: ResMut<bevy::audio::GlobalVolume>,
     icons: Res<graphics_assets::BlockIcons>,
+    mut player_actions: MessageWriter<survival_client::PlayerActionMessage>,
     mut exit: MessageWriter<AppExit>,
 ) {
     for action in std::mem::take(&mut intents.0) {
         match action {
+            Action::CycleGameMode => {
+                game.creation_mode = match game.creation_mode {
+                    game_core::survival::GameMode::Survival => {
+                        game_core::survival::GameMode::Creative
+                    }
+                    game_core::survival::GameMode::Creative => {
+                        game_core::survival::GameMode::Survival
+                    }
+                };
+                game.ui_dirty = true;
+            }
+            Action::Respawn => {
+                player_actions.write(survival_client::PlayerActionMessage(
+                    survival_client::PlayerAction::Respawn,
+                ));
+            }
             Action::New => {
                 game.input_field = 0;
                 game.status.clear();
@@ -273,7 +305,12 @@ fn actions(
                     edits: Vec::new(),
                 };
                 match save_world(&settings::save_root(), &id, &data) {
-                    Ok(()) => open(&mut game, id, data, &mut stream, &mut commands, &mut meshes),
+                    Ok(()) => {
+                        open(&mut game, id, data, &mut stream, &mut commands, &mut meshes);
+                        game.game_mode = game.creation_mode;
+                        // Ждём чанк и ставим на безопасную поверхность без стартового урона.
+                        game.pending_respawn = true;
+                    }
                     Err(e) => {
                         game.status = e;
                         game.ui_dirty = true;

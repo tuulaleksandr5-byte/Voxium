@@ -28,7 +28,7 @@ impl Default for Settings {
 pub fn save_root() -> PathBuf {
     std::env::var_os("VOXEL_SAVE_DIR")
         .map(PathBuf::from)
-        .unwrap_or_else(|| PathBuf::from("saves"))
+        .unwrap_or_else(|| PathBuf::from("saves-v2"))
 }
 impl Settings {
     pub fn load() -> Self {

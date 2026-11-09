@@ -1,0 +1,9 @@
+// Предложение схемы; ингредиенты и результат — ID предметов, не блоков.
+[
+    (
+        id: "survival:planks_from_log",
+        kind: Shapeless,
+        inputs: [(item: "foundation:oak_log", count: 1)],
+        output: (item: "foundation:oak_planks", count: 4),
+    ),
+]
