@@ -1,0 +1,18 @@
+[
+    (id: "survival:planks_from_log", width: 1, height: 1,
+     inputs: [(item: "foundation:oak_log", count: 1)], output: (item: "foundation:oak_planks", count: 4)),
+    (id: "survival:sticks", width: 1, height: 2,
+     inputs: [(item: "foundation:oak_planks", count: 1), (item: "foundation:oak_planks", count: 1)], output: (item: "survival:stick", count: 4)),
+    (id: "survival:crafting_table", width: 2, height: 2,
+     inputs: [(item: "foundation:oak_planks", count: 1), (item: "foundation:oak_planks", count: 1),
+              (item: "foundation:oak_planks", count: 1), (item: "foundation:oak_planks", count: 1)], output: (item: "survival:crafting_table", count: 1)),
+    (id: "survival:sandstone", width: 2, height: 2,
+     inputs: [(item: "foundation:sand", count: 1), (item: "foundation:sand", count: 1),
+              (item: "foundation:sand", count: 1), (item: "foundation:sand", count: 1)], output: (item: "foundation:sandstone", count: 1)),
+    (id: "survival:unpack_iron", width: 1, height: 1,
+     inputs: [(item: "survival:iron_block", count: 1)], output: (item: "survival:iron_ingot", count: 9)),
+    (id: "survival:unpack_gold", width: 1, height: 1,
+     inputs: [(item: "survival:gold_block", count: 1)], output: (item: "survival:gold_ingot", count: 9)),
+    (id: "survival:unpack_diamond", width: 1, height: 1,
+     inputs: [(item: "survival:diamond_block", count: 1)], output: (item: "survival:diamond", count: 9)),
+]

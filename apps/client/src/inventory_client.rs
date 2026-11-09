@@ -7,6 +7,7 @@ use bevy::prelude::*;
 use game_core::{
     AIR, BEDROCK, CHEST, World,
     content::ItemId,
+    crafting::RecipeBook,
     drops::DropConfig,
     interaction::{player_intersects_block, raycast},
     inventory::{ClickButton, Container, Inventory, SlotRef},
@@ -23,6 +24,9 @@ pub enum InventoryAction {
         shift: bool,
     },
     CreativeGrant(ItemId),
+    TakeCraftResult {
+        all: bool,
+    },
     DropSelected {
         all: bool,
     },
@@ -84,6 +88,14 @@ pub fn close_inventory(game: &mut Game) {
             spawn_drop(game, stack, game.feet + Vec3::Y * 0.6, Vec3::Y * 1.5);
         }
     }
+    let overflow = game.inventory.close_crafting(&game.content);
+    if game.game_rules.keep_inventory && (game.vitals.is_dead() || game.mode == Mode::Dead) {
+        game.inventory.crafting = overflow;
+    } else {
+        for stack in overflow.into_iter().flatten() {
+            spawn_drop(game, stack, game.feet + Vec3::Y * 0.6, Vec3::Y * 1.5);
+        }
+    }
     game.open_container = None;
     sync_hotbar(game);
     game.ui_dirty = true;
@@ -92,6 +104,7 @@ pub fn close_inventory(game: &mut Game) {
 pub fn on_death(game: &mut Game) {
     if game.game_rules.keep_inventory {
         game.inventory.cursor = game.inventory.close_cursor(&game.content);
+        game.inventory.crafting = game.inventory.close_crafting(&game.content);
     } else {
         for stack in game.inventory.drain_all() {
             spawn_drop(game, stack, game.feet + Vec3::Y * 0.6, Vec3::Y * 1.5);
@@ -133,6 +146,14 @@ fn process_action(game: &mut Game, action: &InventoryAction) -> Effects {
             if game
                 .inventory
                 .click(container, *slot, *button, *shift, &game.content)
+            {
+                game.ui_dirty = true;
+            }
+        }
+        InventoryAction::TakeCraftResult { all } if game.mode == Mode::Inventory => {
+            if game
+                .recipes
+                .take_result(&mut game.inventory, *all, &game.content)
             {
                 game.ui_dirty = true;
             }
@@ -328,6 +349,7 @@ fn reload_items(game: &mut Game, source: &str) -> Result<(), String> {
         .iter()
         .chain(&game.inventory.main)
         .chain(&game.inventory.armor)
+        .chain(&game.inventory.crafting)
         .chain(std::iter::once(&game.inventory.offhand))
         .chain(std::iter::once(&game.inventory.cursor))
         .filter_map(Option::as_ref)
@@ -342,6 +364,7 @@ fn reload_items(game: &mut Game, source: &str) -> Result<(), String> {
             return Err("Новый размер стопки несовместим с существующими предметами".into());
         }
     }
+    game.recipes.validate_catalog(&candidate)?;
     game.content = candidate;
     sync_hotbar(game);
     game.ui_dirty = true;
@@ -359,6 +382,7 @@ struct ReloadState {
     checked: Option<f64>,
     items: FileState,
     drops: FileState,
+    recipes: FileState,
 }
 
 fn config_source(
@@ -403,6 +427,17 @@ fn reload_config(time: Res<Time<Real>>, mut game: ResMut<Game>, mut state: Local
     );
     reload_file(&mut state.items, items, |source| {
         reload_items(&mut game, source)
+    });
+    let recipes = config_source(
+        "VOXEL_RECIPES_CONFIG",
+        "recipes.ron",
+        include_str!("../../../assets/data/recipes.ron"),
+    );
+    reload_file(&mut state.recipes, recipes, |source| {
+        let candidate = RecipeBook::from_ron(source, &game.content)?;
+        game.recipes = candidate;
+        game.ui_dirty = true;
+        Ok(())
     });
     let drops = config_source(
         "VOXEL_DROPS_CONFIG",
@@ -476,6 +511,73 @@ mod tests {
         let value = stack(game, game_core::DIRT, 64);
         game.inventory.hotbar.fill(Some(value.clone()));
         game.inventory.main.fill(Some(value));
+    }
+
+    #[test]
+    fn result_commands_are_mode_gated_and_consume_actual_input_once() {
+        let mut game = world();
+        let log = game.content.find("foundation:oak_log").unwrap();
+        let planks = game.content.find("foundation:oak_planks").unwrap();
+        game.inventory.crafting[2] = Some(ItemStack::new(log, 1));
+        process_action(&mut game, &InventoryAction::TakeCraftResult { all: false });
+        assert!(game.inventory.cursor.is_none());
+        game.mode = Mode::Inventory;
+        game.ui_dirty = false;
+        process_action(&mut game, &InventoryAction::TakeCraftResult { all: false });
+        assert_eq!(game.inventory.cursor, Some(ItemStack::new(planks, 4)));
+        assert!(game.ui_dirty);
+        process_action(&mut game, &InventoryAction::TakeCraftResult { all: false });
+        assert_eq!(game.inventory.cursor, Some(ItemStack::new(planks, 4)));
+        game.inventory.cursor = None;
+        game.inventory.crafting[0] = Some(ItemStack::new(log, 20));
+        process_action(&mut game, &InventoryAction::TakeCraftResult { all: true });
+        assert_eq!(game.inventory.hotbar[0], Some(ItemStack::new(planks, 64)));
+        assert_eq!(game.inventory.hotbar[1], Some(ItemStack::new(planks, 16)));
+        assert!(game.inventory.crafting.iter().all(Option::is_none));
+    }
+    #[test]
+    fn crafting_close_death_and_keep_inventory_preserve_single_ownership() {
+        let mut game = world();
+        fill(&mut game);
+        game.inventory.crafting[0] = Some(stack(&game, game_core::STONE, 3));
+        game.inventory.crafting[3] = Some(stack(&game, game_core::SAND, 2));
+        game.inventory.cursor = Some(stack(&game, game_core::STONE, 1));
+        close_inventory(&mut game);
+        close_inventory(&mut game);
+        assert_eq!(total_drops(&game), 6);
+        assert!(game.inventory.crafting.iter().all(Option::is_none));
+        reset_session(&mut game, false);
+        game.inventory.crafting[1] = Some(stack(&game, game_core::STONE, 3));
+        on_death(&mut game);
+        on_death(&mut game);
+        assert_eq!(total_drops(&game), 3);
+        assert!(game.inventory.drain_all().is_empty());
+        reset_session(&mut game, false);
+        fill(&mut game);
+        game.game_rules.keep_inventory = true;
+        game.mode = Mode::Dead;
+        game.inventory.crafting[1] = Some(stack(&game, game_core::STONE, 3));
+        game.inventory.cursor = Some(stack(&game, game_core::STONE, 2));
+        on_death(&mut game);
+        close_inventory(&mut game);
+        close_inventory(&mut game);
+        assert_eq!(total_drops(&game), 0);
+        assert_eq!(
+            game.inventory.crafting[1],
+            Some(stack(&game, game_core::STONE, 3))
+        );
+        assert_eq!(
+            game.inventory.cursor,
+            Some(stack(&game, game_core::STONE, 2))
+        );
+        game.inventory.main[0] = None;
+        on_death(&mut game);
+        assert!(game.inventory.cursor.is_none());
+        assert!(game.inventory.crafting.iter().all(Option::is_none));
+        assert_eq!(
+            game.inventory.main[0],
+            Some(stack(&game, game_core::STONE, 5))
+        );
     }
 
     #[test]
@@ -779,10 +881,29 @@ mod tests {
     }
 
     #[test]
+    fn catalog_reload_rejects_caps_that_would_invalidate_live_recipes() {
+        let mut game = world();
+        let source = include_str!("../../../assets/data/items.ron");
+        let changed = source.replace("max_stack: 64", "max_stack: 4");
+        let diamond = game.content.find("survival:diamond").unwrap();
+        assert!(reload_items(&mut game, &changed).is_err());
+        assert_eq!(game.content.max_stack(diamond), 64);
+        game.inventory.crafting[0] = Some(ItemStack::new(
+            game.content.find("survival:diamond_block").unwrap(),
+            1,
+        ));
+        assert_eq!(
+            game.recipes
+                .preview(&game.inventory.crafting, &game.content),
+            Some(ItemStack::new(diamond, 9))
+        );
+    }
+
+    #[test]
     fn reload_rejects_live_oversized_stacks_in_every_storage_atomically() {
         let original = include_str!("../../../assets/data/items.ron");
         let changed = original.replace("max_stack: 64", "max_stack: 16");
-        for location in 0..7 {
+        for location in 0..8 {
             let mut game = world();
             let value = stack(&game, game_core::DIRT, 32);
             let item = value.item;
@@ -792,6 +913,7 @@ mod tests {
                 2 => game.inventory.armor[0] = Some(value),
                 3 => game.inventory.offhand = Some(value),
                 4 => game.inventory.cursor = Some(value),
+                6 => game.inventory.crafting[0] = Some(value),
                 5 => {
                     let mut chest = Container::new(27);
                     chest.slots[0] = Some(value);

@@ -5,6 +5,7 @@ use crate::items::ItemStack;
 pub enum SlotRef {
     Hotbar(usize),
     Main(usize),
+    Crafting(usize),
     Armor(ArmorSlot),
     Offhand,
     Container(usize),
@@ -23,6 +24,7 @@ pub struct Inventory {
     pub armor: [Option<ItemStack>; 4],
     pub offhand: Option<ItemStack>,
     pub cursor: Option<ItemStack>,
+    pub crafting: [Option<ItemStack>; 4],
 }
 
 #[derive(Clone, Debug)]
@@ -43,6 +45,7 @@ impl Inventory {
         match slot {
             SlotRef::Hotbar(index) => self.hotbar.get(index)?.as_ref(),
             SlotRef::Main(index) => self.main.get(index)?.as_ref(),
+            SlotRef::Crafting(index) => self.crafting.get(index)?.as_ref(),
             SlotRef::Armor(armor) => self.armor.get(armor.index())?.as_ref(),
             SlotRef::Offhand => self.offhand.as_ref(),
             SlotRef::Container(_) => None,
@@ -122,11 +125,18 @@ impl Inventory {
         self.insert(stack, catalog)
     }
 
+    /// Return ingredients once; callers own any overflow and must preserve or drop it.
+    pub fn close_crafting(&mut self, catalog: &ContentRegistry) -> [Option<ItemStack>; 4] {
+        std::mem::take(&mut self.crafting)
+            .map(|stack| stack.and_then(|stack| self.insert(stack, catalog)))
+    }
+
     pub fn drain_all(&mut self) -> Vec<ItemStack> {
         self.hotbar
             .iter_mut()
             .chain(self.main.iter_mut())
             .chain(self.armor.iter_mut())
+            .chain(self.crafting.iter_mut())
             .chain(std::iter::once(&mut self.offhand))
             .chain(std::iter::once(&mut self.cursor))
             .filter_map(Option::take)
@@ -137,6 +147,7 @@ impl Inventory {
         match slot {
             SlotRef::Hotbar(index) => self.hotbar.get_mut(index),
             SlotRef::Main(index) => self.main.get_mut(index),
+            SlotRef::Crafting(index) => self.crafting.get_mut(index),
             SlotRef::Armor(armor) => self.armor.get_mut(armor.index()),
             SlotRef::Offhand => Some(&mut self.offhand),
             SlotRef::Container(_) => None,
@@ -174,7 +185,7 @@ impl Inventory {
             match slot {
                 SlotRef::Hotbar(_) => insert_slots(self.main.iter_mut(), &mut stack, catalog),
                 SlotRef::Main(_) => insert_slots(self.hotbar.iter_mut(), &mut stack, catalog),
-                SlotRef::Armor(_) | SlotRef::Offhand => insert_slots(
+                SlotRef::Armor(_) | SlotRef::Offhand | SlotRef::Crafting(_) => insert_slots(
                     self.hotbar.iter_mut().chain(self.main.iter_mut()),
                     &mut stack,
                     catalog,
@@ -334,6 +345,94 @@ mod tests {
     fn fill_storage(inventory: &mut Inventory, item: ItemId, count: u16) {
         inventory.hotbar.fill(Some(ItemStack::new(item, count)));
         inventory.main.fill(Some(ItemStack::new(item, count)));
+    }
+
+    #[test]
+    fn crafting_slots_support_click_split_shift_and_drain_without_auto_insert() {
+        let catalog = ContentRegistry::default();
+        let item = block(&catalog);
+        let mut inventory = Inventory::default();
+        assert!(
+            inventory
+                .set(
+                    SlotRef::Crafting(4),
+                    Some(ItemStack::new(item, 3)),
+                    &catalog
+                )
+                .is_err()
+        );
+        inventory
+            .set(
+                SlotRef::Crafting(1),
+                Some(ItemStack::new(item, 5)),
+                &catalog,
+            )
+            .unwrap();
+        assert!(inventory.click(
+            None,
+            SlotRef::Crafting(1),
+            ClickButton::Right,
+            false,
+            &catalog
+        ));
+        assert_eq!(inventory.cursor, Some(ItemStack::new(item, 3)));
+        assert!(inventory.click(
+            None,
+            SlotRef::Crafting(2),
+            ClickButton::Right,
+            false,
+            &catalog
+        ));
+        assert_eq!(inventory.crafting[2], Some(ItemStack::new(item, 1)));
+        assert!(!inventory.click(
+            None,
+            SlotRef::Crafting(2),
+            ClickButton::Left,
+            true,
+            &catalog
+        ));
+        inventory.close_cursor(&catalog);
+        assert!(inventory.click(
+            None,
+            SlotRef::Crafting(1),
+            ClickButton::Left,
+            true,
+            &catalog
+        ));
+        assert!(inventory.crafting[1].is_none());
+        assert_eq!(inventory.hotbar[0], Some(ItemStack::new(item, 4)));
+        assert_eq!(
+            inventory.drain_all().iter().map(|s| s.count).sum::<u16>(),
+            5
+        );
+        assert!(inventory.drain_all().is_empty());
+        fill_storage(&mut inventory, item, 64);
+        assert_eq!(
+            inventory.insert(ItemStack::new(item, 1), &catalog),
+            Some(ItemStack::new(item, 1))
+        );
+        assert!(inventory.crafting.iter().all(Option::is_none));
+    }
+    #[test]
+    fn close_crafting_returns_only_overflow_and_drains_ingredients_once() {
+        let catalog = ContentRegistry::default();
+        let item = block(&catalog);
+        let mut inventory = Inventory::default();
+        fill_storage(&mut inventory, item, 64);
+        inventory.hotbar[0] = Some(ItemStack::new(item, 63));
+        inventory.crafting[0] = Some(ItemStack::new(item, 3));
+        inventory.crafting[3] = Some(ItemStack::new(item, 2));
+        assert_eq!(
+            inventory.close_crafting(&catalog),
+            [
+                Some(ItemStack::new(item, 2)),
+                None,
+                None,
+                Some(ItemStack::new(item, 2))
+            ]
+        );
+        assert_eq!(inventory.hotbar[0], Some(ItemStack::new(item, 64)));
+        assert_eq!(inventory.close_crafting(&catalog), [None, None, None, None]);
     }
 
     #[test]

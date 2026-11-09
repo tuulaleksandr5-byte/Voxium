@@ -15,6 +15,8 @@ struct InventorySlot(SlotRef);
 #[derive(Component)]
 struct CatalogItem(ItemId);
 #[derive(Component)]
+struct CraftResult;
+#[derive(Component)]
 struct SlotHint(String);
 #[derive(Component)]
 struct Tooltip;
@@ -46,6 +48,7 @@ pub(super) fn plugin(app: &mut App) {
         .add_systems(Update, (input, pointer_overlay).chain());
 }
 
+#[allow(clippy::too_many_arguments)]
 fn input(
     game: Res<Game>,
     mouse: Res<ButtonInput<MouseButton>>,
@@ -53,6 +56,7 @@ fn input(
     mut drag: ResMut<PointerGesture>,
     slots: Query<(&Hovered, &InventorySlot)>,
     catalog: Query<(&Hovered, &CatalogItem)>,
+    result: Query<&Hovered, With<CraftResult>>,
     mut actions: MessageWriter<InventoryActionMessage>,
 ) {
     if game.mode != Mode::Inventory {
@@ -63,6 +67,11 @@ fn input(
         .iter()
         .find(|(hovered, _)| hovered.get())
         .map(|(_, slot)| slot.0);
+    let result_hovered = result.iter().any(Hovered::get);
+    let can_craft = game
+        .recipes
+        .preview(&game.inventory.crafting, &game.content)
+        .is_some();
     let shift = keys.any_pressed([KeyCode::ShiftLeft, KeyCode::ShiftRight]);
     if mouse.just_pressed(MouseButton::Left) {
         drag.0.source = None;
@@ -74,6 +83,10 @@ fn input(
                 slot,
                 button: ClickButton::Left,
                 shift,
+            }));
+        } else if result_hovered && can_craft {
+            actions.write(InventoryActionMessage(InventoryAction::TakeCraftResult {
+                all: shift,
             }));
         } else if game.game_mode == GameMode::Creative
             && let Some((_, item)) = catalog.iter().find(|(hovered, _)| hovered.get())
@@ -90,6 +103,10 @@ fn input(
                 slot,
                 button: ClickButton::Right,
                 shift,
+            }));
+        } else if result_hovered && can_craft {
+            actions.write(InventoryActionMessage(InventoryAction::TakeCraftResult {
+                all: shift,
             }));
         }
     }
@@ -204,6 +221,100 @@ fn slot(
     }
 }
 
+fn crafting(
+    commands: &mut Commands,
+    parent: Entity,
+    game: &Game,
+    icons: &ItemIcons,
+    blocks: &BlockIcons,
+) {
+    label(commands, parent, "СОЗДАНИЕ · 2×2", 12., AMBER);
+    let cells = row(commands, parent, 6.);
+    let grid = column(commands, cells, 6.);
+    commands.entity(grid).insert(Node {
+        width: px(114),
+        flex_direction: FlexDirection::Column,
+        row_gap: px(6),
+        flex_shrink: 0.,
+        ..default()
+    });
+    for y in 0..2 {
+        let line = row(commands, grid, 6.);
+        for x in 0..2 {
+            slot(
+                commands,
+                line,
+                game,
+                icons,
+                blocks,
+                SlotRef::Crafting(y * 2 + x),
+                "",
+            );
+        }
+    }
+    label(commands, cells, "→", 16., MUTED);
+    let output = game
+        .recipes
+        .preview(&game.inventory.crafting, &game.content);
+    let result = node(
+        commands,
+        cells,
+        Node {
+            width: px(54),
+            height: px(54),
+            flex_shrink: 0.,
+            border: UiRect::all(px(2)),
+            border_radius: BorderRadius::all(px(4)),
+            align_items: AlignItems::Center,
+            justify_content: JustifyContent::Center,
+            ..default()
+        },
+        if output.is_some() {
+            Color::srgba(0.24, 0.11, 0.31, 0.96)
+        } else {
+            Color::srgba(0.09, 0.045, 0.13, 0.96)
+        },
+    );
+    commands.entity(result).insert((
+        Button,
+        Hovered::default(),
+        CraftResult,
+        SlotHint(if output.is_some() {
+            format!(
+                "{} · ЛКМ: создать · Shift: создать всё",
+                item_name(game, output.as_ref(), "Результат")
+            )
+        } else {
+            "Нет рецепта · разместите ингредиенты в сетке 2×2".into()
+        }),
+        BorderColor::all(if output.is_some() { AMBER } else { LINE }),
+    ));
+    if let Some(stack) = output {
+        let image = commands
+            .spawn((
+                ImageNode::new(icons.get(stack.item, &game.content, blocks)),
+                Node {
+                    width: px(46),
+                    height: px(46),
+                    ..default()
+                },
+                Pickable::IGNORE,
+            ))
+            .id();
+        commands.entity(result).add_child(image);
+        let count = label(commands, result, stack.count.to_string(), 13., TEXT);
+        commands.entity(count).insert(Node {
+            position_type: PositionType::Absolute,
+            right: px(3),
+            bottom: px(1),
+            ..default()
+        });
+    } else {
+        label(commands, result, "—", 20., MUTED);
+    }
+    label(commands, parent, "РЕЗУЛЬТАТ · Shift: всё", 11., MUTED);
+}
+
 pub(super) fn menu(
     commands: &mut Commands,
     panel: Entity,
@@ -292,6 +403,7 @@ pub(super) fn menu(
             "",
         );
     }
+    crafting(commands, storage, game, icons, blocks);
     let equipment = column(commands, content, 7.);
     commands.entity(equipment).insert(Node {
         width: px(170),
@@ -501,8 +613,13 @@ fn pointer_overlay(
     mut held: Query<&mut Node, (With<HeldCursor>, Without<Tooltip>)>,
     mut tooltip: Query<(&mut Node, &mut Text), With<Tooltip>>,
     mut borders: Query<
-        (&Hovered, &mut BorderColor, Option<&InventorySlot>),
-        Or<(With<InventorySlot>, With<CatalogItem>)>,
+        (
+            &Hovered,
+            &mut BorderColor,
+            Option<&InventorySlot>,
+            Has<CraftResult>,
+        ),
+        Or<(With<InventorySlot>, With<CatalogItem>, With<CraftResult>)>,
     >,
 ) {
     if game.mode != Mode::Inventory {
@@ -536,10 +653,15 @@ fn pointer_overlay(
             text.0 = hint.to_string();
         }
     }
-    for (hovered, mut border, slot) in &mut borders {
+    for (hovered, mut border, slot, result) in &mut borders {
         let selected = slot
             .is_some_and(|slot| matches!(slot.0, SlotRef::Hotbar(index) if index == game.selected));
-        if hovered.get() || selected {
+        let ready = result
+            && game
+                .recipes
+                .preview(&game.inventory.crafting, &game.content)
+                .is_some();
+        if (hovered.get() && !result) || ready || selected {
             border.set_all(AMBER);
         } else {
             border.set_all(LINE);
@@ -584,6 +706,89 @@ mod tests {
             .single(world)
             .unwrap()
             .y
+    }
+    #[test]
+    fn result_pointer_emits_only_result_commands_when_a_recipe_exists() {
+        for all in [false, true] {
+            let mut app = input_app(GameMode::Survival);
+            app.world_mut().spawn((Hovered(true), CraftResult));
+            app.world_mut()
+                .resource_mut::<ButtonInput<MouseButton>>()
+                .press(MouseButton::Left);
+            app.update();
+            assert_eq!(
+                app.world_mut()
+                    .resource_mut::<Messages<InventoryActionMessage>>()
+                    .drain()
+                    .count(),
+                0
+            );
+            let mut game = app.world_mut().resource_mut::<Game>();
+            game.inventory.crafting[0] = Some(ItemStack::new(
+                game.content.find("foundation:oak_log").unwrap(),
+                1,
+            ));
+            if all {
+                app.world_mut()
+                    .resource_mut::<ButtonInput<KeyCode>>()
+                    .press(KeyCode::ShiftLeft);
+            }
+            app.update();
+            let events: Vec<_> = app
+                .world_mut()
+                .resource_mut::<Messages<InventoryActionMessage>>()
+                .drain()
+                .collect();
+            assert_eq!(events.len(), 1);
+            assert!(
+                matches!(events[0].0, InventoryAction::TakeCraftResult { all: value } if value == all)
+            );
+            assert!(app.world().resource::<PointerGesture>().0.source.is_none());
+            assert!(app.world().resource::<Game>().inventory.cursor.is_none());
+        }
+    }
+    #[test]
+    fn result_is_a_separate_visible_preview_with_disabled_empty_state() {
+        let mut game = Game::default();
+        for ready in [false, true] {
+            if ready {
+                game.inventory.crafting[0] = Some(ItemStack::new(
+                    game.content.find("foundation:oak_log").unwrap(),
+                    1,
+                ));
+            }
+            let mut world = World::new();
+            let panel = world.spawn_empty().id();
+            let mut queue = bevy::ecs::world::CommandQueue::default();
+            let mut commands = Commands::new(&mut queue, &world);
+            menu(
+                &mut commands,
+                panel,
+                &game,
+                &ItemIcons::default(),
+                &BlockIcons::default(),
+            );
+            queue.apply(&mut world);
+            let result = world
+                .query_filtered::<Entity, With<CraftResult>>()
+                .single(&world)
+                .unwrap();
+            assert!(world.get::<InventorySlot>(result).is_none());
+            assert_eq!(world.get::<Node>(result).unwrap().width, px(54));
+            let hint = &world.get::<SlotHint>(result).unwrap().0;
+            assert!(if ready {
+                hint.contains("Дубовые доски")
+            } else {
+                hint.contains("Нет рецепта")
+            });
+            let images = world
+                .get::<Children>(result)
+                .unwrap()
+                .iter()
+                .filter(|child| world.get::<ImageNode>(*child).is_some())
+                .count();
+            assert_eq!(images, usize::from(ready));
+        }
     }
     #[test]
     fn inventory_rebuild_preserves_scroll_after_events_and_catalog_reload() {
@@ -706,7 +911,7 @@ mod tests {
             &BlockIcons::default(),
         );
         queue.apply(&mut world);
-        assert_eq!(world.query::<&InventorySlot>().iter(&world).count(), 41);
+        assert_eq!(world.query::<&InventorySlot>().iter(&world).count(), 45);
         assert_eq!(world.query::<&CatalogItem>().iter(&world).count(), 0);
     }
     #[test]
@@ -731,7 +936,7 @@ mod tests {
             &BlockIcons::default(),
         );
         queue.apply(&mut world);
-        assert_eq!(world.query::<&InventorySlot>().iter(&world).count(), 68);
+        assert_eq!(world.query::<&InventorySlot>().iter(&world).count(), 72);
         assert_eq!(
             world.query::<&CatalogItem>().iter(&world).count(),
             expected_catalog

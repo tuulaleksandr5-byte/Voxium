@@ -7,6 +7,7 @@ use game_core::{
 };
 use game_core::{
     content::ContentRegistry,
+    crafting::RecipeBook,
     drops::{DropConfig, DropStore},
     inventory::{Container, Inventory},
     items::ItemStack,
@@ -29,6 +30,7 @@ pub enum Mode {
 #[derive(Resource)]
 pub struct Game {
     pub content: ContentRegistry,
+    pub recipes: RecipeBook,
     pub inventory: Inventory,
     pub containers: HashMap<[i32; 3], Container>,
     pub open_container: Option<[i32; 3]>,
@@ -73,6 +75,7 @@ impl Default for Game {
     fn default() -> Self {
         Self {
             content: ContentRegistry::default(),
+            recipes: RecipeBook::default(),
             inventory: Inventory::default(),
             containers: HashMap::new(),
             open_container: None,

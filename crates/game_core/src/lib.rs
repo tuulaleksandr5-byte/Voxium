@@ -5,6 +5,7 @@ pub use blocks::*;
 pub mod world;
 pub use world::*;
 pub mod content;
+pub mod crafting;
 pub mod drops;
 pub mod interaction;
 pub mod inventory;
