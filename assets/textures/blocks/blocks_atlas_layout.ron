@@ -1,0 +1,22 @@
+// Atlas blocks_atlas_*.png: tiles are laid out left-to-right, top-to-bottom.
+(
+    columns: 4,
+    rows: 4,
+    tiles: [
+        (index: 0, name: "gold_ore"),
+        (index: 1, name: "coal_ore"),
+        (index: 2, name: "diamond_ore"),
+        (index: 3, name: "gold_block"),
+        (index: 4, name: "diamond_block"),
+        (index: 5, name: "iron_ore"),
+        (index: 6, name: "iron_block"),
+        (index: 7, name: "crafting_table_top"),
+        (index: 8, name: "crafting_table_front"),
+        (index: 9, name: "crafting_table_side"),
+        (index: 10, name: "crafting_table_bottom"),
+        (index: 11, name: "furnace_front"),
+        (index: 12, name: "furnace_front_on"),
+        (index: 13, name: "furnace_side"),
+        (index: 14, name: "furnace_top"),
+    ],
+)

@@ -45,7 +45,7 @@ const TOOLS: [(&str, &[u8]); 25] = [
     tool!("wooden_sword"),
 ];
 
-/// Будущие инструменты получают тот же рисунок при появлении их ID в каталоге.
+/// Имена инструментов совпадают с файлами оригинального набора.
 pub(crate) fn pixels(id: &str) -> Option<Vec<u8>> {
     let name = id.strip_prefix("survival:")?;
     let (_, embedded) = TOOLS.iter().find(|(known, _)| *known == name)?;
@@ -59,7 +59,7 @@ pub(crate) fn pixels(id: &str) -> Option<Vec<u8>> {
     }
 }
 
-fn load_pixels(embedded: &[u8], external: Option<&Path>) -> Result<Vec<u8>, String> {
+pub(crate) fn load_pixels(embedded: &[u8], external: Option<&Path>) -> Result<Vec<u8>, String> {
     if let Some(path) = external {
         let result = std::fs::read(path)
             .map_err(|e| e.to_string())

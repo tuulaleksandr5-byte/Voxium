@@ -28,6 +28,15 @@ pub const BEDROCK: u8 = 13;
 pub const SNOW: u8 = 14;
 pub const SANDSTONE: u8 = 15;
 pub const CHEST: u8 = 16;
+pub const COAL_ORE: u8 = 17;
+pub const IRON_ORE: u8 = 18;
+pub const GOLD_ORE: u8 = 19;
+pub const DIAMOND_ORE: u8 = 20;
+pub const IRON_BLOCK: u8 = 21;
+pub const GOLD_BLOCK: u8 = 22;
+pub const DIAMOND_BLOCK: u8 = 23;
+pub const CRAFTING_TABLE: u8 = 24;
+pub const FURNACE: u8 = 25;
 
 const fn block(
     id: u8,
@@ -48,7 +57,7 @@ const fn block(
     }
 }
 
-pub const BLOCKS: [BlockDef; 17] = [
+pub const BLOCKS: [BlockDef; 26] = [
     block(AIR, "Air", "air", 0.0, false, false),
     block(GRASS, "Grass", "grass", 0.6, true, true),
     block(DIRT, "Dirt", "dirt", 0.5, true, true),
@@ -67,6 +76,29 @@ pub const BLOCKS: [BlockDef; 17] = [
     block(SANDSTONE, "Sandstone", "sandstone", 0.8, true, true),
     // TODO(art): временно используем исходную текстуру досок, не изменяя PNG.
     block(CHEST, "Chest", "oak_planks", 2.5, true, true),
+    block(COAL_ORE, "Coal Ore", "coal_ore", 3.0, true, true),
+    block(IRON_ORE, "Iron Ore", "iron_ore", 3.0, true, true),
+    block(GOLD_ORE, "Gold Ore", "gold_ore", 3.0, true, true),
+    block(DIAMOND_ORE, "Diamond Ore", "diamond_ore", 3.0, true, true),
+    block(IRON_BLOCK, "Iron Block", "iron_block", 5.0, true, true),
+    block(GOLD_BLOCK, "Gold Block", "gold_block", 3.0, true, true),
+    block(
+        DIAMOND_BLOCK,
+        "Diamond Block",
+        "diamond_block",
+        5.0,
+        true,
+        true,
+    ),
+    block(
+        CRAFTING_TABLE,
+        "Crafting Table",
+        "crafting_table",
+        2.5,
+        true,
+        true,
+    ),
+    block(FURNACE, "Furnace", "furnace", 3.5, true, true),
 ];
 
 #[must_use]
@@ -87,8 +119,30 @@ mod tests {
     use super::*;
 
     #[test]
+    fn progression_blocks_append_after_all_foundation_and_chest_ids() {
+        let expected = [
+            "Coal Ore",
+            "Iron Ore",
+            "Gold Ore",
+            "Diamond Ore",
+            "Iron Block",
+            "Gold Block",
+            "Diamond Block",
+            "Crafting Table",
+            "Furnace",
+        ];
+        assert_eq!(BLOCKS.len(), 26);
+        for (offset, name) in expected.iter().enumerate() {
+            let id = 17 + offset;
+            assert_eq!(BLOCKS[id].id as usize, id);
+            assert_eq!(BLOCKS[id].name, *name);
+            assert!(is_solid(id as u8) && is_opaque(id as u8));
+        }
+    }
+
+    #[test]
     fn chest_extends_registry_without_changing_foundation_ids() {
-        assert_eq!(BLOCKS.len(), 17);
+        assert_eq!(BLOCKS.len(), 26);
         let chest = BLOCKS.get(16).expect("сундук зарегистрирован");
         assert_eq!(chest.name, "Chest");
         assert!(is_solid(16));
@@ -117,7 +171,7 @@ mod tests {
             "Sandstone",
             "Chest",
         ];
-        for (id, block) in BLOCKS.iter().enumerate() {
+        for (id, block) in BLOCKS[..17].iter().enumerate() {
             assert_eq!(block.id as usize, id);
             assert_eq!(block.name, names[id]);
             assert!(!block.texture.is_empty());

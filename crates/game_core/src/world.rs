@@ -561,7 +561,7 @@ mod tests {
         world.insert(Chunk::generate(1, [0, 0]));
         assert!(!world.set([0, -65, 0], STONE));
         assert!(!world.set([0, 321, 0], STONE));
-        assert!(!world.set([0, 70, 0], 17));
+        assert!(!world.set([0, 70, 0], 26));
         assert!(!world.set([0, -64, 0], AIR));
         assert!(!world.set([0, -64, 0], STONE));
         assert_eq!(world.block([0, -64, 0]), BEDROCK);

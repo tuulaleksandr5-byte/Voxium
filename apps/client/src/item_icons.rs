@@ -1,4 +1,4 @@
-//! Кэш значков: исходные кубики, PNG инструментов и временные рисунки остальных предметов.
+//! Общий кэш: исходные кубики, PNG инструментов, материалов и брони.
 use crate::{graphics_assets::BlockIcons, session::Game};
 use bevy::{
     asset::RenderAssetUsages,
@@ -43,7 +43,7 @@ fn cache_icons(
         if game.content.block_for_item(id).is_some() || icons.handles.contains_key(&id) {
             continue;
         }
-        // PNG из tools.zip имеет приоритет; другие новые предметы пока TODO(art).
+        // Блоки уже пропущены выше: они сохраняют изометрические кубы из граней.
         let mut image = Image::new(
             Extent3d {
                 width: 128,
@@ -52,6 +52,7 @@ fn cache_icons(
             },
             TextureDimension::D2,
             crate::tool_textures::pixels(&definition.id)
+                .or_else(|| crate::item_textures::pixels(&definition.id))
                 .unwrap_or_else(|| placeholder_pixels(&definition.id, &definition.kind)),
             TextureFormat::Rgba8UnormSrgb,
             RenderAssetUsages::default(),
@@ -141,6 +142,62 @@ fn placeholder_pixels(id: &str, kind: &ItemKind) -> Vec<u8> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn material_and_armor_cache_preserves_uploaded_rgba_and_partial_alpha() {
+        let mut app = App::new();
+        app.init_resource::<Game>()
+            .init_resource::<Assets<Image>>()
+            .init_resource::<ItemIcons>()
+            .add_systems(Update, cache_icons);
+        app.update();
+        let mut art = vec![];
+        for name in [
+            "coal",
+            "raw_iron",
+            "raw_gold",
+            "iron_ingot",
+            "gold_ingot",
+            "diamond",
+            "leather",
+        ] {
+            art.push((name.to_string(), "icons"));
+        }
+        for material in ["leather", "iron", "golden", "diamond"] {
+            for part in ["helmet", "chestplate", "leggings", "boots"] {
+                art.push((format!("{material}_{part}"), "armor"));
+            }
+        }
+        for (name, directory) in art {
+            let source = std::fs::read(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(
+                format!("../../assets/textures/{directory}/128x128/{name}.png"),
+            ))
+            .expect("uploaded original PNG");
+            let expected = image::load_from_memory_with_format(&source, image::ImageFormat::Png)
+                .unwrap()
+                .into_rgba8();
+            let item = app
+                .world()
+                .resource::<Game>()
+                .content
+                .find(&format!("survival:{name}"))
+                .unwrap();
+            let handle = &app.world().resource::<ItemIcons>().handles[&item];
+            let actual = app.world().resource::<Assets<Image>>().get(handle).unwrap();
+            assert_eq!(
+                actual.data.as_deref(),
+                Some(expected.as_raw().as_slice()),
+                "{name}"
+            );
+            assert!(expected.pixels().any(|pixel| pixel[3] == 0), "{name}");
+            assert!(
+                expected
+                    .pixels()
+                    .any(|pixel| pixel[3] > 0 && pixel[3] < 255),
+                "{name}"
+            );
+        }
+    }
+
     #[test]
     fn wooden_pickaxe_uses_uploaded_png_pixels_instead_of_placeholder() {
         let mut app = App::new();
@@ -256,7 +313,9 @@ mod tests {
         let registry = ContentRegistry::default();
         let mut blocks = BlockIcons::default();
         let mut images = Assets::<Image>::default();
-        blocks.handles = (0..17).map(|_| images.add(Image::default())).collect();
+        blocks.handles = (0..game_core::blocks::BLOCKS.len())
+            .map(|_| images.add(Image::default()))
+            .collect();
         let icons = ItemIcons::default();
         for (id, _) in registry.iter() {
             if let Some(block) = registry.block_for_item(id) {

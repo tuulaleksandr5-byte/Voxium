@@ -10,6 +10,7 @@ mod graphics_assets;
 mod inventory_client;
 mod inventory_render;
 mod item_icons;
+mod item_textures;
 mod player;
 mod session;
 mod settings;

@@ -63,8 +63,8 @@ pub struct ContentRegistry {
     by_block: HashMap<u8, ItemId>,
 }
 
-// Строковые имена Foundation соответствуют сохранённым ID блоков 0–15.
-const BLOCK_NAMES: [&str; 17] = [
+// Имена соответствуют стабильным сохранённым ID; новые блоки только дописываются.
+const BLOCK_NAMES: [&str; 26] = [
     "foundation:air",
     "foundation:grass",
     "foundation:dirt",
@@ -82,6 +82,15 @@ const BLOCK_NAMES: [&str; 17] = [
     "foundation:snow",
     "foundation:sandstone",
     "survival:chest",
+    "survival:coal_ore",
+    "survival:iron_ore",
+    "survival:gold_ore",
+    "survival:diamond_ore",
+    "survival:iron_block",
+    "survival:gold_block",
+    "survival:diamond_block",
+    "survival:crafting_table",
+    "survival:furnace",
 ];
 
 impl Default for ContentRegistry {
@@ -256,14 +265,99 @@ fn valid_namespaced_id(id: &str) -> bool {
 mod tests {
     use super::*;
 
+    #[test]
+    fn progression_catalog_adds_stable_blocks_drops_tools_and_armor() {
+        let registry = ContentRegistry::default();
+        let blocks = [
+            "coal_ore",
+            "iron_ore",
+            "gold_ore",
+            "diamond_ore",
+            "iron_block",
+            "gold_block",
+            "diamond_block",
+            "crafting_table",
+            "furnace",
+        ];
+        for (offset, name) in blocks.iter().enumerate() {
+            let id = registry
+                .find(&format!("survival:{name}"))
+                .expect("new block item");
+            assert_eq!(registry.block_for_item(id), Some(17 + offset as u8));
+            assert_eq!(registry.item_for_block(17 + offset as u8), Some(id));
+        }
+        for (block, drop) in [
+            (17, "coal"),
+            (18, "raw_iron"),
+            (19, "raw_gold"),
+            (20, "diamond"),
+        ] {
+            assert_eq!(
+                registry.drop_for_block(block),
+                Some(registry.find(&format!("survival:{drop}")).unwrap())
+            );
+        }
+        for block in 21..=25 {
+            assert_eq!(
+                registry.drop_for_block(block),
+                registry.item_for_block(block)
+            );
+        }
+        for name in [
+            "raw_iron",
+            "raw_gold",
+            "iron_ingot",
+            "gold_ingot",
+            "diamond",
+            "leather",
+        ] {
+            let id = registry.find(&format!("survival:{name}")).unwrap();
+            assert_eq!(registry.get(id).unwrap().kind, ItemKind::Material);
+            assert_eq!(registry.max_stack(id), 64);
+        }
+        for material in ["wooden", "stone", "iron", "golden", "diamond"] {
+            for tool in ["axe", "hoe", "pickaxe", "shovel", "sword"] {
+                let def = registry
+                    .get(
+                        registry
+                            .find(&format!("survival:{material}_{tool}"))
+                            .unwrap(),
+                    )
+                    .unwrap();
+                assert_eq!(def.kind, ItemKind::Tool);
+                assert_eq!(def.max_stack, 1);
+                assert!(!def.name.contains("образец"));
+            }
+        }
+        for material in ["leather", "iron", "golden", "diamond"] {
+            for (part, slot) in [
+                ("helmet", ArmorSlot::Head),
+                ("chestplate", ArmorSlot::Chest),
+                ("leggings", ArmorSlot::Legs),
+                ("boots", ArmorSlot::Feet),
+            ] {
+                let def = registry
+                    .get(
+                        registry
+                            .find(&format!("survival:{material}_{part}"))
+                            .unwrap(),
+                    )
+                    .unwrap();
+                assert_eq!(def.kind, ItemKind::Armor { slot });
+                assert_eq!(def.max_stack, 1);
+            }
+        }
+        assert_eq!(registry.len(), 74);
+    }
+
     fn material(id: &str, max_stack: u16) -> String {
         format!("(id: \"{id}\", name: \"Материал\", max_stack: {max_stack}, kind: Material)")
     }
 
     #[test]
-    fn default_catalog_maps_only_stage_three_blocks_and_fixtures() {
+    fn default_catalog_preserves_original_stage_three_blocks_and_fixtures() {
         let registry = ContentRegistry::default();
-        assert_eq!(registry.len(), 23);
+        assert_eq!(registry.len(), 74);
         assert!(!registry.is_empty());
         let names = [
             "foundation:air",
@@ -293,7 +387,7 @@ mod tests {
                 assert_eq!(registry.block_for_item(item), Some(block as u8));
             }
         }
-        assert_eq!(registry.item_for_block(17), None);
+        assert!(registry.item_for_block(17).is_some());
         assert_eq!(
             registry.max_stack(registry.find("survival:egg").unwrap()),
             16
@@ -302,7 +396,6 @@ mod tests {
             registry.max_stack(registry.find("survival:wooden_pickaxe").unwrap()),
             1
         );
-        assert_eq!(registry.find("survival:coal_ore"), None);
         assert_eq!(registry.find("survival:wool"), None);
         assert_eq!(registry.find("survival:raw_beef"), None);
         assert_eq!(registry.get(ItemId(u16::MAX)).map(|d| &d.id), None);
@@ -323,7 +416,7 @@ mod tests {
                     .iter()
                     .filter(|(_, item)| item.kind == ItemKind::Armor { slot })
                     .count(),
-                1
+                4
             );
         }
     }
@@ -423,7 +516,7 @@ mod tests {
         ] {
             assert!(original.reload(&changed).is_err());
         }
-        assert_eq!(original.len(), 23);
+        assert_eq!(original.len(), 74);
         assert_eq!(
             original.max_stack(original.find("survival:egg").unwrap()),
             16
@@ -485,7 +578,7 @@ mod tests {
             "(id:\"test:a\",name:\"A\",max_stack:64,kind:Tool)".into(),
             "(id:\"test:a\",name:\"A\",max_stack:16,kind:Armor(slot:Head))".into(),
             "(id:\"test:a\",name:\"A\",max_stack:64,kind:Material,typo:true)".into(),
-            "(id:\"test:a\",name:\"A\",max_stack:64,kind:Block(block:\"survival:coal_ore\"))"
+            "(id:\"test:a\",name:\"A\",max_stack:64,kind:Block(block:\"survival:unknown_ore\"))"
                 .into(),
             "(id:\"test:a\",name:\"A\",max_stack:64,kind:Block(block:\"foundation:bedrock\"))"
                 .into(),
@@ -786,9 +879,9 @@ mod example_schemas {
                 .iter()
                 .any(|drop| drop.item == "survival:raw_beef")
         );
-        // Руда, шерсть, мясо и животные остаются примерами будущих этапов.
+        // Шерсть, мясо и животные остаются примерами будущих этапов.
         let active = ContentRegistry::default();
-        for future in ["survival:coal_ore", "survival:wool", "survival:raw_beef"] {
+        for future in ["survival:wool", "survival:raw_beef"] {
             assert_eq!(active.find(future), None);
         }
     }
