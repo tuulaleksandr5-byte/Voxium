@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@1.99.1
         with:
           components: rustfmt, clippy
       - uses: Swatinem/rust-cache@v2
@@ -25,8 +25,8 @@ jobs:
       - name: Formatting
         run: cargo fmt --all -- --check
       - name: Check
-        run: cargo check --workspace
+        run: cargo check --workspace --locked
       - name: Clippy
-        run: cargo clippy --workspace --all-targets -- -D warnings
+        run: cargo clippy --workspace --all-targets --locked -- -D warnings
       - name: Tests
-        run: cargo test --workspace
+        run: cargo test --workspace --locked
