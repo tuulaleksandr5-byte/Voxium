@@ -87,7 +87,7 @@
 - [x] Добавить четыре руды: coal Y0…192/20 veins/17 blocks, iron −64…72/12/9, gold −64…32/4/9, diamond −64…16/7/8. Распределение треугольное, заменяет только stone/deepslate; соседние origins проверяются детерминированно, цель жилы загружена независимо. Не внедрять остальные четыре руды прежнего большого плана без PNG в эту итерацию.
 - [x] Маршрутизировать load/create/generation/save с snapshot, сохранить старые номера блоков и фоновые stream cancellations. Проверить новые размещённые блоки в правках старого мира. Состояние печи и полный инвентарь не обещать сохраняемыми.
 - [x] Поставить честную версию alpha обновления и переписать README/отчёт вокруг фактически сделанного. Не помечать завершённым весь этап 4 прежнего плана (там восемь руд).
-- [ ] Проверить весь workspace: fmt, Clippy -D warnings, tests; native GUI сценарии; Windows GNU build/tests через Wine; Windows GUI без assets. Затем собрать уникальный ZIP/BUILD-INFO/SHA256SUMS/полный diff, отдельно опубликовать source+download refs без замены прежних выпусков и проверить реальное скачивание.
+- [x] Проверить весь workspace: fmt, Clippy -D warnings, tests; native GUI сценарии; Windows GNU build/tests через Wine; Windows GUI без assets. Затем собрать уникальный ZIP/BUILD-INFO/SHA256SUMS/полный diff, отдельно опубликовать source+download refs без замены прежних выпусков и проверить реальное скачивание.
 
 ## Builder decisions and preflight
 
