@@ -1,0 +1,29 @@
+{
+  "version": "2.0.0-alpha.4",
+  "source_commit": "42dfeeb321140889f674b7bca8269c4bdf49f4f4",
+  "executable_code_commit": "f6b1fb7",
+  "base_source_commit": "a9bd00bde4901aa44af5f5c10eea6540e6f33311",
+  "target": "x86_64-pc-windows-gnu",
+  "exe_sha256": "bd78b74fa1436025e36223bf87402dc7e86f4055a2b36e63bff7276d9fc8ba0d",
+  "native_tests": 251,
+  "windows_wine_tests": 250,
+  "source_png_count": 239,
+  "embedded_texture_png_count": 80,
+  "native_windows_hardware_verified": false,
+  "created_utc": "2026-11-10T12:11:41.366910+00:00",
+  "runtime_only": [
+    "inventory",
+    "crafting",
+    "cursor",
+    "drops",
+    "chests",
+    "player_stats"
+  ],
+  "not_implemented": [
+    "crafting_3x3",
+    "smelting",
+    "armor_protection",
+    "tool_durability"
+  ],
+  "stick_png_missing": true
+}
