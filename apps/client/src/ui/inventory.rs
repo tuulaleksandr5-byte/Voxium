@@ -486,7 +486,7 @@ pub(super) fn menu(
             "",
         );
     }
-    if game.open_container.is_none() {
+    if !is_furnace {
         crafting(commands, storage, game, icons, blocks);
     }
     let equipment = column(commands, content, 7.);
