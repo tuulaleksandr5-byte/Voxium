@@ -68,10 +68,11 @@ fn input(
         .find(|(hovered, _)| hovered.get())
         .map(|(_, slot)| slot.0);
     let result_hovered = result.iter().any(Hovered::get);
-    let can_craft = game
-        .recipes
-        .preview(&game.inventory.crafting, &game.content)
-        .is_some();
+    let can_craft = if game.open_workbench.is_some() {
+        game.recipes.preview_workbench(&game.inventory.workbench, &game.content).is_some()
+    } else {
+        game.recipes.preview(&game.inventory.crafting, &game.content).is_some()
+    };
     let shift = keys.any_pressed([KeyCode::ShiftLeft, KeyCode::ShiftRight]);
     if mouse.just_pressed(MouseButton::Left) {
         drag.0.source = None;
@@ -163,7 +164,7 @@ fn slot(
             justify_content: JustifyContent::Center,
             ..default()
         },
-        Color::srgba(0.16, 0.07, 0.23, 0.96),
+        Color::srgba(0.13, 0.14, 0.16, 0.98),
     );
     commands.entity(child).insert((
         Button,
@@ -228,34 +229,35 @@ fn crafting(
     icons: &ItemIcons,
     blocks: &BlockIcons,
 ) {
-    label(commands, parent, "СОЗДАНИЕ · 2×2", 12., AMBER);
+    let workbench = game.open_workbench.is_some();
+    label(commands, parent, if workbench { "ВЕРСТАК · 3×3" } else { "СОЗДАНИЕ · 2×2" }, 12., AMBER);
     let cells = row(commands, parent, 6.);
     let grid = column(commands, cells, 6.);
     commands.entity(grid).insert(Node {
-        width: px(114),
+        width: px(if workbench { 174. } else { 114. }),
         flex_direction: FlexDirection::Column,
         row_gap: px(6),
         flex_shrink: 0.,
         ..default()
     });
-    for y in 0..2 {
+    let size = if workbench { 3 } else { 2 };
+    for y in 0..size {
         let line = row(commands, grid, 6.);
-        for x in 0..2 {
-            slot(
-                commands,
-                line,
-                game,
-                icons,
-                blocks,
-                SlotRef::Crafting(y * 2 + x),
-                "",
-            );
+        for x in 0..size {
+            let reference = if workbench {
+                SlotRef::Workbench(y * size + x)
+            } else {
+                SlotRef::Crafting(y * size + x)
+            };
+            slot(commands, line, game, icons, blocks, reference, "");
         }
     }
     label(commands, cells, "→", 16., MUTED);
-    let output = game
-        .recipes
-        .preview(&game.inventory.crafting, &game.content);
+    let output = if workbench {
+        game.recipes.preview_workbench(&game.inventory.workbench, &game.content)
+    } else {
+        game.recipes.preview(&game.inventory.crafting, &game.content)
+    };
     let result = node(
         commands,
         cells,
@@ -285,7 +287,7 @@ fn crafting(
                 item_name(game, output.as_ref(), "Результат")
             )
         } else {
-            "Нет рецепта · разместите ингредиенты в сетке 2×2".into()
+            "Нет рецепта · разместите ингредиенты в сетке".into()
         }),
         BorderColor::all(if output.is_some() { AMBER } else { LINE }),
     ));
@@ -322,15 +324,18 @@ pub(super) fn menu(
     icons: &ItemIcons,
     blocks: &BlockIcons,
 ) {
+    let is_furnace = game.open_container.is_some_and(|pos| game.world.block(pos) == game_core::FURNACE);
+    let title = if game.open_workbench.is_some() { "Верстак" }
+        else if is_furnace { "Печь" }
+        else if game.open_container.is_some() { "Сундук" }
+        else { "Инвентарь" };
+    let accent = if is_furnace { Color::srgb(0.70, 0.74, 0.79) }
+        else if game.open_workbench.is_some() { Color::srgb(0.94, 0.59, 0.31) }
+        else { AMBER };
     commands.entity(panel).insert((
-        BackgroundColor(Color::srgba(0.10, 0.045, 0.16, 0.98)),
-        BorderColor::all(AMBER),
+        BackgroundColor(Color::srgba(0.12, 0.13, 0.15, 0.98)),
+        BorderColor::all(accent),
     ));
-    let title = if game.open_container.is_some() {
-        "Сундук"
-    } else {
-        "Инвентарь"
-    };
     label(commands, panel, title, 26., TEXT);
     label(
         commands,
@@ -358,20 +363,25 @@ pub(super) fn menu(
         flex_shrink: 0.,
         ..default()
     });
-    if game.open_container.is_some() {
-        label(commands, storage, "СУНДУК · 27 ЯЧЕЕК", 12., AMBER);
-        for line in 0..3 {
-            let cells = row(commands, storage, 6.);
-            for index in 0..9 {
-                slot(
-                    commands,
-                    cells,
-                    game,
-                    icons,
-                    blocks,
-                    SlotRef::Container(line * 9 + index),
-                    "",
-                );
+    if let Some(position) = game.open_container {
+        if game.world.block(position) == game_core::FURNACE {
+            label(commands, storage, "ПЕЧЬ · СЫРЬЁ + ТОПЛИВО → СЛИТОК", 12., accent);
+            let cells = row(commands, storage, 12.);
+            slot(commands, cells, game, icons, blocks, SlotRef::Container(0), "Сырьё");
+            label(commands, cells, "+", 20., MUTED);
+            slot(commands, cells, game, icons, blocks, SlotRef::Container(1), "Уголь");
+            label(commands, cells, "→", 20., MUTED);
+            slot(commands, cells, game, icons, blocks, SlotRef::Container(2), "Готово");
+            let percent = game.furnaces.get(&position)
+                .map_or(0., |state| state.progress * 10.);
+            label(commands, storage, format!("Плавка: {percent:.0}% · 10 секунд / предмет"), 12., MUTED);
+        } else {
+            label(commands, storage, "СУНДУК · 27 ЯЧЕЕК", 12., accent);
+            for line in 0..3 {
+                let cells = row(commands, storage, 6.);
+                for index in 0..9 {
+                    slot(commands, cells, game, icons, blocks, SlotRef::Container(line * 9 + index), "");
+                }
             }
         }
     }
@@ -403,7 +413,9 @@ pub(super) fn menu(
             "",
         );
     }
-    crafting(commands, storage, game, icons, blocks);
+    if game.open_container.is_none() {
+        crafting(commands, storage, game, icons, blocks);
+    }
     let equipment = column(commands, content, 7.);
     commands.entity(equipment).insert(Node {
         width: px(170),
@@ -502,7 +514,7 @@ pub(super) fn menu(
                     justify_content: JustifyContent::Center,
                     ..default()
                 },
-                Color::srgba(0.16, 0.07, 0.23, 0.96),
+                Color::srgba(0.13, 0.14, 0.16, 0.98),
             );
             commands.entity(child).insert((
                 Button,
