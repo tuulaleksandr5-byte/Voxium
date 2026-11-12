@@ -162,7 +162,12 @@ fn process_action(game: &mut Game, action: &InventoryAction) -> Effects {
             if matches!(slot, SlotRef::Workbench(_)) && game.open_workbench.is_none() {
                 return effects;
             }
-            if matches!(slot, SlotRef::Container(2)) && game.open_container.is_some_and(|p| game.world.block(p) == FURNACE) && game.inventory.cursor.is_some() {
+            if matches!(slot, SlotRef::Container(2))
+                && game
+                    .open_container
+                    .is_some_and(|p| game.world.block(p) == FURNACE)
+                && game.inventory.cursor.is_some()
+            {
                 return effects;
             }
             let container = game
@@ -177,9 +182,11 @@ fn process_action(game: &mut Game, action: &InventoryAction) -> Effects {
         }
         InventoryAction::TakeCraftResult { all } if game.mode == Mode::Inventory => {
             let crafted = if game.open_workbench.is_some() {
-                game.recipes.take_workbench_result(&mut game.inventory, *all, &game.content)
+                game.recipes
+                    .take_workbench_result(&mut game.inventory, *all, &game.content)
             } else {
-                game.recipes.take_result(&mut game.inventory, *all, &game.content)
+                game.recipes
+                    .take_result(&mut game.inventory, *all, &game.content)
             };
             if crafted {
                 game.ui_dirty = true;
@@ -303,7 +310,10 @@ fn process_action(game: &mut Game, action: &InventoryAction) -> Effects {
         InventoryAction::OpenContainer { position }
             if game.mode == Mode::Playing
                 && game.world_mouse.allowed()
-                && matches!(loaded_block(&game.world, *position), Some(CHEST | FURNACE | CRAFTING_TABLE))
+                && matches!(
+                    loaded_block(&game.world, *position),
+                    Some(CHEST | FURNACE | CRAFTING_TABLE)
+                )
                 && visible_hit(game).is_some_and(|hit| hit.block == *position) =>
         {
             let block = game.world.block(*position);

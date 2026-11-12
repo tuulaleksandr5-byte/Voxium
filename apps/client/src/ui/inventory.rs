@@ -69,9 +69,13 @@ fn input(
         .map(|(_, slot)| slot.0);
     let result_hovered = result.iter().any(Hovered::get);
     let can_craft = if game.open_workbench.is_some() {
-        game.recipes.preview_workbench(&game.inventory.workbench, &game.content).is_some()
+        game.recipes
+            .preview_workbench(&game.inventory.workbench, &game.content)
+            .is_some()
     } else {
-        game.recipes.preview(&game.inventory.crafting, &game.content).is_some()
+        game.recipes
+            .preview(&game.inventory.crafting, &game.content)
+            .is_some()
     };
     let shift = keys.any_pressed([KeyCode::ShiftLeft, KeyCode::ShiftRight]);
     if mouse.just_pressed(MouseButton::Left) {
@@ -230,7 +234,17 @@ fn crafting(
     blocks: &BlockIcons,
 ) {
     let workbench = game.open_workbench.is_some();
-    label(commands, parent, if workbench { "ВЕРСТАК · 3×3" } else { "СОЗДАНИЕ · 2×2" }, 12., AMBER);
+    label(
+        commands,
+        parent,
+        if workbench {
+            "ВЕРСТАК · 3×3"
+        } else {
+            "СОЗДАНИЕ · 2×2"
+        },
+        12.,
+        AMBER,
+    );
     let cells = row(commands, parent, 6.);
     let grid = column(commands, cells, 6.);
     commands.entity(grid).insert(Node {
@@ -254,9 +268,11 @@ fn crafting(
     }
     label(commands, cells, "→", 16., MUTED);
     let output = if workbench {
-        game.recipes.preview_workbench(&game.inventory.workbench, &game.content)
+        game.recipes
+            .preview_workbench(&game.inventory.workbench, &game.content)
     } else {
-        game.recipes.preview(&game.inventory.crafting, &game.content)
+        game.recipes
+            .preview(&game.inventory.crafting, &game.content)
     };
     let result = node(
         commands,
@@ -324,14 +340,25 @@ pub(super) fn menu(
     icons: &ItemIcons,
     blocks: &BlockIcons,
 ) {
-    let is_furnace = game.open_container.is_some_and(|pos| game.world.block(pos) == game_core::FURNACE);
-    let title = if game.open_workbench.is_some() { "Верстак" }
-        else if is_furnace { "Печь" }
-        else if game.open_container.is_some() { "Сундук" }
-        else { "Инвентарь" };
-    let accent = if is_furnace { Color::srgb(0.70, 0.74, 0.79) }
-        else if game.open_workbench.is_some() { Color::srgb(0.94, 0.59, 0.31) }
-        else { AMBER };
+    let is_furnace = game
+        .open_container
+        .is_some_and(|pos| game.world.block(pos) == game_core::FURNACE);
+    let title = if game.open_workbench.is_some() {
+        "Верстак"
+    } else if is_furnace {
+        "Печь"
+    } else if game.open_container.is_some() {
+        "Сундук"
+    } else {
+        "Инвентарь"
+    };
+    let accent = if is_furnace {
+        Color::srgb(0.70, 0.74, 0.79)
+    } else if game.open_workbench.is_some() {
+        Color::srgb(0.94, 0.59, 0.31)
+    } else {
+        AMBER
+    };
     commands.entity(panel).insert((
         BackgroundColor(Color::srgba(0.12, 0.13, 0.15, 0.98)),
         BorderColor::all(accent),
@@ -365,22 +392,68 @@ pub(super) fn menu(
     });
     if let Some(position) = game.open_container {
         if game.world.block(position) == game_core::FURNACE {
-            label(commands, storage, "ПЕЧЬ · СЫРЬЁ + ТОПЛИВО → СЛИТОК", 12., accent);
+            label(
+                commands,
+                storage,
+                "ПЕЧЬ · СЫРЬЁ + ТОПЛИВО → СЛИТОК",
+                12.,
+                accent,
+            );
             let cells = row(commands, storage, 12.);
-            slot(commands, cells, game, icons, blocks, SlotRef::Container(0), "Сырьё");
+            slot(
+                commands,
+                cells,
+                game,
+                icons,
+                blocks,
+                SlotRef::Container(0),
+                "Сырьё",
+            );
             label(commands, cells, "+", 20., MUTED);
-            slot(commands, cells, game, icons, blocks, SlotRef::Container(1), "Уголь");
+            slot(
+                commands,
+                cells,
+                game,
+                icons,
+                blocks,
+                SlotRef::Container(1),
+                "Уголь",
+            );
             label(commands, cells, "→", 20., MUTED);
-            slot(commands, cells, game, icons, blocks, SlotRef::Container(2), "Готово");
-            let percent = game.furnaces.get(&position)
+            slot(
+                commands,
+                cells,
+                game,
+                icons,
+                blocks,
+                SlotRef::Container(2),
+                "Готово",
+            );
+            let percent = game
+                .furnaces
+                .get(&position)
                 .map_or(0., |state| state.progress * 10.);
-            label(commands, storage, format!("Плавка: {percent:.0}% · 10 секунд / предмет"), 12., MUTED);
+            label(
+                commands,
+                storage,
+                format!("Плавка: {percent:.0}% · 10 секунд / предмет"),
+                12.,
+                MUTED,
+            );
         } else {
             label(commands, storage, "СУНДУК · 27 ЯЧЕЕК", 12., accent);
             for line in 0..3 {
                 let cells = row(commands, storage, 6.);
                 for index in 0..9 {
-                    slot(commands, cells, game, icons, blocks, SlotRef::Container(line * 9 + index), "");
+                    slot(
+                        commands,
+                        cells,
+                        game,
+                        icons,
+                        blocks,
+                        SlotRef::Container(line * 9 + index),
+                        "",
+                    );
                 }
             }
         }

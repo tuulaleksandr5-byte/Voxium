@@ -12,7 +12,12 @@ pub struct FurnaceState {
 
 impl FurnaceState {
     /// Returns true only when at least one input is smelted or fuel is consumed.
-    pub fn tick(&mut self, inventory: &mut Container, seconds: f32, catalog: &ContentRegistry) -> bool {
+    pub fn tick(
+        &mut self,
+        inventory: &mut Container,
+        seconds: f32,
+        catalog: &ContentRegistry,
+    ) -> bool {
         if inventory.slots.len() != 3 || !seconds.is_finite() || seconds <= 0.0 {
             return false;
         }
@@ -28,25 +33,35 @@ impl FurnaceState {
                 break;
             };
             let output_cap = catalog.max_stack(output_id);
-            if !inventory.slots[2].as_ref().is_none_or(|s|
-                s.item == output_id && s.count < output_cap
-            ) {
+            if !inventory.slots[2]
+                .as_ref()
+                .is_none_or(|s| s.item == output_id && s.count < output_cap)
+            {
                 break;
             }
             if self.fuel_remaining <= 0.0001 {
-                let Some(fuel) = inventory.slots[1].as_mut() else { break; };
-                if catalog.get(fuel.item).is_none_or(|item| item.id != "survival:coal") {
+                let Some(fuel) = inventory.slots[1].as_mut() else {
+                    break;
+                };
+                if catalog
+                    .get(fuel.item)
+                    .is_none_or(|item| item.id != "survival:coal")
+                {
                     break;
                 }
                 fuel.count -= 1;
-                if fuel.count == 0 { inventory.slots[1] = None; }
+                if fuel.count == 0 {
+                    inventory.slots[1] = None;
+                }
                 self.fuel_remaining = COAL_SECONDS;
                 changed = true;
             }
             let step = remaining
                 .min(self.fuel_remaining)
                 .min((COOK_SECONDS - self.progress).max(0.0));
-            if step <= 0.0 { break; }
+            if step <= 0.0 {
+                break;
+            }
             remaining -= step;
             self.fuel_remaining -= step;
             self.progress += step;
@@ -54,7 +69,9 @@ impl FurnaceState {
                 self.progress = 0.0;
                 if let Some(input) = inventory.slots[0].as_mut() {
                     input.count -= 1;
-                    if input.count == 0 { inventory.slots[0] = None; }
+                    if input.count == 0 {
+                        inventory.slots[0] = None;
+                    }
                 }
                 if let Some(output) = inventory.slots[2].as_mut() {
                     output.count += 1;

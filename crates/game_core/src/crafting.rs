@@ -167,27 +167,44 @@ impl RecipeBook {
             .map(|(recipe, _, _)| recipe.id.as_str());
         let mut changed = false;
         while let Some((recipe, costs, output)) = self.matching(&inventory.workbench, 3, catalog) {
-            if Some(recipe.id.as_str()) != target_recipe { break; }
+            if Some(recipe.id.as_str()) != target_recipe {
+                break;
+            }
             let mut candidate = inventory.clone();
             if all {
-                if candidate.insert(output, catalog).is_some() { break; }
+                if candidate.insert(output, catalog).is_some() {
+                    break;
+                }
             } else if let Some(cursor) = &mut candidate.cursor {
-                if cursor.item != output.item || cursor.count == 0 { break; }
-                let Some(count) = cursor.count.checked_add(output.count)
-                    .filter(|count| *count <= catalog.max_stack(cursor.item)) else { break; };
+                if cursor.item != output.item || cursor.count == 0 {
+                    break;
+                }
+                let Some(count) = cursor
+                    .count
+                    .checked_add(output.count)
+                    .filter(|count| *count <= catalog.max_stack(cursor.item))
+                else {
+                    break;
+                };
                 cursor.count = count;
             } else {
                 candidate.cursor = Some(output);
             }
             for (slot, cost) in candidate.workbench.iter_mut().zip(costs) {
-                if cost > 0 && let Some(stack) = slot {
+                if cost > 0
+                    && let Some(stack) = slot
+                {
                     stack.count -= cost;
-                    if stack.count == 0 { *slot = None; }
+                    if stack.count == 0 {
+                        *slot = None;
+                    }
                 }
             }
             *inventory = candidate;
             changed = true;
-            if !all { break; }
+            if !all {
+                break;
+            }
         }
         changed
     }
@@ -218,15 +235,24 @@ impl RecipeBook {
         width: usize,
         catalog: &ContentRegistry,
     ) -> Option<(&Recipe, [u16; N], ItemStack)> {
-        if N != width * width || grid.iter().flatten()
-            .any(|stack| stack.count == 0 || stack.count > catalog.max_stack(stack.item))
+        if N != width * width
+            || grid
+                .iter()
+                .flatten()
+                .any(|stack| stack.count == 0 || stack.count > catalog.max_stack(stack.item))
         {
             return None;
         }
         for recipe in &self.recipes {
-            if recipe.width > width || recipe.height > width { continue; }
-            let Some(output_item) = catalog.find(&recipe.output.item) else { continue; };
-            if recipe.output.count > catalog.max_stack(output_item) { continue; }
+            if recipe.width > width || recipe.height > width {
+                continue;
+            }
+            let Some(output_item) = catalog.find(&recipe.output.item) else {
+                continue;
+            };
+            if recipe.output.count > catalog.max_stack(output_item) {
+                continue;
+            }
             for y in 0..=width - recipe.height {
                 for x in 0..=width - recipe.width {
                     let mut costs = [0; N];

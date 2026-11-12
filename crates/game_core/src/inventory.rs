@@ -195,7 +195,10 @@ impl Inventory {
             match slot {
                 SlotRef::Hotbar(_) => insert_slots(self.main.iter_mut(), &mut stack, catalog),
                 SlotRef::Main(_) => insert_slots(self.hotbar.iter_mut(), &mut stack, catalog),
-                SlotRef::Armor(_) | SlotRef::Offhand | SlotRef::Crafting(_) | SlotRef::Workbench(_) => insert_slots(
+                SlotRef::Armor(_)
+                | SlotRef::Offhand
+                | SlotRef::Crafting(_)
+                | SlotRef::Workbench(_) => insert_slots(
                     self.hotbar.iter_mut().chain(self.main.iter_mut()),
                     &mut stack,
                     catalog,

@@ -7,7 +7,10 @@ use game_core::{
 };
 
 fn stack(catalog: &ContentRegistry, id: &str, count: u16) -> Option<ItemStack> {
-    Some(ItemStack::new(catalog.find(id).expect("item in catalog"), count))
+    Some(ItemStack::new(
+        catalog.find(id).expect("item in catalog"),
+        count,
+    ))
 }
 
 #[test]
@@ -20,7 +23,9 @@ fn three_by_three_workbench_crafts_tool_and_consumes_ingredients_once() {
     inventory.workbench[2] = stack(&catalog, "survival:iron_ingot", 1);
     inventory.workbench[4] = stack(&catalog, "survival:stick", 1);
     inventory.workbench[7] = stack(&catalog, "survival:stick", 1);
-    let output = recipes.preview_workbench(&inventory.workbench, &catalog).unwrap();
+    let output = recipes
+        .preview_workbench(&inventory.workbench, &catalog)
+        .unwrap();
     assert_eq!(output.item, catalog.find("survival:iron_pickaxe").unwrap());
     assert!(recipes.take_workbench_result(&mut inventory, false, &catalog));
     assert_eq!(inventory.cursor, Some(output));
@@ -39,10 +44,16 @@ fn furnace_consumes_one_coal_and_smelt_input_without_duplicates() {
     assert!(furnace.tick(&mut container, 10.0, &catalog));
     assert_eq!(container.slots[0], stack(&catalog, "survival:raw_iron", 1));
     assert_eq!(container.slots[1], None);
-    assert_eq!(container.slots[2], stack(&catalog, "survival:iron_ingot", 1));
+    assert_eq!(
+        container.slots[2],
+        stack(&catalog, "survival:iron_ingot", 1)
+    );
     assert!(furnace.tick(&mut container, 10.0, &catalog));
     assert_eq!(container.slots[0], None);
-    assert_eq!(container.slots[2], stack(&catalog, "survival:iron_ingot", 2));
+    assert_eq!(
+        container.slots[2],
+        stack(&catalog, "survival:iron_ingot", 2)
+    );
     assert!(!furnace.tick(&mut container, 10.0, &catalog));
 }
 
@@ -57,5 +68,8 @@ fn furnace_refuses_full_or_mismatched_output_without_consuming_fuel() {
     assert!(!furnace.tick(&mut container, 10.0, &catalog));
     assert_eq!(container.slots[0], stack(&catalog, "survival:raw_gold", 1));
     assert_eq!(container.slots[1], stack(&catalog, "survival:coal", 1));
-    assert_eq!(container.slots[2], stack(&catalog, "survival:iron_ingot", 64));
+    assert_eq!(
+        container.slots[2],
+        stack(&catalog, "survival:iron_ingot", 64)
+    );
 }
