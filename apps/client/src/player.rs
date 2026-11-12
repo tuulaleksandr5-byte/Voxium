@@ -356,7 +356,7 @@ pub fn controls(
                 }));
             }
             if world_mouse && mouse.just_pressed(MouseButton::Right) {
-                let action = if game.world.block(hit.block) == game_core::CHEST
+                let action = if matches!(game.world.block(hit.block), game_core::CHEST | game_core::CRAFTING_TABLE | game_core::FURNACE)
                     && !(keys.pressed(KeyCode::ShiftLeft) || keys.pressed(KeyCode::ShiftRight))
                 {
                     Some(InventoryAction::OpenContainer {
