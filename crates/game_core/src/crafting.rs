@@ -44,11 +44,11 @@ impl RecipeBook {
             if !valid_id(&recipe.id) || !ids.insert(&recipe.id) {
                 return Err("Недопустимый или повторный ID рецепта".into());
             }
-            if !(1..=2).contains(&recipe.width)
-                || !(1..=2).contains(&recipe.height)
+            if !(1..=3).contains(&recipe.width)
+                || !(1..=3).contains(&recipe.height)
                 || recipe.inputs.len() != recipe.width * recipe.height
             {
-                return Err("Рецепт должен помещаться в сетку 2×2".into());
+                return Err("Рецепт должен помещаться в сетку 3×3".into());
             }
             // Require a tight bounding rectangle, so every translation is unambiguous.
             let occupied = |x: usize, y: usize| recipe.inputs[y * recipe.width + x].is_some();
@@ -84,7 +84,7 @@ impl RecipeBook {
         grid: &[Option<ItemStack>; 4],
         catalog: &ContentRegistry,
     ) -> Option<ItemStack> {
-        self.matching(grid, catalog).map(|(_, _, output)| output)
+        self.matching(grid, 2, catalog).map(|(_, _, output)| output)
     }
 
     /// A result is never stored: transfer a whole portion before consuming its inputs.
@@ -98,10 +98,10 @@ impl RecipeBook {
             return false;
         }
         let target_recipe = self
-            .matching(&inventory.crafting, catalog)
+            .matching(&inventory.crafting, 2, catalog)
             .map(|(recipe, _, _)| recipe.id.as_str());
         let mut changed = false;
-        while let Some((recipe, costs, output)) = self.matching(&inventory.crafting, catalog) {
+        while let Some((recipe, costs, output)) = self.matching(&inventory.crafting, 2, catalog) {
             if Some(recipe.id.as_str()) != target_recipe {
                 break;
             }
@@ -144,6 +144,71 @@ impl RecipeBook {
         changed
     }
 
+    /// Preview and craft in the separate 3×3 workbench grid.
+    pub fn preview_workbench(
+        &self,
+        grid: &[Option<ItemStack>; 9],
+        catalog: &ContentRegistry,
+    ) -> Option<ItemStack> {
+        self.matching(grid, 3, catalog).map(|(_, _, output)| output)
+    }
+
+    pub fn take_workbench_result(
+        &self,
+        inventory: &mut Inventory,
+        all: bool,
+        catalog: &ContentRegistry,
+    ) -> bool {
+        if all && inventory.cursor.is_some() {
+            return false;
+        }
+        let target_recipe = self
+            .matching(&inventory.workbench, 3, catalog)
+            .map(|(recipe, _, _)| recipe.id.as_str());
+        let mut changed = false;
+        while let Some((recipe, costs, output)) = self.matching(&inventory.workbench, 3, catalog) {
+            if Some(recipe.id.as_str()) != target_recipe {
+                break;
+            }
+            let mut candidate = inventory.clone();
+            if all {
+                if candidate.insert(output, catalog).is_some() {
+                    break;
+                }
+            } else if let Some(cursor) = &mut candidate.cursor {
+                if cursor.item != output.item || cursor.count == 0 {
+                    break;
+                }
+                let Some(count) = cursor
+                    .count
+                    .checked_add(output.count)
+                    .filter(|count| *count <= catalog.max_stack(cursor.item))
+                else {
+                    break;
+                };
+                cursor.count = count;
+            } else {
+                candidate.cursor = Some(output);
+            }
+            for (slot, cost) in candidate.workbench.iter_mut().zip(costs) {
+                if cost > 0
+                    && let Some(stack) = slot
+                {
+                    stack.count -= cost;
+                    if stack.count == 0 {
+                        *slot = None;
+                    }
+                }
+            }
+            *inventory = candidate;
+            changed = true;
+            if !all {
+                break;
+            }
+        }
+        changed
+    }
+
     /// Used before committing an item catalog reload.
     pub fn validate_catalog(&self, catalog: &ContentRegistry) -> Result<(), String> {
         for recipe in &self.recipes {
@@ -164,31 +229,36 @@ impl RecipeBook {
         Ok(())
     }
 
-    fn matching(
+    fn matching<const N: usize>(
         &self,
-        grid: &[Option<ItemStack>; 4],
+        grid: &[Option<ItemStack>; N],
+        width: usize,
         catalog: &ContentRegistry,
-    ) -> Option<(&Recipe, [u16; 4], ItemStack)> {
-        if grid
-            .iter()
-            .flatten()
-            .any(|stack| stack.count == 0 || stack.count > catalog.max_stack(stack.item))
+    ) -> Option<(&Recipe, [u16; N], ItemStack)> {
+        if N != width * width
+            || grid
+                .iter()
+                .flatten()
+                .any(|stack| stack.count == 0 || stack.count > catalog.max_stack(stack.item))
         {
             return None;
         }
         for recipe in &self.recipes {
+            if recipe.width > width || recipe.height > width {
+                continue;
+            }
             let Some(output_item) = catalog.find(&recipe.output.item) else {
                 continue;
             };
             if recipe.output.count > catalog.max_stack(output_item) {
                 continue;
             }
-            for y in 0..=2 - recipe.height {
-                for x in 0..=2 - recipe.width {
-                    let mut costs = [0; 4];
-                    let matches = (0..4).all(|index| {
-                        let gx = index % 2;
-                        let gy = index / 2;
+            for y in 0..=width - recipe.height {
+                for x in 0..=width - recipe.width {
+                    let mut costs = [0; N];
+                    let matches = (0..N).all(|index| {
+                        let gx = index % width;
+                        let gy = index / width;
                         let ingredient = if gx >= x
                             && gx < x + recipe.width
                             && gy >= y

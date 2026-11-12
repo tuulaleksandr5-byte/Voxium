@@ -6,6 +6,7 @@ pub enum SlotRef {
     Hotbar(usize),
     Main(usize),
     Crafting(usize),
+    Workbench(usize),
     Armor(ArmorSlot),
     Offhand,
     Container(usize),
@@ -25,6 +26,7 @@ pub struct Inventory {
     pub offhand: Option<ItemStack>,
     pub cursor: Option<ItemStack>,
     pub crafting: [Option<ItemStack>; 4],
+    pub workbench: [Option<ItemStack>; 9],
 }
 
 #[derive(Clone, Debug)]
@@ -46,6 +48,7 @@ impl Inventory {
             SlotRef::Hotbar(index) => self.hotbar.get(index)?.as_ref(),
             SlotRef::Main(index) => self.main.get(index)?.as_ref(),
             SlotRef::Crafting(index) => self.crafting.get(index)?.as_ref(),
+            SlotRef::Workbench(index) => self.workbench.get(index)?.as_ref(),
             SlotRef::Armor(armor) => self.armor.get(armor.index())?.as_ref(),
             SlotRef::Offhand => self.offhand.as_ref(),
             SlotRef::Container(_) => None,
@@ -131,12 +134,18 @@ impl Inventory {
             .map(|stack| stack.and_then(|stack| self.insert(stack, catalog)))
     }
 
+    pub fn close_workbench(&mut self, catalog: &ContentRegistry) -> [Option<ItemStack>; 9] {
+        std::mem::take(&mut self.workbench)
+            .map(|stack| stack.and_then(|stack| self.insert(stack, catalog)))
+    }
+
     pub fn drain_all(&mut self) -> Vec<ItemStack> {
         self.hotbar
             .iter_mut()
             .chain(self.main.iter_mut())
             .chain(self.armor.iter_mut())
             .chain(self.crafting.iter_mut())
+            .chain(self.workbench.iter_mut())
             .chain(std::iter::once(&mut self.offhand))
             .chain(std::iter::once(&mut self.cursor))
             .filter_map(Option::take)
@@ -148,6 +157,7 @@ impl Inventory {
             SlotRef::Hotbar(index) => self.hotbar.get_mut(index),
             SlotRef::Main(index) => self.main.get_mut(index),
             SlotRef::Crafting(index) => self.crafting.get_mut(index),
+            SlotRef::Workbench(index) => self.workbench.get_mut(index),
             SlotRef::Armor(armor) => self.armor.get_mut(armor.index()),
             SlotRef::Offhand => Some(&mut self.offhand),
             SlotRef::Container(_) => None,
@@ -185,7 +195,10 @@ impl Inventory {
             match slot {
                 SlotRef::Hotbar(_) => insert_slots(self.main.iter_mut(), &mut stack, catalog),
                 SlotRef::Main(_) => insert_slots(self.hotbar.iter_mut(), &mut stack, catalog),
-                SlotRef::Armor(_) | SlotRef::Offhand | SlotRef::Crafting(_) => insert_slots(
+                SlotRef::Armor(_)
+                | SlotRef::Offhand
+                | SlotRef::Crafting(_)
+                | SlotRef::Workbench(_) => insert_slots(
                     self.hotbar.iter_mut().chain(self.main.iter_mut()),
                     &mut stack,
                     catalog,

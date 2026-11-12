@@ -5,7 +5,7 @@ use crate::{
 };
 use bevy::prelude::*;
 use game_core::{
-    AIR, BEDROCK, CHEST, World,
+    AIR, BEDROCK, CHEST, CRAFTING_TABLE, FURNACE, World,
     content::ItemId,
     crafting::RecipeBook,
     drops::DropConfig,
@@ -59,7 +59,8 @@ pub fn plugin(app: &mut App) {
             tick_drops
                 .after(crate::survival_client::simulate)
                 .before(crate::player::sky),
-        );
+        )
+        .add_systems(Update, tick_furnaces.after(apply_actions));
 }
 
 pub fn reset_session(game: &mut Game, creative: bool) {
@@ -68,6 +69,8 @@ pub fn reset_session(game: &mut Game, creative: bool) {
     game.inventory = Inventory::default();
     game.containers.clear();
     game.open_container = None;
+    game.open_workbench = None;
+    game.furnaces.clear();
     game.drops.clear();
     game.selected = 0;
     if creative {
@@ -98,7 +101,16 @@ pub fn close_inventory(game: &mut Game) {
             spawn_drop(game, stack, game.feet + Vec3::Y * 0.6, Vec3::Y * 1.5);
         }
     }
+    let leftovers = game.inventory.close_workbench(&game.content);
+    if game.game_rules.keep_inventory && (game.vitals.is_dead() || game.mode == Mode::Dead) {
+        game.inventory.workbench = leftovers;
+    } else {
+        for stack in leftovers.into_iter().flatten() {
+            spawn_drop(game, stack, game.feet + Vec3::Y * 0.6, Vec3::Y * 1.5);
+        }
+    }
     game.open_container = None;
+    game.open_workbench = None;
     sync_hotbar(game);
     game.ui_dirty = true;
 }
@@ -109,12 +121,14 @@ pub fn on_death(game: &mut Game) {
     if game.game_rules.keep_inventory {
         game.inventory.cursor = game.inventory.close_cursor(&game.content);
         game.inventory.crafting = game.inventory.close_crafting(&game.content);
+        game.inventory.workbench = game.inventory.close_workbench(&game.content);
     } else {
         for stack in game.inventory.drain_all() {
             spawn_drop(game, stack, game.feet + Vec3::Y * 0.6, Vec3::Y * 1.5);
         }
     }
     game.open_container = None;
+    game.open_workbench = None;
     sync_hotbar(game);
     game.ui_dirty = true;
 }
@@ -145,6 +159,17 @@ fn process_action(game: &mut Game, action: &InventoryAction) -> Effects {
             button,
             shift,
         } if game.mode == Mode::Inventory => {
+            if matches!(slot, SlotRef::Workbench(_)) && game.open_workbench.is_none() {
+                return effects;
+            }
+            if matches!(slot, SlotRef::Container(2))
+                && game
+                    .open_container
+                    .is_some_and(|p| game.world.block(p) == FURNACE)
+                && game.inventory.cursor.is_some()
+            {
+                return effects;
+            }
             let container = game
                 .open_container
                 .and_then(|p| game.containers.get_mut(&p));
@@ -156,10 +181,14 @@ fn process_action(game: &mut Game, action: &InventoryAction) -> Effects {
             }
         }
         InventoryAction::TakeCraftResult { all } if game.mode == Mode::Inventory => {
-            if game
-                .recipes
-                .take_result(&mut game.inventory, *all, &game.content)
-            {
+            let crafted = if game.open_workbench.is_some() {
+                game.recipes
+                    .take_workbench_result(&mut game.inventory, *all, &game.content)
+            } else {
+                game.recipes
+                    .take_result(&mut game.inventory, *all, &game.content)
+            };
+            if crafted {
                 game.ui_dirty = true;
             }
         }
@@ -227,6 +256,7 @@ fn process_action(game: &mut Game, action: &InventoryAction) -> Effects {
             }
             if game.world.set(*position, AIR) {
                 let center = block_center(*position);
+                game.furnaces.remove(position);
                 if let Some(container) = game.containers.remove(position) {
                     for stack in container.slots.into_iter().flatten() {
                         spawn_drop(game, stack, center, Vec3::Y * 1.5);
@@ -260,10 +290,13 @@ fn process_action(game: &mut Game, action: &InventoryAction) -> Effects {
                 if game.game_mode == GameMode::Survival {
                     game.inventory.take_selected(game.selected, false);
                 }
-                if block == CHEST {
+                if block == CHEST || block == FURNACE {
                     game.containers
                         .entry(*position)
-                        .or_insert_with(|| Container::new(27));
+                        .or_insert_with(|| Container::new(if block == CHEST { 27 } else { 3 }));
+                }
+                if block == FURNACE {
+                    game.furnaces.entry(*position).or_default();
                 }
                 effects.sounds.push(BlockSound {
                     block,
@@ -277,13 +310,26 @@ fn process_action(game: &mut Game, action: &InventoryAction) -> Effects {
         InventoryAction::OpenContainer { position }
             if game.mode == Mode::Playing
                 && game.world_mouse.allowed()
-                && loaded_block(&game.world, *position) == Some(CHEST)
+                && matches!(
+                    loaded_block(&game.world, *position),
+                    Some(CHEST | FURNACE | CRAFTING_TABLE)
+                )
                 && visible_hit(game).is_some_and(|hit| hit.block == *position) =>
         {
-            game.containers
-                .entry(*position)
-                .or_insert_with(|| Container::new(27));
-            game.open_container = Some(*position);
+            let block = game.world.block(*position);
+            game.open_container = None;
+            game.open_workbench = None;
+            if block == CRAFTING_TABLE {
+                game.open_workbench = Some(*position);
+            } else {
+                game.containers
+                    .entry(*position)
+                    .or_insert_with(|| Container::new(if block == CHEST { 27 } else { 3 }));
+                if block == FURNACE {
+                    game.furnaces.entry(*position).or_default();
+                }
+                game.open_container = Some(*position);
+            }
             game.screen(Mode::Inventory);
         }
         _ => {}
@@ -344,6 +390,30 @@ fn apply_actions(
                 crate::survival_client::PlayerAction::MinedBlock,
             ));
         }
+    }
+}
+
+pub fn tick_furnaces(time: Res<Time<Real>>, mut game: ResMut<Game>) {
+    if !matches!(game.mode, Mode::Playing | Mode::Inventory) || game.world_id.is_none() {
+        return;
+    }
+    let elapsed = time.delta_secs();
+    let mut changed = false;
+    let game: &mut Game = &mut game;
+    for (position, state) in &mut game.furnaces {
+        if game.world.block(*position) != FURNACE {
+            continue;
+        }
+        if let Some(container) = game.containers.get_mut(position) {
+            let progress_before = state.progress.floor();
+            changed |= state.tick(container, elapsed, &game.content);
+            if game.open_container == Some(*position) && progress_before != state.progress.floor() {
+                changed = true;
+            }
+        }
+    }
+    if changed {
+        game.ui_dirty = true;
     }
 }
 
