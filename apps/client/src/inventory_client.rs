@@ -384,17 +384,27 @@ fn apply_actions(
 }
 
 pub fn tick_furnaces(time: Res<Time<Real>>, mut game: ResMut<Game>) {
-    if game.mode != Mode::Playing || game.world_id.is_none() { return; }
+    if !matches!(game.mode, Mode::Playing | Mode::Inventory) || game.world_id.is_none() {
+        return;
+    }
     let elapsed = time.delta_secs();
     let mut changed = false;
     let game: &mut Game = &mut game;
     for (position, state) in &mut game.furnaces {
-        if game.world.block(*position) != FURNACE { continue; }
+        if game.world.block(*position) != FURNACE {
+            continue;
+        }
         if let Some(container) = game.containers.get_mut(position) {
+            let progress_before = state.progress.floor();
             changed |= state.tick(container, elapsed, &game.content);
+            if game.open_container == Some(*position) && progress_before != state.progress.floor() {
+                changed = true;
+            }
         }
     }
-    if changed { game.ui_dirty = true; }
+    if changed {
+        game.ui_dirty = true;
+    }
 }
 
 pub fn tick_drops(time: Res<Time<Real>>, mut game: ResMut<Game>) {
