@@ -1,8 +1,8 @@
-name: Windows x64 - Minecraft inventory UI
+name: Windows x64 - Pixel Art 16 32
 
 on:
   pull_request:
-    branches: [main, feature/functional-stations-dark-inventory, feature/minecraft-optifine-resourcepacks]
+    branches: [main, feature/functional-stations-dark-inventory, feature/minecraft-optifine-resourcepacks, feature/minecraft-inventory-layout]
   workflow_dispatch:
 
 permissions:
@@ -31,10 +31,10 @@ jobs:
         run: |
           New-Item -ItemType Directory -Force dist | Out-Null
           Copy-Item target/x86_64-pc-windows-msvc/release/voxel-client.exe dist/Voxium.exe
-          'Voxium Minecraft-style UI preview with resourcepack backgrounds, functional stations and original fallback textures. Put ZIP at assets/resourcepacks/active.zip. Not full OptiFine; no Animals source. Back up worlds.' | Out-File dist/README.txt -Encoding UTF8
+          'Voxium pixel-art graphics preview: selectable 16x16, 32x32 and original 128x128 textures (restart after changing). Minecraft UI, resourcepack backgrounds, functional stations and original fallback textures. Put ZIP at assets/resourcepacks/active.zip. Not full OptiFine; no Animals source. Back up worlds.' | Out-File dist/README.txt -Encoding UTF8
       - uses: actions/upload-artifact@v4
         with:
-          name: Voxium-Minecraft-Inventory-Windows-x64
+          name: Voxium-Pixel-Art-Windows-x64
           path: dist/
           if-no-files-found: error
           retention-days: 7

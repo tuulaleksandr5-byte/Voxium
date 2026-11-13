@@ -123,6 +123,33 @@ impl BlockAtlas {
             .map_err(|error| error.to_string())
     }
 
+    /// Preserve the fixed 128px GPU atlas format while rendering 16px or 32px texels.
+    /// Downsample and upscale each layer independently, never blending with neighbors.
+    pub fn pixelated(&self, pixel_size: u32) -> Result<Self, String> {
+        if pixel_size == TILE_SIZE {
+            return Ok(self.clone());
+        }
+        if !matches!(pixel_size, 16 | 32) {
+            return Err(format!(
+                "pixel size must be 16, 32 or 128, got {pixel_size}"
+            ));
+        }
+        let mut atlas = self.clone();
+        for layer in 0..36 {
+            let original = image::imageops::crop_imm(
+                &self.rgba,
+                (layer % 6) * TILE_SIZE,
+                (layer / 6) * TILE_SIZE,
+                TILE_SIZE,
+                TILE_SIZE,
+            )
+            .to_image();
+            let scaled = resize_pixel_art(&original, pixel_size);
+            atlas.replace_layer_rgba(layer as usize, &scaled)?;
+        }
+        Ok(atlas)
+    }
+
     /// Заменить один дополнительный PNG; индекс 0…14 соответствует слоям 18…32.
     /// Проверка индекса и полное декодирование предшествуют изменению атласа.
     /// При ошибке текущие пиксели, включая все исходные слои, сохраняются.
@@ -140,6 +167,38 @@ impl BlockAtlas {
             )
             .map_err(|e| format!("cannot copy tile {layer}: {e}"))
     }
+}
+
+fn resize_pixel_art(image: &RgbaImage, pixel_size: u32) -> RgbaImage {
+    let small = image::imageops::resize(
+        image,
+        pixel_size,
+        pixel_size,
+        image::imageops::FilterType::Nearest,
+    );
+    image::imageops::resize(
+        &small,
+        TILE_SIZE,
+        TILE_SIZE,
+        image::imageops::FilterType::Nearest,
+    )
+}
+
+/// Quantize square icon RGBA without modifying its alpha or source asset.
+pub fn pixelate_icon_rgba(rgba: &[u8], pixel_size: u32) -> Result<Vec<u8>, String> {
+    if rgba.len() != (TILE_SIZE * TILE_SIZE * 4) as usize {
+        return Err("expected 128×128 RGBA icon".into());
+    }
+    if pixel_size == TILE_SIZE {
+        return Ok(rgba.to_vec());
+    }
+    if !matches!(pixel_size, 16 | 32) {
+        return Err(format!(
+            "pixel size must be 16, 32 or 128, got {pixel_size}"
+        ));
+    }
+    let source = RgbaImage::from_raw(TILE_SIZE, TILE_SIZE, rgba.to_vec()).expect("length verified");
+    Ok(resize_pixel_art(&source, pixel_size).into_raw())
 }
 
 fn decode_png(bytes: &[u8], expected: (u32, u32), name: &str) -> Result<RgbaImage, String> {
@@ -181,6 +240,62 @@ mod tests {
         include_bytes!("../../../assets/textures/sandstone.png"),
         include_bytes!("../../../assets/textures/sandstone_top.png"),
     ];
+
+    #[test]
+    fn pixelated_atlas_16_and_32_preserves_alpha_and_does_not_mix_layers() {
+        let mut atlas = BlockAtlas::from_tiles(&ORIGINAL_TILES).unwrap();
+        let source = RgbaImage::from_fn(128, 128, |x, y| {
+            image::Rgba([x as u8, y as u8, 83, if x < 64 { 0 } else { 137 }])
+        });
+        atlas.replace_layer_rgba(0, &source).unwrap();
+        let neighbor = RgbaImage::from_pixel(128, 128, image::Rgba([7, 8, 9, 23]));
+        atlas.replace_layer_rgba(1, &neighbor).unwrap();
+        for size in [16, 32] {
+            let result = atlas.pixelated(size).unwrap();
+            let stride = 128 / size;
+            let sample = *result.rgba.get_pixel(stride / 2, stride / 2);
+            for x in 0..stride {
+                for y in 0..stride {
+                    assert_eq!(*result.rgba.get_pixel(x, y), sample);
+                }
+            }
+            assert_eq!(result.rgba.get_pixel(0, 0)[3], 0);
+            assert_eq!(result.rgba.get_pixel(127, 0)[3], 137);
+            assert_eq!(result.rgba.get_pixel(128, 0).0, [7, 8, 9, 23]);
+            assert_eq!(result.rgba.get_pixel(255, 127).0, [7, 8, 9, 23]);
+        }
+        assert_eq!(atlas.pixelated(128).unwrap().rgba, atlas.rgba);
+        assert!(atlas.pixelated(20).is_err());
+    }
+
+    #[test]
+    fn pixelated_icons_are_nearest_neighbour_and_preserve_transparency() {
+        let mut rgba = vec![0u8; 128 * 128 * 4];
+        for y in 0..128 {
+            for x in 0..128 {
+                let p = (y * 128 + x) * 4;
+                rgba[p..p + 4].copy_from_slice(&[
+                    x as u8,
+                    y as u8,
+                    20,
+                    if x < 64 { 0 } else { 255 },
+                ]);
+            }
+        }
+        for size in [16, 32] {
+            let output = pixelate_icon_rgba(&rgba, size).unwrap();
+            assert_eq!(output.len(), rgba.len());
+            let step = 128 / size as usize;
+            assert_eq!(
+                &output[0..4],
+                &output[((step - 1) * 128 + step - 1) * 4..][..4]
+            );
+            assert_eq!(output[3], 0);
+            assert_eq!(output[(127 * 4) + 3], 255);
+        }
+        assert_eq!(pixelate_icon_rgba(&rgba, 128).unwrap(), rgba);
+        assert!(pixelate_icon_rgba(&rgba[..10], 16).is_err());
+    }
 
     #[test]
     fn single_additional_replacement_rejects_invalid_input_without_mutating_any_layer() {

@@ -10,15 +10,15 @@ mod icons;
 mod materials;
 mod meshing;
 
-pub use atlas::{ADDITIONAL_TILE_NAMES, BlockAtlas};
+pub use atlas::{ADDITIONAL_TILE_NAMES, BlockAtlas, pixelate_icon_rgba};
 pub use environment::gradient_sky;
 pub use face_textures::{
     BlockTextures, FaceTextures, GRASS_BOTTOM, GRASS_TOP, MATERIAL_COUNT, WOOD_END,
 };
 pub use icons::{bake_atlas_icons, bake_block_icons};
 pub use materials::{
-    VoxelMaterial, VoxelRenderPlugin, atlas_array, atlas_png, create_materials,
-    create_materials_from_atlas,
+    VoxelMaterial, VoxelRenderPlugin, atlas_array, atlas_png, configure_pixel_sampler,
+    create_materials, create_materials_from_atlas,
 };
 pub use meshing::{mesh_section, mesh_section_with_textures};
 

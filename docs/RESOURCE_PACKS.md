@@ -13,6 +13,10 @@ Alternatively set the `VOXIUM_RESOURCE_PACK` environment variable to the absolut
 
 The ZIP must contain `assets/minecraft/` at its root. PNGs not present in the pack leave the built-in Voxium art unchanged. A corrupt ZIP also preserves the built-in art. This release never extracts entries onto disk.
 
+## Pixel-art display sizes
+
+The graphics settings now offer **16×16**, **32×32**, and original **128×128** texture modes. The client still uses a 128×128 GPU texture-array layout; the 16×16 and 32×32 modes explicitly quantize each tile and upscale it with nearest-neighbour sampling, with the GPU sampler set to nearest/nearest and repeat wrapping. This gives visible sharp pixels instead of blur while allowing existing fixed-size Voxium shaders and world meshes to work. Material/tool icons also use pixelated sampling. Switch modes in Settings and restart the application. This changes only presentation, not ZIP source files or world save data.
+
 ## What is implemented
 
 - Minecraft Java block textures in `assets/minecraft/textures/block/*.png` (or legacy `textures/blocks`) mapped to Voxium's existing 32 atlas slots. Examples: `grass_block_top`, `oak_planks`, `stone`, `iron_ore`, `crafting_table_front`.

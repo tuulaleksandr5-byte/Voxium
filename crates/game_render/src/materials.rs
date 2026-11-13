@@ -103,6 +103,19 @@ pub fn atlas_array(rgba: &[u8]) -> Result<Image, String> {
     Ok(image)
 }
 
+/// Keep UV wrapping while making every Texel a hard pixel edge.
+pub fn configure_pixel_sampler(image: &mut Image) {
+    image.sampler = ImageSampler::Descriptor(ImageSamplerDescriptor {
+        address_mode_u: ImageAddressMode::Repeat,
+        address_mode_v: ImageAddressMode::Repeat,
+        mag_filter: ImageFilterMode::Nearest,
+        min_filter: ImageFilterMode::Nearest,
+        mipmap_filter: ImageFilterMode::Nearest,
+        anisotropy_clamp: 1,
+        ..default()
+    });
+}
+
 fn append_mips(data: &mut Vec<u8>, mut level: Vec<u8>, mut width: usize) {
     loop {
         data.extend_from_slice(&level);
@@ -217,6 +230,21 @@ pub fn create_materials_from_atlas(
 mod tests {
     use super::*;
     use std::io::Cursor;
+
+    #[test]
+    fn pixel_art_sampler_is_nearest_with_repeat_and_no_anisotropy() {
+        let mut image = atlas_array(&vec![0; (ATLAS_WIDTH * ATLAS_HEIGHT * 4) as usize]).unwrap();
+        configure_pixel_sampler(&mut image);
+        let ImageSampler::Descriptor(sampler) = &image.sampler else {
+            panic!("pixel-art mode must use a custom sampler");
+        };
+        assert_eq!(sampler.address_mode_u, ImageAddressMode::Repeat);
+        assert_eq!(sampler.address_mode_v, ImageAddressMode::Repeat);
+        assert_eq!(sampler.mag_filter, ImageFilterMode::Nearest);
+        assert_eq!(sampler.min_filter, ImageFilterMode::Nearest);
+        assert_eq!(sampler.mipmap_filter, ImageFilterMode::Nearest);
+        assert_eq!(sampler.anisotropy_clamp, 1);
+    }
     #[test]
     fn layers_and_all_mips_never_mix_neighboring_tiles() {
         let mut rgba = vec![0; (ATLAS_WIDTH * ATLAS_HEIGHT * 4) as usize];

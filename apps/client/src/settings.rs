@@ -11,6 +11,7 @@ pub struct Settings {
     pub vsync: bool,
     pub fullscreen: bool,
     pub resolution: usize,
+    pub pixel_size: u32,
     pub volume: f32,
 }
 impl Default for Settings {
@@ -21,6 +22,7 @@ impl Default for Settings {
             vsync: true,
             fullscreen: false,
             resolution: 0,
+            pixel_size: 128,
             volume: 0.8,
         }
     }
@@ -31,6 +33,21 @@ pub fn save_root() -> PathBuf {
         .unwrap_or_else(|| PathBuf::from("saves-v2"))
 }
 impl Settings {
+    pub fn normalized_pixel_size(size: u32) -> u32 {
+        match size {
+            16 | 32 | 128 => size,
+            _ => 128,
+        }
+    }
+
+    pub fn cycle_pixel_size(&mut self) {
+        self.pixel_size = match Self::normalized_pixel_size(self.pixel_size) {
+            128 => 16,
+            16 => 32,
+            _ => 128,
+        };
+    }
+
     pub fn load() -> Self {
         fs::read(save_root().join("settings.cfg"))
             .ok()
@@ -42,6 +59,7 @@ impl Settings {
                 }
                 s.sensitivity = s.sensitivity.clamp(0.0005, 0.01);
                 s.resolution %= 3;
+                s.pixel_size = Self::normalized_pixel_size(s.pixel_size);
                 if !s.volume.is_finite() {
                     s.volume = 0.8;
                 }
@@ -69,6 +87,28 @@ impl Settings {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn pixel_size_migrates_and_cycles_128_to_16_to_32() {
+        let old = br#"{"distance":4,"resolution":0,"volume":0.5}"#;
+        let mut settings: Settings = serde_json::from_slice(old).unwrap();
+        assert_eq!(settings.pixel_size, 128);
+        settings.cycle_pixel_size();
+        assert_eq!(settings.pixel_size, 16);
+        settings.cycle_pixel_size();
+        assert_eq!(settings.pixel_size, 32);
+        settings.cycle_pixel_size();
+        assert_eq!(settings.pixel_size, 128);
+        assert_eq!(Settings::normalized_pixel_size(17), 128);
+        let json = serde_json::to_vec(&settings).unwrap();
+        assert_eq!(
+            serde_json::from_slice::<Settings>(&json)
+                .unwrap()
+                .pixel_size,
+            128
+        );
+    }
+
     #[test]
     fn settings_can_be_saved_repeatedly_with_fullscreen_preserved() {
         let root = std::env::temp_dir().join(format!(

@@ -110,9 +110,25 @@ fn setup(
     commands.insert_resource(resource_packs::load_gui_skins(&mut images));
     stream.textures = graphics_assets::load_face_textures();
     let loaded = graphics_assets::load_atlas().and_then(|atlas| {
-        let baked = game_render::bake_atlas_icons(&atlas, &stream.textures)?;
+        let pixel_size = game.settings.pixel_size;
+        let atlas = atlas.pixelated(pixel_size)?;
+        let mut baked = game_render::bake_atlas_icons(&atlas, &stream.textures)?;
         let handles =
             game_render::create_materials_from_atlas(&mut images, &mut materials, &atlas)?;
+        if pixel_size != 128 {
+            let texture_array = materials
+                .get(&handles[0])
+                .expect("voxel material created")
+                .extension
+                .image
+                .clone();
+            if let Some(mut image) = images.get_mut(&texture_array) {
+                game_render::configure_pixel_sampler(&mut image);
+            }
+            for icon in &mut baked {
+                icon.sampler = bevy::image::ImageSampler::nearest();
+            }
+        }
         Ok((baked, handles))
     });
     match loaded {
@@ -461,6 +477,13 @@ fn actions(
                     }
                     Action::CycleResolution => {
                         game.settings.resolution = (game.settings.resolution + 1) % 3
+                    }
+                    Action::CyclePixelSize => {
+                        game.settings.cycle_pixel_size();
+                        game.status = format!(
+                            "Режим {}×{} сохранён. Перезапустите игру для применения.",
+                            game.settings.pixel_size, game.settings.pixel_size
+                        );
                     }
                     _ => {}
                 }
