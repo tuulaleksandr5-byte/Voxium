@@ -1130,10 +1130,13 @@ mod tests {
             });
             let images = world
                 .get::<Children>(result)
-                .unwrap()
-                .iter()
-                .filter(|child| world.get::<ImageNode>(*child).is_some())
-                .count();
+                .map(|children| {
+                    children
+                        .iter()
+                        .filter(|child| world.get::<ImageNode>(*child).is_some())
+                        .count()
+                })
+                .unwrap_or(0);
             assert_eq!(images, usize::from(ready));
         }
     }
