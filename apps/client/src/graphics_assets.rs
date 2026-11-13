@@ -87,7 +87,12 @@ const ORIGINAL_TILES: [&[u8]; 17] = [
 ];
 
 pub fn load_atlas() -> Result<game_render::BlockAtlas, String> {
-    load_atlas_with_overrides(load_original_atlas, asset_path)
+    let mut atlas = load_atlas_with_overrides(load_original_atlas, asset_path)?;
+    if let Some(pack) = crate::resource_packs::active() {
+        let count = pack.apply_block_tiles(&mut atlas);
+        info!("Minecraft resource pack replaced {count} Voxium atlas layers");
+    }
+    Ok(atlas)
 }
 
 fn load_atlas_with_overrides(
