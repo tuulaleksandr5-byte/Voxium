@@ -37,6 +37,7 @@ pub enum Action {
     ToggleVsync,
     ToggleFullscreen,
     CycleResolution,
+    CyclePixelSize,
     FocusName,
     FocusSeed,
     RandomSeed,
@@ -985,6 +986,20 @@ fn settings_menu(commands: &mut Commands, panel: Entity, game: &Game) {
         "Оконное разрешение",
         ["1280 × 720  ↻", "1600 × 900  ↻", "1920 × 1080  ↻"][settings.resolution].into(),
         Action::CycleResolution,
+    );
+    settings_row(
+        commands,
+        panel,
+        "Пиксельные текстуры",
+        format!("{} × {}  ↻", settings.pixel_size, settings.pixel_size),
+        Action::CyclePixelSize,
+    );
+    label(
+        commands,
+        panel,
+        "16×16 — классика · 32×32 — детально · 128×128 — оригинал. Для применения перезапусти игру.",
+        12.,
+        MUTED,
     );
     presentation::section(commands, panel, "УПРАВЛЕНИЕ");
     presentation::range(
