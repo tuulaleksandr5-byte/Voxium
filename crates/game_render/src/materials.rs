@@ -217,6 +217,21 @@ pub fn create_materials_from_atlas(
 mod tests {
     use super::*;
     use std::io::Cursor;
+
+    #[test]
+    fn pixel_art_sampler_is_nearest_with_repeat_and_no_anisotropy() {
+        let mut image = atlas_array(&vec![0; (ATLAS_WIDTH * ATLAS_HEIGHT * 4) as usize]).unwrap();
+        configure_pixel_sampler(&mut image);
+        let ImageSampler::Descriptor(sampler) = &image.sampler else {
+            panic!("pixel-art mode must use a custom sampler");
+        };
+        assert_eq!(sampler.address_mode_u, ImageAddressMode::Repeat);
+        assert_eq!(sampler.address_mode_v, ImageAddressMode::Repeat);
+        assert_eq!(sampler.mag_filter, ImageFilterMode::Nearest);
+        assert_eq!(sampler.min_filter, ImageFilterMode::Nearest);
+        assert_eq!(sampler.mipmap_filter, ImageFilterMode::Nearest);
+        assert_eq!(sampler.anisotropy_clamp, 1);
+    }
     #[test]
     fn layers_and_all_mips_never_mix_neighboring_tiles() {
         let mut rgba = vec![0; (ATLAS_WIDTH * ATLAS_HEIGHT * 4) as usize];
