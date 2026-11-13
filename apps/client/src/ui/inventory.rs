@@ -68,10 +68,7 @@ fn input(
         .find(|(hovered, _)| hovered.get())
         .map(|(_, slot)| slot.0);
     let result_hovered = result.iter().any(Hovered::get);
-    let can_craft = game
-        .recipes
-        .preview(&game.inventory.crafting, &game.content)
-        .is_some();
+    let can_craft = crate::inventory_client::craft_preview(&game).is_some();
     let shift = keys.any_pressed([KeyCode::ShiftLeft, KeyCode::ShiftRight]);
     if mouse.just_pressed(MouseButton::Left) {
         drag.0.source = None;
@@ -253,9 +250,21 @@ fn crafting(
         }
     }
     label(commands, cells, "→", 16., MUTED);
-    let output = game
-        .recipes
-        .preview(&game.inventory.crafting, &game.content);
+    result_slot(commands, cells, parent, game, icons, blocks);
+}
+
+/// Слот результата крафта: личная сетка 2×2 или верстак 3×3.
+fn result_slot(
+    commands: &mut Commands,
+    cells: Entity,
+    parent: Entity,
+    game: &Game,
+    icons: &ItemIcons,
+    blocks: &BlockIcons,
+) {
+    let workbench = crate::inventory_client::open_station(game)
+        == Some(crate::inventory_client::Station::Workbench);
+    let output = crate::inventory_client::craft_preview(game);
     let result = node(
         commands,
         cells,
@@ -285,7 +294,12 @@ fn crafting(
                 item_name(game, output.as_ref(), "Результат")
             )
         } else {
-            "Нет рецепта · разместите ингредиенты в сетке 2×2".into()
+            if workbench {
+                "Нет рецепта · разместите ингредиенты в сетке 3×3"
+            } else {
+                "Нет рецепта · разместите ингредиенты в сетке 2×2"
+            }
+            .into()
         }),
         BorderColor::all(if output.is_some() { AMBER } else { LINE }),
     ));
@@ -315,6 +329,89 @@ fn crafting(
     label(commands, parent, "РЕЗУЛЬТАТ · Shift: всё", 11., MUTED);
 }
 
+fn furnace_panel(
+    commands: &mut Commands,
+    storage: Entity,
+    game: &Game,
+    icons: &ItemIcons,
+    blocks: &BlockIcons,
+) {
+    use game_core::smelting::{FUEL, INPUT, OUTPUT};
+    let state = game
+        .open_container
+        .and_then(|position| game.furnaces.get(&position))
+        .cloned()
+        .unwrap_or_default();
+    let container = game
+        .open_container
+        .and_then(|position| game.containers.get(&position));
+    let arrow = container.map_or(0.0, |c| state.arrow(c, &game.smelting));
+    label(commands, storage, "ПЕЧКА · ПЛАВКА", 12., AMBER);
+    let cells = row(commands, storage, 14.);
+    let left = column(commands, cells, 6.);
+    label(commands, left, "СЫРЬЁ", 11., MUTED);
+    slot(
+        commands,
+        left,
+        game,
+        icons,
+        blocks,
+        SlotRef::Container(INPUT),
+        "",
+    );
+    let flame = (state.flame() * 8.0).ceil() as usize;
+    label(
+        commands,
+        left,
+        format!("ОГОНЬ {}{}", "▮".repeat(flame), "▯".repeat(8 - flame)),
+        11.,
+        if state.is_burning() { AMBER } else { MUTED },
+    );
+    slot(
+        commands,
+        left,
+        game,
+        icons,
+        blocks,
+        SlotRef::Container(FUEL),
+        "",
+    );
+    label(commands, left, "ТОПЛИВО", 11., MUTED);
+    let middle = column(commands, cells, 6.);
+    label(
+        commands,
+        middle,
+        "→",
+        22.,
+        if arrow > 0.0 { AMBER } else { MUTED },
+    );
+    label(
+        commands,
+        middle,
+        format!("{}%", (arrow * 100.0) as u32),
+        12.,
+        MUTED,
+    );
+    let right = column(commands, cells, 6.);
+    label(commands, right, "РЕЗУЛЬТАТ", 11., MUTED);
+    slot(
+        commands,
+        right,
+        game,
+        icons,
+        blocks,
+        SlotRef::Container(OUTPUT),
+        "",
+    );
+    label(
+        commands,
+        storage,
+        "Топливо: уголь, брёвна, доски, палки. Результат можно только забирать.",
+        11.,
+        MUTED,
+    );
+}
+
 pub(super) fn menu(
     commands: &mut Commands,
     panel: Entity,
@@ -326,10 +423,13 @@ pub(super) fn menu(
         BackgroundColor(Color::srgba(0.10, 0.045, 0.16, 0.98)),
         BorderColor::all(AMBER),
     ));
-    let title = if game.open_container.is_some() {
-        "Сундук"
-    } else {
-        "Инвентарь"
+    use crate::inventory_client::{Station, open_station};
+    let station = open_station(game);
+    let title = match station {
+        Some(Station::Chest) => "Сундук",
+        Some(Station::Workbench) => "Верстак",
+        Some(Station::Furnace) => "Печка",
+        None => "Инвентарь",
     };
     label(commands, panel, title, 26., TEXT);
     label(
@@ -358,7 +458,29 @@ pub(super) fn menu(
         flex_shrink: 0.,
         ..default()
     });
-    if game.open_container.is_some() {
+    if station == Some(Station::Workbench) {
+        label(commands, storage, "ВЕРСТАК · СЕТКА 3×3", 12., AMBER);
+        let cells = row(commands, storage, 10.);
+        let grid = column(commands, cells, 6.);
+        for y in 0..3 {
+            let line = row(commands, grid, 6.);
+            for x in 0..3 {
+                slot(
+                    commands,
+                    line,
+                    game,
+                    icons,
+                    blocks,
+                    SlotRef::Container(y * 3 + x),
+                    "",
+                );
+            }
+        }
+        label(commands, cells, "→", 16., MUTED);
+        result_slot(commands, cells, storage, game, icons, blocks);
+    } else if station == Some(Station::Furnace) {
+        furnace_panel(commands, storage, game, icons, blocks);
+    } else if station.is_some() {
         label(commands, storage, "СУНДУК · 27 ЯЧЕЕК", 12., AMBER);
         for line in 0..3 {
             let cells = row(commands, storage, 6.);
@@ -403,7 +525,9 @@ pub(super) fn menu(
             "",
         );
     }
-    crafting(commands, storage, game, icons, blocks);
+    if matches!(station, None | Some(Station::Chest)) {
+        crafting(commands, storage, game, icons, blocks);
+    }
     let equipment = column(commands, content, 7.);
     commands.entity(equipment).insert(Node {
         width: px(170),
@@ -656,11 +780,7 @@ fn pointer_overlay(
     for (hovered, mut border, slot, result) in &mut borders {
         let selected = slot
             .is_some_and(|slot| matches!(slot.0, SlotRef::Hotbar(index) if index == game.selected));
-        let ready = result
-            && game
-                .recipes
-                .preview(&game.inventory.crafting, &game.content)
-                .is_some();
+        let ready = result && crate::inventory_client::craft_preview(&game).is_some();
         if (hovered.get() && !result) || ready || selected {
             border.set_all(AMBER);
         } else {

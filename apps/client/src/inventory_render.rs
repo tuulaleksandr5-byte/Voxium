@@ -62,10 +62,11 @@ fn render(
             .id();
         if let Some(block) = game.content.block_for_item(drop.stack.item) {
             let faces = cache.blocks.entry(block).or_insert_with(|| {
-                game_render::mesh_section_with_textures(
+                game_render::mesh_section_with_models(
                     [0, 0, 0],
                     |p| if p == [0, 0, 0] { block } else { AIR },
                     &stream.textures,
+                    &stream.models,
                 )
                 .into_iter()
                 .map(|(layer, mesh)| (layer, meshes.add(mesh)))

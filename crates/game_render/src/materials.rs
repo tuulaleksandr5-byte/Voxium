@@ -51,12 +51,20 @@ pub fn atlas_png(bytes: &[u8]) -> Result<Image, String> {
 /// Row-major RGBA atlas -> layer-major GPU image, with an independent mip chain per tile.
 /// UVs stay unbounded: hardware repeat works inside a layer, including anisotropic taps.
 pub fn atlas_array(rgba: &[u8]) -> Result<Image, String> {
+    atlas_array_filtered(rgba, false)
+}
+
+/// `pixel_art`: резкие пиксели вблизи (nearest), мипы вдали сохраняются.
+pub fn atlas_array_filtered(rgba: &[u8], pixel_art: bool) -> Result<Image, String> {
     // Keep the original public 18-layer RGBA input working alongside the
     // internal 36-layer atlas. Legacy source pixels are copied without changes.
     if rgba.len() == (ATLAS_WIDTH * TEXTURE_SIZE * 3 * 4) as usize {
         let source = image::RgbaImage::from_raw(ATLAS_WIDTH, TEXTURE_SIZE * 3, rgba.to_vec())
             .expect("legacy RGBA length checked");
-        return atlas_array(BlockAtlas::from_legacy_rgba(&source)?.rgba.as_raw());
+        return atlas_array_filtered(
+            BlockAtlas::from_legacy_rgba(&source)?.rgba.as_raw(),
+            pixel_art,
+        );
     }
     if rgba.len() != (ATLAS_WIDTH * ATLAS_HEIGHT * 4) as usize {
         return Err("atlas RGBA byte count does not match 768×384 or 768×768".into());
@@ -94,7 +102,11 @@ pub fn atlas_array(rgba: &[u8]) -> Result<Image, String> {
     image.sampler = ImageSampler::Descriptor(ImageSamplerDescriptor {
         address_mode_u: ImageAddressMode::Repeat,
         address_mode_v: ImageAddressMode::Repeat,
-        mag_filter: ImageFilterMode::Linear,
+        mag_filter: if pixel_art {
+            ImageFilterMode::Nearest
+        } else {
+            ImageFilterMode::Linear
+        },
         min_filter: ImageFilterMode::Linear,
         mipmap_filter: ImageFilterMode::Linear,
         anisotropy_clamp: 8,
@@ -168,7 +180,7 @@ pub fn create_materials_from_atlas(
     materials: &mut Assets<VoxelMaterial>,
     atlas: &BlockAtlas,
 ) -> Result<Vec<Handle<VoxelMaterial>>, String> {
-    let array = atlas_array(atlas.rgba.as_raw())?;
+    let array = atlas_array_filtered(atlas.rgba.as_raw(), atlas.pixel_art)?;
     let data = array.data.as_ref().expect("initialized texture array");
     let layer_stride = data.len() / MATERIAL_COUNT;
     let has_alpha: [bool; MATERIAL_COUNT] = std::array::from_fn(|layer| {

@@ -13,6 +13,7 @@ mod item_icons;
 mod item_textures;
 mod mining_client;
 mod player;
+mod resource_packs;
 mod session;
 mod settings;
 mod streaming;
@@ -107,7 +108,10 @@ fn setup(
     mut volume: ResMut<bevy::audio::GlobalVolume>,
 ) {
     stream.textures = graphics_assets::load_face_textures();
-    let loaded = graphics_assets::load_atlas().and_then(|atlas| {
+    let loaded = graphics_assets::load_atlas().and_then(|mut atlas| {
+        if let Some(root) = resource_packs::packs_directory() {
+            stream.models = resource_packs::apply(&mut atlas, &root).models;
+        }
         let baked = game_render::bake_atlas_icons(&atlas, &stream.textures)?;
         let handles =
             game_render::create_materials_from_atlas(&mut images, &mut materials, &atlas)?;

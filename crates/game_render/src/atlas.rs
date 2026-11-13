@@ -9,6 +9,38 @@ const SOURCE_HEIGHT: u32 = TILE_SIZE * 3;
 const ATLAS_HEIGHT: u32 = TILE_SIZE * 6;
 const SOURCE_TILE_COUNT: usize = 17;
 
+/// Layer order of the seventeen base tiles (layers 0…16).
+pub const BASE_TILE_NAMES: [&str; 17] = [
+    "grass_top",
+    "grass_side",
+    "dirt",
+    "stone",
+    "deepslate",
+    "sand",
+    "gravel",
+    "oak_log",
+    "oak_log_top",
+    "oak_leaves",
+    "oak_planks",
+    "cobblestone",
+    "glass",
+    "water",
+    "snow",
+    "sandstone",
+    "sandstone_top",
+];
+
+/// Слой атласа по имени текстуры (`oak_planks`, `furnace_front`, …).
+#[must_use]
+pub fn layer_of(name: &str) -> Option<usize> {
+    BASE_TILE_NAMES.iter().position(|n| *n == name).or_else(|| {
+        ADDITIONAL_TILE_NAMES
+            .iter()
+            .position(|n| *n == name)
+            .map(|offset| offset + 18)
+    })
+}
+
 /// Layer order for the fifteen additional 128×128 PNGs (layers 18…32).
 pub const ADDITIONAL_TILE_NAMES: [&str; 15] = [
     "gold_ore",
@@ -55,6 +87,8 @@ const ADDITIONAL_TILES: [&[u8]; 15] = [
 #[derive(Clone, Debug)]
 pub struct BlockAtlas {
     pub(crate) rgba: RgbaImage,
+    /// Пиксельная графика: ближайший сосед при увеличении (как в OptiFine/Minecraft).
+    pub pixel_art: bool,
 }
 
 impl BlockAtlas {
@@ -84,13 +118,21 @@ impl BlockAtlas {
             )
             .map_err(|e| format!("cannot copy tile {layer}: {e}"))?;
         }
-        Self { rgba }.with_additional_tiles(&ADDITIONAL_TILES)
+        Self {
+            rgba,
+            pixel_art: false,
+        }
+        .with_additional_tiles(&ADDITIONAL_TILES)
     }
 
     pub(crate) fn from_legacy_rgba(source: &RgbaImage) -> Result<Self, String> {
         let mut rgba = RgbaImage::new(ATLAS_WIDTH, ATLAS_HEIGHT);
         rgba.copy_from(source, 0, 0).map_err(|e| e.to_string())?;
-        Self { rgba }.with_additional_tiles(&ADDITIONAL_TILES)
+        Self {
+            rgba,
+            pixel_art: false,
+        }
+        .with_additional_tiles(&ADDITIONAL_TILES)
     }
 
     /// Replace layers 18…32 with exactly fifteen supplied 128×128 PNGs.
@@ -112,6 +154,33 @@ impl BlockAtlas {
     /// Заменить один дополнительный PNG; индекс 0…14 соответствует слоям 18…32.
     /// Проверка индекса и полное декодирование предшествуют изменению атласа.
     /// При ошибке текущие пиксели, включая все исходные слои, сохраняются.
+    /// Пиксель RGBA слоя `layer` (для проверок и инструментов).
+    #[must_use]
+    pub fn pixel(&self, layer: usize, x: u32, y: u32) -> [u8; 4] {
+        self.rgba
+            .get_pixel(
+                (layer as u32 % 6) * TILE_SIZE + x,
+                (layer as u32 / 6) * TILE_SIZE + y,
+            )
+            .0
+    }
+
+    /// Заменяет слой квадратной картинкой любого размера. Пиксельная графика
+    /// сохраняется: увеличение — ближайшим соседом, уменьшение — усреднением.
+    pub fn replace_layer(&mut self, layer: usize, image: &RgbaImage) -> Result<(), String> {
+        if layer >= 36 {
+            return Err(format!("слой должен быть в 0..36, получено {layer}"));
+        }
+        let tile = fit_tile(image)?;
+        self.rgba
+            .copy_from(
+                &tile,
+                (layer as u32 % 6) * TILE_SIZE,
+                (layer as u32 / 6) * TILE_SIZE,
+            )
+            .map_err(|e| format!("cannot copy tile {layer}: {e}"))
+    }
+
     pub fn replace_additional_tile(&mut self, offset: usize, bytes: &[u8]) -> Result<(), String> {
         let name = ADDITIONAL_TILE_NAMES
             .get(offset)
@@ -126,6 +195,31 @@ impl BlockAtlas {
             )
             .map_err(|e| format!("cannot copy tile {layer}: {e}"))
     }
+}
+
+/// Приводит квадратную текстуру (16×16, 32×32, 256×256, …) к размеру слоя 128×128.
+pub fn fit_tile(image: &RgbaImage) -> Result<RgbaImage, String> {
+    let (w, h) = image.dimensions();
+    if w == 0 || w != h || w > 4096 {
+        return Err(format!(
+            "текстура должна быть квадратной (≤4096), получено {w}×{h}"
+        ));
+    }
+    Ok(match w.cmp(&TILE_SIZE) {
+        std::cmp::Ordering::Equal => image.clone(),
+        std::cmp::Ordering::Less => image::imageops::resize(
+            image,
+            TILE_SIZE,
+            TILE_SIZE,
+            image::imageops::FilterType::Nearest,
+        ),
+        std::cmp::Ordering::Greater => image::imageops::resize(
+            image,
+            TILE_SIZE,
+            TILE_SIZE,
+            image::imageops::FilterType::Triangle,
+        ),
+    })
 }
 
 fn decode_png(bytes: &[u8], expected: (u32, u32), name: &str) -> Result<RgbaImage, String> {

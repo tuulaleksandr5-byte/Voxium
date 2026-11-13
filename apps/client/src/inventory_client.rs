@@ -56,10 +56,110 @@ pub fn plugin(app: &mut App) {
         )
         .add_systems(
             Update,
-            tick_drops
+            (smelt_tick, tick_drops)
                 .after(crate::survival_client::simulate)
                 .before(crate::player::sky),
         );
+}
+
+/// Что открыто в интерфейсе: сундук, верстак 3×3 или печка.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Station {
+    Chest,
+    Workbench,
+    Furnace,
+}
+
+fn station_block(block: u8) -> Option<Station> {
+    match block {
+        CHEST => Some(Station::Chest),
+        game_core::CRAFTING_TABLE => Some(Station::Workbench),
+        game_core::FURNACE => Some(Station::Furnace),
+        _ => None,
+    }
+}
+fn station_container(station: Station) -> Container {
+    Container::new(match station {
+        Station::Chest => 27,
+        Station::Workbench => 9,
+        Station::Furnace => game_core::smelting::SLOTS,
+    })
+}
+pub fn open_station(game: &Game) -> Option<Station> {
+    game.open_container
+        .map(|position| station_block(game.world.block(position)).unwrap_or(Station::Chest))
+}
+
+/// Результат текущей сетки: 3×3 на верстаке, иначе личная 2×2.
+pub fn craft_preview(game: &Game) -> Option<ItemStack> {
+    if open_station(game) == Some(Station::Workbench)
+        && let Some(container) = game
+            .open_container
+            .and_then(|position| game.containers.get(&position))
+    {
+        return game
+            .recipes
+            .preview_workbench(&container.slots, &game.content);
+    }
+    game.recipes
+        .preview(&game.inventory.crafting, &game.content)
+}
+
+/// Содержимое сетки верстака возвращается игроку; лишнее выпадает.
+fn return_workbench(game: &mut Game) {
+    if open_station(game) != Some(Station::Workbench) {
+        return;
+    }
+    let Some(position) = game.open_container else {
+        return;
+    };
+    if let Some(container) = game.containers.remove(&position) {
+        for stack in container.slots.into_iter().flatten() {
+            if let Some(rest) = game.inventory.insert(stack, &game.content) {
+                spawn_drop(game, rest, game.feet + Vec3::Y * 0.6, Vec3::Y * 1.5);
+            }
+        }
+    }
+}
+
+/// Печки горят и плавят, пока их чанк загружен.
+fn smelt_tick(time: Option<Res<Time>>, mut game: ResMut<Game>) {
+    let Some(time) = time else {
+        return;
+    };
+    if game.world_id.is_none() || game.furnaces.is_empty() {
+        return;
+    }
+    let dt = time.delta_secs().min(0.25);
+    let game = &mut *game;
+    let open = game.open_container;
+    let mut dirty = false;
+    for (position, state) in &mut game.furnaces {
+        let Some(container) = game.containers.get_mut(position) else {
+            continue;
+        };
+        if loaded_block(&game.world, *position).is_none() {
+            continue;
+        }
+        let signature = |state: &game_core::smelting::FurnaceState,
+                         container: &Container,
+                         book: &game_core::smelting::SmeltingBook| {
+            (
+                (state.flame() * 16.0) as u32,
+                (state.arrow(container, book) * 24.0) as u32,
+            )
+        };
+        let before = signature(state, container, &game.smelting);
+        let changed = state.advance(container, dt, &game.smelting, &game.content);
+        if Some(*position) == open
+            && (changed || before != signature(state, container, &game.smelting))
+        {
+            dirty = true;
+        }
+    }
+    if dirty {
+        game.ui_dirty = true;
+    }
 }
 
 pub fn reset_session(game: &mut Game, creative: bool) {
@@ -67,6 +167,7 @@ pub fn reset_session(game: &mut Game, creative: bool) {
     game.world_mouse.disarm();
     game.inventory = Inventory::default();
     game.containers.clear();
+    game.furnaces.clear();
     game.open_container = None;
     game.drops.clear();
     game.selected = 0;
@@ -83,6 +184,7 @@ pub fn reset_session(game: &mut Game, creative: bool) {
 }
 
 pub fn close_inventory(game: &mut Game) {
+    return_workbench(game);
     if let Some(stack) = game.inventory.close_cursor(&game.content) {
         if game.game_rules.keep_inventory && (game.vitals.is_dead() || game.mode == Mode::Dead) {
             game.inventory.cursor = Some(stack);
@@ -104,6 +206,7 @@ pub fn close_inventory(game: &mut Game) {
 }
 
 pub fn on_death(game: &mut Game) {
+    return_workbench(game);
     game.mining.reset();
     game.world_mouse.disarm();
     if game.game_rules.keep_inventory {
@@ -145,12 +248,40 @@ fn process_action(game: &mut Game, action: &InventoryAction) -> Effects {
             button,
             shift,
         } if game.mode == Mode::Inventory => {
+            let furnace = open_station(game) == Some(Station::Furnace);
             let container = game
                 .open_container
                 .and_then(|p| game.containers.get_mut(&p));
-            if game
-                .inventory
-                .click(container, *slot, *button, *shift, &game.content)
+            let changed = match container {
+                Some(container) if furnace => game_core::smelting::FurnaceState::click(
+                    &mut game.inventory,
+                    container,
+                    *slot,
+                    *button,
+                    *shift,
+                    &game.smelting,
+                    &game.content,
+                ),
+                container => game
+                    .inventory
+                    .click(container, *slot, *button, *shift, &game.content),
+            };
+            if changed {
+                game.ui_dirty = true;
+            }
+        }
+        InventoryAction::TakeCraftResult { all }
+            if game.mode == Mode::Inventory && open_station(game) == Some(Station::Workbench) =>
+        {
+            if let Some(container) = game
+                .open_container
+                .and_then(|p| game.containers.get_mut(&p))
+                && game.recipes.take_workbench_result(
+                    &mut game.inventory,
+                    &mut container.slots,
+                    *all,
+                    &game.content,
+                )
             {
                 game.ui_dirty = true;
             }
@@ -227,6 +358,7 @@ fn process_action(game: &mut Game, action: &InventoryAction) -> Effects {
             }
             if game.world.set(*position, AIR) {
                 let center = block_center(*position);
+                game.furnaces.remove(position);
                 if let Some(container) = game.containers.remove(position) {
                     for stack in container.slots.into_iter().flatten() {
                         spawn_drop(game, stack, center, Vec3::Y * 1.5);
@@ -277,12 +409,18 @@ fn process_action(game: &mut Game, action: &InventoryAction) -> Effects {
         InventoryAction::OpenContainer { position }
             if game.mode == Mode::Playing
                 && game.world_mouse.allowed()
-                && loaded_block(&game.world, *position) == Some(CHEST)
+                && loaded_block(&game.world, *position)
+                    .and_then(station_block)
+                    .is_some()
                 && visible_hit(game).is_some_and(|hit| hit.block == *position) =>
         {
+            let station = station_block(game.world.block(*position)).expect("проверено выше");
             game.containers
                 .entry(*position)
-                .or_insert_with(|| Container::new(27));
+                .or_insert_with(|| station_container(station));
+            if station == Station::Furnace {
+                game.furnaces.entry(*position).or_default();
+            }
             game.open_container = Some(*position);
             game.screen(Mode::Inventory);
         }
@@ -1019,6 +1157,143 @@ mod tests {
             },
         );
         assert_eq!(game.inventory.cursor, Some(ItemStack::new(item, 2)));
+    }
+
+    fn open_at(game: &mut Game, block: u8) {
+        assert!(game.world.set([8, 101, 5], block));
+        process_action(
+            game,
+            &InventoryAction::OpenContainer {
+                position: [8, 101, 5],
+            },
+        );
+        assert_eq!(game.mode, Mode::Inventory);
+    }
+    fn named(game: &Game, name: &str, count: u16) -> Option<ItemStack> {
+        Some(ItemStack::new(game.content.find(name).unwrap(), count))
+    }
+
+    #[test]
+    fn workbench_crafts_a_pickaxe_and_returns_the_grid_on_close() {
+        let mut game = world();
+        open_at(&mut game, game_core::CRAFTING_TABLE);
+        assert_eq!(open_station(&game), Some(Station::Workbench));
+        let pos = [8, 101, 5];
+        assert_eq!(game.containers[&pos].slots.len(), 9);
+        let planks = "foundation:oak_planks";
+        let stick = "survival:stick";
+        let layout = [
+            (0, planks, 1),
+            (1, planks, 1),
+            (2, planks, 1),
+            (4, stick, 1),
+            (7, stick, 1),
+        ];
+        for (slot, name, count) in layout {
+            let stack = named(&game, name, count);
+            game.containers.get_mut(&pos).unwrap().slots[slot] = stack;
+        }
+        assert_eq!(
+            craft_preview(&game),
+            named(&game, "survival:wooden_pickaxe", 1)
+        );
+        process_action(&mut game, &InventoryAction::TakeCraftResult { all: false });
+        assert_eq!(
+            game.inventory.cursor,
+            named(&game, "survival:wooden_pickaxe", 1)
+        );
+        assert!(game.containers[&pos].slots.iter().all(Option::is_none));
+        // Остатки сетки возвращаются в рюкзак при закрытии, контейнер исчезает.
+        let stack = named(&game, planks, 3);
+        game.containers.get_mut(&pos).unwrap().slots[5] = stack;
+        close_inventory(&mut game);
+        assert!(!game.containers.contains_key(&pos));
+        let planks_id = game.content.find(planks).unwrap();
+        let held: u16 = game
+            .inventory
+            .hotbar
+            .iter()
+            .chain(&game.inventory.main)
+            .flatten()
+            .filter(|s| s.item == planks_id)
+            .map(|s| s.count)
+            .sum();
+        assert_eq!(held, 3);
+    }
+
+    #[test]
+    fn furnace_smelts_through_ui_clicks_and_rejects_bad_items() {
+        let mut game = world();
+        open_at(&mut game, game_core::FURNACE);
+        let pos = [8, 101, 5];
+        assert_eq!(open_station(&game), Some(Station::Furnace));
+        assert_eq!(game.containers[&pos].slots.len(), 3);
+        let click = |game: &mut Game, slot: usize| {
+            process_action(
+                game,
+                &InventoryAction::Click {
+                    slot: SlotRef::Container(slot),
+                    button: ClickButton::Left,
+                    shift: false,
+                },
+            );
+        };
+        // Земля — не сырьё и не топливо.
+        game.inventory.cursor = named(&game, "foundation:dirt", 2);
+        click(&mut game, 0);
+        click(&mut game, 1);
+        assert!(game.containers[&pos].slots.iter().all(Option::is_none));
+        game.inventory.cursor = named(&game, "survival:raw_iron", 1);
+        click(&mut game, 0);
+        game.inventory.cursor = named(&game, "survival:coal", 1);
+        click(&mut game, 1);
+        assert!(game.inventory.cursor.is_none());
+        let GameBorrow {
+            furnaces,
+            containers,
+            smelting,
+            content,
+        } = GameBorrow::of(&mut game);
+        furnaces.get_mut(&pos).unwrap().advance(
+            containers.get_mut(&pos).unwrap(),
+            10.5,
+            smelting,
+            content,
+        );
+        assert_eq!(
+            game.containers[&pos].slots[game_core::smelting::OUTPUT],
+            named(&game, "survival:iron_ingot", 1)
+        );
+        click(&mut game, 2);
+        assert_eq!(
+            game.inventory.cursor,
+            named(&game, "survival:iron_ingot", 1)
+        );
+        // Ломание печки выбрасывает её содержимое и забывает состояние.
+        close_inventory(&mut game);
+        assert!(game.furnaces.contains_key(&pos));
+        game.mode = Mode::Playing;
+        finish_mining(&mut game);
+        process_action(&mut game, &InventoryAction::Break { position: pos });
+        process_action(&mut game, &InventoryAction::Break { position: pos });
+        assert!(!game.furnaces.contains_key(&pos) && !game.containers.contains_key(&pos));
+    }
+
+    struct GameBorrow<'a> {
+        furnaces: &'a mut std::collections::HashMap<[i32; 3], game_core::smelting::FurnaceState>,
+        containers: &'a mut std::collections::HashMap<[i32; 3], Container>,
+        smelting: &'a game_core::smelting::SmeltingBook,
+        content: &'a game_core::content::ContentRegistry,
+    }
+    impl<'a> GameBorrow<'a> {
+        fn of(game: &'a mut Game) -> Self {
+            Self {
+                furnaces: &mut game.furnaces,
+                containers: &mut game.containers,
+                smelting: &game.smelting,
+                content: &game.content,
+            }
+        }
     }
 
     #[test]

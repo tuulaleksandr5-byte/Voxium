@@ -13,6 +13,7 @@ pub mod items;
 pub mod mining;
 pub mod ores;
 pub mod persistence;
+pub mod smelting;
 pub mod survival;
 
 /// Inclusive lower bound of the overworld.

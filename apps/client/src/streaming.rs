@@ -14,6 +14,7 @@ pub struct Streaming {
     visuals: HashMap<[i32; 3], Vec<(Entity, Handle<Mesh>)>>,
     pub materials: Vec<Handle<game_render::VoxelMaterial>>,
     pub textures: game_render::BlockTextures,
+    pub models: game_render::BlockModels,
     pub generation_count: usize,
 }
 impl Streaming {
@@ -182,10 +183,11 @@ pub fn stream_world(
         }
         let chunks = game.world.chunks.clone();
         let textures = stream.textures.clone();
+        let models = stream.models.clone();
         stream.meshing.push((
             key,
             AsyncComputeTaskPool::get().spawn(async move {
-                game_render::mesh_section_with_textures(
+                game_render::mesh_section_with_models(
                     key,
                     |p| {
                         if !valid_world_height(p[1]) {
@@ -196,6 +198,7 @@ pub fn stream_world(
                             .map_or(AIR, |chunk| chunk.block(p))
                     },
                     &textures,
+                    &models,
                 )
             }),
         ));

@@ -1,0 +1,18 @@
+// Печка: топливо и рецепты плавки. Время — в секундах.
+(
+    fuels: [
+        (item: "survival:coal", burn_seconds: 80.0),
+        (item: "foundation:oak_log", burn_seconds: 15.0),
+        (item: "foundation:oak_planks", burn_seconds: 7.5),
+        (item: "survival:stick", burn_seconds: 5.0),
+        (item: "survival:chest", burn_seconds: 15.0),
+        (item: "survival:crafting_table", burn_seconds: 15.0),
+    ],
+    recipes: [
+        (input: "survival:raw_iron", output: (item: "survival:iron_ingot", count: 1), seconds: 10.0),
+        (input: "survival:raw_gold", output: (item: "survival:gold_ingot", count: 1), seconds: 10.0),
+        (input: "foundation:sand", output: (item: "foundation:glass", count: 1), seconds: 10.0),
+        (input: "foundation:cobblestone", output: (item: "foundation:stone", count: 1), seconds: 10.0),
+        (input: "foundation:oak_log", output: (item: "survival:coal", count: 1), seconds: 10.0),
+    ],
+)
