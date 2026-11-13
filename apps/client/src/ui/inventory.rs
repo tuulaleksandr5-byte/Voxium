@@ -1369,7 +1369,6 @@ mod tests {
         );
     }
 
-
     #[test]
     fn minecraft_board_skin_is_behind_clickable_slots_and_avatar_is_personal_only() {
         let game = Game::default();
@@ -1396,13 +1395,22 @@ mod tests {
         assert_eq!(world.query::<&AvatarPreview>().iter(&world).count(), 1);
         assert_eq!(world.query::<&InventorySlot>().iter(&world).count(), 45);
 
-        let station = Game { open_workbench: Some([1, 2, 3]), ..default() };
+        let station = Game {
+            open_workbench: Some([1, 2, 3]),
+            ..default()
+        };
         let mut workbench = render_inventory_for_test(&station);
-        assert_eq!(workbench.query::<&AvatarPreview>().iter(&workbench).count(), 0);
+        assert_eq!(
+            workbench.query::<&AvatarPreview>().iter(&workbench).count(),
+            0
+        );
         let mut boards = workbench.query::<(&InventoryBoard, &Node)>();
         assert_eq!(boards.single(&workbench).unwrap().1.height, px(498.));
 
-        let chest = Game { open_container: Some([1, 2, 3]), ..default() };
+        let chest = Game {
+            open_container: Some([1, 2, 3]),
+            ..default()
+        };
         let mut chest_world = render_inventory_for_test(&chest);
         let mut boards = chest_world.query::<(&InventoryBoard, &Node)>();
         assert_eq!(boards.single(&chest_world).unwrap().1.height, px(666.));

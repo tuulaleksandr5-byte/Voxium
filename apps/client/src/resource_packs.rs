@@ -303,7 +303,10 @@ pub(crate) struct GuiSkins {
 impl GuiSkins {
     #[cfg(test)]
     pub(crate) fn inventory_test_skin(handle: Handle<Image>) -> Self {
-        Self { inventory: Some(handle), ..default() }
+        Self {
+            inventory: Some(handle),
+            ..default()
+        }
     }
 
     pub(crate) fn get(&self, name: &str) -> Option<Handle<Image>> {
