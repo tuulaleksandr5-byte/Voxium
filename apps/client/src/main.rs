@@ -116,9 +116,12 @@ fn setup(
         let handles =
             game_render::create_materials_from_atlas(&mut images, &mut materials, &atlas)?;
         if pixel_size != 128 {
-            let texture_array = materials.get(&handles[0])
+            let texture_array = materials
+                .get(&handles[0])
                 .expect("voxel material created")
-                .extension.image.clone();
+                .extension
+                .image
+                .clone();
             if let Some(image) = images.get_mut(&texture_array) {
                 game_render::configure_pixel_sampler(image);
             }
@@ -479,8 +482,7 @@ fn actions(
                         game.settings.cycle_pixel_size();
                         game.status = format!(
                             "Режим {}×{} сохранён. Перезапустите игру для применения.",
-                            game.settings.pixel_size,
-                            game.settings.pixel_size
+                            game.settings.pixel_size, game.settings.pixel_size
                         );
                     }
                     _ => {}
