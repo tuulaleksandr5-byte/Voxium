@@ -144,7 +144,6 @@ fn item_name(game: &Game, stack: Option<&ItemStack>, fallback: &str) -> String {
         .unwrap_or_else(|| fallback.to_string())
 }
 
-
 const PIXEL_SCALE: f32 = 3.0;
 const SLOT_SIZE: f32 = 18.0 * PIXEL_SCALE;
 const INVENTORY_CANVAS_WIDTH: f32 = 176.0 * PIXEL_SCALE;
@@ -273,7 +272,11 @@ fn slot_at(
             item_name(
                 game,
                 stack,
-                if empty_hint.is_empty() { "Пустая ячейка" } else { empty_hint },
+                if empty_hint.is_empty() {
+                    "Пустая ячейка"
+                } else {
+                    empty_hint
+                },
             )
         }),
         BorderColor::all(if selected {
@@ -320,9 +323,11 @@ fn craft_result_at(
     skinned: bool,
 ) {
     let output = if screen == InventoryScreen::Workbench {
-        game.recipes.preview_workbench(&game.inventory.workbench, &game.content)
+        game.recipes
+            .preview_workbench(&game.inventory.workbench, &game.content)
     } else {
-        game.recipes.preview(&game.inventory.crafting, &game.content)
+        game.recipes
+            .preview(&game.inventory.crafting, &game.content)
     };
     let result = node(
         commands,
@@ -389,20 +394,8 @@ fn craft_result_at(
     }
 }
 
-fn board_caption(
-    commands: &mut Commands,
-    board: Entity,
-    text: &str,
-    x: f32,
-    y: f32,
-) {
-    let entity = label(
-        commands,
-        board,
-        text,
-        14.0,
-        Color::srgb(0.17, 0.17, 0.18),
-    );
+fn board_caption(commands: &mut Commands, board: Entity, text: &str, x: f32, y: f32) {
+    let entity = label(commands, board, text, 14.0, Color::srgb(0.17, 0.17, 0.18));
     commands.entity(entity).insert(Node {
         position_type: PositionType::Absolute,
         left: px(x * PIXEL_SCALE),
@@ -458,13 +451,69 @@ fn avatar_preview(commands: &mut Commands, board: Entity) {
         Pickable::IGNORE,
         BorderColor::all(Color::srgb(0.30, 0.32, 0.34)),
     ));
-    avatar_piece(commands, avatar, 19.0, 8.0, 13.0, 13.0, Color::srgb(0.72, 0.53, 0.37));
-    avatar_piece(commands, avatar, 19.0, 8.0, 13.0, 4.0, Color::srgb(0.20, 0.16, 0.14));
-    avatar_piece(commands, avatar, 14.0, 21.0, 23.0, 24.0, Color::srgb(0.16, 0.46, 0.75));
-    avatar_piece(commands, avatar, 7.0, 22.0, 7.0, 23.0, Color::srgb(0.67, 0.49, 0.34));
-    avatar_piece(commands, avatar, 37.0, 22.0, 7.0, 23.0, Color::srgb(0.67, 0.49, 0.34));
-    avatar_piece(commands, avatar, 15.0, 45.0, 10.0, 22.0, Color::srgb(0.20, 0.23, 0.40));
-    avatar_piece(commands, avatar, 26.0, 45.0, 10.0, 22.0, Color::srgb(0.20, 0.23, 0.40));
+    avatar_piece(
+        commands,
+        avatar,
+        19.0,
+        8.0,
+        13.0,
+        13.0,
+        Color::srgb(0.72, 0.53, 0.37),
+    );
+    avatar_piece(
+        commands,
+        avatar,
+        19.0,
+        8.0,
+        13.0,
+        4.0,
+        Color::srgb(0.20, 0.16, 0.14),
+    );
+    avatar_piece(
+        commands,
+        avatar,
+        14.0,
+        21.0,
+        23.0,
+        24.0,
+        Color::srgb(0.16, 0.46, 0.75),
+    );
+    avatar_piece(
+        commands,
+        avatar,
+        7.0,
+        22.0,
+        7.0,
+        23.0,
+        Color::srgb(0.67, 0.49, 0.34),
+    );
+    avatar_piece(
+        commands,
+        avatar,
+        37.0,
+        22.0,
+        7.0,
+        23.0,
+        Color::srgb(0.67, 0.49, 0.34),
+    );
+    avatar_piece(
+        commands,
+        avatar,
+        15.0,
+        45.0,
+        10.0,
+        22.0,
+        Color::srgb(0.20, 0.23, 0.40),
+    );
+    avatar_piece(
+        commands,
+        avatar,
+        26.0,
+        45.0,
+        10.0,
+        22.0,
+        Color::srgb(0.20, 0.23, 0.40),
+    );
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -477,17 +526,15 @@ fn draw_main_and_hotbar(
     screen: InventoryScreen,
     skinned: bool,
 ) {
-    board_caption(
-        commands,
-        board,
-        "Инвентарь",
-        8.0,
-        screen.main_y() - 11.0,
-    );
+    board_caption(commands, board, "Инвентарь", 8.0, screen.main_y() - 11.0);
     for line in 0..3 {
         for index in 0..9 {
             slot_at(
-                commands, board, game, icons, blocks,
+                commands,
+                board,
+                game,
+                icons,
+                blocks,
                 SlotRef::Main(line * 9 + index),
                 8.0 + index as f32 * 18.0,
                 screen.main_y() + line as f32 * 18.0,
@@ -498,7 +545,11 @@ fn draw_main_and_hotbar(
     }
     for index in 0..9 {
         slot_at(
-            commands, board, game, icons, blocks,
+            commands,
+            board,
+            game,
+            icons,
+            blocks,
             SlotRef::Hotbar(index),
             8.0 + index as f32 * 18.0,
             screen.hotbar_y(),
@@ -583,32 +634,58 @@ pub(super) fn menu_with_skins(
         InventoryScreen::Personal => {
             avatar_preview(commands, board);
             for (index, armor) in [
-                ArmorSlot::Head, ArmorSlot::Chest, ArmorSlot::Legs, ArmorSlot::Feet,
-            ].into_iter().enumerate() {
+                ArmorSlot::Head,
+                ArmorSlot::Chest,
+                ArmorSlot::Legs,
+                ArmorSlot::Feet,
+            ]
+            .into_iter()
+            .enumerate()
+            {
                 slot_at(
-                    commands, board, game, icons, blocks, SlotRef::Armor(armor),
-                    8.0, 8.0 + index as f32 * 18.0, skinned, "",
+                    commands,
+                    board,
+                    game,
+                    icons,
+                    blocks,
+                    SlotRef::Armor(armor),
+                    8.0,
+                    8.0 + index as f32 * 18.0,
+                    skinned,
+                    "",
                 );
             }
             slot_at(
-                commands, board, game, icons, blocks, SlotRef::Offhand,
-                77.0, 62.0, skinned, "",
+                commands,
+                board,
+                game,
+                icons,
+                blocks,
+                SlotRef::Offhand,
+                77.0,
+                62.0,
+                skinned,
+                "",
             );
             board_caption(commands, board, "Создание", 98.0, 5.0);
             for line in 0..2 {
                 for index in 0..2 {
                     slot_at(
-                        commands, board, game, icons, blocks,
+                        commands,
+                        board,
+                        game,
+                        icons,
+                        blocks,
                         SlotRef::Crafting(line * 2 + index),
                         98.0 + index as f32 * 18.0,
                         18.0 + line as f32 * 18.0,
-                        skinned, "",
+                        skinned,
+                        "",
                     );
                 }
             }
             craft_result_at(
-                commands, board, game, icons, blocks,
-                screen, 154.0, 28.0, skinned,
+                commands, board, game, icons, blocks, screen, 154.0, 28.0, skinned,
             );
         }
         InventoryScreen::Workbench => {
@@ -616,17 +693,21 @@ pub(super) fn menu_with_skins(
             for line in 0..3 {
                 for index in 0..3 {
                     slot_at(
-                        commands, board, game, icons, blocks,
+                        commands,
+                        board,
+                        game,
+                        icons,
+                        blocks,
                         SlotRef::Workbench(line * 3 + index),
                         30.0 + index as f32 * 18.0,
                         17.0 + line as f32 * 18.0,
-                        skinned, "",
+                        skinned,
+                        "",
                     );
                 }
             }
             craft_result_at(
-                commands, board, game, icons, blocks,
-                screen, 124.0, 35.0, skinned,
+                commands, board, game, icons, blocks, screen, 124.0, 35.0, skinned,
             );
         }
         InventoryScreen::Furnace => {
@@ -637,12 +718,22 @@ pub(super) fn menu_with_skins(
                 (2, 116.0, 35.0, "Готово"),
             ] {
                 slot_at(
-                    commands, board, game, icons, blocks,
-                    SlotRef::Container(index), x, y, skinned, hint,
+                    commands,
+                    board,
+                    game,
+                    icons,
+                    blocks,
+                    SlotRef::Container(index),
+                    x,
+                    y,
+                    skinned,
+                    hint,
                 );
             }
             if let Some(position) = game.open_container {
-                let progress = game.furnaces.get(&position)
+                let progress = game
+                    .furnaces
+                    .get(&position)
                     .map_or(0.0, |furnace| (furnace.progress / 10.0).clamp(0.0, 1.0));
                 let indicator = node(
                     commands,
@@ -665,24 +756,29 @@ pub(super) fn menu_with_skins(
             for line in 0..3 {
                 for index in 0..9 {
                     slot_at(
-                        commands, board, game, icons, blocks,
+                        commands,
+                        board,
+                        game,
+                        icons,
+                        blocks,
                         SlotRef::Container(line * 9 + index),
                         8.0 + index as f32 * 18.0,
                         18.0 + line as f32 * 18.0,
-                        skinned, "",
+                        skinned,
+                        "",
                     );
                 }
             }
         }
     }
 
-    draw_main_and_hotbar(
-        commands, board, game, icons, blocks, screen, skinned,
-    );
+    draw_main_and_hotbar(commands, board, game, icons, blocks, screen, skinned);
     label(
-        commands, panel,
+        commands,
+        panel,
         "ЛКМ: взять · ПКМ: разделить · Shift: быстрый перенос",
-        12.0, MUTED,
+        12.0,
+        MUTED,
     );
     if game.game_mode == GameMode::Creative {
         label(
