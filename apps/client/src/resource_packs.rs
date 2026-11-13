@@ -33,7 +33,7 @@ impl ResourcePack {
         let mut result = Self::default();
         let mut total = 0u64;
         for index in 0..archive.len() {
-            let mut entry = archive.by_index(index).map_err(|e| e.to_string())?;
+            let entry = archive.by_index(index).map_err(|e| e.to_string())?;
             if entry.is_dir() || !safe_entry(entry.name()) || !interesting(entry.name()) {
                 continue;
             }
@@ -144,10 +144,10 @@ impl ResourcePack {
             } else {
                 format!("{image}.png")
             };
-            if let Some(data) = self.read_path(&image) {
-                if let Some(pixels) = decode_gui(data) {
-                    return Some(pixels);
-                }
+            if let Some(data) = self.read_path(&image)
+                && let Some(pixels) = decode_gui(data)
+            {
+                return Some(pixels);
             }
         }
         None
@@ -195,10 +195,10 @@ impl ResourcePack {
         let mut replaced = 0;
         for (layer, name) in names.enumerate() {
             let layer = if layer < 17 { layer } else { layer + 1 };
-            if let Some(image) = self.block_tile(&name) {
-                if atlas.replace_layer_rgba(layer, &image).is_ok() {
-                    replaced += 1;
-                }
+            if let Some(image) = self.block_tile(&name)
+                && atlas.replace_layer_rgba(layer, &image).is_ok()
+            {
+                replaced += 1;
             }
         }
         replaced
