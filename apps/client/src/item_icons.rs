@@ -54,7 +54,7 @@ fn cache_icons(
             source_pixels
         } else {
             game_render::pixelate_icon_rgba(&source_pixels, pixel_size)
-                .unwrap_or_else(|_| source_pixels)
+                .unwrap_or(source_pixels)
         };
         let mut image = Image::new(
             Extent3d {
