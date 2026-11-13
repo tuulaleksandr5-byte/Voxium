@@ -18,7 +18,7 @@ The ZIP must contain `assets/minecraft/` at its root. PNGs not present in the pa
 - Minecraft Java block textures in `assets/minecraft/textures/block/*.png` (or legacy `textures/blocks`) mapped to Voxium's existing 32 atlas slots. Examples: `grass_block_top`, `oak_planks`, `stone`, `iron_ore`, `crafting_table_front`.
 - Material and tool icons in `assets/minecraft/textures/item/*.png` (or legacy `textures/items`) are loaded before Voxium's embedded icon fallback.
 - 16×16, 32×32, 64×64, 128×128, 256×256 and 512×512 square PNGs are converted to the renderer's fixed 128×128 atlas and icon slots using nearest-neighbour scaling; source ZIP entries are untouched. Alpha is preserved.
-- Minecraft inventory, crafting table, furnace and chest GUI images from `textures/gui/container/` and simple unconditional OptiFine `optifine/gui/container/**/*.properties` can be previewed in the matching Voxium panel without replacing its interactive slots. The uploaded Colourful Containers Dark Mode 1.18 pack contains these GUI assets.
+- Minecraft inventory, crafting table, furnace and chest GUI images from `textures/gui/container/` and simple unconditional OptiFine `optifine/gui/container/**/*.properties` are displayed as the background of the corresponding Minecraft-style inventory screen, with working Voxium slot hitboxes drawn above the image. The uploaded Colourful Containers Dark Mode 1.18 pack contains these GUI assets.
 - Invalid images/unknown entries are skipped without changing the remaining textures. The total uncompressed size of interesting files is capped at 256 MiB.
 
 ## What is **not** supported (yet)
@@ -28,9 +28,9 @@ Do not interpret "OptiFine resource pack" as full OptiFine compatibility. This l
 - Custom Item Textures rules (CIT), custom entity models (CEM), or JSON blockstate/3D model geometry
 - PBR normal, specular or emissive maps, OptiFine/Iris shader packs or their shaders
 - Conditional custom GUI rules tied to NBT, names, biomes, professions, etc.
-- Minecraft's exact inventory slot layout or font replacements
+- Full Minecraft creative-tab UI, exact fonts, animated 3D character preview, and automatic resizing of custom GUI assets beyond the supported 176-unit layouts
 
-The OptiFine custom GUI parser applies only rules without unsupported conditions; other rules are ignored safely. Block geometry still uses Voxium's voxel meshes. Full visual interoperability requires later renderer stages.
+The inventory, workbench, furnace and chest now use Minecraft-style fixed slot coordinates (three-times scale). The chest currently stores 27 items although a resource pack may supply the larger 54-slot chest GUI backdrop. The OptiFine custom GUI parser applies only rules without unsupported conditions; other rules are ignored safely. Block geometry still uses Voxium's voxel meshes. Full visual interoperability requires later renderer stages.
 
 ## Validation
 

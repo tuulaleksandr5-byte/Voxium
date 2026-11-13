@@ -144,33 +144,122 @@ fn item_name(game: &Game, stack: Option<&ItemStack>, fallback: &str) -> String {
         .unwrap_or_else(|| fallback.to_string())
 }
 
-fn slot(
+const PIXEL_SCALE: f32 = 3.0;
+const SLOT_SIZE: f32 = 18.0 * PIXEL_SCALE;
+const INVENTORY_CANVAS_WIDTH: f32 = 176.0 * PIXEL_SCALE;
+
+#[derive(Component)]
+struct InventoryBoard;
+#[derive(Component)]
+struct PackGuiBackground;
+#[derive(Component)]
+struct AvatarPreview;
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+enum InventoryScreen {
+    Personal,
+    Workbench,
+    Furnace,
+    Chest,
+}
+
+impl InventoryScreen {
+    fn from_game(game: &Game) -> Self {
+        if game.open_workbench.is_some() {
+            Self::Workbench
+        } else if game
+            .open_container
+            .is_some_and(|pos| game.world.block(pos) == game_core::FURNACE)
+        {
+            Self::Furnace
+        } else if game.open_container.is_some() {
+            Self::Chest
+        } else {
+            Self::Personal
+        }
+    }
+
+    fn title(self) -> &'static str {
+        match self {
+            Self::Personal => "Инвентарь",
+            Self::Workbench => "Верстак · 3×3",
+            Self::Furnace => "Печь",
+            Self::Chest => "Сундук · 27 ячеек",
+        }
+    }
+
+    fn skin_name(self) -> &'static str {
+        match self {
+            Self::Personal => "inventory",
+            Self::Workbench => "workbench",
+            Self::Furnace => "furnace",
+            Self::Chest => "chest",
+        }
+    }
+
+    fn height(self) -> f32 {
+        if self == Self::Chest {
+            222.0 * PIXEL_SCALE
+        } else {
+            166.0 * PIXEL_SCALE
+        }
+    }
+
+    fn main_y(self) -> f32 {
+        if self == Self::Chest { 140.0 } else { 84.0 }
+    }
+
+    fn hotbar_y(self) -> f32 {
+        if self == Self::Chest { 198.0 } else { 142.0 }
+    }
+}
+
+/// Create an interactable Minecraft-size 18×18 slot in a fixed 176-unit canvas.
+#[allow(clippy::too_many_arguments)]
+fn slot_at(
     commands: &mut Commands,
     parent: Entity,
     game: &Game,
     icons: &ItemIcons,
     blocks: &BlockIcons,
     reference: SlotRef,
-    empty_name: &str,
+    logical_x: f32,
+    logical_y: f32,
+    skinned: bool,
+    empty_hint: &str,
 ) {
     let stack = stack_at(game, reference);
     let selected = matches!(reference, SlotRef::Hotbar(index) if index == game.selected);
-    let child = node(
+    let border = if selected {
+        2.0
+    } else if skinned {
+        0.0
+    } else {
+        2.0
+    };
+    let cell = node(
         commands,
         parent,
         Node {
-            width: px(54),
-            height: px(54),
-            flex_shrink: 0.,
-            border: UiRect::all(px(if selected { 2. } else { 1. })),
-            border_radius: BorderRadius::all(px(4)),
+            position_type: PositionType::Absolute,
+            left: px(logical_x * PIXEL_SCALE),
+            top: px(logical_y * PIXEL_SCALE),
+            width: px(SLOT_SIZE),
+            height: px(SLOT_SIZE),
+            flex_shrink: 0.0,
+            border: UiRect::all(px(border)),
+            border_radius: BorderRadius::all(px(0.0)),
             align_items: AlignItems::Center,
             justify_content: JustifyContent::Center,
             ..default()
         },
-        Color::srgba(0.13, 0.14, 0.16, 0.98),
+        if skinned {
+            Color::NONE
+        } else {
+            Color::srgba(0.19, 0.19, 0.20, 0.93)
+        },
     );
-    commands.entity(child).insert((
+    commands.entity(cell).insert((
         Button,
         Hovered::default(),
         InventorySlot(reference),
@@ -183,91 +272,58 @@ fn slot(
             item_name(
                 game,
                 stack,
-                if empty_name.is_empty() {
+                if empty_hint.is_empty() {
                     "Пустая ячейка"
                 } else {
-                    empty_name
+                    empty_hint
                 },
             )
         }),
-        BorderColor::all(if selected { AMBER } else { LINE }),
+        BorderColor::all(if selected {
+            Color::srgb(0.99, 0.88, 0.30)
+        } else if skinned {
+            Color::NONE
+        } else {
+            Color::srgb(0.35, 0.35, 0.36)
+        }),
     ));
     if let Some(stack) = stack {
         let icon = commands
             .spawn((
                 ImageNode::new(icons.get(stack.item, &game.content, blocks)),
                 Node {
-                    width: px(46),
-                    height: px(46),
+                    width: px(46.0),
+                    height: px(46.0),
                     ..default()
                 },
                 Pickable::IGNORE,
             ))
             .id();
-        commands.entity(child).add_child(icon);
-        let count = label(commands, child, stack.count.to_string(), 13., TEXT);
+        commands.entity(cell).add_child(icon);
+        let count = label(commands, cell, stack.count.to_string(), 13.0, TEXT);
         commands.entity(count).insert(Node {
             position_type: PositionType::Absolute,
-            right: px(3),
-            bottom: px(1),
-            ..default()
-        });
-    } else if !empty_name.is_empty() {
-        label(commands, child, empty_name, 10., MUTED);
-    }
-    if let SlotRef::Hotbar(index) = reference {
-        let number = label(commands, child, (index + 1).to_string(), 10., MUTED);
-        commands.entity(number).insert(Node {
-            position_type: PositionType::Absolute,
-            left: px(3),
-            top: px(1),
+            right: px(2.0),
+            bottom: px(1.0),
             ..default()
         });
     }
 }
 
-fn crafting(
+/// Visible crafting result is a preview, not a writable inventory slot.
+#[allow(clippy::too_many_arguments)]
+fn craft_result_at(
     commands: &mut Commands,
-    parent: Entity,
+    board: Entity,
     game: &Game,
     icons: &ItemIcons,
     blocks: &BlockIcons,
+    screen: InventoryScreen,
+    x: f32,
+    y: f32,
+    skinned: bool,
 ) {
-    let workbench = game.open_workbench.is_some();
-    label(
-        commands,
-        parent,
-        if workbench {
-            "ВЕРСТАК · 3×3"
-        } else {
-            "СОЗДАНИЕ · 2×2"
-        },
-        12.,
-        AMBER,
-    );
-    let cells = row(commands, parent, 6.);
-    let grid = column(commands, cells, 6.);
-    commands.entity(grid).insert(Node {
-        width: px(if workbench { 174. } else { 114. }),
-        flex_direction: FlexDirection::Column,
-        row_gap: px(6),
-        flex_shrink: 0.,
-        ..default()
-    });
-    let size = if workbench { 3 } else { 2 };
-    for y in 0..size {
-        let line = row(commands, grid, 6.);
-        for x in 0..size {
-            let reference = if workbench {
-                SlotRef::Workbench(y * size + x)
-            } else {
-                SlotRef::Crafting(y * size + x)
-            };
-            slot(commands, line, game, icons, blocks, reference, "");
-        }
-    }
-    label(commands, cells, "→", 16., MUTED);
-    let output = if workbench {
+    let output = if screen == InventoryScreen::Workbench {
         game.recipes
             .preview_workbench(&game.inventory.workbench, &game.content)
     } else {
@@ -276,21 +332,24 @@ fn crafting(
     };
     let result = node(
         commands,
-        cells,
+        board,
         Node {
-            width: px(54),
-            height: px(54),
-            flex_shrink: 0.,
-            border: UiRect::all(px(2)),
-            border_radius: BorderRadius::all(px(4)),
+            position_type: PositionType::Absolute,
+            left: px(x * PIXEL_SCALE),
+            top: px(y * PIXEL_SCALE),
+            width: px(SLOT_SIZE),
+            height: px(SLOT_SIZE),
+            flex_shrink: 0.0,
+            border: UiRect::all(px(if skinned { 0.0 } else { 2.0 })),
+            border_radius: BorderRadius::all(px(0.0)),
             align_items: AlignItems::Center,
             justify_content: JustifyContent::Center,
             ..default()
         },
-        if output.is_some() {
-            Color::srgba(0.24, 0.11, 0.31, 0.96)
+        if skinned {
+            Color::NONE
         } else {
-            Color::srgba(0.09, 0.045, 0.13, 0.96)
+            Color::srgba(0.19, 0.19, 0.20, 0.93)
         },
     );
     commands.entity(result).insert((
@@ -305,34 +364,203 @@ fn crafting(
         } else {
             "Нет рецепта · разместите ингредиенты в сетке".into()
         }),
-        BorderColor::all(if output.is_some() { AMBER } else { LINE }),
+        BorderColor::all(if output.is_some() {
+            Color::srgb(0.99, 0.88, 0.30)
+        } else if skinned {
+            Color::NONE
+        } else {
+            Color::srgb(0.35, 0.35, 0.36)
+        }),
     ));
     if let Some(stack) = output {
         let image = commands
             .spawn((
                 ImageNode::new(icons.get(stack.item, &game.content, blocks)),
                 Node {
-                    width: px(46),
-                    height: px(46),
+                    width: px(46.0),
+                    height: px(46.0),
                     ..default()
                 },
                 Pickable::IGNORE,
             ))
             .id();
         commands.entity(result).add_child(image);
-        let count = label(commands, result, stack.count.to_string(), 13., TEXT);
+        let count = label(commands, result, stack.count.to_string(), 13.0, TEXT);
         commands.entity(count).insert(Node {
             position_type: PositionType::Absolute,
-            right: px(3),
-            bottom: px(1),
+            right: px(2.0),
+            bottom: px(1.0),
             ..default()
         });
-    } else {
-        label(commands, result, "—", 20., MUTED);
     }
-    label(commands, parent, "РЕЗУЛЬТАТ · Shift: всё", 11., MUTED);
 }
 
+fn board_caption(commands: &mut Commands, board: Entity, text: &str, x: f32, y: f32) {
+    let entity = label(commands, board, text, 14.0, Color::srgb(0.17, 0.17, 0.18));
+    commands.entity(entity).insert(Node {
+        position_type: PositionType::Absolute,
+        left: px(x * PIXEL_SCALE),
+        top: px(y * PIXEL_SCALE),
+        ..default()
+    });
+}
+
+fn avatar_piece(
+    commands: &mut Commands,
+    avatar: Entity,
+    x: f32,
+    y: f32,
+    width: f32,
+    height: f32,
+    color: Color,
+) {
+    let piece = node(
+        commands,
+        avatar,
+        Node {
+            position_type: PositionType::Absolute,
+            left: px(x * PIXEL_SCALE),
+            top: px(y * PIXEL_SCALE),
+            width: px(width * PIXEL_SCALE),
+            height: px(height * PIXEL_SCALE),
+            ..default()
+        },
+        color,
+    );
+    commands.entity(piece).insert(Pickable::IGNORE);
+}
+
+/// Until the Voxium character mesh is available in UI, show a static original silhouette.
+fn avatar_preview(commands: &mut Commands, board: Entity) {
+    let avatar = node(
+        commands,
+        board,
+        Node {
+            position_type: PositionType::Absolute,
+            left: px(26.0 * PIXEL_SCALE),
+            top: px(8.0 * PIXEL_SCALE),
+            width: px(51.0 * PIXEL_SCALE),
+            height: px(72.0 * PIXEL_SCALE),
+            flex_shrink: 0.0,
+            border: UiRect::all(px(2.0)),
+            ..default()
+        },
+        Color::srgba(0.10, 0.17, 0.24, 0.90),
+    );
+    commands.entity(avatar).insert((
+        AvatarPreview,
+        Pickable::IGNORE,
+        BorderColor::all(Color::srgb(0.30, 0.32, 0.34)),
+    ));
+    avatar_piece(
+        commands,
+        avatar,
+        19.0,
+        8.0,
+        13.0,
+        13.0,
+        Color::srgb(0.72, 0.53, 0.37),
+    );
+    avatar_piece(
+        commands,
+        avatar,
+        19.0,
+        8.0,
+        13.0,
+        4.0,
+        Color::srgb(0.20, 0.16, 0.14),
+    );
+    avatar_piece(
+        commands,
+        avatar,
+        14.0,
+        21.0,
+        23.0,
+        24.0,
+        Color::srgb(0.16, 0.46, 0.75),
+    );
+    avatar_piece(
+        commands,
+        avatar,
+        7.0,
+        22.0,
+        7.0,
+        23.0,
+        Color::srgb(0.67, 0.49, 0.34),
+    );
+    avatar_piece(
+        commands,
+        avatar,
+        37.0,
+        22.0,
+        7.0,
+        23.0,
+        Color::srgb(0.67, 0.49, 0.34),
+    );
+    avatar_piece(
+        commands,
+        avatar,
+        15.0,
+        45.0,
+        10.0,
+        22.0,
+        Color::srgb(0.20, 0.23, 0.40),
+    );
+    avatar_piece(
+        commands,
+        avatar,
+        26.0,
+        45.0,
+        10.0,
+        22.0,
+        Color::srgb(0.20, 0.23, 0.40),
+    );
+}
+
+#[allow(clippy::too_many_arguments)]
+fn draw_main_and_hotbar(
+    commands: &mut Commands,
+    board: Entity,
+    game: &Game,
+    icons: &ItemIcons,
+    blocks: &BlockIcons,
+    screen: InventoryScreen,
+    skinned: bool,
+) {
+    board_caption(commands, board, "Инвентарь", 8.0, screen.main_y() - 11.0);
+    for line in 0..3 {
+        for index in 0..9 {
+            slot_at(
+                commands,
+                board,
+                game,
+                icons,
+                blocks,
+                SlotRef::Main(line * 9 + index),
+                8.0 + index as f32 * 18.0,
+                screen.main_y() + line as f32 * 18.0,
+                skinned,
+                "",
+            );
+        }
+    }
+    for index in 0..9 {
+        slot_at(
+            commands,
+            board,
+            game,
+            icons,
+            blocks,
+            SlotRef::Hotbar(index),
+            8.0 + index as f32 * 18.0,
+            screen.hotbar_y(),
+            skinned,
+            "",
+        );
+    }
+}
+
+/// Fully interactive Minecraft-like inventory with a pixel-aligned GUI canvas.
 #[cfg(test)]
 pub(super) fn menu(
     commands: &mut Commands,
@@ -352,215 +580,207 @@ pub(super) fn menu_with_skins(
     blocks: &BlockIcons,
     skins: Option<&crate::resource_packs::GuiSkins>,
 ) {
-    let is_furnace = game
-        .open_container
-        .is_some_and(|pos| game.world.block(pos) == game_core::FURNACE);
-    let title = if game.open_workbench.is_some() {
-        "Верстак"
-    } else if is_furnace {
-        "Печь"
-    } else if game.open_container.is_some() {
-        "Сундук"
-    } else {
-        "Инвентарь"
-    };
-    let accent = if is_furnace {
-        Color::srgb(0.70, 0.74, 0.79)
-    } else if game.open_workbench.is_some() {
-        Color::srgb(0.94, 0.59, 0.31)
-    } else {
-        AMBER
-    };
+    let screen = InventoryScreen::from_game(game);
+    let skin = skins.and_then(|skins| skins.get(screen.skin_name()));
+    let skinned = skin.is_some();
     commands.entity(panel).insert((
-        BackgroundColor(Color::srgba(0.12, 0.13, 0.15, 0.98)),
-        BorderColor::all(accent),
+        BackgroundColor(Color::srgba(0.10, 0.10, 0.12, 0.98)),
+        BorderColor::all(Color::srgb(0.40, 0.40, 0.42)),
     ));
-    label(commands, panel, title, 26., TEXT);
-    label(
+    label(commands, panel, screen.title(), 22.0, TEXT);
+    let board = node(
         commands,
         panel,
-        "ЛКМ: взять / положить · ПКМ: половина / один · Shift: перенос",
-        12.,
-        MUTED,
-    );
-    let content = row(commands, panel, 24.);
-    commands.entity(content).insert(Node {
-        width: percent(100),
-        column_gap: px(24),
-        align_items: AlignItems::FlexStart,
-        flex_wrap: FlexWrap::Wrap,
-        row_gap: px(16),
-        flex_shrink: 0.,
-        ..default()
-    });
-    let storage = column(commands, content, 7.);
-    commands.entity(storage).insert(Node {
-        width: px(534),
-        max_width: percent(100),
-        flex_direction: FlexDirection::Column,
-        row_gap: px(7),
-        flex_shrink: 0.,
-        ..default()
-    });
-    if let Some(position) = game.open_container {
-        if game.world.block(position) == game_core::FURNACE {
-            label(
-                commands,
-                storage,
-                "ПЕЧЬ · СЫРЬЁ + ТОПЛИВО → СЛИТОК",
-                12.,
-                accent,
-            );
-            let cells = row(commands, storage, 12.);
-            slot(
-                commands,
-                cells,
-                game,
-                icons,
-                blocks,
-                SlotRef::Container(0),
-                "Сырьё",
-            );
-            label(commands, cells, "+", 20., MUTED);
-            slot(
-                commands,
-                cells,
-                game,
-                icons,
-                blocks,
-                SlotRef::Container(1),
-                "Уголь",
-            );
-            label(commands, cells, "→", 20., MUTED);
-            slot(
-                commands,
-                cells,
-                game,
-                icons,
-                blocks,
-                SlotRef::Container(2),
-                "Готово",
-            );
-            let percent = game
-                .furnaces
-                .get(&position)
-                .map_or(0., |state| state.progress * 10.);
-            label(
-                commands,
-                storage,
-                format!("Плавка: {percent:.0}% · 10 секунд / предмет"),
-                12.,
-                MUTED,
-            );
+        Node {
+            width: px(INVENTORY_CANVAS_WIDTH),
+            height: px(screen.height()),
+            min_width: px(INVENTORY_CANVAS_WIDTH),
+            min_height: px(screen.height()),
+            flex_shrink: 0.0,
+            align_self: AlignSelf::Center,
+            border: UiRect::all(px(3.0)),
+            border_radius: BorderRadius::all(px(0.0)),
+            ..default()
+        },
+        if skinned {
+            Color::NONE
         } else {
-            label(commands, storage, "СУНДУК · 27 ЯЧЕЕК", 12., accent);
-            for line in 0..3 {
-                let cells = row(commands, storage, 6.);
-                for index in 0..9 {
-                    slot(
+            Color::srgb(0.73, 0.73, 0.73)
+        },
+    );
+    commands.entity(board).insert((
+        InventoryBoard,
+        BorderColor::all(Color::srgb(0.23, 0.23, 0.24)),
+    ));
+    if let Some(skin) = skin {
+        let backdrop = commands
+            .spawn((
+                ImageNode::new(skin),
+                Node {
+                    position_type: PositionType::Absolute,
+                    left: px(0.0),
+                    top: px(0.0),
+                    width: px(INVENTORY_CANVAS_WIDTH),
+                    height: px(screen.height()),
+                    ..default()
+                },
+                PackGuiBackground,
+                Pickable::IGNORE,
+            ))
+            .id();
+        commands.entity(board).add_child(backdrop);
+    }
+
+    match screen {
+        InventoryScreen::Personal => {
+            avatar_preview(commands, board);
+            for (index, armor) in [
+                ArmorSlot::Head,
+                ArmorSlot::Chest,
+                ArmorSlot::Legs,
+                ArmorSlot::Feet,
+            ]
+            .into_iter()
+            .enumerate()
+            {
+                slot_at(
+                    commands,
+                    board,
+                    game,
+                    icons,
+                    blocks,
+                    SlotRef::Armor(armor),
+                    8.0,
+                    8.0 + index as f32 * 18.0,
+                    skinned,
+                    "",
+                );
+            }
+            slot_at(
+                commands,
+                board,
+                game,
+                icons,
+                blocks,
+                SlotRef::Offhand,
+                77.0,
+                62.0,
+                skinned,
+                "",
+            );
+            board_caption(commands, board, "Создание", 98.0, 5.0);
+            for line in 0..2 {
+                for index in 0..2 {
+                    slot_at(
                         commands,
-                        cells,
+                        board,
+                        game,
+                        icons,
+                        blocks,
+                        SlotRef::Crafting(line * 2 + index),
+                        98.0 + index as f32 * 18.0,
+                        18.0 + line as f32 * 18.0,
+                        skinned,
+                        "",
+                    );
+                }
+            }
+            craft_result_at(
+                commands, board, game, icons, blocks, screen, 154.0, 28.0, skinned,
+            );
+        }
+        InventoryScreen::Workbench => {
+            board_caption(commands, board, "Создание", 28.0, 5.0);
+            for line in 0..3 {
+                for index in 0..3 {
+                    slot_at(
+                        commands,
+                        board,
+                        game,
+                        icons,
+                        blocks,
+                        SlotRef::Workbench(line * 3 + index),
+                        30.0 + index as f32 * 18.0,
+                        17.0 + line as f32 * 18.0,
+                        skinned,
+                        "",
+                    );
+                }
+            }
+            craft_result_at(
+                commands, board, game, icons, blocks, screen, 124.0, 35.0, skinned,
+            );
+        }
+        InventoryScreen::Furnace => {
+            board_caption(commands, board, "Плавка", 8.0, 5.0);
+            for (index, x, y, hint) in [
+                (0, 56.0, 17.0, "Сырьё"),
+                (1, 56.0, 53.0, "Топливо"),
+                (2, 116.0, 35.0, "Готово"),
+            ] {
+                slot_at(
+                    commands,
+                    board,
+                    game,
+                    icons,
+                    blocks,
+                    SlotRef::Container(index),
+                    x,
+                    y,
+                    skinned,
+                    hint,
+                );
+            }
+            if let Some(position) = game.open_container {
+                let progress = game
+                    .furnaces
+                    .get(&position)
+                    .map_or(0.0, |furnace| (furnace.progress / 10.0).clamp(0.0, 1.0));
+                let indicator = node(
+                    commands,
+                    board,
+                    Node {
+                        position_type: PositionType::Absolute,
+                        left: px(79.0 * PIXEL_SCALE),
+                        top: px(37.0 * PIXEL_SCALE),
+                        width: px(23.0 * PIXEL_SCALE * progress),
+                        height: px(3.0 * PIXEL_SCALE),
+                        ..default()
+                    },
+                    Color::srgb(0.97, 0.69, 0.25),
+                );
+                commands.entity(indicator).insert(Pickable::IGNORE);
+            }
+        }
+        InventoryScreen::Chest => {
+            board_caption(commands, board, "Сундук", 8.0, 5.0);
+            for line in 0..3 {
+                for index in 0..9 {
+                    slot_at(
+                        commands,
+                        board,
                         game,
                         icons,
                         blocks,
                         SlotRef::Container(line * 9 + index),
+                        8.0 + index as f32 * 18.0,
+                        18.0 + line as f32 * 18.0,
+                        skinned,
                         "",
                     );
                 }
             }
         }
     }
-    label(commands, storage, "РЮКЗАК · 27 ЯЧЕЕК", 12., MUTED);
-    for line in 0..3 {
-        let cells = row(commands, storage, 6.);
-        for index in 0..9 {
-            slot(
-                commands,
-                cells,
-                game,
-                icons,
-                blocks,
-                SlotRef::Main(line * 9 + index),
-                "",
-            );
-        }
-    }
-    label(commands, storage, "ПАНЕЛЬ БЫСТРОГО ДОСТУПА", 12., MUTED);
-    let hotbar = row(commands, storage, 6.);
-    for index in 0..9 {
-        slot(
-            commands,
-            hotbar,
-            game,
-            icons,
-            blocks,
-            SlotRef::Hotbar(index),
-            "",
-        );
-    }
-    if !is_furnace {
-        crafting(commands, storage, game, icons, blocks);
-    }
-    let equipment = column(commands, content, 7.);
-    commands.entity(equipment).insert(Node {
-        width: px(170),
-        flex_direction: FlexDirection::Column,
-        row_gap: px(7),
-        flex_shrink: 0.,
-        ..default()
-    });
-    label(commands, equipment, "ЭКИПИРОВКА", 12., AMBER);
-    for (armor, caption) in [
-        (ArmorSlot::Head, "Голова"),
-        (ArmorSlot::Chest, "Тело"),
-        (ArmorSlot::Legs, "Ноги"),
-        (ArmorSlot::Feet, "Ступни"),
-    ] {
-        let cells = row(commands, equipment, 8.);
-        slot(
-            commands,
-            cells,
-            game,
-            icons,
-            blocks,
-            SlotRef::Armor(armor),
-            "",
-        );
-        label(commands, cells, caption, 12., MUTED);
-    }
-    let cells = row(commands, equipment, 8.);
-    slot(commands, cells, game, icons, blocks, SlotRef::Offhand, "");
-    label(commands, cells, "Вторая рука", 12., MUTED);
-    label(commands, equipment, "Броня пока\nбез бонусов.", 12., MUTED);
-    if let Some(skins) = skins {
-        let name = if game.open_workbench.is_some() {
-            "workbench"
-        } else if is_furnace {
-            "furnace"
-        } else if game.open_container.is_some() {
-            "chest"
-        } else {
-            "inventory"
-        };
-        if let Some(handle) = skins.get(name) {
-            label(commands, equipment, "РЕСУРСПАК · GUI", 11., accent);
-            let height = if name == "chest" { 210. } else { 157. };
-            let image = commands
-                .spawn((
-                    ImageNode::new(handle),
-                    Node {
-                        width: px(166.),
-                        height: px(height),
-                        flex_shrink: 0.,
-                        ..default()
-                    },
-                    Pickable::IGNORE,
-                ))
-                .id();
-            commands.entity(equipment).add_child(image);
-        }
-    }
 
+    draw_main_and_hotbar(commands, board, game, icons, blocks, screen, skinned);
+    label(
+        commands,
+        panel,
+        "ЛКМ: взять · ПКМ: разделить · Shift: быстрый перенос",
+        12.0,
+        MUTED,
+    );
     if game.game_mode == GameMode::Creative {
         label(
             commands,
@@ -658,17 +878,18 @@ pub(super) fn menu_with_skins(
             });
         }
     }
+
     label(
         commands,
         panel,
         "E / Esc: закрыть · колесо: прокрутить",
-        12.,
+        12.0,
         MUTED,
     );
     button(
         commands,
         panel,
-        "Вернуться в мир",
+        "Закрыть инвентарь",
         Action::Resume,
         Tone::Gold,
     );
@@ -909,10 +1130,13 @@ mod tests {
             });
             let images = world
                 .get::<Children>(result)
-                .unwrap()
-                .iter()
-                .filter(|child| world.get::<ImageNode>(*child).is_some())
-                .count();
+                .map(|children| {
+                    children
+                        .iter()
+                        .filter(|child| world.get::<ImageNode>(*child).is_some())
+                        .count()
+                })
+                .unwrap_or(0);
             assert_eq!(images, usize::from(ready));
         }
     }
@@ -1019,6 +1243,184 @@ mod tests {
         app.update();
         assert_eq!(panel_scroll(&mut app), 0.);
     }
+
+    fn render_inventory_for_test(game: &Game) -> World {
+        let mut world = World::new();
+        let panel = world.spawn_empty().id();
+        let mut queue = bevy::ecs::world::CommandQueue::default();
+        let mut commands = Commands::new(&mut queue, &world);
+        menu(
+            &mut commands,
+            panel,
+            game,
+            &ItemIcons::default(),
+            &BlockIcons::default(),
+        );
+        queue.apply(&mut world);
+        world
+    }
+
+    fn assert_slot_at(world: &mut World, target: SlotRef, x: f32, y: f32) {
+        let mut slots = world.query::<(&InventorySlot, &Node)>();
+        let (_, layout) = slots
+            .iter(world)
+            .find(|(slot, _)| slot.0 == target)
+            .unwrap_or_else(|| panic!("missing interactive slot {target:?}"));
+        assert_eq!(layout.position_type, PositionType::Absolute, "{target:?}");
+        assert_eq!(layout.left, px(x * 3.), "{target:?} x");
+        assert_eq!(layout.top, px(y * 3.), "{target:?} y");
+        assert_eq!(layout.width, px(54.), "{target:?} width");
+        assert_eq!(layout.height, px(54.), "{target:?} height");
+    }
+
+    #[test]
+    fn minecraft_personal_inventory_places_avatar_armor_2x2_and_backpack() {
+        let mut world = render_inventory_for_test(&Game::default());
+        assert_eq!(world.query::<&InventorySlot>().iter(&world).count(), 45);
+        assert_eq!(world.query::<&CraftResult>().iter(&world).count(), 1);
+        assert_slot_at(&mut world, SlotRef::Armor(ArmorSlot::Head), 8., 8.);
+        assert_slot_at(&mut world, SlotRef::Armor(ArmorSlot::Feet), 8., 62.);
+        assert_slot_at(&mut world, SlotRef::Offhand, 77., 62.);
+        assert_slot_at(&mut world, SlotRef::Crafting(0), 98., 18.);
+        assert_slot_at(&mut world, SlotRef::Crafting(3), 116., 36.);
+        assert_slot_at(&mut world, SlotRef::Main(0), 8., 84.);
+        assert_slot_at(&mut world, SlotRef::Main(26), 152., 120.);
+        assert_slot_at(&mut world, SlotRef::Hotbar(0), 8., 142.);
+        assert_slot_at(&mut world, SlotRef::Hotbar(8), 152., 142.);
+        let mut results = world.query::<(&CraftResult, &Node)>();
+        let (_, layout) = results.single(&world).unwrap();
+        assert_eq!(layout.left, px(154. * 3.));
+        assert_eq!(layout.top, px(28. * 3.));
+    }
+
+    #[test]
+    fn minecraft_workbench_has_3x3_above_inventory_without_equipment() {
+        let game = Game {
+            open_workbench: Some([1, 2, 3]),
+            ..default()
+        };
+        let mut world = render_inventory_for_test(&game);
+        assert_eq!(world.query::<&InventorySlot>().iter(&world).count(), 45);
+        assert_slot_at(&mut world, SlotRef::Workbench(0), 30., 17.);
+        assert_slot_at(&mut world, SlotRef::Workbench(8), 66., 53.);
+        assert_slot_at(&mut world, SlotRef::Main(0), 8., 84.);
+        assert_slot_at(&mut world, SlotRef::Hotbar(0), 8., 142.);
+        let mut result = world.query::<(&CraftResult, &Node)>();
+        assert_eq!(result.single(&world).unwrap().1.left, px(124. * 3.));
+        let mut slots = world.query::<&InventorySlot>();
+        assert!(!slots.iter(&world).any(|s| matches!(
+            s.0,
+            SlotRef::Armor(_) | SlotRef::Crafting(_) | SlotRef::Offhand
+        )));
+    }
+
+    #[test]
+    fn minecraft_furnace_and_chest_use_station_specific_slotted_windows() {
+        let position = [1, 85, 1];
+        let mut furnace = Game {
+            open_container: Some(position),
+            ..default()
+        };
+        furnace.world.edits.insert(position, game_core::FURNACE);
+        furnace.world.insert(game_core::Chunk::generate(0, [0, 0]));
+        furnace
+            .containers
+            .insert(position, game_core::inventory::Container::new(3));
+        let mut furnace_world = render_inventory_for_test(&furnace);
+        assert_eq!(
+            furnace_world
+                .query::<&InventorySlot>()
+                .iter(&furnace_world)
+                .count(),
+            39
+        );
+        assert_slot_at(&mut furnace_world, SlotRef::Container(0), 56., 17.);
+        assert_slot_at(&mut furnace_world, SlotRef::Container(1), 56., 53.);
+        assert_slot_at(&mut furnace_world, SlotRef::Container(2), 116., 35.);
+        assert_slot_at(&mut furnace_world, SlotRef::Main(0), 8., 84.);
+        assert_eq!(
+            furnace_world
+                .query::<&CraftResult>()
+                .iter(&furnace_world)
+                .count(),
+            0
+        );
+
+        let mut chest = Game {
+            open_container: Some(position),
+            ..default()
+        };
+        chest
+            .containers
+            .insert(position, game_core::inventory::Container::new(27));
+        let mut chest_world = render_inventory_for_test(&chest);
+        assert_eq!(
+            chest_world
+                .query::<&InventorySlot>()
+                .iter(&chest_world)
+                .count(),
+            63
+        );
+        assert_slot_at(&mut chest_world, SlotRef::Container(0), 8., 18.);
+        assert_slot_at(&mut chest_world, SlotRef::Container(26), 152., 54.);
+        assert_slot_at(&mut chest_world, SlotRef::Main(0), 8., 140.);
+        assert_slot_at(&mut chest_world, SlotRef::Hotbar(0), 8., 198.);
+        assert_eq!(
+            chest_world
+                .query::<&CraftResult>()
+                .iter(&chest_world)
+                .count(),
+            0
+        );
+    }
+
+    #[test]
+    fn minecraft_board_skin_is_behind_clickable_slots_and_avatar_is_personal_only() {
+        let game = Game::default();
+        let skins = crate::resource_packs::GuiSkins::inventory_test_skin(Handle::default());
+        let mut world = World::new();
+        let panel = world.spawn_empty().id();
+        let mut queue = bevy::ecs::world::CommandQueue::default();
+        let mut commands = Commands::new(&mut queue, &world);
+        menu_with_skins(
+            &mut commands,
+            panel,
+            &game,
+            &ItemIcons::default(),
+            &BlockIcons::default(),
+            Some(&skins),
+        );
+        queue.apply(&mut world);
+        let mut boards = world.query_filtered::<Entity, With<InventoryBoard>>();
+        let board = boards.single(&world).unwrap();
+        let children = world.get::<Children>(board).unwrap();
+        assert!(world.get::<PackGuiBackground>(children[0]).is_some());
+        assert!(world.get::<Pickable>(children[0]).is_some());
+        assert_eq!(world.get::<Node>(children[0]).unwrap().width, px(528.));
+        assert_eq!(world.query::<&AvatarPreview>().iter(&world).count(), 1);
+        assert_eq!(world.query::<&InventorySlot>().iter(&world).count(), 45);
+
+        let station = Game {
+            open_workbench: Some([1, 2, 3]),
+            ..default()
+        };
+        let mut workbench = render_inventory_for_test(&station);
+        assert_eq!(
+            workbench.query::<&AvatarPreview>().iter(&workbench).count(),
+            0
+        );
+        let mut boards = workbench.query::<(&InventoryBoard, &Node)>();
+        assert_eq!(boards.single(&workbench).unwrap().1.height, px(498.));
+
+        let chest = Game {
+            open_container: Some([1, 2, 3]),
+            ..default()
+        };
+        let mut chest_world = render_inventory_for_test(&chest);
+        let mut boards = chest_world.query::<(&InventoryBoard, &Node)>();
+        assert_eq!(boards.single(&chest_world).unwrap().1.height, px(666.));
+    }
+
     #[test]
     fn survival_panel_has_all_finite_slots_and_no_catalog() {
         let game = Game {
@@ -1062,7 +1464,7 @@ mod tests {
             &BlockIcons::default(),
         );
         queue.apply(&mut world);
-        assert_eq!(world.query::<&InventorySlot>().iter(&world).count(), 72);
+        assert_eq!(world.query::<&InventorySlot>().iter(&world).count(), 63);
         assert_eq!(
             world.query::<&CatalogItem>().iter(&world).count(),
             expected_catalog
