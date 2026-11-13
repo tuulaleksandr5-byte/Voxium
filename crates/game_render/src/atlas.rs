@@ -227,7 +227,10 @@ mod tests {
             let output = pixelate_icon_rgba(&rgba, size).unwrap();
             assert_eq!(output.len(), rgba.len());
             let step = 128 / size as usize;
-            assert_eq!(&output[0..4], &output[((step - 1) * 128 + step - 1) * 4..][..4]);
+            assert_eq!(
+                &output[0..4],
+                &output[((step - 1) * 128 + step - 1) * 4..][..4]
+            );
             assert_eq!(output[3], 0);
             assert_eq!(output[(127 * 4) + 3], 255);
         }
