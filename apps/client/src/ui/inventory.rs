@@ -1319,6 +1319,7 @@ mod tests {
             ..default()
         };
         furnace.world.edits.insert(position, game_core::FURNACE);
+        furnace.world.insert(game_core::Chunk::generate(0, [0, 0]));
         furnace
             .containers
             .insert(position, game_core::inventory::Container::new(3));
