@@ -130,7 +130,9 @@ impl BlockAtlas {
             return Ok(self.clone());
         }
         if !matches!(pixel_size, 16 | 32) {
-            return Err(format!("pixel size must be 16, 32 or 128, got {pixel_size}"));
+            return Err(format!(
+                "pixel size must be 16, 32 or 128, got {pixel_size}"
+            ));
         }
         let mut atlas = self.clone();
         for layer in 0..36 {
@@ -174,7 +176,12 @@ fn resize_pixel_art(image: &RgbaImage, pixel_size: u32) -> RgbaImage {
         pixel_size,
         image::imageops::FilterType::Nearest,
     );
-    image::imageops::resize(&small, TILE_SIZE, TILE_SIZE, image::imageops::FilterType::Nearest)
+    image::imageops::resize(
+        &small,
+        TILE_SIZE,
+        TILE_SIZE,
+        image::imageops::FilterType::Nearest,
+    )
 }
 
 /// Quantize square icon RGBA without modifying its alpha or source asset.
@@ -186,10 +193,11 @@ pub fn pixelate_icon_rgba(rgba: &[u8], pixel_size: u32) -> Result<Vec<u8>, Strin
         return Ok(rgba.to_vec());
     }
     if !matches!(pixel_size, 16 | 32) {
-        return Err(format!("pixel size must be 16, 32 or 128, got {pixel_size}"));
+        return Err(format!(
+            "pixel size must be 16, 32 or 128, got {pixel_size}"
+        ));
     }
-    let source = RgbaImage::from_raw(TILE_SIZE, TILE_SIZE, rgba.to_vec())
-        .expect("length verified");
+    let source = RgbaImage::from_raw(TILE_SIZE, TILE_SIZE, rgba.to_vec()).expect("length verified");
     Ok(resize_pixel_art(&source, pixel_size).into_raw())
 }
 
