@@ -405,6 +405,7 @@ struct InventoryScrollContext {
     world_id: Option<String>,
     world_seed: u64,
     container: Option<[i32; 3]>,
+    workbench: Option<[i32; 3]>,
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -427,6 +428,7 @@ fn rebuild(
         world_id: game.world_id.clone(),
         world_seed: game.world.seed,
         container: game.open_container,
+        workbench: game.open_workbench,
     });
     // Прокрутка принадлежит текущему экрану, миру и открытому контейнеру.
     let scroll = if inventory_context.is_some() && *previous_inventory == inventory_context {
@@ -468,7 +470,7 @@ fn rebuild(
         return;
     }
     let width = match game.mode {
-        Mode::Inventory => 820.,
+        Mode::Inventory => 640.,
         Mode::Create | Mode::Console => 840.,
         Mode::Load => 710.,
         Mode::Settings => 640.,
