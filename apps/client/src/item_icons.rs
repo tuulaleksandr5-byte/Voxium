@@ -51,7 +51,9 @@ fn cache_icons(
                 depth_or_array_layers: 1,
             },
             TextureDimension::D2,
-            crate::tool_textures::pixels(&definition.id)
+            crate::resource_packs::active()
+                .and_then(|pack| pack.item_pixels(&definition.id))
+                .or_else(|| crate::tool_textures::pixels(&definition.id))
                 .or_else(|| crate::item_textures::pixels(&definition.id))
                 .unwrap_or_else(|| placeholder_pixels(&definition.id, &definition.kind)),
             TextureFormat::Rgba8UnormSrgb,

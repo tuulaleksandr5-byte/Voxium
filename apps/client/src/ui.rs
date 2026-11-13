@@ -411,6 +411,7 @@ struct InventoryScrollContext {
 fn rebuild(
     mut commands: Commands,
     mut game: ResMut<Game>,
+    skins: Option<Res<crate::resource_packs::GuiSkins>>,
     icons: Res<BlockIcons>,
     item_icons: Res<ItemIcons>,
     console: Res<ConsoleState>,
@@ -487,7 +488,14 @@ fn rebuild(
         Mode::Paused => pause_menu(&mut commands, panel, &game),
         Mode::Inventory => {
             commands.entity(panel).insert(scroll);
-            inventory::menu(&mut commands, panel, &game, &item_icons, &icons);
+            inventory::menu_with_skins(
+                &mut commands,
+                panel,
+                &game,
+                &item_icons,
+                &icons,
+                skins.as_deref(),
+            );
             inventory::overlay(&mut commands, root, &game, &item_icons, &icons);
         }
         Mode::Dead => death_menu(&mut commands, panel, &game),

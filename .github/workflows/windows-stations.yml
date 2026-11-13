@@ -1,8 +1,8 @@
-name: Windows x64 - functional stations preview
+name: Windows x64 - Minecraft resource packs
 
 on:
   pull_request:
-    branches: [main]
+    branches: [main, feature/functional-stations-dark-inventory]
   workflow_dispatch:
 
 permissions:
@@ -31,10 +31,10 @@ jobs:
         run: |
           New-Item -ItemType Directory -Force dist | Out-Null
           Copy-Item target/x86_64-pc-windows-msvc/release/voxel-client.exe dist/Voxium.exe
-          'Built from the public alpha.4 source branch with new crafting/furnace features. NOT the Animals binary. Back up saves-v2 before using.' | Out-File dist/README.txt -Encoding UTF8
+          'Voxium resource-pack preview based on alpha.4 and functional stations. Place ZIP at assets/resourcepacks/active.zip. Not full OptiFine; no Animals source. Back up saves before running.' | Out-File dist/README.txt -Encoding UTF8
       - uses: actions/upload-artifact@v4
         with:
-          name: Voxium-Stations-Windows-x64
+          name: Voxium-Resourcepacks-Windows-x64
           path: dist/
           if-no-files-found: error
           retention-days: 7
