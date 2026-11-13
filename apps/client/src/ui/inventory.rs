@@ -1025,7 +1025,13 @@ mod tests {
         let panel = world.spawn_empty().id();
         let mut queue = bevy::ecs::world::CommandQueue::default();
         let mut commands = Commands::new(&mut queue, &world);
-        menu(&mut commands, panel, game, &ItemIcons::default(), &BlockIcons::default());
+        menu(
+            &mut commands,
+            panel,
+            game,
+            &ItemIcons::default(),
+            &BlockIcons::default(),
+        );
         queue.apply(&mut world);
         world
     }
@@ -1065,7 +1071,10 @@ mod tests {
 
     #[test]
     fn minecraft_workbench_has_3x3_above_inventory_without_equipment() {
-        let game = Game { open_workbench: Some([1, 2, 3]), ..default() };
+        let game = Game {
+            open_workbench: Some([1, 2, 3]),
+            ..default()
+        };
         let mut world = render_inventory_for_test(&game);
         assert_eq!(world.query::<&InventorySlot>().iter(&world).count(), 45);
         assert_slot_at(&mut world, SlotRef::Workbench(0), 30., 17.);
@@ -1075,32 +1084,69 @@ mod tests {
         let mut result = world.query::<(&CraftResult, &Node)>();
         assert_eq!(result.single(&world).unwrap().1.left, px(124. * 3.));
         let mut slots = world.query::<&InventorySlot>();
-        assert!(!slots.iter(&world).any(|s| matches!(s.0, SlotRef::Armor(_) | SlotRef::Crafting(_) | SlotRef::Offhand)));
+        assert!(!slots.iter(&world).any(|s| matches!(
+            s.0,
+            SlotRef::Armor(_) | SlotRef::Crafting(_) | SlotRef::Offhand
+        )));
     }
 
     #[test]
     fn minecraft_furnace_and_chest_use_station_specific_slotted_windows() {
         let position = [1, 85, 1];
-        let mut furnace = Game { open_container: Some(position), ..default() };
+        let mut furnace = Game {
+            open_container: Some(position),
+            ..default()
+        };
         furnace.world.edits.insert(position, game_core::FURNACE);
-        furnace.containers.insert(position, game_core::inventory::Container::new(3));
+        furnace
+            .containers
+            .insert(position, game_core::inventory::Container::new(3));
         let mut furnace_world = render_inventory_for_test(&furnace);
-        assert_eq!(furnace_world.query::<&InventorySlot>().iter(&furnace_world).count(), 39);
+        assert_eq!(
+            furnace_world
+                .query::<&InventorySlot>()
+                .iter(&furnace_world)
+                .count(),
+            39
+        );
         assert_slot_at(&mut furnace_world, SlotRef::Container(0), 56., 17.);
         assert_slot_at(&mut furnace_world, SlotRef::Container(1), 56., 53.);
         assert_slot_at(&mut furnace_world, SlotRef::Container(2), 116., 35.);
         assert_slot_at(&mut furnace_world, SlotRef::Main(0), 8., 84.);
-        assert_eq!(furnace_world.query::<&CraftResult>().iter(&furnace_world).count(), 0);
+        assert_eq!(
+            furnace_world
+                .query::<&CraftResult>()
+                .iter(&furnace_world)
+                .count(),
+            0
+        );
 
-        let mut chest = Game { open_container: Some(position), ..default() };
-        chest.containers.insert(position, game_core::inventory::Container::new(27));
+        let mut chest = Game {
+            open_container: Some(position),
+            ..default()
+        };
+        chest
+            .containers
+            .insert(position, game_core::inventory::Container::new(27));
         let mut chest_world = render_inventory_for_test(&chest);
-        assert_eq!(chest_world.query::<&InventorySlot>().iter(&chest_world).count(), 63);
+        assert_eq!(
+            chest_world
+                .query::<&InventorySlot>()
+                .iter(&chest_world)
+                .count(),
+            63
+        );
         assert_slot_at(&mut chest_world, SlotRef::Container(0), 8., 18.);
         assert_slot_at(&mut chest_world, SlotRef::Container(26), 152., 54.);
         assert_slot_at(&mut chest_world, SlotRef::Main(0), 8., 140.);
         assert_slot_at(&mut chest_world, SlotRef::Hotbar(0), 8., 198.);
-        assert_eq!(chest_world.query::<&CraftResult>().iter(&chest_world).count(), 0);
+        assert_eq!(
+            chest_world
+                .query::<&CraftResult>()
+                .iter(&chest_world)
+                .count(),
+            0
+        );
     }
 
     #[test]
