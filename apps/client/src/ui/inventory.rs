@@ -1369,6 +1369,45 @@ mod tests {
         );
     }
 
+
+    #[test]
+    fn minecraft_board_skin_is_behind_clickable_slots_and_avatar_is_personal_only() {
+        let game = Game::default();
+        let skins = crate::resource_packs::GuiSkins::inventory_test_skin(Handle::default());
+        let mut world = World::new();
+        let panel = world.spawn_empty().id();
+        let mut queue = bevy::ecs::world::CommandQueue::default();
+        let mut commands = Commands::new(&mut queue, &world);
+        menu_with_skins(
+            &mut commands,
+            panel,
+            &game,
+            &ItemIcons::default(),
+            &BlockIcons::default(),
+            Some(&skins),
+        );
+        queue.apply(&mut world);
+        let mut boards = world.query_filtered::<Entity, With<InventoryBoard>>();
+        let board = boards.single(&world).unwrap();
+        let children = world.get::<Children>(board).unwrap();
+        assert!(world.get::<PackGuiBackground>(children[0]).is_some());
+        assert!(world.get::<Pickable>(children[0]).is_some());
+        assert_eq!(world.get::<Node>(children[0]).unwrap().width, px(528.));
+        assert_eq!(world.query::<&AvatarPreview>().iter(&world).count(), 1);
+        assert_eq!(world.query::<&InventorySlot>().iter(&world).count(), 45);
+
+        let station = Game { open_workbench: Some([1, 2, 3]), ..default() };
+        let mut workbench = render_inventory_for_test(&station);
+        assert_eq!(workbench.query::<&AvatarPreview>().iter(&workbench).count(), 0);
+        let mut boards = workbench.query::<(&InventoryBoard, &Node)>();
+        assert_eq!(boards.single(&workbench).unwrap().1.height, px(498.));
+
+        let chest = Game { open_container: Some([1, 2, 3]), ..default() };
+        let mut chest_world = render_inventory_for_test(&chest);
+        let mut boards = chest_world.query::<(&InventoryBoard, &Node)>();
+        assert_eq!(boards.single(&chest_world).unwrap().1.height, px(666.));
+    }
+
     #[test]
     fn survival_panel_has_all_finite_slots_and_no_catalog() {
         let game = Game {
@@ -1412,7 +1451,7 @@ mod tests {
             &BlockIcons::default(),
         );
         queue.apply(&mut world);
-        assert_eq!(world.query::<&InventorySlot>().iter(&world).count(), 72);
+        assert_eq!(world.query::<&InventorySlot>().iter(&world).count(), 63);
         assert_eq!(
             world.query::<&CatalogItem>().iter(&world).count(),
             expected_catalog
