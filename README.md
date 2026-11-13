@@ -12,6 +12,10 @@
 
 Подключены исходные PNG блоков, материалов, 25 инструментов и 16 частей брони. Инструменты влияют на время добычи и разрешение дропа; прочность, защита брони, крафт 3×3 и плавка пока не реализованы. Верстак и печь доступны как размещаемые блоки. Мирные животные и еда остаются в плане этапа 6. История: [этап 1](docs/STAGE_1_ANIMALS_PLAN.md), [этап 2](docs/STAGE_2_SURVIVAL.md), [этап 3](docs/STAGE_3_INVENTORY.md), [изображения инструментов](docs/TOOL_TEXTURES.md).
 
+
+### Minecraft ZIP / OptiFine resource packs
+
+Put a Minecraft Java texture-pack ZIP at `assets/resourcepacks/active.zip` next to the EXE (or set `VOXIUM_RESOURCE_PACK`). Supported block/item PNGs and simple OptiFine GUI artwork are imported at startup. CTM/CIT/CEM, PBR/shaders and 3D model rules are not yet supported. Details: [resource pack guide](docs/RESOURCE_PACKS.md).
 ## Запуск
 
 Установите [Rust через rustup](https://rustup.rs/). Версия и компоненты закреплены в `rust-toolchain.toml`, зависимости — в `Cargo.lock`.
