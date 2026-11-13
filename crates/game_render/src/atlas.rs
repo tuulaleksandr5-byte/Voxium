@@ -109,6 +109,18 @@ impl BlockAtlas {
         Ok(self)
     }
 
+    /// Apply a decoded square texture to an atlas layer, preserving other layers.
+    pub fn replace_layer_rgba(&mut self, layer: usize, rgba: &RgbaImage) -> Result<(), String> {
+        if layer >= 36 || rgba.dimensions() != (TILE_SIZE, TILE_SIZE) {
+            return Err("expected 128×128 RGBA texture for a valid atlas layer".into());
+        }
+        self.rgba.copy_from(
+            rgba,
+            (layer as u32 % 6) * TILE_SIZE,
+            (layer as u32 / 6) * TILE_SIZE,
+        ).map_err(|error| error.to_string())
+    }
+
     /// Заменить один дополнительный PNG; индекс 0…14 соответствует слоям 18…32.
     /// Проверка индекса и полное декодирование предшествуют изменению атласа.
     /// При ошибке текущие пиксели, включая все исходные слои, сохраняются.
