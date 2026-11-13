@@ -123,6 +123,31 @@ impl BlockAtlas {
             .map_err(|error| error.to_string())
     }
 
+    /// Preserve the fixed 128px GPU atlas format while rendering 16px or 32px texels.
+    /// Downsample and upscale each layer independently, never blending with neighbors.
+    pub fn pixelated(&self, pixel_size: u32) -> Result<Self, String> {
+        if pixel_size == TILE_SIZE {
+            return Ok(self.clone());
+        }
+        if !matches!(pixel_size, 16 | 32) {
+            return Err(format!("pixel size must be 16, 32 or 128, got {pixel_size}"));
+        }
+        let mut atlas = self.clone();
+        for layer in 0..36 {
+            let original = image::imageops::crop_imm(
+                &self.rgba,
+                (layer % 6) * TILE_SIZE,
+                (layer / 6) * TILE_SIZE,
+                TILE_SIZE,
+                TILE_SIZE,
+            )
+            .to_image();
+            let scaled = resize_pixel_art(&original, pixel_size);
+            atlas.replace_layer_rgba(layer as usize, &scaled)?;
+        }
+        Ok(atlas)
+    }
+
     /// Заменить один дополнительный PNG; индекс 0…14 соответствует слоям 18…32.
     /// Проверка индекса и полное декодирование предшествуют изменению атласа.
     /// При ошибке текущие пиксели, включая все исходные слои, сохраняются.
@@ -140,6 +165,32 @@ impl BlockAtlas {
             )
             .map_err(|e| format!("cannot copy tile {layer}: {e}"))
     }
+}
+
+fn resize_pixel_art(image: &RgbaImage, pixel_size: u32) -> RgbaImage {
+    let small = image::imageops::resize(
+        image,
+        pixel_size,
+        pixel_size,
+        image::imageops::FilterType::Nearest,
+    );
+    image::imageops::resize(&small, TILE_SIZE, TILE_SIZE, image::imageops::FilterType::Nearest)
+}
+
+/// Quantize square icon RGBA without modifying its alpha or source asset.
+pub fn pixelate_icon_rgba(rgba: &[u8], pixel_size: u32) -> Result<Vec<u8>, String> {
+    if rgba.len() != (TILE_SIZE * TILE_SIZE * 4) as usize {
+        return Err("expected 128×128 RGBA icon".into());
+    }
+    if pixel_size == TILE_SIZE {
+        return Ok(rgba.to_vec());
+    }
+    if !matches!(pixel_size, 16 | 32) {
+        return Err(format!("pixel size must be 16, 32 or 128, got {pixel_size}"));
+    }
+    let source = RgbaImage::from_raw(TILE_SIZE, TILE_SIZE, rgba.to_vec())
+        .expect("length verified");
+    Ok(resize_pixel_art(&source, pixel_size).into_raw())
 }
 
 fn decode_png(bytes: &[u8], expected: (u32, u32), name: &str) -> Result<RgbaImage, String> {
