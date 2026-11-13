@@ -13,6 +13,10 @@
 Подключены исходные PNG блоков, материалов, 25 инструментов и 16 частей брони. Инструменты влияют на время добычи и разрешение дропа; прочность, защита брони, крафт 3×3 и плавка пока не реализованы. Верстак и печь доступны как размещаемые блоки. Мирные животные и еда остаются в плане этапа 6. История: [этап 1](docs/STAGE_1_ANIMALS_PLAN.md), [этап 2](docs/STAGE_2_SURVIVAL.md), [этап 3](docs/STAGE_3_INVENTORY.md), [изображения инструментов](docs/TOOL_TEXTURES.md).
 
 
+### Pixel-art rendering: 16×16 or 32×32
+
+Settings → **Пиксельные текстуры** cycles 128×128 (original), 16×16 (classic), and 32×32 (detailed). Your selection is saved to `saves-v2/settings.cfg` and takes effect after restarting Voxium. Pixel modes quantize each block-tile layer independently and use nearest sampling with no blur; tool/armor icons are quantized too. Minecraft Java resourcepacks containing 16×16 and 32×32 textures continue to load from `assets/resourcepacks/active.zip`. The original 128×128 setting restores the original art.
+
 ### Minecraft-style inventory UI
 
 Personal inventory now uses the familiar four armor slots, character preview, offhand, 2×2 crafting, 3×9 backpack and 1×9 hotbar. Right-click functional blocks for workbench 3×3, furnace or chest views. GUI PNG artwork from an active Minecraft/OptiFine resource pack is used behind the clickable Bevy slots. The character preview is a static Voxium silhouette; all click/shift/drag mechanics stay native. Screens larger than the viewport remain scrollable.
