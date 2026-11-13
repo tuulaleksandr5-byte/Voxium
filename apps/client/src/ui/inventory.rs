@@ -333,12 +333,24 @@ fn crafting(
     label(commands, parent, "РЕЗУЛЬТАТ · Shift: всё", 11., MUTED);
 }
 
+#[cfg(test)]
 pub(super) fn menu(
     commands: &mut Commands,
     panel: Entity,
     game: &Game,
     icons: &ItemIcons,
     blocks: &BlockIcons,
+) {
+    menu_with_skins(commands, panel, game, icons, blocks, None);
+}
+
+pub(super) fn menu_with_skins(
+    commands: &mut Commands,
+    panel: Entity,
+    game: &Game,
+    icons: &ItemIcons,
+    blocks: &BlockIcons,
+    skins: Option<&crate::resource_packs::GuiSkins>,
 ) {
     let is_furnace = game
         .open_container
@@ -520,6 +532,33 @@ pub(super) fn menu(
     slot(commands, cells, game, icons, blocks, SlotRef::Offhand, "");
     label(commands, cells, "Вторая рука", 12., MUTED);
     label(commands, equipment, "Броня пока\nбез бонусов.", 12., MUTED);
+    if let Some(skins) = skins {
+        let name = if game.open_workbench.is_some() {
+            "workbench"
+        } else if is_furnace {
+            "furnace"
+        } else if game.open_container.is_some() {
+            "chest"
+        } else {
+            "inventory"
+        };
+        if let Some(handle) = skins.get(name) {
+            label(commands, equipment, "РЕСУРСПАК · GUI", 11., accent);
+            let height = if name == "chest" { 210. } else { 157. };
+            let image = commands.spawn((
+                ImageNode::new(handle),
+                Node {
+                    width: px(166.),
+                    height: px(height),
+                    flex_shrink: 0.,
+                    ..default()
+                },
+                Pickable::IGNORE,
+            )).id();
+            commands.entity(equipment).add_child(image);
+        }
+    }
+
     if game.game_mode == GameMode::Creative {
         label(
             commands,
