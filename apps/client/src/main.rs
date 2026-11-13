@@ -122,8 +122,8 @@ fn setup(
                 .extension
                 .image
                 .clone();
-            if let Some(image) = images.get_mut(&texture_array) {
-                game_render::configure_pixel_sampler(image);
+            if let Some(mut image) = images.get_mut(&texture_array) {
+                game_render::configure_pixel_sampler(&mut image);
             }
             for icon in &mut baked {
                 icon.sampler = bevy::image::ImageSampler::nearest();
