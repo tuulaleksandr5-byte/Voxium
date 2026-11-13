@@ -311,6 +311,7 @@ fn slot_at(
 }
 
 /// Visible crafting result is a preview, not a writable inventory slot.
+#[allow(clippy::too_many_arguments)]
 fn craft_result_at(
     commands: &mut Commands,
     board: Entity,
