@@ -10,7 +10,7 @@ use image::{imageops::FilterType, RgbaImage};
 use std::{
     collections::HashMap,
     io::{Cursor, Read},
-    path::{Path, PathBuf},
+    path::PathBuf,
     sync::OnceLock,
 };
 
