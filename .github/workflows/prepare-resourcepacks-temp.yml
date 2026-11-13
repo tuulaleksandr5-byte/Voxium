@@ -1,0 +1,36 @@
+name: Prepare resource pack lockfile and format
+
+on:
+  pull_request:
+    branches: [feature/functional-stations-dark-inventory]
+
+permissions:
+  contents: write
+
+jobs:
+  resolve:
+    if: github.event.pull_request.head.ref == 'feature/minecraft-optifine-resourcepacks' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/minecraft-optifine-resourcepacks
+          fetch-depth: 0
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: '1.99.1'
+          components: rustfmt
+      - run: cargo fmt --all
+      - name: Resolve workspace lockfile
+        run: cargo check --package game_core
+      - name: Commit lockfile and rustfmt changes
+        shell: bash
+        run: |
+          git diff --check
+          if ! git diff --quiet; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add Cargo.lock apps/ crates/
+            git commit -m "build: resolve zip dependency and format resource pack code"
+            git push origin HEAD:feature/minecraft-optifine-resourcepacks
+          fi
