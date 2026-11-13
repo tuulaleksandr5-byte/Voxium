@@ -301,6 +301,11 @@ pub(crate) struct GuiSkins {
     chest: Option<Handle<Image>>,
 }
 impl GuiSkins {
+    #[cfg(test)]
+    pub(crate) fn inventory_test_skin(handle: Handle<Image>) -> Self {
+        Self { inventory: Some(handle), ..default() }
+    }
+
     pub(crate) fn get(&self, name: &str) -> Option<Handle<Image>> {
         match name {
             "inventory" => self.inventory.clone(),
