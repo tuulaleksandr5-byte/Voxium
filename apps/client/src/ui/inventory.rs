@@ -545,16 +545,18 @@ pub(super) fn menu_with_skins(
         if let Some(handle) = skins.get(name) {
             label(commands, equipment, "РЕСУРСПАК · GUI", 11., accent);
             let height = if name == "chest" { 210. } else { 157. };
-            let image = commands.spawn((
-                ImageNode::new(handle),
-                Node {
-                    width: px(166.),
-                    height: px(height),
-                    flex_shrink: 0.,
-                    ..default()
-                },
-                Pickable::IGNORE,
-            )).id();
+            let image = commands
+                .spawn((
+                    ImageNode::new(handle),
+                    Node {
+                        width: px(166.),
+                        height: px(height),
+                        flex_shrink: 0.,
+                        ..default()
+                    },
+                    Pickable::IGNORE,
+                ))
+                .id();
             commands.entity(equipment).add_child(image);
         }
     }

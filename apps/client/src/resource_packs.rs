@@ -6,7 +6,7 @@ use bevy::{
     prelude::*,
     render::render_resource::{Extent3d, TextureDimension, TextureFormat},
 };
-use image::{imageops::FilterType, RgbaImage};
+use image::{RgbaImage, imageops::FilterType};
 use std::{
     collections::HashMap,
     io::{Cursor, Read},
@@ -46,7 +46,9 @@ impl ResourcePack {
             }
             let key = entry.name().to_owned();
             let mut data = Vec::new();
-            entry.take(MAX_FILE_BYTES + 1).read_to_end(&mut data)
+            entry
+                .take(MAX_FILE_BYTES + 1)
+                .read_to_end(&mut data)
                 .map_err(|e| format!("не удалось распаковать {key}: {e}"))?;
             if data.len() as u64 > MAX_FILE_BYTES {
                 continue;
@@ -91,7 +93,9 @@ impl ResourcePack {
     /// Only apply unconditional OptiFine GUI rules; gameplay does not track
     /// the NBT, biome, profession, or custom-name predicates required by other rules.
     fn optifine_gui_image(&self, container: &str) -> Option<RgbaImage> {
-        let mut rules: Vec<_> = self.files.keys()
+        let mut rules: Vec<_> = self
+            .files
+            .keys()
             .filter(|name| {
                 name.starts_with("assets/minecraft/optifine/gui/container/")
                     && name.ends_with(".properties")
@@ -100,10 +104,13 @@ impl ResourcePack {
         rules.sort();
         for path in rules {
             let source = std::str::from_utf8(self.read_path(path)?).ok()?;
-            let properties: HashMap<&str, &str> = source.lines()
+            let properties: HashMap<&str, &str> = source
+                .lines()
                 .filter_map(|line| {
                     let line = line.trim();
-                    if line.is_empty() || line.starts_with('#') { return None; }
+                    if line.is_empty() || line.starts_with('#') {
+                        return None;
+                    }
                     line.split_once('=').map(|(k, v)| (k.trim(), v.trim()))
                 })
                 .collect();
@@ -118,7 +125,9 @@ impl ResourcePack {
             }) {
                 continue;
             }
-            let Some(file) = properties.get("texture") else { continue; };
+            let Some(file) = properties.get("texture") else {
+                continue;
+            };
             if file.contains("..") || file.contains('\\') || file.starts_with('/') {
                 continue;
             }
@@ -130,7 +139,11 @@ impl ResourcePack {
             } else {
                 format!("{parent}/{file}")
             };
-            let image = if image.ends_with(".png") { image } else { format!("{image}.png") };
+            let image = if image.ends_with(".png") {
+                image
+            } else {
+                format!("{image}.png")
+            };
             if let Some(data) = self.read_path(&image) {
                 if let Some(pixels) = decode_gui(data) {
                     return Some(pixels);
@@ -156,12 +169,29 @@ impl ResourcePack {
 
     pub(crate) fn apply_block_tiles(&self, atlas: &mut game_render::BlockAtlas) -> usize {
         const OLD_TILES: [&str; 17] = [
-            "grass_top", "grass_side", "dirt", "stone", "deepslate", "sand",
-            "gravel", "oak_log", "oak_log_top", "oak_leaves", "oak_planks",
-            "cobblestone", "glass", "water", "snow", "sandstone", "sandstone_top",
+            "grass_top",
+            "grass_side",
+            "dirt",
+            "stone",
+            "deepslate",
+            "sand",
+            "gravel",
+            "oak_log",
+            "oak_log_top",
+            "oak_leaves",
+            "oak_planks",
+            "cobblestone",
+            "glass",
+            "water",
+            "snow",
+            "sandstone",
+            "sandstone_top",
         ];
-        let names = OLD_TILES.into_iter().map(str::to_owned)
-            .chain(game_render::ADDITIONAL_TILE_NAMES.iter().map(|s| (*s).to_owned()));
+        let names = OLD_TILES.into_iter().map(str::to_owned).chain(
+            game_render::ADDITIONAL_TILE_NAMES
+                .iter()
+                .map(|s| (*s).to_owned()),
+        );
         let mut replaced = 0;
         for (layer, name) in names.enumerate() {
             let layer = if layer < 17 { layer } else { layer + 1 };
@@ -178,68 +208,89 @@ impl ResourcePack {
 /// No filesystem extraction; all active images are read once at startup.
 pub(crate) fn active() -> Option<&'static ResourcePack> {
     static ACTIVE: OnceLock<Option<ResourcePack>> = OnceLock::new();
-    ACTIVE.get_or_init(|| {
-        let path = std::env::var_os("VOXIUM_RESOURCE_PACK")
-            .map(PathBuf::from)
-            .or_else(|| crate::graphics_assets::asset_path("assets/resourcepacks/active.zip"))?;
-        match std::fs::read(&path).map_err(|e| e.to_string())
-            .and_then(|bytes| ResourcePack::from_bytes(&bytes))
-        {
-            Ok(pack) => {
-                info!("Loaded Minecraft resource pack: {} ({} supported files)",
-                      path.display(), pack.files.len());
-                Some(pack)
+    ACTIVE
+        .get_or_init(|| {
+            let path = std::env::var_os("VOXIUM_RESOURCE_PACK")
+                .map(PathBuf::from)
+                .or_else(|| {
+                    crate::graphics_assets::asset_path("assets/resourcepacks/active.zip")
+                })?;
+            match std::fs::read(&path)
+                .map_err(|e| e.to_string())
+                .and_then(|bytes| ResourcePack::from_bytes(&bytes))
+            {
+                Ok(pack) => {
+                    info!(
+                        "Loaded Minecraft resource pack: {} ({} supported files)",
+                        path.display(),
+                        pack.files.len()
+                    );
+                    Some(pack)
+                }
+                Err(error) => {
+                    warn!("Could not load resource pack {}: {error}", path.display());
+                    None
+                }
             }
-            Err(error) => {
-                warn!("Could not load resource pack {}: {error}", path.display());
-                None
-            }
-        }
-    }).as_ref()
+        })
+        .as_ref()
 }
 
 fn safe_entry(path: &str) -> bool {
     path.len() <= 512
         && !path.contains('\\')
-        && path.split('/').all(|segment|
-            !segment.is_empty() && segment != "." && segment != ".."
-        )
+        && path
+            .split('/')
+            .all(|segment| !segment.is_empty() && segment != "." && segment != "..")
 }
 fn interesting(path: &str) -> bool {
     let base = "assets/minecraft/";
-    let Some(path) = path.strip_prefix(base) else { return false; };
+    let Some(path) = path.strip_prefix(base) else {
+        return false;
+    };
     let png = path.ends_with(".png");
     let properties = path.ends_with(".properties");
-    (png && (
-        path.starts_with("textures/block/")
+    (png && (path.starts_with("textures/block/")
         || path.starts_with("textures/blocks/")
         || path.starts_with("textures/item/")
         || path.starts_with("textures/items/")
         || path.starts_with("textures/gui/container/")
-        || path.starts_with("optifine/gui/container/")
-    )) || (properties && path.starts_with("optifine/gui/container/"))
+        || path.starts_with("optifine/gui/container/")))
+        || (properties && path.starts_with("optifine/gui/container/"))
 }
 fn decode_tile(raw: &[u8]) -> Option<RgbaImage> {
-    let (width, height) = image::ImageReader::with_format(
-        Cursor::new(raw), image::ImageFormat::Png
-    ).into_dimensions().ok()?;
+    let (width, height) =
+        image::ImageReader::with_format(Cursor::new(raw), image::ImageFormat::Png)
+            .into_dimensions()
+            .ok()?;
     if width != height || ![16, 32, 64, 128, 256, 512].contains(&width) {
         return None;
     }
     let image = image::load_from_memory_with_format(raw, image::ImageFormat::Png)
-        .ok()?.into_rgba8();
-    if width == 128 { Some(image) }
-    else { Some(image::imageops::resize(&image, 128, 128, FilterType::Nearest)) }
+        .ok()?
+        .into_rgba8();
+    if width == 128 {
+        Some(image)
+    } else {
+        Some(image::imageops::resize(
+            &image,
+            128,
+            128,
+            FilterType::Nearest,
+        ))
+    }
 }
 fn decode_gui(raw: &[u8]) -> Option<RgbaImage> {
-    let (width, height) = image::ImageReader::with_format(
-        Cursor::new(raw), image::ImageFormat::Png
-    ).into_dimensions().ok()?;
+    let (width, height) =
+        image::ImageReader::with_format(Cursor::new(raw), image::ImageFormat::Png)
+            .into_dimensions()
+            .ok()?;
     if width == 0 || height == 0 || width > 1024 || height > 1024 {
         return None;
     }
     image::load_from_memory_with_format(raw, image::ImageFormat::Png)
-        .ok().map(image::DynamicImage::into_rgba8)
+        .ok()
+        .map(image::DynamicImage::into_rgba8)
 }
 
 #[derive(Resource, Default)]
@@ -261,7 +312,9 @@ impl GuiSkins {
     }
 }
 pub(crate) fn load_gui_skins(images: &mut Assets<Image>) -> GuiSkins {
-    let Some(pack) = active() else { return GuiSkins::default(); };
+    let Some(pack) = active() else {
+        return GuiSkins::default();
+    };
     let mut skins = GuiSkins::default();
     for (name, output) in [
         ("inventory", &mut skins.inventory),
@@ -269,15 +322,22 @@ pub(crate) fn load_gui_skins(images: &mut Assets<Image>) -> GuiSkins {
         ("furnace", &mut skins.furnace),
         ("chest", &mut skins.chest),
     ] {
-        let Some(img) = pack.gui_image(name) else { continue; };
+        let Some(img) = pack.gui_image(name) else {
+            continue;
+        };
         // Minecraft GUI panels occupy the top-left 176×166 (large chest: 176×222)
         // of the vanilla 256×256 texture. Keep its pixel artwork intact.
         let width = (img.width() * 176 / 256).max(1).min(img.width());
         let height = (img.height() * if name == "chest" { 222 } else { 166 } / 256)
-            .max(1).min(img.height());
+            .max(1)
+            .min(img.height());
         let cropped = image::imageops::crop_imm(&img, 0, 0, width, height).to_image();
         let mut texture = Image::new(
-            Extent3d { width, height, depth_or_array_layers: 1 },
+            Extent3d {
+                width,
+                height,
+                depth_or_array_layers: 1,
+            },
             TextureDimension::D2,
             cropped.into_raw(),
             TextureFormat::Rgba8UnormSrgb,
@@ -294,21 +354,27 @@ pub(crate) fn load_gui_skins(images: &mut Assets<Image>) -> GuiSkins {
 mod tests {
     use super::*;
     use std::io::{Cursor, Write};
-    use zip::{write::SimpleFileOptions, ZipWriter};
+    use zip::{ZipWriter, write::SimpleFileOptions};
 
     fn png(size: u32) -> Vec<u8> {
         let mut dst = Cursor::new(Vec::new());
         image::RgbaImage::from_fn(size, size, |x, y| {
-            if x == 0 && y == 0 { image::Rgba([31, 63, 95, 127]) }
-            else { image::Rgba([12, 24, 36, 255]) }
+            if x == 0 && y == 0 {
+                image::Rgba([31, 63, 95, 127])
+            } else {
+                image::Rgba([12, 24, 36, 255])
+            }
         })
-        .write_to(&mut dst, image::ImageFormat::Png).unwrap();
+        .write_to(&mut dst, image::ImageFormat::Png)
+        .unwrap();
         dst.into_inner()
     }
     fn pack(entries: &[(&str, &[u8])]) -> ResourcePack {
         let mut writer = ZipWriter::new(Cursor::new(Vec::new()));
         for &(path, bytes) in entries {
-            writer.start_file(path, SimpleFileOptions::default()).unwrap();
+            writer
+                .start_file(path, SimpleFileOptions::default())
+                .unwrap();
             writer.write_all(bytes).unwrap();
         }
         let zip = writer.finish().unwrap().into_inner();
@@ -318,7 +384,10 @@ mod tests {
     #[test]
     fn accepts_minecraft_block_png_and_scales_16_nearest_with_alpha() {
         let image = png(16);
-        let pack = pack(&[("assets/minecraft/textures/block/grass_block_top.png", &image)]);
+        let pack = pack(&[(
+            "assets/minecraft/textures/block/grass_block_top.png",
+            &image,
+        )]);
         let tile = pack.block_tile("grass_top").unwrap();
         assert_eq!(tile.dimensions(), (128, 128));
         assert_eq!(&tile.get_pixel(0, 0).0, &[31, 63, 95, 127]);
@@ -343,9 +412,18 @@ mod tests {
         let custom = png(256);
         let rule = b"container=chest\ntexture=chest\nender=false\nchristmas=false\n";
         let pack = pack(&[
-            ("assets/minecraft/textures/gui/container/generic_54.png", &base),
-            ("assets/minecraft/optifine/gui/container/chests/chest.properties", rule),
-            ("assets/minecraft/optifine/gui/container/chests/chest.png", &custom),
+            (
+                "assets/minecraft/textures/gui/container/generic_54.png",
+                &base,
+            ),
+            (
+                "assets/minecraft/optifine/gui/container/chests/chest.properties",
+                rule,
+            ),
+            (
+                "assets/minecraft/optifine/gui/container/chests/chest.png",
+                &custom,
+            ),
         ]);
         let chest = pack.gui_image("chest").unwrap();
         assert_eq!(chest.dimensions(), (256, 256));
@@ -358,9 +436,18 @@ mod tests {
         let rules = b"container=chest\nname=SpecialChest\ntexture=custom\n";
         let custom = png(256);
         let pack = pack(&[
-            ("assets/minecraft/textures/gui/container/generic_54.png", &base),
-            ("assets/minecraft/optifine/gui/container/test.properties", rules),
-            ("assets/minecraft/optifine/gui/container/custom.png", &custom),
+            (
+                "assets/minecraft/textures/gui/container/generic_54.png",
+                &base,
+            ),
+            (
+                "assets/minecraft/optifine/gui/container/test.properties",
+                rules,
+            ),
+            (
+                "assets/minecraft/optifine/gui/container/custom.png",
+                &custom,
+            ),
         ]);
         assert_eq!(pack.gui_image("chest").unwrap().dimensions(), (128, 128));
     }

@@ -488,7 +488,14 @@ fn rebuild(
         Mode::Paused => pause_menu(&mut commands, panel, &game),
         Mode::Inventory => {
             commands.entity(panel).insert(scroll);
-            inventory::menu_with_skins(&mut commands, panel, &game, &item_icons, &icons, skins.as_deref());
+            inventory::menu_with_skins(
+                &mut commands,
+                panel,
+                &game,
+                &item_icons,
+                &icons,
+                skins.as_deref(),
+            );
             inventory::overlay(&mut commands, root, &game, &item_icons, &icons);
         }
         Mode::Dead => death_menu(&mut commands, panel, &game),
