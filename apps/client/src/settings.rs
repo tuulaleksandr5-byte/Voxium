@@ -83,7 +83,12 @@ mod tests {
         assert_eq!(settings.pixel_size, 128);
         assert_eq!(Settings::normalized_pixel_size(17), 128);
         let json = serde_json::to_vec(&settings).unwrap();
-        assert_eq!(serde_json::from_slice::<Settings>(&json).unwrap().pixel_size, 128);
+        assert_eq!(
+            serde_json::from_slice::<Settings>(&json)
+                .unwrap()
+                .pixel_size,
+            128
+        );
     }
 
     #[test]

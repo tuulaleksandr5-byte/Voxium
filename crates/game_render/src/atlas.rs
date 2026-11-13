@@ -182,7 +182,6 @@ mod tests {
         include_bytes!("../../../assets/textures/sandstone_top.png"),
     ];
 
-
     #[test]
     fn pixelated_atlas_16_and_32_preserves_alpha_and_does_not_mix_layers() {
         let mut atlas = BlockAtlas::from_tiles(&ORIGINAL_TILES).unwrap();
@@ -216,7 +215,12 @@ mod tests {
         for y in 0..128 {
             for x in 0..128 {
                 let p = (y * 128 + x) * 4;
-                rgba[p..p + 4].copy_from_slice(&[x as u8, y as u8, 20, if x < 64 { 0 } else { 255 }]);
+                rgba[p..p + 4].copy_from_slice(&[
+                    x as u8,
+                    y as u8,
+                    20,
+                    if x < 64 { 0 } else { 255 },
+                ]);
             }
         }
         for size in [16, 32] {
