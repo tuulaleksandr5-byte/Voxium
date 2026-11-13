@@ -44,6 +44,18 @@ fn cache_icons(
             continue;
         }
         // Блоки уже пропущены выше: они сохраняют изометрические кубы из граней.
+        let source_pixels = crate::resource_packs::active()
+            .and_then(|pack| pack.item_pixels(&definition.id))
+            .or_else(|| crate::tool_textures::pixels(&definition.id))
+            .or_else(|| crate::item_textures::pixels(&definition.id))
+            .unwrap_or_else(|| placeholder_pixels(&definition.id, &definition.kind));
+        let pixel_size = game.settings.pixel_size;
+        let pixels = if pixel_size == 128 {
+            source_pixels
+        } else {
+            game_render::pixelate_icon_rgba(&source_pixels, pixel_size)
+                .unwrap_or_else(|_| source_pixels)
+        };
         let mut image = Image::new(
             Extent3d {
                 width: 128,
@@ -51,15 +63,15 @@ fn cache_icons(
                 depth_or_array_layers: 1,
             },
             TextureDimension::D2,
-            crate::resource_packs::active()
-                .and_then(|pack| pack.item_pixels(&definition.id))
-                .or_else(|| crate::tool_textures::pixels(&definition.id))
-                .or_else(|| crate::item_textures::pixels(&definition.id))
-                .unwrap_or_else(|| placeholder_pixels(&definition.id, &definition.kind)),
+            pixels,
             TextureFormat::Rgba8UnormSrgb,
             RenderAssetUsages::default(),
         );
-        image.sampler = ImageSampler::linear();
+        image.sampler = if pixel_size == 128 {
+            ImageSampler::linear()
+        } else {
+            ImageSampler::nearest()
+        };
         icons.handles.insert(id, images.add(image));
         added = true;
     }
