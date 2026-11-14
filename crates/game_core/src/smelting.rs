@@ -11,6 +11,56 @@ use crate::{
 use serde::Deserialize;
 use std::collections::HashMap;
 
+/// Вид печи: коптильня берёт только еду, плавильня — только руду; обе вдвое быстрее.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum FurnaceKind {
+    Furnace,
+    Smoker,
+    Blast,
+}
+impl FurnaceKind {
+    /// Вид печи и признак горения по ID блока.
+    #[must_use]
+    pub fn of_block(block: u8) -> Option<(Self, bool)> {
+        Some(match block {
+            crate::FURNACE => (Self::Furnace, false),
+            crate::FURNACE_LIT => (Self::Furnace, true),
+            crate::SMOKER => (Self::Smoker, false),
+            crate::SMOKER_LIT => (Self::Smoker, true),
+            crate::BLAST_FURNACE => (Self::Blast, false),
+            crate::BLAST_FURNACE_LIT => (Self::Blast, true),
+            _ => return None,
+        })
+    }
+    /// ID блока этого вида в выбранном состоянии.
+    #[must_use]
+    pub fn block(self, lit: bool) -> u8 {
+        match (self, lit) {
+            (Self::Furnace, false) => crate::FURNACE,
+            (Self::Furnace, true) => crate::FURNACE_LIT,
+            (Self::Smoker, false) => crate::SMOKER,
+            (Self::Smoker, true) => crate::SMOKER_LIT,
+            (Self::Blast, false) => crate::BLAST_FURNACE,
+            (Self::Blast, true) => crate::BLAST_FURNACE_LIT,
+        }
+    }
+    fn speed(self) -> f32 {
+        if self == Self::Furnace { 1.0 } else { 2.0 }
+    }
+    fn accepts(self, input: &str, catalog: &ContentRegistry) -> bool {
+        match self {
+            Self::Furnace => true,
+            Self::Smoker => catalog
+                .find(input)
+                .and_then(|id| catalog.get(id))
+                .is_some_and(|item| item.kind == crate::content::ItemKind::Food),
+            Self::Blast => {
+                input.contains("raw_iron") || input.contains("raw_gold") || input.ends_with("_ore")
+            }
+        }
+    }
+}
+
 pub const FURNACE_INPUT: usize = 0;
 pub const FURNACE_FUEL: usize = 1;
 pub const FURNACE_OUTPUT: usize = 2;
@@ -90,6 +140,19 @@ impl SmeltingBook {
     pub fn result(&self, input: ItemId) -> Option<ItemId> {
         self.recipes.get(&input).copied()
     }
+    /// Результат с учётом того, что принимает этот вид печи.
+    #[must_use]
+    pub fn result_for(
+        &self,
+        kind: FurnaceKind,
+        input: ItemId,
+        catalog: &ContentRegistry,
+    ) -> Option<ItemId> {
+        let id = &catalog.get(input)?.id;
+        kind.accepts(id, catalog)
+            .then(|| self.result(input))
+            .flatten()
+    }
     #[must_use]
     pub fn fuel_seconds(&self, item: ItemId) -> Option<f32> {
         self.fuels.get(&item).copied()
@@ -136,14 +199,27 @@ impl FurnaceState {
         book: &SmeltingBook,
         catalog: &ContentRegistry,
     ) -> bool {
+        self.tick_kind(FurnaceKind::Furnace, container, dt, book, catalog)
+    }
+
+    /// То же для любого вида печи: коптильня и плавильня работают вдвое быстрее
+    /// и вдвое быстрее жгут топливо.
+    pub fn tick_kind(
+        &mut self,
+        kind: FurnaceKind,
+        container: &mut Container,
+        dt: f32,
+        book: &SmeltingBook,
+        catalog: &ContentRegistry,
+    ) -> bool {
         if container.slots.len() < FURNACE_SLOTS || !dt.is_finite() || dt <= 0.0 {
             return false;
         }
         let mut changed = false;
-        let mut remaining = dt.min(60.0);
+        let mut remaining = dt.min(60.0) * kind.speed();
         // Длинный кадр обрабатывается шагами, чтобы не терять предметы и топливо.
         while remaining > 0.0 {
-            let output = Self::smeltable(container, book, catalog);
+            let output = Self::smeltable(kind, container, book, catalog);
             if self.burn_left <= 0.0 {
                 let fuel = container.slots[FURNACE_FUEL]
                     .as_ref()
@@ -186,12 +262,13 @@ impl FurnaceState {
     }
 
     fn smeltable(
+        kind: FurnaceKind,
         container: &Container,
         book: &SmeltingBook,
         catalog: &ContentRegistry,
     ) -> Option<ItemId> {
         let input = container.slots[FURNACE_INPUT].as_ref()?;
-        let output = book.result(input.item)?;
+        let output = book.result_for(kind, input.item, catalog)?;
         match &container.slots[FURNACE_OUTPUT] {
             None => Some(output),
             Some(stack) if stack.item == output && stack.count < catalog.max_stack(output) => {
@@ -302,5 +379,39 @@ mod tests {
         ] {
             assert!(SmeltingBook::from_ron(&invalid, &catalog).is_err());
         }
+    }
+
+    #[test]
+    fn smoker_and_blast_furnace_filter_inputs_and_work_twice_as_fast() {
+        let catalog = ContentRegistry::default();
+        let book = SmeltingBook::default();
+        for (kind, good, bad, output) in [
+            (
+                FurnaceKind::Smoker,
+                "builder:raw_beef",
+                "survival:raw_iron",
+                "builder:cooked_beef",
+            ),
+            (
+                FurnaceKind::Blast,
+                "survival:raw_iron",
+                "builder:raw_beef",
+                "survival:iron_ingot",
+            ),
+        ] {
+            let mut furnace = Container::new(FURNACE_SLOTS);
+            let mut state = FurnaceState::default();
+            furnace.slots[FURNACE_FUEL] = stack(&catalog, "survival:coal", 1);
+            furnace.slots[FURNACE_INPUT] = stack(&catalog, bad, 2);
+            assert!(!state.tick_kind(kind, &mut furnace, 10.0, &book, &catalog));
+            assert!(!state.lit());
+            furnace.slots[FURNACE_INPUT] = stack(&catalog, good, 2);
+            // 4.1 с реального времени = 8.2 с плавки: ровно один предмет.
+            state.tick_kind(kind, &mut furnace, 4.1, &book, &catalog);
+            assert_eq!(furnace.slots[FURNACE_OUTPUT], stack(&catalog, output, 1));
+            assert_eq!(FurnaceKind::of_block(kind.block(true)), Some((kind, true)));
+            assert_eq!(crate::unlit(kind.block(true)), kind.block(false));
+        }
+        assert_eq!(FurnaceKind::of_block(crate::STONE), None);
     }
 }

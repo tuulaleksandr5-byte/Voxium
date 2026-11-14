@@ -104,4 +104,10 @@
     (id: "builder:raw_chicken", name: "Сырая курятина", max_stack: 64, kind: Food),
     (id: "builder:cooked_chicken", name: "Жареная курятина", max_stack: 64, kind: Food),
     (id: "builder:rotten_meat", name: "Гнилое мясо", max_stack: 64, kind: Food),
+    // Обновление «Мастерская»: новые функциональные блоки.
+    (id: "maker:barrel", name: "Бочка", max_stack: 64, kind: Block(block: "maker:barrel")),
+    (id: "maker:smoker", name: "Коптильня", max_stack: 64, kind: Block(block: "maker:smoker")),
+    (id: "maker:blast_furnace", name: "Плавильня", max_stack: 64, kind: Block(block: "maker:blast_furnace")),
+    (id: "maker:stonecutter", name: "Камнерез", max_stack: 64, kind: Block(block: "maker:stonecutter")),
+    (id: "maker:vault", name: "Общий сундук", max_stack: 64, kind: Block(block: "maker:vault")),
 ]

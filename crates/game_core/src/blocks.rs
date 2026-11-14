@@ -54,6 +54,14 @@ pub const SMOOTH_STONE: u8 = 39;
 pub const COAL_BLOCK: u8 = 40;
 /// Работающая печь: состояние блока, а не отдельный предмет.
 pub const FURNACE_LIT: u8 = 41;
+pub const BARREL: u8 = 42;
+pub const SMOKER: u8 = 43;
+pub const SMOKER_LIT: u8 = 44;
+pub const BLAST_FURNACE: u8 = 45;
+pub const BLAST_FURNACE_LIT: u8 = 46;
+pub const STONECUTTER: u8 = 47;
+/// Общий сундук: все такие блоки открывают одно хранилище игрока.
+pub const VAULT: u8 = 48;
 
 const fn block(
     id: u8,
@@ -74,7 +82,7 @@ const fn block(
     }
 }
 
-pub const BLOCKS: [BlockDef; 42] = [
+pub const BLOCKS: [BlockDef; 49] = [
     block(AIR, "Air", "air", 0.0, false, false),
     block(GRASS, "Grass", "grass", 0.6, true, true),
     block(DIRT, "Dirt", "dirt", 0.5, true, true),
@@ -173,7 +181,45 @@ pub const BLOCKS: [BlockDef; 42] = [
         light_emission: 13,
         ..block(FURNACE_LIT, "Lit Furnace", "furnace", 3.5, true, true)
     },
+    block(BARREL, "Barrel", "barrel", 2.5, true, true),
+    block(SMOKER, "Smoker", "smoker", 3.5, true, true),
+    BlockDef {
+        light_emission: 13,
+        ..block(SMOKER_LIT, "Lit Smoker", "smoker", 3.5, true, true)
+    },
+    block(
+        BLAST_FURNACE,
+        "Blast Furnace",
+        "blast_furnace",
+        3.5,
+        true,
+        true,
+    ),
+    BlockDef {
+        light_emission: 13,
+        ..block(
+            BLAST_FURNACE_LIT,
+            "Lit Blast Furnace",
+            "blast_furnace",
+            3.5,
+            true,
+            true,
+        )
+    },
+    block(STONECUTTER, "Stonecutter", "stonecutter", 3.5, true, true),
+    block(VAULT, "Vault", "vault", 22.5, true, true),
 ];
+
+/// Блок без состояния «горит»: в таком виде он выпадает и сохраняется.
+#[must_use]
+pub fn unlit(id: u8) -> u8 {
+    match id {
+        FURNACE_LIT => FURNACE,
+        SMOKER_LIT => SMOKER,
+        BLAST_FURNACE_LIT => BLAST_FURNACE,
+        other => other,
+    }
+}
 
 /// Листва получает объёмную геометрию и не сливается в greedy-грани.
 #[must_use]
@@ -211,7 +257,7 @@ mod tests {
             "Crafting Table",
             "Furnace",
         ];
-        assert_eq!(BLOCKS.len(), 42);
+        assert_eq!(BLOCKS.len(), 49);
         for (offset, name) in expected.iter().enumerate() {
             let id = 17 + offset;
             assert_eq!(BLOCKS[id].id as usize, id);
@@ -222,7 +268,7 @@ mod tests {
 
     #[test]
     fn chest_extends_registry_without_changing_foundation_ids() {
-        assert_eq!(BLOCKS.len(), 42);
+        assert_eq!(BLOCKS.len(), 49);
         let chest = BLOCKS.get(16).expect("сундук зарегистрирован");
         assert_eq!(chest.name, "Chest");
         assert!(is_solid(16));

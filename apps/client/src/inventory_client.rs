@@ -5,7 +5,7 @@ use crate::{
 };
 use bevy::prelude::*;
 use game_core::{
-    AIR, BEDROCK, CHEST, CRAFTING_TABLE, FURNACE, FURNACE_LIT, World,
+    AIR, BEDROCK, CHEST, CRAFTING_TABLE, FURNACE, World,
     content::ItemId,
     crafting::RecipeBook,
     drops::DropConfig,
@@ -288,7 +288,7 @@ fn process_action(game: &mut Game, action: &InventoryAction) -> Effects {
                 }
                 if let Some(size) = container_size(block) {
                     game.containers
-                        .entry(*position)
+                        .entry(container_key(block, *position))
                         .or_insert_with(|| Container::new(size));
                 }
                 effects.sounds.push(BlockSound {
@@ -308,16 +308,18 @@ fn process_action(game: &mut Game, action: &InventoryAction) -> Effects {
                     .is_some()
                 && visible_hit(game).is_some_and(|hit| hit.block == *position) =>
         {
-            let size = container_size(game.world.block(*position)).expect("проверено выше");
+            let block = game.world.block(*position);
+            let size = container_size(block).expect("проверено выше");
+            let key = container_key(block, *position);
             let container = game
                 .containers
-                .entry(*position)
+                .entry(key)
                 .or_insert_with(|| Container::new(size));
             // Блок на месте старого контейнера мог смениться: приводим размер.
             if container.slots.len() != size {
                 *container = Container::new(size);
             }
-            game.open_container = Some(*position);
+            game.open_container = Some(key);
             game.screen(Mode::Inventory);
         }
         _ => {}
@@ -329,16 +331,68 @@ fn process_action(game: &mut Game, action: &InventoryAction) -> Effects {
 /// Число ячеек блока-контейнера: сундук 27, верстак 3×3, печь 3.
 pub(crate) fn container_size(block: u8) -> Option<usize> {
     match block {
-        CHEST => Some(27),
+        CHEST | game_core::BARREL | game_core::VAULT => Some(27),
         CRAFTING_TABLE => Some(9),
-        FURNACE | FURNACE_LIT => Some(game_core::smelting::FURNACE_SLOTS),
-        _ => None,
+        game_core::STONECUTTER => Some(1),
+        _ => game_core::smelting::FurnaceKind::of_block(block)
+            .map(|_| game_core::smelting::FURNACE_SLOTS),
     }
+}
+
+/// Ключ общего хранилища: все общие сундуки открывают один контейнер.
+pub(crate) const SHARED_VAULT: [i32; 3] = [0, i32::MIN, 0];
+
+/// Где лежит контейнер блока: у общего сундука — в общем хранилище.
+fn container_key(block: u8, position: [i32; 3]) -> [i32; 3] {
+    if block == game_core::VAULT {
+        SHARED_VAULT
+    } else {
+        position
+    }
+}
+
+/// Камнерез: превратить один предмет из его ячейки в выбранный вариант.
+pub(crate) fn stonecut(game: &mut Game, output: ItemId) -> bool {
+    if game.mode != Mode::Inventory || open_block(game) != Some(game_core::STONECUTTER) {
+        return false;
+    }
+    let Some(position) = game.open_container else {
+        return false;
+    };
+    let Some(input) = game
+        .containers
+        .get(&position)
+        .and_then(|cutter| cutter.slots.first().cloned().flatten())
+    else {
+        return false;
+    };
+    if !game_core::stonecutting::options(input.item, &game.content).contains(&output) {
+        return false;
+    }
+    // Результат идёт на курсор; несовместимый или полный курсор отменяет резку.
+    match &mut game.inventory.cursor {
+        None => game.inventory.cursor = Some(ItemStack::new(output, 1)),
+        Some(cursor) if cursor.item == output && cursor.count < game.content.max_stack(output) => {
+            cursor.count += 1;
+        }
+        Some(_) => return false,
+    }
+    let slot = &mut game
+        .containers
+        .get_mut(&position)
+        .expect("проверено выше")
+        .slots[0];
+    *slot = (input.count > 1).then(|| ItemStack::new(input.item, input.count - 1));
+    game.ui_dirty = true;
+    true
 }
 
 /// Блок открытого сейчас контейнера.
 pub(crate) fn open_block(game: &Game) -> Option<u8> {
     let position = game.open_container?;
+    if position == SHARED_VAULT {
+        return Some(game_core::VAULT);
+    }
     loaded_block(&game.world, position)
         .filter(|block| container_size(*block).is_some())
         .or_else(|| {
@@ -346,6 +400,7 @@ pub(crate) fn open_block(game: &Game) -> Option<u8> {
             match game.containers.get(&position)?.slots.len() {
                 27 => Some(CHEST),
                 9 => Some(CRAFTING_TABLE),
+                1 => Some(game_core::STONECUTTER),
                 game_core::smelting::FURNACE_SLOTS => Some(FURNACE),
                 _ => None,
             }
@@ -423,10 +478,10 @@ pub fn tick_furnaces(time: Res<Time<Real>>, mut game: ResMut<Game>) {
         let Some(block) = loaded_block(&game.world, position) else {
             continue;
         };
-        if !matches!(block, FURNACE | FURNACE_LIT) {
+        let Some((kind, _)) = game_core::smelting::FurnaceKind::of_block(block) else {
             game.furnaces.remove(&position);
             continue;
-        }
+        };
         let state = game.furnaces.entry(position).or_default();
         let before = (
             state.lit(),
@@ -437,17 +492,20 @@ pub fn tick_furnaces(time: Res<Time<Real>>, mut game: ResMut<Game>) {
             .containers
             .get_mut(&position)
             .expect("позиция из списка");
-        let changed = state.tick(container, time.delta_secs(), &game.smelting, &game.content);
+        let changed = state.tick_kind(
+            kind,
+            container,
+            time.delta_secs(),
+            &game.smelting,
+            &game.content,
+        );
         let after = (
             state.lit(),
             (state.progress_fraction(&game.smelting) * 20.) as u8,
             (state.fuel_fraction() * 20.) as u8,
         );
-        if after.0 != before.0 {
-            let lit = if after.0 { FURNACE_LIT } else { FURNACE };
-            if game.world.set(position, lit) {
-                game.revision += 1;
-            }
+        if after.0 != before.0 && game.world.set(position, kind.block(after.0)) {
+            game.revision += 1;
         }
         if game.open_container == Some(position) && (changed || before != after) {
             game.ui_dirty = true;
@@ -1413,5 +1471,53 @@ mod tests {
         assert!(game.drops.entities.is_empty());
         assert_eq!(game.inventory.hotbar[0].as_ref().unwrap().count, 4);
         assert_eq!(game.hotbar[0], game_core::DIRT);
+    }
+
+    #[test]
+    fn stonecutter_cuts_one_block_to_cursor_and_rejects_foreign_outputs() {
+        let mut game = Game {
+            mode: Mode::Inventory,
+            open_container: Some([1, 2, 3]),
+            ..Default::default()
+        };
+        let find = |game: &Game, id: &str| game.content.find(id).unwrap();
+        let stone = find(&game, "foundation:stone");
+        let bricks = find(&game, "builder:stone_bricks");
+        let dirt = find(&game, "foundation:dirt");
+        let mut cutter = Container::new(1);
+        cutter.slots[0] = Some(ItemStack::new(stone, 2));
+        game.containers.insert([1, 2, 3], cutter);
+        assert_eq!(open_block(&game), Some(game_core::STONECUTTER));
+        assert!(!stonecut(&mut game, dirt));
+        assert!(stonecut(&mut game, bricks));
+        assert!(stonecut(&mut game, bricks));
+        assert_eq!(game.inventory.cursor, Some(ItemStack::new(bricks, 2)));
+        assert!(game.containers[&[1, 2, 3]].slots[0].is_none());
+        assert!(!stonecut(&mut game, bricks), "сырьё закончилось");
+    }
+
+    #[test]
+    fn every_container_block_has_a_size_and_vaults_share_one_storage() {
+        for (block, size) in [
+            (CHEST, 27),
+            (game_core::BARREL, 27),
+            (game_core::VAULT, 27),
+            (CRAFTING_TABLE, 9),
+            (game_core::STONECUTTER, 1),
+            (FURNACE, 3),
+            (game_core::SMOKER_LIT, 3),
+            (game_core::BLAST_FURNACE, 3),
+        ] {
+            assert_eq!(container_size(block), Some(size), "{block}");
+        }
+        assert_eq!(container_size(game_core::STONE), None);
+        assert_eq!(container_key(game_core::VAULT, [5, 6, 7]), SHARED_VAULT);
+        assert_eq!(container_key(game_core::VAULT, [-9, 1, 2]), SHARED_VAULT);
+        assert_eq!(container_key(game_core::BARREL, [5, 6, 7]), [5, 6, 7]);
+        let game = Game {
+            open_container: Some(SHARED_VAULT),
+            ..Default::default()
+        };
+        assert_eq!(open_block(&game), Some(game_core::VAULT));
     }
 }

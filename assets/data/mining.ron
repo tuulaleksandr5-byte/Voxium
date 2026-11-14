@@ -43,5 +43,12 @@
         (block: 39, hardness: 2.0, tool: Pickaxe, harvest_tier: 1, seconds: None),
         (block: 40, hardness: 5.0, tool: Pickaxe, harvest_tier: 1, seconds: None),
         (block: 41, hardness: 3.5, tool: Pickaxe, harvest_tier: 1, seconds: None),
+        (block: 42, hardness: 2.5, tool: Axe, harvest_tier: 0, seconds: None),
+        (block: 43, hardness: 3.5, tool: Pickaxe, harvest_tier: 1, seconds: None),
+        (block: 44, hardness: 3.5, tool: Pickaxe, harvest_tier: 1, seconds: None),
+        (block: 45, hardness: 3.5, tool: Pickaxe, harvest_tier: 1, seconds: None),
+        (block: 46, hardness: 3.5, tool: Pickaxe, harvest_tier: 1, seconds: None),
+        (block: 47, hardness: 3.5, tool: Pickaxe, harvest_tier: 1, seconds: None),
+        (block: 48, hardness: 22.5, tool: Pickaxe, harvest_tier: 1, seconds: None),
     ],
 )

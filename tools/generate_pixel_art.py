@@ -795,6 +795,126 @@ def wool():
     return image
 
 
+# ------------------------------------------------------- functional blocks
+
+
+def barrel(face):
+    image = planks("barrel", ["#8a5f30", "#966a38", "#a27540", "#ae8048"], "#5e3e1a", "#6e4a22")
+    if face == "top":
+        frame(image, "#3e3e44", "#6a6a72")
+        rect(image, 6, 6, 20, 20, "#5e3e1a")
+        rect(image, 7, 7, 18, 18, "#966a38")
+        rect(image, 14, 14, 4, 4, "#3e3e44")
+    else:
+        image = np.rot90(image).copy()
+        for y in (5, 6, 25, 26):
+            rect(image, 0, y, N, 1, "#3e3e44" if y in (6, 26) else "#6a6a72")
+    return image
+
+
+TILES["barrel_side"] = lambda: barrel("side")
+TILES["barrel_top"] = lambda: barrel("top")
+
+
+def smoker(face, lit=False):
+    image = furnace_shell("furnace_side")
+    rect(image, 0, 0, N, 5, "#7a5630")
+    rect(image, 0, 5, N, 1, "#4a300e")
+    rect(image, 0, N - 5, N, 4, "#7a5630")
+    rect(image, 0, N - 6, N, 1, "#4a300e")
+    if face == "front":
+        rect(image, 6, 9, 20, 14, "#3b3b3b")
+        rect(image, 8, 11, 16, 10, "#120d0a")
+        for x in range(9, 24, 3):
+            rect(image, x, 11, 1, 10, "#4a4a4a")
+        if lit:
+            for x in range(8, 24):
+                if (x - 9) % 3:
+                    height = 3 + (x * 7) % 4
+                    for step in range(height):
+                        put(image, x, 20 - step, "#fff3a0" if step < 1 else "#ffb02e" if step < 3 else "#e2501a")
+    return image
+
+
+TILES["smoker_side"] = lambda: smoker("side")
+TILES["smoker_front"] = lambda: smoker("front")
+TILES["smoker_front_on"] = lambda: smoker("front", True)
+
+
+def blast_furnace(face, lit=False):
+    r = rng("blast_furnace")
+    image = fill(canvas(), fbm(r, ((4, 1.0), (16, 0.4))), ["#55585e", "#606369", "#6b6e75", "#767981"])
+    frame(image, "#2e3034", "#8e9199")
+    for x, y in ((4, 4), (27, 4), (4, 27), (27, 27)):
+        put(image, x, y, "#c6c9d0")
+        put(image, x + 1, y + 1, "#2e3034")
+    rect(image, 2, 15, N - 4, 2, "#2e3034")
+    if face == "front":
+        rect(image, 8, 5, 16, 8, "#2e3034")
+        for x in range(10, 23, 3):
+            rect(image, x, 7, 2, 4, "#e2501a" if lit else "#101114")
+        rect(image, 7, 18, 18, 10, "#2e3034")
+        rect(image, 9, 20, 14, 7, "#101114")
+        if lit:
+            for x in range(9, 23):
+                height = 2 + (x * 5) % 5
+                for step in range(height):
+                    put(image, x, 26 - step, "#fff3a0" if step < 2 else "#ffb02e" if step < 4 else "#e2501a")
+    return image
+
+
+TILES["blast_furnace_side"] = lambda: blast_furnace("side")
+TILES["blast_furnace_front"] = lambda: blast_furnace("front")
+TILES["blast_furnace_front_on"] = lambda: blast_furnace("front", True)
+
+
+@tile("stonecutter_side")
+def stonecutter_side():
+    image = brick_pattern(rng("stonecutter"), STONE, "#555555")
+    rect(image, 0, 0, N, 4, "#9a9a9a")
+    rect(image, 0, 4, N, 1, "#4a4a4a")
+    return image
+
+
+@tile("stonecutter_top")
+def stonecutter_top():
+    r = rng("stonecutter_top")
+    image = fill(canvas(), fbm(r, ((4, 1.0), (16, 0.3))), ["#8a8a8a", "#939393", "#9c9c9c", "#a5a5a5"])
+    frame(image, "#5a5a5a", "#b8b8b8")
+    for y in range(N):
+        for x in range(N):
+            d = math.hypot(x - 15.5, y - 15.5)
+            if d < 10:
+                image[y, x, :3] = rgb("#d0d4da" if d < 8 else "#7d828a")
+                angle = math.atan2(y - 15.5, x - 15.5)
+                if 8 <= d and int(angle * 6 / math.pi) % 2 == 0:
+                    image[y, x, :3] = rgb("#eef1f5")
+            if d < 2.5:
+                image[y, x, :3] = rgb("#4a4a4a")
+    return image
+
+
+def vault(face):
+    r = rng("vault")
+    image = fill(canvas(), fbm(r, ((4, 1.0), (8, 0.6))), ["#1c2a3a", "#223246", "#283a52", "#2e425e"])
+    frame(image, "#0e1620", "#4fd8cc")
+    if face != "top":
+        rect(image, 2, 11, N - 4, 2, "#0e1620")
+    if face == "front":
+        rect(image, 12, 8, 8, 9, "#36bdb3")
+        rect(image, 12, 8, 8, 1, "#dcfffa")
+        rect(image, 15, 11, 2, 4, "#0e1620")
+    if face == "top":
+        rect(image, 12, 12, 8, 8, "#36bdb3")
+        rect(image, 14, 14, 4, 4, "#dcfffa")
+    return image
+
+
+TILES["vault_front"] = lambda: vault("front")
+TILES["vault_side"] = lambda: vault("side")
+TILES["vault_top"] = lambda: vault("top")
+
+
 # ------------------------------------------------------------------ icons
 
 

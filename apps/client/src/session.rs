@@ -169,8 +169,7 @@ impl Game {
                     // а горящая печь записывается обычной.
                     match *b {
                         game_core::CHEST => game_core::AIR,
-                        game_core::FURNACE_LIT => game_core::FURNACE,
-                        other => other,
+                        other => game_core::unlit(other),
                     },
                 )
             })

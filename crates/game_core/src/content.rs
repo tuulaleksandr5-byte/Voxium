@@ -64,7 +64,7 @@ pub struct ContentRegistry {
 }
 
 // Имена соответствуют стабильным сохранённым ID; новые блоки только дописываются.
-const BLOCK_NAMES: [&str; 42] = [
+const BLOCK_NAMES: [&str; 49] = [
     "foundation:air",
     "foundation:grass",
     "foundation:dirt",
@@ -107,6 +107,13 @@ const BLOCK_NAMES: [&str; 42] = [
     "builder:smooth_stone",
     "builder:coal_block",
     "builder:furnace_lit",
+    "maker:barrel",
+    "maker:smoker",
+    "maker:smoker_lit",
+    "maker:blast_furnace",
+    "maker:blast_furnace_lit",
+    "maker:stonecutter",
+    "maker:vault",
 ];
 
 impl Default for ContentRegistry {
@@ -152,7 +159,7 @@ impl ContentRegistry {
                     .position(|name| name == block)
                     .ok_or_else(|| format!("Неизвестный блок {block} у предмета {}", item.id))?
                     as u8;
-                if matches!(block_id, 0 | 13 | crate::FURNACE_LIT) {
+                if matches!(block_id, 0 | 13) || crate::unlit(block_id) != block_id {
                     return Err(format!("Блок {block} не может быть предметом"));
                 }
                 if by_block.insert(block_id, id).is_some() {
@@ -247,11 +254,7 @@ impl ContentRegistry {
     #[must_use]
     pub fn drop_for_block(&self, block: u8) -> Option<ItemId> {
         // Горящая печь выпадает обычной печью.
-        let block = if block == crate::FURNACE_LIT {
-            crate::FURNACE
-        } else {
-            block
-        };
+        let block = crate::unlit(block);
         let item = self.item_for_block(block)?;
         match &self.get(item)?.break_drop {
             BreakDrop::SelfItem => Some(item),
@@ -369,7 +372,7 @@ mod tests {
                 assert_eq!(def.max_stack, 1);
             }
         }
-        assert_eq!(registry.len(), 102);
+        assert_eq!(registry.len(), 107);
     }
 
     fn material(id: &str, max_stack: u16) -> String {
@@ -379,7 +382,7 @@ mod tests {
     #[test]
     fn default_catalog_preserves_original_stage_three_blocks_and_fixtures() {
         let registry = ContentRegistry::default();
-        assert_eq!(registry.len(), 102);
+        assert_eq!(registry.len(), 107);
         assert!(!registry.is_empty());
         let names = [
             "foundation:air",
@@ -538,7 +541,7 @@ mod tests {
         ] {
             assert!(original.reload(&changed).is_err());
         }
-        assert_eq!(original.len(), 102);
+        assert_eq!(original.len(), 107);
         assert_eq!(
             original.max_stack(original.find("survival:egg").unwrap()),
             16

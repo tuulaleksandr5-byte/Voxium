@@ -40,6 +40,8 @@ pub enum Action {
     ToggleTextures,
     CatalogTab(usize),
     TrashCursor,
+    /// Камнерез: вырезать выбранный вариант.
+    Stonecut(game_core::content::ItemId),
     FocusName,
     FocusSeed,
     RandomSeed,

@@ -134,4 +134,15 @@
      inputs: [(item: "foundation:oak_planks", count: 1), (item: "foundation:oak_planks", count: 1), (item: "foundation:oak_planks", count: 1), (item: "survival:leather", count: 1), (item: "survival:leather", count: 1), (item: "survival:leather", count: 1), (item: "foundation:oak_planks", count: 1), (item: "foundation:oak_planks", count: 1), (item: "foundation:oak_planks", count: 1)], output: (item: "builder:bookshelf", count: 1)),
     (id: "builder:lamp", width: 3, height: 3,
      inputs: [None, (item: "foundation:glass", count: 1), None, (item: "foundation:glass", count: 1), (item: "survival:coal", count: 1), (item: "foundation:glass", count: 1), None, (item: "foundation:glass", count: 1), None], output: (item: "builder:lamp", count: 2)),
+    // Мастерская: новые функциональные блоки.
+    (id: "maker:barrel", width: 3, height: 3,
+     inputs: [(item: "foundation:oak_planks", count: 1), (item: "survival:stick", count: 1), (item: "foundation:oak_planks", count: 1), (item: "foundation:oak_planks", count: 1), None, (item: "foundation:oak_planks", count: 1), (item: "foundation:oak_planks", count: 1), (item: "survival:stick", count: 1), (item: "foundation:oak_planks", count: 1)], output: (item: "maker:barrel", count: 1)),
+    (id: "maker:smoker", width: 3, height: 3,
+     inputs: [None, (item: "foundation:oak_log", count: 1), None, (item: "foundation:oak_log", count: 1), (item: "survival:furnace", count: 1), (item: "foundation:oak_log", count: 1), None, (item: "foundation:oak_log", count: 1), None], output: (item: "maker:smoker", count: 1)),
+    (id: "maker:blast_furnace", width: 3, height: 3,
+     inputs: [(item: "survival:iron_ingot", count: 1), (item: "survival:iron_ingot", count: 1), (item: "survival:iron_ingot", count: 1), (item: "survival:iron_ingot", count: 1), (item: "survival:furnace", count: 1), (item: "survival:iron_ingot", count: 1), (item: "builder:smooth_stone", count: 1), (item: "builder:smooth_stone", count: 1), (item: "builder:smooth_stone", count: 1)], output: (item: "maker:blast_furnace", count: 1)),
+    (id: "maker:stonecutter", width: 3, height: 2,
+     inputs: [None, (item: "survival:iron_ingot", count: 1), None, (item: "foundation:stone", count: 1), (item: "foundation:stone", count: 1), (item: "foundation:stone", count: 1)], output: (item: "maker:stonecutter", count: 1)),
+    (id: "maker:vault", width: 3, height: 3,
+     inputs: [(item: "builder:obsidian", count: 1), (item: "builder:obsidian", count: 1), (item: "builder:obsidian", count: 1), (item: "builder:obsidian", count: 1), (item: "survival:diamond", count: 1), (item: "builder:obsidian", count: 1), (item: "builder:obsidian", count: 1), (item: "builder:obsidian", count: 1), (item: "builder:obsidian", count: 1)], output: (item: "maker:vault", count: 1)),
 ]

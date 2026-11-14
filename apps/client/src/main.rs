@@ -445,6 +445,9 @@ fn actions(
                     game.ui_dirty = true;
                 }
             }
+            Action::Stonecut(output) => {
+                inventory_client::stonecut(&mut game, output);
+            }
             Action::RandomSeed => {
                 game.seed_input = SystemTime::now()
                     .duration_since(UNIX_EPOCH)

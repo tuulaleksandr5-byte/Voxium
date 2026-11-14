@@ -370,8 +370,23 @@ fn furnace(
     game: &Game,
     icons: &ItemIcons,
     blocks: &BlockIcons,
+    kind: game_core::smelting::FurnaceKind,
 ) {
-    use game_core::smelting::{FURNACE_FUEL, FURNACE_INPUT, FURNACE_OUTPUT};
+    use game_core::smelting::{FURNACE_FUEL, FURNACE_INPUT, FURNACE_OUTPUT, FurnaceKind};
+    let (name, hint) = match kind {
+        FurnaceKind::Furnace => (
+            "ПЕЧЬ",
+            "Уголь, брёвна, доски и палки — топливо. Руда, песок, глина и мясо — сырьё.",
+        ),
+        FurnaceKind::Smoker => (
+            "КОПТИЛЬНЯ",
+            "Готовит только еду, зато вдвое быстрее печи. Топливо то же.",
+        ),
+        FurnaceKind::Blast => (
+            "ПЛАВИЛЬНЯ",
+            "Плавит только руду и сырой металл, вдвое быстрее печи. Топливо то же.",
+        ),
+    };
     let state = game
         .open_container
         .and_then(|position| game.furnaces.get(&position))
@@ -381,15 +396,22 @@ fn furnace(
         commands,
         parent,
         if state.lit() {
-            "ПЕЧЬ · горит"
+            format!("{name} · горит")
         } else {
-            "ПЕЧЬ · нужно топливо и сырьё"
+            format!("{name} · нужно топливо и сырьё")
         },
         12.,
         AMBER,
     );
     let cells = row(commands, parent, 10.);
     let inputs = column(commands, cells, 6.);
+    commands.entity(inputs).insert(Node {
+        width: px(150),
+        flex_direction: FlexDirection::Column,
+        row_gap: px(6),
+        flex_shrink: 0.,
+        ..default()
+    });
     for (index, caption) in [(FURNACE_INPUT, "Сырьё"), (FURNACE_FUEL, "Топливо")] {
         let line = row(commands, inputs, 8.);
         slot(
@@ -422,13 +444,86 @@ fn furnace(
         AMBER,
     );
     meter(commands, parent, "жар", state.fuel_fraction(), TEAL);
+    label(commands, parent, hint, 11., MUTED);
+}
+
+/// Камнерез: ячейка сырья и кнопки вариантов; клик выдаёт один блок на курсор.
+fn stonecutter(
+    commands: &mut Commands,
+    parent: Entity,
+    game: &Game,
+    icons: &ItemIcons,
+    blocks: &BlockIcons,
+) {
     label(
         commands,
         parent,
-        "Уголь, брёвна, доски и палки — топливо. Руда, песок, глина и мясо — сырьё.",
-        11.,
-        MUTED,
+        "КАМНЕРЕЗ · один блок → один блок",
+        12.,
+        AMBER,
     );
+    let cells = row(commands, parent, 10.);
+    slot(
+        commands,
+        cells,
+        game,
+        icons,
+        blocks,
+        SlotRef::Container(0),
+        "",
+    );
+    label(commands, cells, "→", 16., MUTED);
+    let input = stack_at(game, SlotRef::Container(0));
+    let options = input
+        .map(|stack| game_core::stonecutting::options(stack.item, &game.content))
+        .unwrap_or_default();
+    if options.is_empty() {
+        label(
+            commands,
+            cells,
+            if input.is_some() {
+                "Этот предмет не режется"
+            } else {
+                "Положите камень, булыжник, кирпичи или песчаник"
+            },
+            12.,
+            MUTED,
+        );
+    }
+    for output in options {
+        let name = game
+            .content
+            .get(output)
+            .map_or_else(String::new, |item| item.name.clone());
+        let choice = button(commands, cells, "", Action::Stonecut(output), Tone::Normal);
+        commands.entity(choice).insert((
+            Node {
+                width: px(54),
+                height: px(54),
+                min_height: px(54),
+                flex_shrink: 0.,
+                padding: UiRect::all(px(0)),
+                border: UiRect::all(px(2)),
+                border_radius: BorderRadius::all(px(4)),
+                align_items: AlignItems::Center,
+                justify_content: JustifyContent::Center,
+                ..default()
+            },
+            SlotHint(format!("{name} · клик: вырезать один")),
+        ));
+        let image = commands
+            .spawn((
+                ImageNode::new(icons.get(output, &game.content, blocks)),
+                Node {
+                    width: px(46),
+                    height: px(46),
+                    ..default()
+                },
+                Pickable::IGNORE,
+            ))
+            .id();
+        commands.entity(choice).add_child(image);
+    }
 }
 
 /// Вкладки творческого каталога; нулевая показывает всё.
@@ -457,7 +552,12 @@ fn catalog_tab(game: &Game, id: ItemId) -> usize {
             | game_core::CRAFTING_TABLE
             | game_core::FURNACE
             | game_core::LAMP
-            | game_core::BOOKSHELF => 3,
+            | game_core::BOOKSHELF
+            | game_core::BARREL
+            | game_core::SMOKER
+            | game_core::BLAST_FURNACE
+            | game_core::STONECUTTER
+            | game_core::VAULT => 3,
             game_core::GRASS
             | game_core::DIRT
             | game_core::STONE
@@ -653,6 +753,11 @@ pub(super) fn menu(
         Some(game_core::CHEST) => "Сундук",
         Some(game_core::CRAFTING_TABLE) => "Верстак",
         Some(game_core::FURNACE | game_core::FURNACE_LIT) => "Печь",
+        Some(game_core::SMOKER | game_core::SMOKER_LIT) => "Коптильня",
+        Some(game_core::BLAST_FURNACE | game_core::BLAST_FURNACE_LIT) => "Плавильня",
+        Some(game_core::BARREL) => "Бочка",
+        Some(game_core::VAULT) => "Общий сундук",
+        Some(game_core::STONECUTTER) => "Камнерез",
         _ => "Инвентарь",
     };
     label(commands, panel, title, 26., TEXT);
@@ -663,7 +768,9 @@ pub(super) fn menu(
         12.,
         MUTED,
     );
-    if game.game_mode == GameMode::Creative {
+    // Открытый блок важнее каталога: при нём каталог уходит под инвентарь.
+    let catalog_first = game.open_container.is_none();
+    if game.game_mode == GameMode::Creative && catalog_first {
         catalog(commands, panel, game, icons, blocks);
     }
     let content = row(commands, panel, 24.);
@@ -687,10 +794,25 @@ pub(super) fn menu(
     });
     if open == Some(game_core::CRAFTING_TABLE) {
         crafting(commands, storage, game, icons, blocks);
-    } else if matches!(open, Some(game_core::FURNACE | game_core::FURNACE_LIT)) {
-        furnace(commands, storage, game, icons, blocks);
-    } else if open == Some(game_core::CHEST) {
-        label(commands, storage, "СУНДУК · 27 ЯЧЕЕК", 12., AMBER);
+    } else if let Some((kind, _)) = open.and_then(game_core::smelting::FurnaceKind::of_block) {
+        furnace(commands, storage, game, icons, blocks, kind);
+    } else if open == Some(game_core::STONECUTTER) {
+        stonecutter(commands, storage, game, icons, blocks);
+    } else if matches!(
+        open,
+        Some(game_core::CHEST | game_core::BARREL | game_core::VAULT)
+    ) {
+        label(
+            commands,
+            storage,
+            match open {
+                Some(game_core::BARREL) => "БОЧКА · 27 ЯЧЕЕК",
+                Some(game_core::VAULT) => "ОБЩИЙ СУНДУК · одно хранилище на все такие блоки",
+                _ => "СУНДУК · 27 ЯЧЕЕК",
+            },
+            12.,
+            AMBER,
+        );
         for line in 0..3 {
             let cells = row(commands, storage, 6.);
             for index in 0..9 {
@@ -768,6 +890,9 @@ pub(super) fn menu(
     slot(commands, cells, game, icons, blocks, SlotRef::Offhand, "");
     label(commands, cells, "Вторая рука", 12., MUTED);
     label(commands, equipment, "Броня пока\nбез бонусов.", 12., MUTED);
+    if game.game_mode == GameMode::Creative && !catalog_first {
+        catalog(commands, panel, game, icons, blocks);
+    }
     label(
         commands,
         panel,

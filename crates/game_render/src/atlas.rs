@@ -59,7 +59,7 @@ macro_rules! pixel_tile {
     };
 }
 /// Пиксельные тайлы новых блоков: слои 36…54 в обоих стилях графики.
-const EXTRA_TILES: [(&str, &[u8]); 19] = [
+const EXTRA_TILES: [(&str, &[u8]); 32] = [
     pixel_tile!("bricks"),
     pixel_tile!("stone_bricks"),
     pixel_tile!("mossy_cobblestone"),
@@ -79,6 +79,19 @@ const EXTRA_TILES: [(&str, &[u8]); 19] = [
     pixel_tile!("chest_front"),
     pixel_tile!("chest_side"),
     pixel_tile!("chest_top"),
+    pixel_tile!("barrel_side"),
+    pixel_tile!("barrel_top"),
+    pixel_tile!("smoker_front"),
+    pixel_tile!("smoker_front_on"),
+    pixel_tile!("smoker_side"),
+    pixel_tile!("blast_furnace_front"),
+    pixel_tile!("blast_furnace_front_on"),
+    pixel_tile!("blast_furnace_side"),
+    pixel_tile!("stonecutter_top"),
+    pixel_tile!("stonecutter_side"),
+    pixel_tile!("vault_front"),
+    pixel_tile!("vault_side"),
+    pixel_tile!("vault_top"),
 ];
 /// Пиксельные версии семнадцати исходных тайлов (слои 0…16).
 const PIXEL_SOURCE_TILES: [(&str, &[u8]); 17] = [
