@@ -795,6 +795,157 @@ def wool():
     return image
 
 
+# ------------------------------------------------------------ palette set
+
+COLORS = {
+    "white": "#e9ecec",
+    "orange": "#f07613",
+    "magenta": "#bd44b3",
+    "light_blue": "#3aafd9",
+    "yellow": "#f8c627",
+    "lime": "#70b919",
+    "pink": "#ed8dac",
+    "gray": "#3e4447",
+    "light_gray": "#8e8e86",
+    "cyan": "#158991",
+    "purple": "#792aac",
+    "blue": "#35399d",
+    "brown": "#724728",
+    "green": "#546d1b",
+    "red": "#a12722",
+    "black": "#16161b",
+}
+
+
+def shades(color, spread=0.16):
+    base = rgb(color)
+    return ["#%02x%02x%02x" % tuple(int(v) for v in np.clip(base * (1 + spread * k) + 6 * k, 0, 255)) for k in (-1.0, -0.4, 0.2, 0.8)]
+
+
+def dyed_wool(name, color):
+    def build():
+        r = rng("wool")
+        image = fill(canvas(), fbm(r, ((8, 1.0), (16, 0.8))), shades(color))
+        for y in range(N):
+            for x in range(N):
+                if (x + y * 3) % 8 == 0 or (x * 3 - y) % 11 == 0:
+                    image[y, x, :3] = image[y, x, :3] * 0.88
+        return image
+
+    TILES[name] = build
+
+
+def concrete(name, color):
+    def build():
+        r = rng("concrete")
+        image = fill(canvas(), fbm(r, ((4, 1.0), (8, 0.3))), shades(color, 0.05))
+        speckle(image, r, [shades(color, 0.1)[0]], 14)
+        return image
+
+    TILES[name] = build
+
+
+for _color, _hex in COLORS.items():
+    if _color != "white":
+        dyed_wool(f"wool_{_color}", _hex)
+    concrete(f"concrete_{_color}", _hex)
+
+
+def rock(name, palette, speck, veins=None, layered=False):
+    def raw():
+        r = rng(name)
+        octaves = ((2, 0.3), (32, 1.0)) if layered else ((4, 1.0), (8, 0.7), (16, 0.5))
+        field = fbm(r, octaves)
+        if layered:
+            field = np.clip(np.repeat(field[:, ::8], 8, axis=1) * 0.8 + fbm(r) * 0.2, 0, 0.999)
+        image = fill(canvas(), field, palette)
+        speckle(image, r, speck, 60)
+        if veins:
+            for _ in range(5):
+                x, y = r.integers(0, N, 2)
+                for _ in range(int(r.integers(10, 22))):
+                    put(image, x, y, veins)
+                    x += 1
+                    y += int(r.integers(-1, 2))
+        return image
+
+    def polished():
+        image = raw()
+        image[..., :3] = image[..., :3] * 0.5 + np.array(rgb(palette[2])) * 0.5
+        for i in range(N):
+            put(image, i, 0, palette[3])
+            put(image, 0, i, palette[3])
+            put(image, i, N - 1, palette[0])
+            put(image, N - 1, i, palette[0])
+        return image
+
+    TILES[name] = raw
+    TILES["polished_" + name] = polished
+
+
+rock("granite", ["#8a5a4a", "#9a6756", "#a97462", "#b8826f"], ["#d9b0a0", "#5e3a30", "#e8e0d8"])
+rock("marble", ["#d8d8d4", "#e2e2de", "#ecece8", "#f6f6f3"], ["#c8c8c4"], veins="#a8adb4")
+rock("basalt", ["#2c2c30", "#35353a", "#3f3f45", "#494950"], ["#5a5a62", "#202024"], layered=True)
+rock("slate", ["#3e4a5a", "#475466", "#505e72", "#59687e"], ["#6a7a92", "#323c4a"], layered=True)
+rock("limestone", ["#b8ae90", "#c2b89a", "#ccc2a4", "#d6ccae"], ["#a89e80", "#e2dac0"])
+
+TILES["pine_log"] = lambda: bark(rng("pine_log"), ["#2e2018", "#382820", "#423028", "#4c3830"], "#1c120c")
+TILES["pine_log_top"] = lambda: log_top("pine_log_top", ["#2e2018", "#382820", "#423028"], ["#8a6a42", "#947448", "#9e7e50", "#a88858"], "#6e5230")
+TILES["pine_planks"] = lambda: planks("pine_planks", ["#7a5a36", "#84633c", "#8e6c42", "#987548"], "#58401f", "#684c28")
+TILES["pine_leaves"] = lambda: leaves("pine_leaves", ["#1c4a2c", "#225636", "#286240", "#30704a", "#3a7e54"], "#143820", 0.28)
+
+
+@tile("sandstone_bricks")
+def sandstone_bricks():
+    return brick_pattern(rng("sandstone_bricks"), ["#cdb983", "#d6c38e", "#dfcd9a", "#e7d6a6"], "#a89462")
+
+
+@tile("mossy_stone_bricks")
+def mossy_stone_bricks():
+    image = brick_pattern(rng("stone_bricks"), STONE, "#555555")
+    moss = fbm(rng("moss-bricks"), ((4, 1.0), (8, 0.8), (16, 0.5)))
+    green = ramp(fbm(rng("moss2"), ((16, 1.0), (32, 1.0))), ["#3f6b2a", "#4f7f33", "#5f9440"])
+    image[moss > 0.6, :3] = green[moss > 0.6]
+    return image
+
+
+@tile("cracked_stone_bricks")
+def cracked_stone_bricks():
+    r = rng("cracked")
+    image = brick_pattern(rng("stone_bricks"), STONE, "#555555")
+    for _ in range(9):
+        x, y = r.integers(0, N, 2)
+        for _ in range(int(r.integers(5, 11))):
+            put(image, x, y, "#3e3e3e")
+            x += int(r.integers(-1, 2))
+            y += 1
+    return image
+
+
+@tile("dark_bricks")
+def dark_bricks():
+    image = bricks()
+    image[..., :3] = image[..., :3] * np.array([0.42, 0.44, 0.6])
+    return image
+
+
+@tile("stone_tiles")
+def stone_tiles():
+    r = rng("stone_tiles")
+    image = canvas("#555555")
+    tone = fbm(r, ((16, 1.0), (32, 0.6)))
+    for ty in range(4):
+        for tx in range(4):
+            dark = (tx + ty) % 2
+            for y in range(ty * 8, ty * 8 + 7):
+                for x in range(tx * 8, tx * 8 + 7):
+                    value = np.clip(tone[y, x] * 0.5 + (0.1 if dark else 0.5), 0, 0.999)
+                    image[y, x, :3] = ramp(np.array(value), ["#5e5e5e", "#727272", "#8a8a8a", "#a0a0a0", "#b4b4b4"])
+            for i in range(7):
+                image[ty * 8, tx * 8 + i, :3] = np.clip(image[ty * 8, tx * 8 + i, :3] + 20, 0, 255)
+    return image
+
+
 # ------------------------------------------------------- functional blocks
 
 

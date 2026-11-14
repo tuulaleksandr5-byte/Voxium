@@ -1,6 +1,6 @@
 use crate::{
     BIRCH_LEAVES_LAYER, BlockAtlas, GLASS_LAYER, ICE_LAYER, LAMP_LAYER, MATERIAL_COUNT,
-    OAK_LEAVES_LAYER, WATER_LAYER,
+    OAK_LEAVES_LAYER, PINE_LEAVES_LAYER, WATER_LAYER,
 };
 use bevy::{
     asset::{RenderAssetUsages, embedded_asset},
@@ -16,7 +16,7 @@ use bevy::{
 
 pub const TEXTURE_SIZE: u32 = 128;
 const ATLAS_WIDTH: u32 = TEXTURE_SIZE * 6;
-const ATLAS_HEIGHT: u32 = TEXTURE_SIZE * 12;
+const ATLAS_HEIGHT: u32 = TEXTURE_SIZE * 24;
 const LEGACY_EXPANDED_HEIGHT: u32 = TEXTURE_SIZE * 6;
 
 pub type VoxelMaterial = ExtendedMaterial<StandardMaterial, TileArray>;
@@ -69,7 +69,7 @@ pub fn atlas_array(rgba: &[u8]) -> Result<Image, String> {
         return atlas_array(&padded);
     }
     if rgba.len() != (ATLAS_WIDTH * ATLAS_HEIGHT * 4) as usize {
-        return Err("atlas RGBA byte count does not match 768×384, 768×768 or 768×1536".into());
+        return Err("atlas RGBA byte count does not match 768×384, 768×768 or 768×3072".into());
     }
     let mut data = Vec::new();
     for layer in 0..MATERIAL_COUNT {
@@ -223,16 +223,24 @@ pub fn create_materials_from_atlas(
                     },
                     alpha_mode: match layer {
                         GLASS_LAYER | WATER_LAYER | ICE_LAYER => AlphaMode::Blend,
-                        OAK_LEAVES_LAYER | BIRCH_LEAVES_LAYER => AlphaMode::Mask(0.45),
+                        OAK_LEAVES_LAYER | BIRCH_LEAVES_LAYER | PINE_LEAVES_LAYER => {
+                            AlphaMode::Mask(0.45)
+                        }
                         _ => AlphaMode::Opaque,
                     },
                     // Объёмная листва состоит из двусторонних плоскостей.
-                    cull_mode: if matches!(layer, OAK_LEAVES_LAYER | BIRCH_LEAVES_LAYER) {
+                    cull_mode: if matches!(
+                        layer,
+                        OAK_LEAVES_LAYER | BIRCH_LEAVES_LAYER | PINE_LEAVES_LAYER
+                    ) {
                         None
                     } else {
                         Some(bevy::render::render_resource::Face::Back)
                     },
-                    double_sided: matches!(layer, OAK_LEAVES_LAYER | BIRCH_LEAVES_LAYER),
+                    double_sided: matches!(
+                        layer,
+                        OAK_LEAVES_LAYER | BIRCH_LEAVES_LAYER | PINE_LEAVES_LAYER
+                    ),
                     ..default()
                 },
                 extension: TileArray {
@@ -255,7 +263,7 @@ mod tests {
             for x in 0..ATLAS_WIDTH as usize {
                 let layer = (y / 128) * 6 + x / 128;
                 rgba[(y * ATLAS_WIDTH as usize + x) * 4..][..4].copy_from_slice(&[
-                    layer as u8 * 3,
+                    layer as u8,
                     30,
                     90,
                     255,
@@ -274,7 +282,7 @@ mod tests {
                     .as_chunks::<4>()
                     .0
                     .iter()
-                    .all(|p| *p == [layer as u8 * 3, 30, 90, 255])
+                    .all(|p| *p == [layer as u8, 30, 90, 255])
             );
         }
         assert!(atlas_array(&[]).is_err());

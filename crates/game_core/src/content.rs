@@ -64,7 +64,7 @@ pub struct ContentRegistry {
 }
 
 // Имена соответствуют стабильным сохранённым ID; новые блоки только дописываются.
-const BLOCK_NAMES: [&str; 49] = [
+const BLOCK_NAMES: [&str; 98] = [
     "foundation:air",
     "foundation:grass",
     "foundation:dirt",
@@ -114,6 +114,55 @@ const BLOCK_NAMES: [&str; 49] = [
     "maker:blast_furnace_lit",
     "maker:stonecutter",
     "maker:vault",
+    "palette:wool_orange",
+    "palette:wool_magenta",
+    "palette:wool_light_blue",
+    "palette:wool_yellow",
+    "palette:wool_lime",
+    "palette:wool_pink",
+    "palette:wool_gray",
+    "palette:wool_light_gray",
+    "palette:wool_cyan",
+    "palette:wool_purple",
+    "palette:wool_blue",
+    "palette:wool_brown",
+    "palette:wool_green",
+    "palette:wool_red",
+    "palette:wool_black",
+    "palette:concrete_white",
+    "palette:concrete_orange",
+    "palette:concrete_magenta",
+    "palette:concrete_light_blue",
+    "palette:concrete_yellow",
+    "palette:concrete_lime",
+    "palette:concrete_pink",
+    "palette:concrete_gray",
+    "palette:concrete_light_gray",
+    "palette:concrete_cyan",
+    "palette:concrete_purple",
+    "palette:concrete_blue",
+    "palette:concrete_brown",
+    "palette:concrete_green",
+    "palette:concrete_red",
+    "palette:concrete_black",
+    "palette:granite",
+    "palette:polished_granite",
+    "palette:marble",
+    "palette:polished_marble",
+    "palette:basalt",
+    "palette:polished_basalt",
+    "palette:slate",
+    "palette:polished_slate",
+    "palette:limestone",
+    "palette:polished_limestone",
+    "palette:pine_log",
+    "palette:pine_leaves",
+    "palette:pine_planks",
+    "palette:sandstone_bricks",
+    "palette:mossy_stone_bricks",
+    "palette:cracked_stone_bricks",
+    "palette:dark_bricks",
+    "palette:stone_tiles",
 ];
 
 impl Default for ContentRegistry {
@@ -372,7 +421,7 @@ mod tests {
                 assert_eq!(def.max_stack, 1);
             }
         }
-        assert_eq!(registry.len(), 107);
+        assert_eq!(registry.len(), 156);
     }
 
     fn material(id: &str, max_stack: u16) -> String {
@@ -382,7 +431,7 @@ mod tests {
     #[test]
     fn default_catalog_preserves_original_stage_three_blocks_and_fixtures() {
         let registry = ContentRegistry::default();
-        assert_eq!(registry.len(), 107);
+        assert_eq!(registry.len(), 156);
         assert!(!registry.is_empty());
         let names = [
             "foundation:air",
@@ -541,7 +590,7 @@ mod tests {
         ] {
             assert!(original.reload(&changed).is_err());
         }
-        assert_eq!(original.len(), 107);
+        assert_eq!(original.len(), 156);
         assert_eq!(
             original.max_stack(original.find("survival:egg").unwrap()),
             16

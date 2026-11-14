@@ -62,6 +62,56 @@ pub const BLAST_FURNACE_LIT: u8 = 46;
 pub const STONECUTTER: u8 = 47;
 /// Общий сундук: все такие блоки открывают одно хранилище игрока.
 pub const VAULT: u8 = 48;
+// Декоративные блоки обновления «Палитра».
+pub const WOOL_ORANGE: u8 = 49;
+pub const WOOL_MAGENTA: u8 = 50;
+pub const WOOL_LIGHT_BLUE: u8 = 51;
+pub const WOOL_YELLOW: u8 = 52;
+pub const WOOL_LIME: u8 = 53;
+pub const WOOL_PINK: u8 = 54;
+pub const WOOL_GRAY: u8 = 55;
+pub const WOOL_LIGHT_GRAY: u8 = 56;
+pub const WOOL_CYAN: u8 = 57;
+pub const WOOL_PURPLE: u8 = 58;
+pub const WOOL_BLUE: u8 = 59;
+pub const WOOL_BROWN: u8 = 60;
+pub const WOOL_GREEN: u8 = 61;
+pub const WOOL_RED: u8 = 62;
+pub const WOOL_BLACK: u8 = 63;
+pub const CONCRETE_WHITE: u8 = 64;
+pub const CONCRETE_ORANGE: u8 = 65;
+pub const CONCRETE_MAGENTA: u8 = 66;
+pub const CONCRETE_LIGHT_BLUE: u8 = 67;
+pub const CONCRETE_YELLOW: u8 = 68;
+pub const CONCRETE_LIME: u8 = 69;
+pub const CONCRETE_PINK: u8 = 70;
+pub const CONCRETE_GRAY: u8 = 71;
+pub const CONCRETE_LIGHT_GRAY: u8 = 72;
+pub const CONCRETE_CYAN: u8 = 73;
+pub const CONCRETE_PURPLE: u8 = 74;
+pub const CONCRETE_BLUE: u8 = 75;
+pub const CONCRETE_BROWN: u8 = 76;
+pub const CONCRETE_GREEN: u8 = 77;
+pub const CONCRETE_RED: u8 = 78;
+pub const CONCRETE_BLACK: u8 = 79;
+pub const GRANITE: u8 = 80;
+pub const POLISHED_GRANITE: u8 = 81;
+pub const MARBLE: u8 = 82;
+pub const POLISHED_MARBLE: u8 = 83;
+pub const BASALT: u8 = 84;
+pub const POLISHED_BASALT: u8 = 85;
+pub const SLATE: u8 = 86;
+pub const POLISHED_SLATE: u8 = 87;
+pub const LIMESTONE: u8 = 88;
+pub const POLISHED_LIMESTONE: u8 = 89;
+pub const PINE_LOG: u8 = 90;
+pub const PINE_LEAVES: u8 = 91;
+pub const PINE_PLANKS: u8 = 92;
+pub const SANDSTONE_BRICKS: u8 = 93;
+pub const MOSSY_STONE_BRICKS: u8 = 94;
+pub const CRACKED_STONE_BRICKS: u8 = 95;
+pub const DARK_BRICKS: u8 = 96;
+pub const STONE_TILES: u8 = 97;
 
 const fn block(
     id: u8,
@@ -82,7 +132,7 @@ const fn block(
     }
 }
 
-pub const BLOCKS: [BlockDef; 49] = [
+pub const BLOCKS: [BlockDef; 98] = [
     block(AIR, "Air", "air", 0.0, false, false),
     block(GRASS, "Grass", "grass", 0.6, true, true),
     block(DIRT, "Dirt", "dirt", 0.5, true, true),
@@ -208,6 +258,244 @@ pub const BLOCKS: [BlockDef; 49] = [
     },
     block(STONECUTTER, "Stonecutter", "stonecutter", 3.5, true, true),
     block(VAULT, "Vault", "vault", 22.5, true, true),
+    block(WOOL_ORANGE, "Orange Wool", "wool_orange", 0.8, true, true),
+    block(
+        WOOL_MAGENTA,
+        "Magenta Wool",
+        "wool_magenta",
+        0.8,
+        true,
+        true,
+    ),
+    block(
+        WOOL_LIGHT_BLUE,
+        "Light_Blue Wool",
+        "wool_light_blue",
+        0.8,
+        true,
+        true,
+    ),
+    block(WOOL_YELLOW, "Yellow Wool", "wool_yellow", 0.8, true, true),
+    block(WOOL_LIME, "Lime Wool", "wool_lime", 0.8, true, true),
+    block(WOOL_PINK, "Pink Wool", "wool_pink", 0.8, true, true),
+    block(WOOL_GRAY, "Gray Wool", "wool_gray", 0.8, true, true),
+    block(
+        WOOL_LIGHT_GRAY,
+        "Light_Gray Wool",
+        "wool_light_gray",
+        0.8,
+        true,
+        true,
+    ),
+    block(WOOL_CYAN, "Cyan Wool", "wool_cyan", 0.8, true, true),
+    block(WOOL_PURPLE, "Purple Wool", "wool_purple", 0.8, true, true),
+    block(WOOL_BLUE, "Blue Wool", "wool_blue", 0.8, true, true),
+    block(WOOL_BROWN, "Brown Wool", "wool_brown", 0.8, true, true),
+    block(WOOL_GREEN, "Green Wool", "wool_green", 0.8, true, true),
+    block(WOOL_RED, "Red Wool", "wool_red", 0.8, true, true),
+    block(WOOL_BLACK, "Black Wool", "wool_black", 0.8, true, true),
+    block(
+        CONCRETE_WHITE,
+        "White Concrete",
+        "concrete_white",
+        1.8,
+        true,
+        true,
+    ),
+    block(
+        CONCRETE_ORANGE,
+        "Orange Concrete",
+        "concrete_orange",
+        1.8,
+        true,
+        true,
+    ),
+    block(
+        CONCRETE_MAGENTA,
+        "Magenta Concrete",
+        "concrete_magenta",
+        1.8,
+        true,
+        true,
+    ),
+    block(
+        CONCRETE_LIGHT_BLUE,
+        "Light_Blue Concrete",
+        "concrete_light_blue",
+        1.8,
+        true,
+        true,
+    ),
+    block(
+        CONCRETE_YELLOW,
+        "Yellow Concrete",
+        "concrete_yellow",
+        1.8,
+        true,
+        true,
+    ),
+    block(
+        CONCRETE_LIME,
+        "Lime Concrete",
+        "concrete_lime",
+        1.8,
+        true,
+        true,
+    ),
+    block(
+        CONCRETE_PINK,
+        "Pink Concrete",
+        "concrete_pink",
+        1.8,
+        true,
+        true,
+    ),
+    block(
+        CONCRETE_GRAY,
+        "Gray Concrete",
+        "concrete_gray",
+        1.8,
+        true,
+        true,
+    ),
+    block(
+        CONCRETE_LIGHT_GRAY,
+        "Light_Gray Concrete",
+        "concrete_light_gray",
+        1.8,
+        true,
+        true,
+    ),
+    block(
+        CONCRETE_CYAN,
+        "Cyan Concrete",
+        "concrete_cyan",
+        1.8,
+        true,
+        true,
+    ),
+    block(
+        CONCRETE_PURPLE,
+        "Purple Concrete",
+        "concrete_purple",
+        1.8,
+        true,
+        true,
+    ),
+    block(
+        CONCRETE_BLUE,
+        "Blue Concrete",
+        "concrete_blue",
+        1.8,
+        true,
+        true,
+    ),
+    block(
+        CONCRETE_BROWN,
+        "Brown Concrete",
+        "concrete_brown",
+        1.8,
+        true,
+        true,
+    ),
+    block(
+        CONCRETE_GREEN,
+        "Green Concrete",
+        "concrete_green",
+        1.8,
+        true,
+        true,
+    ),
+    block(
+        CONCRETE_RED,
+        "Red Concrete",
+        "concrete_red",
+        1.8,
+        true,
+        true,
+    ),
+    block(
+        CONCRETE_BLACK,
+        "Black Concrete",
+        "concrete_black",
+        1.8,
+        true,
+        true,
+    ),
+    block(GRANITE, "Granite", "granite", 1.5, true, true),
+    block(
+        POLISHED_GRANITE,
+        "Polished Granite",
+        "polished_granite",
+        1.5,
+        true,
+        true,
+    ),
+    block(MARBLE, "Marble", "marble", 1.5, true, true),
+    block(
+        POLISHED_MARBLE,
+        "Polished Marble",
+        "polished_marble",
+        1.5,
+        true,
+        true,
+    ),
+    block(BASALT, "Basalt", "basalt", 1.5, true, true),
+    block(
+        POLISHED_BASALT,
+        "Polished Basalt",
+        "polished_basalt",
+        1.5,
+        true,
+        true,
+    ),
+    block(SLATE, "Slate", "slate", 1.5, true, true),
+    block(
+        POLISHED_SLATE,
+        "Polished Slate",
+        "polished_slate",
+        1.5,
+        true,
+        true,
+    ),
+    block(LIMESTONE, "Limestone", "limestone", 1.5, true, true),
+    block(
+        POLISHED_LIMESTONE,
+        "Polished Limestone",
+        "polished_limestone",
+        1.5,
+        true,
+        true,
+    ),
+    block(PINE_LOG, "Pine Log", "pine_log", 2.0, true, true),
+    block(PINE_LEAVES, "Pine Leaves", "pine_leaves", 0.2, true, false),
+    block(PINE_PLANKS, "Pine Planks", "pine_planks", 2.0, true, true),
+    block(
+        SANDSTONE_BRICKS,
+        "Sandstone Bricks",
+        "sandstone_bricks",
+        1.8,
+        true,
+        true,
+    ),
+    block(
+        MOSSY_STONE_BRICKS,
+        "Mossy Stone Bricks",
+        "mossy_stone_bricks",
+        1.8,
+        true,
+        true,
+    ),
+    block(
+        CRACKED_STONE_BRICKS,
+        "Cracked Stone Bricks",
+        "cracked_stone_bricks",
+        1.8,
+        true,
+        true,
+    ),
+    block(DARK_BRICKS, "Dark Bricks", "dark_bricks", 1.8, true, true),
+    block(STONE_TILES, "Stone Tiles", "stone_tiles", 1.8, true, true),
 ];
 
 /// Блок без состояния «горит»: в таком виде он выпадает и сохраняется.
@@ -224,7 +512,7 @@ pub fn unlit(id: u8) -> u8 {
 /// Листва получает объёмную геометрию и не сливается в greedy-грани.
 #[must_use]
 pub fn is_leaves(id: u8) -> bool {
-    matches!(id, LEAVES | BIRCH_LEAVES)
+    matches!(id, LEAVES | BIRCH_LEAVES | PINE_LEAVES)
 }
 
 #[must_use]
@@ -257,7 +545,7 @@ mod tests {
             "Crafting Table",
             "Furnace",
         ];
-        assert_eq!(BLOCKS.len(), 49);
+        assert_eq!(BLOCKS.len(), 98);
         for (offset, name) in expected.iter().enumerate() {
             let id = 17 + offset;
             assert_eq!(BLOCKS[id].id as usize, id);
@@ -268,7 +556,7 @@ mod tests {
 
     #[test]
     fn chest_extends_registry_without_changing_foundation_ids() {
-        assert_eq!(BLOCKS.len(), 49);
+        assert_eq!(BLOCKS.len(), 98);
         let chest = BLOCKS.get(16).expect("сундук зарегистрирован");
         assert_eq!(chest.name, "Chest");
         assert!(is_solid(16));

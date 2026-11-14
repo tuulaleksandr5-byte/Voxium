@@ -6,7 +6,7 @@ use std::io::Cursor;
 const TILE_SIZE: u32 = 128;
 const ATLAS_WIDTH: u32 = TILE_SIZE * 6;
 const SOURCE_HEIGHT: u32 = TILE_SIZE * 3;
-const ATLAS_HEIGHT: u32 = TILE_SIZE * 12;
+const ATLAS_HEIGHT: u32 = TILE_SIZE * 24;
 const EXTRA_FIRST_LAYER: usize = 36;
 const SOURCE_TILE_COUNT: usize = 17;
 
@@ -59,7 +59,7 @@ macro_rules! pixel_tile {
     };
 }
 /// Пиксельные тайлы новых блоков: слои 36…54 в обоих стилях графики.
-const EXTRA_TILES: [(&str, &[u8]); 32] = [
+const EXTRA_TILES: [(&str, &[u8]); 82] = [
     pixel_tile!("bricks"),
     pixel_tile!("stone_bricks"),
     pixel_tile!("mossy_cobblestone"),
@@ -92,6 +92,56 @@ const EXTRA_TILES: [(&str, &[u8]); 32] = [
     pixel_tile!("vault_front"),
     pixel_tile!("vault_side"),
     pixel_tile!("vault_top"),
+    pixel_tile!("wool_orange"),
+    pixel_tile!("wool_magenta"),
+    pixel_tile!("wool_light_blue"),
+    pixel_tile!("wool_yellow"),
+    pixel_tile!("wool_lime"),
+    pixel_tile!("wool_pink"),
+    pixel_tile!("wool_gray"),
+    pixel_tile!("wool_light_gray"),
+    pixel_tile!("wool_cyan"),
+    pixel_tile!("wool_purple"),
+    pixel_tile!("wool_blue"),
+    pixel_tile!("wool_brown"),
+    pixel_tile!("wool_green"),
+    pixel_tile!("wool_red"),
+    pixel_tile!("wool_black"),
+    pixel_tile!("concrete_white"),
+    pixel_tile!("concrete_orange"),
+    pixel_tile!("concrete_magenta"),
+    pixel_tile!("concrete_light_blue"),
+    pixel_tile!("concrete_yellow"),
+    pixel_tile!("concrete_lime"),
+    pixel_tile!("concrete_pink"),
+    pixel_tile!("concrete_gray"),
+    pixel_tile!("concrete_light_gray"),
+    pixel_tile!("concrete_cyan"),
+    pixel_tile!("concrete_purple"),
+    pixel_tile!("concrete_blue"),
+    pixel_tile!("concrete_brown"),
+    pixel_tile!("concrete_green"),
+    pixel_tile!("concrete_red"),
+    pixel_tile!("concrete_black"),
+    pixel_tile!("granite"),
+    pixel_tile!("polished_granite"),
+    pixel_tile!("marble"),
+    pixel_tile!("polished_marble"),
+    pixel_tile!("basalt"),
+    pixel_tile!("polished_basalt"),
+    pixel_tile!("slate"),
+    pixel_tile!("polished_slate"),
+    pixel_tile!("limestone"),
+    pixel_tile!("polished_limestone"),
+    pixel_tile!("pine_log"),
+    pixel_tile!("pine_log_top"),
+    pixel_tile!("pine_leaves"),
+    pixel_tile!("pine_planks"),
+    pixel_tile!("sandstone_bricks"),
+    pixel_tile!("mossy_stone_bricks"),
+    pixel_tile!("cracked_stone_bricks"),
+    pixel_tile!("dark_bricks"),
+    pixel_tile!("stone_tiles"),
 ];
 /// Пиксельные версии семнадцати исходных тайлов (слои 0…16).
 const PIXEL_SOURCE_TILES: [(&str, &[u8]); 17] = [
@@ -352,7 +402,7 @@ mod tests {
         let expanded_gpu = atlas_array(atlas.rgba.as_raw()).unwrap();
         assert_eq!(legacy_gpu.data, expanded_gpu.data);
         let data = expanded_gpu.data.unwrap();
-        let stride = data.len() / 72;
+        let stride = data.len() / 144;
         for layer in 0..18 {
             let expected =
                 image::imageops::crop_imm(&source, (layer % 6) * 128, (layer / 6) * 128, 128, 128)
@@ -451,10 +501,10 @@ mod tests {
             BlockAtlas::from_tiles(&ORIGINAL_TILES).unwrap(),
             BlockAtlas::from_png(source.get_ref()).unwrap(),
         ] {
-            assert_eq!(atlas.rgba.dimensions(), (768, 1536));
+            assert_eq!(atlas.rgba.dimensions(), (768, 3072));
             let gpu = atlas_array(atlas.rgba.as_raw()).unwrap();
             let data = gpu.data.unwrap();
-            let stride = data.len() / 72;
+            let stride = data.len() / 144;
             for (offset, png) in tiles.iter().enumerate() {
                 let layer = offset + 18;
                 let expected = image::load_from_memory(png).unwrap().into_rgba8();
@@ -522,7 +572,7 @@ mod tests {
         let atlas = BlockAtlas::from_tiles(&ORIGINAL_TILES).unwrap();
         let combined = atlas_array(atlas.rgba.as_raw()).unwrap();
         let combined_bytes = combined.data.as_ref().unwrap();
-        let layer_stride = combined_bytes.len() / 72;
+        let layer_stride = combined_bytes.len() / 144;
         for (layer, bytes) in ORIGINAL_TILES.iter().enumerate() {
             // Repeat just this source tile into every slot. Its mip chain must
             // match the chain built among the seventeen different real images,

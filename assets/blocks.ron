@@ -1,4 +1,4 @@
-// Stable block IDs; texture layers are row-major in the 6×12 internal atlas.
+// Stable block IDs; texture layers are row-major in the 6×24 internal atlas.
 // Layers 36+ are the pixel-art tiles from assets/textures/pixel.
 [
     (top: 17, side: 17, bottom: 17), // air (never meshed)
@@ -50,4 +50,53 @@
     (top: 62, side: 62, bottom: 62, front: Some(61)), // lit blast furnace
     (top: 63, side: 64, bottom: 50), // stonecutter
     (top: 67, side: 66, bottom: 67, front: Some(65)), // vault
+    (top: 68, side: 68, bottom: 68), // wool_orange
+    (top: 69, side: 69, bottom: 69), // wool_magenta
+    (top: 70, side: 70, bottom: 70), // wool_light_blue
+    (top: 71, side: 71, bottom: 71), // wool_yellow
+    (top: 72, side: 72, bottom: 72), // wool_lime
+    (top: 73, side: 73, bottom: 73), // wool_pink
+    (top: 74, side: 74, bottom: 74), // wool_gray
+    (top: 75, side: 75, bottom: 75), // wool_light_gray
+    (top: 76, side: 76, bottom: 76), // wool_cyan
+    (top: 77, side: 77, bottom: 77), // wool_purple
+    (top: 78, side: 78, bottom: 78), // wool_blue
+    (top: 79, side: 79, bottom: 79), // wool_brown
+    (top: 80, side: 80, bottom: 80), // wool_green
+    (top: 81, side: 81, bottom: 81), // wool_red
+    (top: 82, side: 82, bottom: 82), // wool_black
+    (top: 83, side: 83, bottom: 83), // concrete_white
+    (top: 84, side: 84, bottom: 84), // concrete_orange
+    (top: 85, side: 85, bottom: 85), // concrete_magenta
+    (top: 86, side: 86, bottom: 86), // concrete_light_blue
+    (top: 87, side: 87, bottom: 87), // concrete_yellow
+    (top: 88, side: 88, bottom: 88), // concrete_lime
+    (top: 89, side: 89, bottom: 89), // concrete_pink
+    (top: 90, side: 90, bottom: 90), // concrete_gray
+    (top: 91, side: 91, bottom: 91), // concrete_light_gray
+    (top: 92, side: 92, bottom: 92), // concrete_cyan
+    (top: 93, side: 93, bottom: 93), // concrete_purple
+    (top: 94, side: 94, bottom: 94), // concrete_blue
+    (top: 95, side: 95, bottom: 95), // concrete_brown
+    (top: 96, side: 96, bottom: 96), // concrete_green
+    (top: 97, side: 97, bottom: 97), // concrete_red
+    (top: 98, side: 98, bottom: 98), // concrete_black
+    (top: 99, side: 99, bottom: 99), // granite
+    (top: 100, side: 100, bottom: 100), // polished_granite
+    (top: 101, side: 101, bottom: 101), // marble
+    (top: 102, side: 102, bottom: 102), // polished_marble
+    (top: 103, side: 103, bottom: 103), // basalt
+    (top: 104, side: 104, bottom: 104), // polished_basalt
+    (top: 105, side: 105, bottom: 105), // slate
+    (top: 106, side: 106, bottom: 106), // polished_slate
+    (top: 107, side: 107, bottom: 107), // limestone
+    (top: 108, side: 108, bottom: 108), // polished_limestone
+    (top: 110, side: 109, bottom: 110), // pine_log
+    (top: 111, side: 111, bottom: 111), // pine_leaves
+    (top: 112, side: 112, bottom: 112), // pine_planks
+    (top: 113, side: 113, bottom: 113), // sandstone_bricks
+    (top: 114, side: 114, bottom: 114), // mossy_stone_bricks
+    (top: 115, side: 115, bottom: 115), // cracked_stone_bricks
+    (top: 116, side: 116, bottom: 116), // dark_bricks
+    (top: 117, side: 117, bottom: 117), // stone_tiles
 ]

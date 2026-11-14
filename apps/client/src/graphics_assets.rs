@@ -310,8 +310,8 @@ mod tests {
             game_render::create_materials_from_atlas(&mut images, &mut materials, atlas).unwrap();
         let array = materials.get(&handles[0]).unwrap().extension.image.clone();
         let gpu = images.get(&array).unwrap().clone();
-        assert_eq!(handles.len(), 72);
-        assert_eq!(gpu.texture_descriptor.size.depth_or_array_layers, 72);
+        assert_eq!(handles.len(), 144);
+        assert_eq!(gpu.texture_descriptor.size.depth_or_array_layers, 144);
         (
             gpu,
             game_render::bake_atlas_icons(atlas, &game_render::BlockTextures::default()).unwrap(),
@@ -320,13 +320,13 @@ mod tests {
 
     fn layer(gpu: &Image, index: usize) -> &[u8] {
         let bytes = gpu.data.as_ref().unwrap();
-        &bytes[index * (bytes.len() / 72)..][..128 * 128 * 4]
+        &bytes[index * (bytes.len() / 144)..][..128 * 128 * 4]
     }
 
     fn assert_composition(atlas: &game_render::BlockAtlas, changed: &[(usize, u8, [u8; 4])]) {
         let (gpu, icons) = outputs(atlas);
         let (defaults, default_icons) = outputs(&embedded().unwrap());
-        for index in 0..72 {
+        for index in 0..144 {
             if let Some((_, _, rgba)) = changed.iter().find(|&&(i, _, _)| i == index) {
                 assert!(
                     layer(&gpu, index)

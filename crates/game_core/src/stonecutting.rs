@@ -3,25 +3,37 @@
 use crate::content::{ContentRegistry, ItemId};
 
 /// (сырьё, варианты результата). Обмен всегда один к одному.
-const CUTS: [(&str, &[&str]); 8] = [
+const CUTS: [(&str, &[&str]); 13] = [
     (
         "foundation:stone",
         &[
             "builder:stone_bricks",
             "builder:smooth_stone",
             "foundation:cobblestone",
+            "palette:stone_tiles",
         ],
     ),
     (
         "foundation:cobblestone",
         &["foundation:gravel", "builder:mossy_cobblestone"],
     ),
-    ("builder:stone_bricks", &["foundation:stone"]),
+    (
+        "builder:stone_bricks",
+        &["foundation:stone", "palette:cracked_stone_bricks"],
+    ),
     (
         "builder:smooth_stone",
         &["builder:stone_bricks", "foundation:stone"],
     ),
-    ("foundation:sandstone", &["foundation:sand"]),
+    ("palette:granite", &["palette:polished_granite"]),
+    ("palette:marble", &["palette:polished_marble"]),
+    ("palette:basalt", &["palette:polished_basalt"]),
+    ("palette:slate", &["palette:polished_slate"]),
+    ("palette:limestone", &["palette:polished_limestone"]),
+    (
+        "foundation:sandstone",
+        &["foundation:sand", "palette:sandstone_bricks"],
+    ),
     ("foundation:gravel", &["foundation:sand"]),
     ("foundation:deepslate", &["foundation:cobblestone"]),
     ("builder:bricks", &["builder:terracotta"]),

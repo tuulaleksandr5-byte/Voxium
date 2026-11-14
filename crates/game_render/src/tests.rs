@@ -244,7 +244,7 @@ fn array_materials_share_image_and_use_linear_anisotropic_filtering() {
     let mut png = std::io::Cursor::new(Vec::new());
     fixture.write_to(&mut png, image::ImageFormat::Png).unwrap();
     let handles = create_materials(&mut images, &mut materials, png.get_ref()).unwrap();
-    assert_eq!(handles.len(), 72);
+    assert_eq!(handles.len(), 144);
     let first = materials.get(&handles[0]).unwrap().extension.image.clone();
     for (layer, handle) in handles.iter().enumerate() {
         let m = materials.get(handle).unwrap();
@@ -253,7 +253,7 @@ fn array_materials_share_image_and_use_linear_anisotropic_filtering() {
     }
     let image = images.get(&first).unwrap();
     assert_eq!((image.width(), image.height()), (128, 128));
-    assert_eq!(image.texture_descriptor.size.depth_or_array_layers, 72);
+    assert_eq!(image.texture_descriptor.size.depth_or_array_layers, 144);
     assert_eq!(image.texture_descriptor.mip_level_count, 8);
     let ImageSampler::Descriptor(s) = &image.sampler else {
         panic!("explicit sampler required");

@@ -14,7 +14,8 @@ pub use atlas::{ADDITIONAL_TILE_NAMES, BlockAtlas, extra_tile_names};
 pub use environment::gradient_sky;
 pub use face_textures::{
     BIRCH_LEAVES_LAYER, BlockTextures, FaceTextures, GLASS_LAYER, GRASS_BOTTOM, GRASS_TOP,
-    ICE_LAYER, LAMP_LAYER, MATERIAL_COUNT, OAK_LEAVES_LAYER, WATER_LAYER, WOOD_END,
+    ICE_LAYER, LAMP_LAYER, MATERIAL_COUNT, OAK_LEAVES_LAYER, PINE_LEAVES_LAYER, WATER_LAYER,
+    WOOD_END,
 };
 pub use icons::{bake_atlas_icons, bake_block_icons};
 pub use materials::{

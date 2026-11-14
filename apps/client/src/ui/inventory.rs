@@ -576,7 +576,14 @@ fn catalog_tab(game: &Game, id: ItemId) -> usize {
             | game_core::BIRCH_LEAVES
             | game_core::CLAY
             | game_core::ICE
-            | game_core::OBSIDIAN => 2,
+            | game_core::OBSIDIAN
+            | game_core::GRANITE
+            | game_core::MARBLE
+            | game_core::BASALT
+            | game_core::SLATE
+            | game_core::LIMESTONE
+            | game_core::PINE_LOG
+            | game_core::PINE_LEAVES => 2,
             _ => 1,
         },
     }
