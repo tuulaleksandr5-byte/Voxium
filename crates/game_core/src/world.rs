@@ -302,6 +302,111 @@ impl Chunk {
             }
         }
     }
+    /// Дополнения генератора 5: ещё пять пород деревьев, медь, лазурит и
+    /// изумруды, красный песок в пустынях, редкие тыквы и арбузы.
+    pub(crate) fn decorate_v5(&mut self, seed: u64) {
+        let min_x = i64::from(self.position[0]) * 16;
+        let min_z = i64::from(self.position[1]) * 16;
+        if self.sections.is_empty() {
+            return;
+        }
+        for gx in (min_x - 2).div_euclid(5)..=(min_x + 17).div_euclid(5) {
+            for gz in (min_z - 2).div_euclid(5)..=(min_z + 17).div_euclid(5) {
+                let Some(tree) = tree_at_cell(seed, gx, gz) else {
+                    continue;
+                };
+                let (log, leaves) = match coordinate_hash(seed ^ 0x7A15, gx, gz) % 8 {
+                    0 => (CHERRY_LOG, CHERRY_LEAVES),
+                    1 => (ACACIA_LOG, ACACIA_LEAVES),
+                    2 => (DARK_OAK_LOG, DARK_OAK_LEAVES),
+                    3 => (JUNGLE_LOG, JUNGLE_LEAVES),
+                    4 => (MANGROVE_LOG, MANGROVE_LEAVES),
+                    _ => continue,
+                };
+                let top = tree.ground + tree.height;
+                for dy in -1_i32..=1 {
+                    for dx in -2_i32..=2 {
+                        for dz in -2_i32..=2 {
+                            let (Some(x), Some(z)) =
+                                (tree.x.checked_add(dx), tree.z.checked_add(dz))
+                            else {
+                                continue;
+                            };
+                            let p = [x, top + dy, z];
+                            if self.block(p) == LEAVES {
+                                self.write(p, leaves);
+                            }
+                        }
+                    }
+                }
+                for y in tree.ground + 1..=top {
+                    let p = [tree.x, y, tree.z];
+                    if self.block(p) == WOOD {
+                        self.write(p, log);
+                    }
+                }
+            }
+        }
+        // (руда, нижняя и верхняя высота, порог местности, редкость гнезда).
+        let ores = [
+            (COPPER_ORE, 0, 96, 0.1, 9_u64),
+            (LAPIS_ORE, -48, 30, 0.3, 14),
+            (EMERALD_ORE, -16, 110, 0.45, 20),
+        ];
+        for x in min_x as i32..=(min_x + 15) as i32 {
+            for z in min_z as i32..=(min_z + 15) as i32 {
+                let (fx, fz) = (f64::from(x), f64::from(z));
+                let column = terrain_column(seed, x, z);
+                let height = column.height;
+                for (index, (ore, low, high, threshold, rarity)) in ores.into_iter().enumerate() {
+                    let salt = 0x0E50 + index as u64 * 0x77;
+                    if noise(seed ^ salt, fx / 26.0, fz / 26.0) < threshold {
+                        continue;
+                    }
+                    for y in low.max(WORLD_MIN_Y + 2)..=high.min(height - 5) {
+                        // Гнездо 2×2×2: общий жребий на ячейку и отдельный на блок.
+                        let nest = mix(coordinate_hash(
+                            seed ^ salt,
+                            i64::from(x >> 1),
+                            i64::from(z >> 1),
+                        ) ^ (i64::from(y >> 1) as u64)
+                            .wrapping_mul(0x9e37_79b9_7f4a_7c15));
+                        if !nest.is_multiple_of(rarity * 8) {
+                            continue;
+                        }
+                        let own = mix(nest
+                            ^ ((x & 1) as u64) << 1
+                            ^ ((z & 1) as u64) << 2
+                            ^ (y & 1) as u64);
+                        if !own.is_multiple_of(3)
+                            && matches!(self.block([x, y, z]), STONE | DEEP_STONE)
+                        {
+                            self.write([x, y, z], ore);
+                        }
+                    }
+                }
+                if column.biome == Biome::Desert
+                    && noise(seed ^ 0x5ED5, fx / 48.0, fz / 48.0) > 0.25
+                {
+                    for y in height - 2..=height {
+                        if self.block([x, y, z]) == SAND {
+                            self.write([x, y, z], RED_SAND);
+                        }
+                    }
+                }
+                if self.block([x, height, z]) == GRASS
+                    && height < WORLD_MAX_Y
+                    && self.block([x, height + 1, z]) == AIR
+                {
+                    match coordinate_hash(seed ^ 0x9A70, i64::from(x), i64::from(z)) % 1500 {
+                        0..=2 => self.write([x, height + 1, z], PUMPKIN),
+                        3..=5 => self.write([x, height + 1, z], MELON),
+                        _ => {}
+                    }
+                }
+            }
+        }
+    }
     fn plant(&mut self, tree: Tree) {
         let top = tree.ground + tree.height;
         for dy in -1_i32..=1 {

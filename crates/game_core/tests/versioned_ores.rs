@@ -47,7 +47,7 @@ fn default_ore_bands_replace_only_stone_and_are_load_order_independent() {
 #[test]
 fn version_selection_requires_valid_snapshot_and_leaves_legacy_exact() {
     assert!(WorldGenerator::from_snapshot(2, None).is_err());
-    assert!(WorldGenerator::from_snapshot(5, Some(OreConfig::default())).is_err());
+    assert!(WorldGenerator::from_snapshot(6, Some(OreConfig::default())).is_err());
     assert!(WorldGenerator::from_snapshot(1, Some(OreConfig::default())).is_err());
     let legacy = WorldGenerator::from_snapshot(1, None).unwrap();
     assert_eq!(legacy.generate(3, [-1, -1]), Chunk::generate(3, [-1, -1]));
@@ -110,7 +110,7 @@ fn generator_three_only_adds_birch_clay_and_obsidian_on_top_of_generator_two() {
     let three = WorldGenerator::from_snapshot(3, Some(OreConfig::default())).unwrap();
     assert_eq!((two.version(), three.version()), (2, 3));
     assert!(WorldGenerator::from_snapshot(3, None).is_err());
-    assert!(WorldGenerator::from_snapshot(5, Some(OreConfig::default())).is_err());
+    assert!(WorldGenerator::from_snapshot(6, Some(OreConfig::default())).is_err());
     let seed = 5;
     // Лесной чанк гарантирует деревья, остальные дают воду и глубину.
     let forest = (-40..40)
@@ -190,6 +190,65 @@ fn generator_four_adds_pines_rocks_and_plants_only_where_expected() {
                             assert_eq!(new.block([p[0], p[1] - 1, p[2]]), GRASS);
                         }
                         found[index] += 1;
+                    }
+                }
+            }
+        }
+    }
+    assert!(found.iter().all(|count| *count > 0), "{found:?}");
+}
+
+#[test]
+fn generator_five_adds_tree_species_and_ores_without_touching_anything_else() {
+    use game_core::{
+        ACACIA_LEAVES, ACACIA_LOG, CHERRY_LEAVES, CHERRY_LOG, COPPER_ORE, DARK_OAK_LEAVES,
+        DARK_OAK_LOG, EMERALD_ORE, GRASS, JUNGLE_LEAVES, JUNGLE_LOG, LAPIS_ORE, LEAVES,
+        MANGROVE_LEAVES, MANGROVE_LOG, MELON, PUMPKIN, RED_SAND, SAND, WOOD, biome_at,
+        world::Biome,
+    };
+    let four = WorldGenerator::from_snapshot(4, Some(OreConfig::default())).unwrap();
+    let five = WorldGenerator::from_snapshot(5, Some(OreConfig::default())).unwrap();
+    assert_eq!(five.version(), 5);
+    let seed = 5;
+    let forest = (-40..40)
+        .flat_map(|x| (-40..40).map(move |z| [x, z]))
+        .find(|p| biome_at(seed, p[0] * 16 + 8, p[1] * 16 + 8) == Biome::Forest)
+        .expect("seed has a forest");
+    // [деревья, руды]
+    let mut found = [0_usize; 2];
+    for dx in -4..=4 {
+        for dz in -4..=4 {
+            let pos = [forest[0] + dx, forest[1] + dz];
+            let old = four.generate(seed, pos);
+            let new = five.generate(seed, pos);
+            assert_eq!(new, five.generate(seed, pos));
+            for y in WORLD_MIN_Y..=WORLD_MAX_Y {
+                for z in 0..16 {
+                    for x in 0..16 {
+                        let p = [pos[0] * 16 + x, y, pos[1] * 16 + z];
+                        let (before, after) = (old.block(p), new.block(p));
+                        if before == after {
+                            continue;
+                        }
+                        match (before, after) {
+                            (
+                                WOOD,
+                                ACACIA_LOG | CHERRY_LOG | DARK_OAK_LOG | JUNGLE_LOG | MANGROVE_LOG,
+                            )
+                            | (
+                                LEAVES,
+                                ACACIA_LEAVES | CHERRY_LEAVES | DARK_OAK_LEAVES | JUNGLE_LEAVES
+                                | MANGROVE_LEAVES,
+                            ) => found[0] += 1,
+                            (STONE | DEEP_STONE, COPPER_ORE | LAPIS_ORE | EMERALD_ORE) => {
+                                found[1] += 1
+                            }
+                            (SAND, RED_SAND) => {}
+                            (AIR, PUMPKIN | MELON) => {
+                                assert_eq!(new.block([p[0], p[1] - 1, p[2]]), GRASS)
+                            }
+                            other => panic!("unexpected replacement {other:?} at {p:?}"),
+                        }
                     }
                 }
             }
