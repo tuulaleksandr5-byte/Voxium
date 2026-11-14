@@ -1,7 +1,4 @@
-use crate::{
-    BIRCH_LEAVES_LAYER, BlockAtlas, GLASS_LAYER, ICE_LAYER, LAMP_LAYER, MATERIAL_COUNT,
-    OAK_LEAVES_LAYER, PINE_LEAVES_LAYER, WATER_LAYER,
-};
+use crate::{BlockAtlas, GLASS_LAYER, ICE_LAYER, LAMP_LAYER, MATERIAL_COUNT, WATER_LAYER};
 use bevy::{
     asset::{RenderAssetUsages, embedded_asset},
     image::{ImageAddressMode, ImageFilterMode, ImageSampler, ImageSamplerDescriptor},
@@ -223,9 +220,7 @@ pub fn create_materials_from_atlas(
                     },
                     alpha_mode: match layer {
                         GLASS_LAYER | WATER_LAYER | ICE_LAYER => AlphaMode::Blend,
-                        OAK_LEAVES_LAYER | BIRCH_LEAVES_LAYER | PINE_LEAVES_LAYER => {
-                            AlphaMode::Mask(0.45)
-                        }
+                        layer if crate::is_cutout_layer(layer) => AlphaMode::Mask(0.45),
                         _ => AlphaMode::Opaque,
                     },
                     // Объёмная листва состоит из двусторонних плоскостей.
@@ -357,5 +352,24 @@ mod tests {
             materials.get(&handles[13]).unwrap().base.base_color.alpha(),
             0.65
         );
+    }
+
+    #[test]
+    fn every_cutout_layer_is_alpha_masked_and_double_sided() {
+        let atlas = BlockAtlas::pixel().unwrap();
+        let mut images = Assets::default();
+        let mut materials = Assets::default();
+        let handles = create_materials_from_atlas(&mut images, &mut materials, &atlas).unwrap();
+        for (layer, handle) in handles.iter().enumerate() {
+            let base = &materials.get(handle).unwrap().base;
+            let cutout = crate::is_cutout_layer(layer);
+            assert_eq!(
+                matches!(base.alpha_mode, AlphaMode::Mask(_)),
+                cutout,
+                "layer {layer}"
+            );
+            assert_eq!(base.cull_mode.is_none(), cutout, "layer {layer}");
+        }
+        assert!(crate::PLANT_LAYERS.clone().all(crate::is_cutout_layer));
     }
 }
