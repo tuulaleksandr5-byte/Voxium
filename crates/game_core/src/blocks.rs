@@ -118,6 +118,89 @@ pub const DANDELION: u8 = 99;
 pub const CORNFLOWER: u8 = 100;
 pub const DAISY: u8 = 101;
 pub const TALL_GRASS: u8 = 102;
+// Большая партия: породы дерева, руды, стекло, терракота, природа, плиты.
+pub const ACACIA_LOG: u8 = 103;
+pub const ACACIA_LEAVES: u8 = 104;
+pub const ACACIA_PLANKS: u8 = 105;
+pub const JUNGLE_LOG: u8 = 106;
+pub const JUNGLE_LEAVES: u8 = 107;
+pub const JUNGLE_PLANKS: u8 = 108;
+pub const DARK_OAK_LOG: u8 = 109;
+pub const DARK_OAK_LEAVES: u8 = 110;
+pub const DARK_OAK_PLANKS: u8 = 111;
+pub const MANGROVE_LOG: u8 = 112;
+pub const MANGROVE_LEAVES: u8 = 113;
+pub const MANGROVE_PLANKS: u8 = 114;
+pub const CHERRY_LOG: u8 = 115;
+pub const CHERRY_LEAVES: u8 = 116;
+pub const CHERRY_PLANKS: u8 = 117;
+pub const COPPER_ORE: u8 = 118;
+pub const EMERALD_ORE: u8 = 119;
+pub const LAPIS_ORE: u8 = 120;
+pub const COPPER_BLOCK: u8 = 121;
+pub const EMERALD_BLOCK: u8 = 122;
+pub const LAPIS_BLOCK: u8 = 123;
+pub const GLASS_WHITE: u8 = 124;
+pub const GLASS_ORANGE: u8 = 125;
+pub const GLASS_MAGENTA: u8 = 126;
+pub const GLASS_LIGHT_BLUE: u8 = 127;
+pub const GLASS_YELLOW: u8 = 128;
+pub const GLASS_LIME: u8 = 129;
+pub const GLASS_PINK: u8 = 130;
+pub const GLASS_GRAY: u8 = 131;
+pub const GLASS_LIGHT_GRAY: u8 = 132;
+pub const GLASS_CYAN: u8 = 133;
+pub const GLASS_PURPLE: u8 = 134;
+pub const GLASS_BLUE: u8 = 135;
+pub const GLASS_BROWN: u8 = 136;
+pub const GLASS_GREEN: u8 = 137;
+pub const GLASS_RED: u8 = 138;
+pub const GLASS_BLACK: u8 = 139;
+pub const TERRACOTTA_WHITE: u8 = 140;
+pub const TERRACOTTA_ORANGE: u8 = 141;
+pub const TERRACOTTA_MAGENTA: u8 = 142;
+pub const TERRACOTTA_LIGHT_BLUE: u8 = 143;
+pub const TERRACOTTA_YELLOW: u8 = 144;
+pub const TERRACOTTA_LIME: u8 = 145;
+pub const TERRACOTTA_PINK: u8 = 146;
+pub const TERRACOTTA_GRAY: u8 = 147;
+pub const TERRACOTTA_LIGHT_GRAY: u8 = 148;
+pub const TERRACOTTA_CYAN: u8 = 149;
+pub const TERRACOTTA_PURPLE: u8 = 150;
+pub const TERRACOTTA_BLUE: u8 = 151;
+pub const TERRACOTTA_BROWN: u8 = 152;
+pub const TERRACOTTA_GREEN: u8 = 153;
+pub const TERRACOTTA_RED: u8 = 154;
+pub const TERRACOTTA_BLACK: u8 = 155;
+pub const SPONGE: u8 = 156;
+pub const MELON: u8 = 157;
+pub const PUMPKIN: u8 = 158;
+pub const HAY_BALE: u8 = 159;
+pub const BONE_BLOCK: u8 = 160;
+pub const MUD: u8 = 161;
+pub const PACKED_MUD: u8 = 162;
+pub const MUD_BRICKS: u8 = 163;
+pub const MOSS_BLOCK: u8 = 164;
+pub const PODZOL: u8 = 165;
+pub const COARSE_DIRT: u8 = 166;
+pub const RED_SAND: u8 = 167;
+pub const RED_SANDSTONE: u8 = 168;
+pub const CALCITE: u8 = 169;
+pub const TUFF: u8 = 170;
+pub const AMETHYST_BLOCK: u8 = 171;
+pub const QUARTZ_BLOCK: u8 = 172;
+pub const OAK_SLAB: u8 = 173;
+pub const BIRCH_SLAB: u8 = 174;
+pub const PINE_SLAB: u8 = 175;
+pub const STONE_SLAB: u8 = 176;
+pub const COBBLESTONE_SLAB: u8 = 177;
+pub const STONE_BRICK_SLAB: u8 = 178;
+pub const SMOOTH_STONE_SLAB: u8 = 179;
+pub const SANDSTONE_SLAB: u8 = 180;
+pub const BRICK_SLAB: u8 = 181;
+pub const GRANITE_SLAB: u8 = 182;
+pub const MARBLE_SLAB: u8 = 183;
+pub const DARK_BRICK_SLAB: u8 = 184;
 
 const fn block(
     id: u8,
@@ -138,7 +221,7 @@ const fn block(
     }
 }
 
-pub const BLOCKS: [BlockDef; 103] = [
+pub const BLOCKS: [BlockDef; 185] = [
     block(AIR, "Air", "air", 0.0, false, false),
     block(GRASS, "Grass", "grass", 0.6, true, true),
     block(DIRT, "Dirt", "dirt", 0.5, true, true),
@@ -507,12 +590,415 @@ pub const BLOCKS: [BlockDef; 103] = [
     block(CORNFLOWER, "Cornflower", "cornflower", 0.05, false, false),
     block(DAISY, "Daisy", "daisy", 0.05, false, false),
     block(TALL_GRASS, "Tall Grass", "tall_grass", 0.05, false, false),
+    block(ACACIA_LOG, "Acacia Log", "acacia_log", 2.0, true, true),
+    block(
+        ACACIA_LEAVES,
+        "Acacia Leaves",
+        "acacia_leaves",
+        0.2,
+        true,
+        false,
+    ),
+    block(
+        ACACIA_PLANKS,
+        "Acacia Planks",
+        "acacia_planks",
+        2.0,
+        true,
+        true,
+    ),
+    block(JUNGLE_LOG, "Jungle Log", "jungle_log", 2.0, true, true),
+    block(
+        JUNGLE_LEAVES,
+        "Jungle Leaves",
+        "jungle_leaves",
+        0.2,
+        true,
+        false,
+    ),
+    block(
+        JUNGLE_PLANKS,
+        "Jungle Planks",
+        "jungle_planks",
+        2.0,
+        true,
+        true,
+    ),
+    block(
+        DARK_OAK_LOG,
+        "Dark Oak Log",
+        "dark_oak_log",
+        2.0,
+        true,
+        true,
+    ),
+    block(
+        DARK_OAK_LEAVES,
+        "Dark Oak Leaves",
+        "dark_oak_leaves",
+        0.2,
+        true,
+        false,
+    ),
+    block(
+        DARK_OAK_PLANKS,
+        "Dark Oak Planks",
+        "dark_oak_planks",
+        2.0,
+        true,
+        true,
+    ),
+    block(
+        MANGROVE_LOG,
+        "Mangrove Log",
+        "mangrove_log",
+        2.0,
+        true,
+        true,
+    ),
+    block(
+        MANGROVE_LEAVES,
+        "Mangrove Leaves",
+        "mangrove_leaves",
+        0.2,
+        true,
+        false,
+    ),
+    block(
+        MANGROVE_PLANKS,
+        "Mangrove Planks",
+        "mangrove_planks",
+        2.0,
+        true,
+        true,
+    ),
+    block(CHERRY_LOG, "Cherry Log", "cherry_log", 2.0, true, true),
+    block(
+        CHERRY_LEAVES,
+        "Cherry Leaves",
+        "cherry_leaves",
+        0.2,
+        true,
+        false,
+    ),
+    block(
+        CHERRY_PLANKS,
+        "Cherry Planks",
+        "cherry_planks",
+        2.0,
+        true,
+        true,
+    ),
+    block(COPPER_ORE, "Copper Ore", "copper_ore", 3.0, true, true),
+    block(EMERALD_ORE, "Emerald Ore", "emerald_ore", 3.0, true, true),
+    block(LAPIS_ORE, "Lapis Ore", "lapis_ore", 3.0, true, true),
+    block(
+        COPPER_BLOCK,
+        "Copper Block",
+        "copper_block",
+        3.0,
+        true,
+        true,
+    ),
+    block(
+        EMERALD_BLOCK,
+        "Emerald Block",
+        "emerald_block",
+        3.0,
+        true,
+        true,
+    ),
+    block(LAPIS_BLOCK, "Lapis Block", "lapis_block", 3.0, true, true),
+    block(GLASS_WHITE, "Glass White", "glass_white", 0.3, true, false),
+    block(
+        GLASS_ORANGE,
+        "Glass Orange",
+        "glass_orange",
+        0.3,
+        true,
+        false,
+    ),
+    block(
+        GLASS_MAGENTA,
+        "Glass Magenta",
+        "glass_magenta",
+        0.3,
+        true,
+        false,
+    ),
+    block(
+        GLASS_LIGHT_BLUE,
+        "Glass Light Blue",
+        "glass_light_blue",
+        0.3,
+        true,
+        false,
+    ),
+    block(
+        GLASS_YELLOW,
+        "Glass Yellow",
+        "glass_yellow",
+        0.3,
+        true,
+        false,
+    ),
+    block(GLASS_LIME, "Glass Lime", "glass_lime", 0.3, true, false),
+    block(GLASS_PINK, "Glass Pink", "glass_pink", 0.3, true, false),
+    block(GLASS_GRAY, "Glass Gray", "glass_gray", 0.3, true, false),
+    block(
+        GLASS_LIGHT_GRAY,
+        "Glass Light Gray",
+        "glass_light_gray",
+        0.3,
+        true,
+        false,
+    ),
+    block(GLASS_CYAN, "Glass Cyan", "glass_cyan", 0.3, true, false),
+    block(
+        GLASS_PURPLE,
+        "Glass Purple",
+        "glass_purple",
+        0.3,
+        true,
+        false,
+    ),
+    block(GLASS_BLUE, "Glass Blue", "glass_blue", 0.3, true, false),
+    block(GLASS_BROWN, "Glass Brown", "glass_brown", 0.3, true, false),
+    block(GLASS_GREEN, "Glass Green", "glass_green", 0.3, true, false),
+    block(GLASS_RED, "Glass Red", "glass_red", 0.3, true, false),
+    block(GLASS_BLACK, "Glass Black", "glass_black", 0.3, true, false),
+    block(
+        TERRACOTTA_WHITE,
+        "Terracotta White",
+        "terracotta_white",
+        1.25,
+        true,
+        true,
+    ),
+    block(
+        TERRACOTTA_ORANGE,
+        "Terracotta Orange",
+        "terracotta_orange",
+        1.25,
+        true,
+        true,
+    ),
+    block(
+        TERRACOTTA_MAGENTA,
+        "Terracotta Magenta",
+        "terracotta_magenta",
+        1.25,
+        true,
+        true,
+    ),
+    block(
+        TERRACOTTA_LIGHT_BLUE,
+        "Terracotta Light Blue",
+        "terracotta_light_blue",
+        1.25,
+        true,
+        true,
+    ),
+    block(
+        TERRACOTTA_YELLOW,
+        "Terracotta Yellow",
+        "terracotta_yellow",
+        1.25,
+        true,
+        true,
+    ),
+    block(
+        TERRACOTTA_LIME,
+        "Terracotta Lime",
+        "terracotta_lime",
+        1.25,
+        true,
+        true,
+    ),
+    block(
+        TERRACOTTA_PINK,
+        "Terracotta Pink",
+        "terracotta_pink",
+        1.25,
+        true,
+        true,
+    ),
+    block(
+        TERRACOTTA_GRAY,
+        "Terracotta Gray",
+        "terracotta_gray",
+        1.25,
+        true,
+        true,
+    ),
+    block(
+        TERRACOTTA_LIGHT_GRAY,
+        "Terracotta Light Gray",
+        "terracotta_light_gray",
+        1.25,
+        true,
+        true,
+    ),
+    block(
+        TERRACOTTA_CYAN,
+        "Terracotta Cyan",
+        "terracotta_cyan",
+        1.25,
+        true,
+        true,
+    ),
+    block(
+        TERRACOTTA_PURPLE,
+        "Terracotta Purple",
+        "terracotta_purple",
+        1.25,
+        true,
+        true,
+    ),
+    block(
+        TERRACOTTA_BLUE,
+        "Terracotta Blue",
+        "terracotta_blue",
+        1.25,
+        true,
+        true,
+    ),
+    block(
+        TERRACOTTA_BROWN,
+        "Terracotta Brown",
+        "terracotta_brown",
+        1.25,
+        true,
+        true,
+    ),
+    block(
+        TERRACOTTA_GREEN,
+        "Terracotta Green",
+        "terracotta_green",
+        1.25,
+        true,
+        true,
+    ),
+    block(
+        TERRACOTTA_RED,
+        "Terracotta Red",
+        "terracotta_red",
+        1.25,
+        true,
+        true,
+    ),
+    block(
+        TERRACOTTA_BLACK,
+        "Terracotta Black",
+        "terracotta_black",
+        1.25,
+        true,
+        true,
+    ),
+    block(SPONGE, "Sponge", "sponge", 0.6, true, true),
+    block(MELON, "Melon", "melon", 1.0, true, true),
+    block(PUMPKIN, "Pumpkin", "pumpkin", 1.0, true, true),
+    block(HAY_BALE, "Hay Bale", "hay_bale", 0.5, true, true),
+    block(BONE_BLOCK, "Bone Block", "bone_block", 2.0, true, true),
+    block(MUD, "Mud", "mud", 0.5, true, true),
+    block(PACKED_MUD, "Packed Mud", "packed_mud", 1.0, true, true),
+    block(MUD_BRICKS, "Mud Bricks", "mud_bricks", 1.5, true, true),
+    block(MOSS_BLOCK, "Moss Block", "moss_block", 0.1, true, true),
+    block(PODZOL, "Podzol", "podzol", 0.5, true, true),
+    block(COARSE_DIRT, "Coarse Dirt", "coarse_dirt", 0.5, true, true),
+    block(RED_SAND, "Red Sand", "red_sand", 0.5, true, true),
+    block(
+        RED_SANDSTONE,
+        "Red Sandstone",
+        "red_sandstone",
+        0.8,
+        true,
+        true,
+    ),
+    block(CALCITE, "Calcite", "calcite", 0.75, true, true),
+    block(TUFF, "Tuff", "tuff", 1.5, true, true),
+    block(
+        AMETHYST_BLOCK,
+        "Amethyst Block",
+        "amethyst_block",
+        1.5,
+        true,
+        true,
+    ),
+    block(
+        QUARTZ_BLOCK,
+        "Quartz Block",
+        "quartz_block",
+        0.8,
+        true,
+        true,
+    ),
+    block(OAK_SLAB, "Oak Slab", "oak_slab", 1.5, true, false),
+    block(BIRCH_SLAB, "Birch Slab", "birch_slab", 1.5, true, false),
+    block(PINE_SLAB, "Pine Slab", "pine_slab", 1.5, true, false),
+    block(STONE_SLAB, "Stone Slab", "stone_slab", 1.5, true, false),
+    block(
+        COBBLESTONE_SLAB,
+        "Cobblestone Slab",
+        "cobblestone_slab",
+        1.5,
+        true,
+        false,
+    ),
+    block(
+        STONE_BRICK_SLAB,
+        "Stone Brick Slab",
+        "stone_brick_slab",
+        1.5,
+        true,
+        false,
+    ),
+    block(
+        SMOOTH_STONE_SLAB,
+        "Smooth Stone Slab",
+        "smooth_stone_slab",
+        1.5,
+        true,
+        false,
+    ),
+    block(
+        SANDSTONE_SLAB,
+        "Sandstone Slab",
+        "sandstone_slab",
+        1.5,
+        true,
+        false,
+    ),
+    block(BRICK_SLAB, "Brick Slab", "brick_slab", 1.5, true, false),
+    block(
+        GRANITE_SLAB,
+        "Granite Slab",
+        "granite_slab",
+        1.5,
+        true,
+        false,
+    ),
+    block(MARBLE_SLAB, "Marble Slab", "marble_slab", 1.5, true, false),
+    block(
+        DARK_BRICK_SLAB,
+        "Dark Brick Slab",
+        "dark_brick_slab",
+        1.5,
+        true,
+        false,
+    ),
 ];
 
 /// Растения рисуются двумя скрещёнными плоскостями и не мешают ходьбе.
 #[must_use]
 pub fn is_plant(id: u8) -> bool {
     (POPPY..=TALL_GRASS).contains(&id)
+}
+
+/// Плита занимает нижнюю половину клетки.
+#[must_use]
+pub fn is_slab(id: u8) -> bool {
+    (OAK_SLAB..=DARK_BRICK_SLAB).contains(&id)
 }
 
 /// Блок без состояния «горит»: в таком виде он выпадает и сохраняется.
@@ -529,7 +1015,17 @@ pub fn unlit(id: u8) -> u8 {
 /// Листва получает объёмную геометрию и не сливается в greedy-грани.
 #[must_use]
 pub fn is_leaves(id: u8) -> bool {
-    matches!(id, LEAVES | BIRCH_LEAVES | PINE_LEAVES)
+    matches!(
+        id,
+        LEAVES
+            | BIRCH_LEAVES
+            | PINE_LEAVES
+            | ACACIA_LEAVES
+            | JUNGLE_LEAVES
+            | DARK_OAK_LEAVES
+            | MANGROVE_LEAVES
+            | CHERRY_LEAVES
+    )
 }
 
 #[must_use]
@@ -562,7 +1058,7 @@ mod tests {
             "Crafting Table",
             "Furnace",
         ];
-        assert_eq!(BLOCKS.len(), 103);
+        assert_eq!(BLOCKS.len(), 185);
         for (offset, name) in expected.iter().enumerate() {
             let id = 17 + offset;
             assert_eq!(BLOCKS[id].id as usize, id);
@@ -573,7 +1069,7 @@ mod tests {
 
     #[test]
     fn chest_extends_registry_without_changing_foundation_ids() {
-        assert_eq!(BLOCKS.len(), 103);
+        assert_eq!(BLOCKS.len(), 185);
         let chest = BLOCKS.get(16).expect("сундук зарегистрирован");
         assert_eq!(chest.name, "Chest");
         assert!(is_solid(16));

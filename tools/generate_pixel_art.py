@@ -1009,6 +1009,198 @@ for _color, _hex in COLORS.items():
     ICONS[f"dye_{_color}"] = dye_icon(_hex)
 
 
+# ------------------------------------------------------------- big batch
+
+WOODS = {
+    "acacia": (["#5a5148", "#665c52", "#72675c", "#7e7266"], ["#a8552e", "#b25e34", "#bc673a", "#c67040"], ["#5c7a22", "#6a8a28", "#789a2e", "#86aa36", "#94ba40"]),
+    "jungle": (["#4a3f1e", "#564a24", "#62552a", "#6e6030"], ["#a07550", "#aa7e58", "#b48760", "#be9068"], ["#1f6a12", "#277a18", "#2f8a1e", "#389a26", "#44ac30"]),
+    "dark_oak": (["#2a1e10", "#332514", "#3c2c18", "#45331c"], ["#3e2912", "#463016", "#4e371a", "#563e1e"], ["#1f4f14", "#265c19", "#2d691e", "#357624", "#3e842c"]),
+    "mangrove": (["#4e3a2a", "#584232", "#624a3a", "#6c5242"], ["#6e2c2a", "#783230", "#823836", "#8c3e3c"], ["#3a7a1e", "#448a24", "#4e9a2a", "#58aa32", "#64ba3c"]),
+    "cherry": (["#2e1c22", "#382228", "#42282e", "#4c2e34"], ["#deb0a8", "#e4b8b0", "#eac0b8", "#f0c8c0"], ["#e896b8", "#eea6c4", "#f4b6d0", "#f8c6dc", "#fcd8e8"]),
+}
+for _wood, (_bark, _planks, _leaf) in WOODS.items():
+    TILES[f"{_wood}_log"] = (lambda b=_bark, n=_wood: bark(rng(n + "_log"), b, b[0]))
+    TILES[f"{_wood}_log_top"] = (lambda b=_bark, p=_planks, n=_wood: log_top(n + "_log_top", b[:3], p, p[0]))
+    TILES[f"{_wood}_planks"] = (lambda p=_planks, n=_wood: planks(n + "_planks", p, "#%02x%02x%02x" % tuple(int(v * 0.7) for v in rgb(p[0])), p[0]))
+    TILES[f"{_wood}_leaves"] = (lambda l=_leaf, n=_wood: leaves(n + "_leaves", l, "#%02x%02x%02x" % tuple(int(v * 0.72) for v in rgb(l[0])), 0.3))
+
+ore("copper_ore", ("#f0a070", "#c8683c", "#4a5a50"))
+ore("emerald_ore", ("#a8ffc0", "#22c85a", "#3a5a44"))
+ore("lapis_ore", ("#7a9cff", "#2a4fc8", "#3a4460"))
+metal("copper_block", ("#8a4424", "#b8643a", "#d07a4a", "#e89460", "#ffc8a0"))
+metal("emerald_block", ("#0e7a34", "#1ea84c", "#2ec864", "#5ee88c", "#c8ffd8"))
+metal("lapis_block", ("#16286e", "#22409a", "#2c52b8", "#4a70d8", "#a8c0ff"))
+
+
+def stained_glass(name, color):
+    def build():
+        image = canvas(color, 96)
+        light = shades(color, 0.3)[3]
+        dark = shades(color, 0.3)[0]
+        for i in range(N):
+            for edge in (0, N - 1):
+                put(image, i, edge, light, 255)
+                put(image, edge, i, light, 255)
+            for edge in (1, N - 2):
+                if 0 < i < N - 1:
+                    put(image, i, edge, dark, 230)
+                    put(image, edge, i, dark, 230)
+        for start, length in ((5, 7), (9, 4), (20, 6)):
+            for step in range(length):
+                put(image, start + step, start + length - step + 2, "#ffffff", 190)
+        return image
+
+    TILES[name] = build
+
+
+def glazed(name, color):
+    def build():
+        r = rng("terracotta")
+        base = rgb(color) * 0.62 + rgb("#964f32") * 0.38
+        hexc = "#%02x%02x%02x" % tuple(int(v) for v in base)
+        image = fill(canvas(), fbm(r, ((4, 1.0), (8, 0.4))), shades(hexc, 0.07))
+        speckle(image, r, [shades(hexc, 0.12)[0]], 18)
+        return image
+
+    TILES[name] = build
+
+
+for _color, _hex in COLORS.items():
+    stained_glass(f"glass_{_color}", _hex)
+    glazed(f"terracotta_{_color}", _hex)
+
+
+def simple(name, palette, speck=(), octaves=((4, 1.0), (8, 0.7), (16, 0.5)), count=40):
+    def build():
+        r = rng(name)
+        image = fill(canvas(), fbm(r, octaves), palette)
+        if speck:
+            speckle(image, r, list(speck), count)
+        return image
+
+    TILES[name] = build
+
+
+simple("mud", ["#3a3238", "#42393f", "#4a4046", "#52474d"], ["#2e282c", "#5e5258"])
+simple("packed_mud", ["#8a6a52", "#94735a", "#9e7c62", "#a8856a"], ["#c8b08a", "#7a5c46"], count=60)
+simple("moss_block", ["#4a6a24", "#55772a", "#608430", "#6b9136"], ["#7aa240", "#3e5a1e"], count=70)
+simple("coarse_dirt", ["#5e4630", "#6b5038", "#785a40", "#856448"], ["#9a9088", "#4a3828", "#a08a70"], count=90)
+simple("red_sand", ["#b05a20", "#ba6326", "#c46c2c", "#ce7532"], ["#a04e18", "#dc8a48"], ((4, 1.0), (16, 0.5)), 70)
+simple("calcite", ["#d8dcd8", "#e0e4e0", "#e8ece8", "#f0f4f0"], ["#c8ccc8"], ((2, 1.0), (8, 0.5)))
+simple("tuff", ["#5a5c52", "#64665c", "#6e7066", "#787a70"], ["#4a4c44", "#8a8c80"], count=80)
+simple("quartz_block", ["#e4ddd4", "#eae4dc", "#f0ebe4", "#f6f2ec"], ["#dcd4c8"], ((2, 1.0), (4, 0.5)), 16)
+simple("sponge", ["#b8b030", "#c4bc3a", "#d0c844", "#dcd44e"])
+
+
+def _holes(name, base, color, count):
+    def build():
+        image = TILES[base]()
+        r = rng(name)
+        for _ in range(count):
+            x, y = r.integers(1, N - 2, 2)
+            rect(image, int(x), int(y), int(r.integers(1, 4)), int(r.integers(1, 3)), color)
+        return image
+
+    return build
+
+
+_sponge = TILES["sponge"]
+TILES["sponge"] = lambda: (lambda image: (
+    [rect(image, int(x), int(y), 2, 2, "#8a8420") for x, y in rng("sponge-holes").integers(1, N - 3, (26, 2))], image)[1])(_sponge())
+
+
+@tile("red_sandstone")
+def red_sandstone():
+    r = rng("red_sandstone")
+    image = fill(canvas(), fbm(r, ((4, 1.0), (16, 0.6))), ["#a8521c", "#b25b22", "#bc6428", "#c66d2e"])
+    for y in (0, 9, 10, 19, 20, 27, N - 1):
+        for x in range(N):
+            put(image, x, y, "#8e4416" if y % 2 else "#d07e3e")
+    return image
+
+
+@tile("mud_bricks")
+def mud_bricks():
+    return brick_pattern(rng("mud_bricks"), ["#8a6a52", "#94735a", "#9e7c62", "#a8856a"], "#5e4636")
+
+
+@tile("amethyst_block")
+def amethyst_block():
+    r = rng("amethyst")
+    image, _ = cells(r, 14, "#4a2a7a", ["#7a4ab8", "#8a5ac8", "#9a6cd8", "#b088e8"], 30, 1.0)
+    speckle(image, r, ["#e8d8ff"], 14)
+    return image
+
+
+def striped(name, palette, dark, vertical=True, period=4):
+    def build():
+        r = rng(name)
+        image = fill(canvas(), fbm(r, ((16, 1.0), (32, 0.6))), palette)
+        for i in range(0, N, period):
+            for j in range(N):
+                if r.random() < 0.85:
+                    put(image, i if vertical else j, j if vertical else i, dark)
+        return image
+
+    TILES[name] = build
+
+
+striped("melon_side", ["#5a9a22", "#66a828", "#72b62e", "#7ec436"], "#3a6a16", True, 5)
+simple("melon_top", ["#5a9a22", "#66a828", "#72b62e", "#7ec436"], ["#3a6a16"], count=50)
+striped("pumpkin_side", ["#d07a14", "#dc861a", "#e89220", "#f29e28"], "#a85a0c", True, 6)
+striped("hay_bale_side", ["#b89a1c", "#c4a622", "#d0b228", "#dcbe30"], "#8a7012", True, 3)
+simple("hay_bale_top", ["#b89a1c", "#c4a622", "#d0b228", "#dcbe30"], ["#8a7012", "#ecd45a"], ((16, 1.0), (32, 1.0)), 120)
+striped("bone_block_side", ["#d8d2b8", "#e0dac2", "#e8e2cc", "#f0ead6"], "#b8b298", True, 8)
+simple("bone_block_top", ["#d8d2b8", "#e0dac2", "#e8e2cc", "#f0ead6"], ["#b8b298"], count=50)
+simple("podzol_top", ["#5a3e1c", "#664822", "#725228", "#7e5c2e"], ["#3e2a12", "#8e6c3a", "#4a5a22"], count=90)
+
+
+@tile("pumpkin_top")
+def pumpkin_top():
+    image = TILES["pumpkin_side"]()
+    image = np.rot90(image).copy()
+    rect(image, 13, 13, 6, 6, "#5a7a22")
+    rect(image, 14, 14, 4, 4, "#7a9a32")
+    return image
+
+
+@tile("podzol_side")
+def podzol_side():
+    r = rng("podzol_side")
+    image = dirt_base(r)
+    top = TILES["podzol_top"]()
+    for x in range(N):
+        d = 4 + int(r.integers(0, 3))
+        image[:d, x] = top[:d, x]
+    return image
+
+
+def gem_icon(name, palette, shape):
+    def build():
+        r = rng(name)
+        if shape == "gem":
+            mask = np.zeros((N, N), dtype=bool)
+            for y in range(N):
+                for x in range(N):
+                    mask[y, x] = abs(x - 15.5) / 9 + abs(y - 16) / 11 <= 1
+        elif shape == "ingot":
+            mask = np.zeros((N, N), dtype=bool)
+            for y in range(11, 22):
+                shift = (y - 11) // 3
+                mask[y, 4 + shift : 24 + shift] = True
+        else:
+            mask = ellipse(12, 14, 6, 5) | ellipse(19, 18, 7, 6) | ellipse(13, 21, 5, 4)
+        return sprite(mask, palette, r)
+
+    ICONS[name] = build
+
+
+gem_icon("raw_copper", ["#6e3418", "#b8643a", "#d07a4a", "#f0a070"], "lump")
+gem_icon("copper_ingot", ["#6e3418", "#b8643a", "#d88454", "#ffc8a0"], "ingot")
+gem_icon("emerald", ["#0a5a26", "#1ea84c", "#3ed874", "#c8ffd8"], "gem")
+gem_icon("lapis", ["#101e5a", "#22409a", "#3a60d0", "#a8c0ff"], "lump")
+
+
 # ------------------------------------------------------- functional blocks
 
 

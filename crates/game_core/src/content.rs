@@ -64,7 +64,7 @@ pub struct ContentRegistry {
 }
 
 // Имена соответствуют стабильным сохранённым ID; новые блоки только дописываются.
-const BLOCK_NAMES: [&str; 103] = [
+const BLOCK_NAMES: [&str; 185] = [
     "foundation:air",
     "foundation:grass",
     "foundation:dirt",
@@ -168,6 +168,88 @@ const BLOCK_NAMES: [&str; 103] = [
     "flora:cornflower",
     "flora:daisy",
     "flora:tall_grass",
+    "mine:acacia_log",
+    "mine:acacia_leaves",
+    "mine:acacia_planks",
+    "mine:jungle_log",
+    "mine:jungle_leaves",
+    "mine:jungle_planks",
+    "mine:dark_oak_log",
+    "mine:dark_oak_leaves",
+    "mine:dark_oak_planks",
+    "mine:mangrove_log",
+    "mine:mangrove_leaves",
+    "mine:mangrove_planks",
+    "mine:cherry_log",
+    "mine:cherry_leaves",
+    "mine:cherry_planks",
+    "mine:copper_ore",
+    "mine:emerald_ore",
+    "mine:lapis_ore",
+    "mine:copper_block",
+    "mine:emerald_block",
+    "mine:lapis_block",
+    "mine:glass_white",
+    "mine:glass_orange",
+    "mine:glass_magenta",
+    "mine:glass_light_blue",
+    "mine:glass_yellow",
+    "mine:glass_lime",
+    "mine:glass_pink",
+    "mine:glass_gray",
+    "mine:glass_light_gray",
+    "mine:glass_cyan",
+    "mine:glass_purple",
+    "mine:glass_blue",
+    "mine:glass_brown",
+    "mine:glass_green",
+    "mine:glass_red",
+    "mine:glass_black",
+    "mine:terracotta_white",
+    "mine:terracotta_orange",
+    "mine:terracotta_magenta",
+    "mine:terracotta_light_blue",
+    "mine:terracotta_yellow",
+    "mine:terracotta_lime",
+    "mine:terracotta_pink",
+    "mine:terracotta_gray",
+    "mine:terracotta_light_gray",
+    "mine:terracotta_cyan",
+    "mine:terracotta_purple",
+    "mine:terracotta_blue",
+    "mine:terracotta_brown",
+    "mine:terracotta_green",
+    "mine:terracotta_red",
+    "mine:terracotta_black",
+    "mine:sponge",
+    "mine:melon",
+    "mine:pumpkin",
+    "mine:hay_bale",
+    "mine:bone_block",
+    "mine:mud",
+    "mine:packed_mud",
+    "mine:mud_bricks",
+    "mine:moss_block",
+    "mine:podzol",
+    "mine:coarse_dirt",
+    "mine:red_sand",
+    "mine:red_sandstone",
+    "mine:calcite",
+    "mine:tuff",
+    "mine:amethyst_block",
+    "mine:quartz_block",
+    "mine:oak_slab",
+    "mine:birch_slab",
+    "mine:pine_slab",
+    "mine:stone_slab",
+    "mine:cobblestone_slab",
+    "mine:stone_brick_slab",
+    "mine:smooth_stone_slab",
+    "mine:sandstone_slab",
+    "mine:brick_slab",
+    "mine:granite_slab",
+    "mine:marble_slab",
+    "mine:dark_brick_slab",
 ];
 
 impl Default for ContentRegistry {
@@ -426,7 +508,7 @@ mod tests {
                 assert_eq!(def.max_stack, 1);
             }
         }
-        assert_eq!(registry.len(), 177);
+        assert_eq!(registry.len(), 263);
     }
 
     fn material(id: &str, max_stack: u16) -> String {
@@ -436,7 +518,7 @@ mod tests {
     #[test]
     fn default_catalog_preserves_original_stage_three_blocks_and_fixtures() {
         let registry = ContentRegistry::default();
-        assert_eq!(registry.len(), 177);
+        assert_eq!(registry.len(), 263);
         assert!(!registry.is_empty());
         let names = [
             "foundation:air",
@@ -595,7 +677,7 @@ mod tests {
         ] {
             assert!(original.reload(&changed).is_err());
         }
-        assert_eq!(original.len(), 177);
+        assert_eq!(original.len(), 263);
         assert_eq!(
             original.max_stack(original.find("survival:egg").unwrap()),
             16

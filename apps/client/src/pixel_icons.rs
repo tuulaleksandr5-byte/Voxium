@@ -14,7 +14,7 @@ macro_rules! icon {
     };
 }
 
-const ICONS: [(&str, &[u8]); 31] = [
+const ICONS: [(&str, &[u8]); 35] = [
     icon!("survival:stick", "stick"),
     icon!("survival:egg", "egg"),
     icon!("builder:clay_ball", "clay_ball"),
@@ -46,6 +46,10 @@ const ICONS: [(&str, &[u8]); 31] = [
     icon!("flora:dye_green", "dye_green"),
     icon!("flora:dye_red", "dye_red"),
     icon!("flora:dye_black", "dye_black"),
+    icon!("mine:raw_copper", "raw_copper"),
+    icon!("mine:copper_ingot", "copper_ingot"),
+    icon!("mine:emerald", "emerald"),
+    icon!("mine:lapis", "lapis"),
 ];
 
 /// RGBA 128×128 для предмета с пиксельным значком.
@@ -73,7 +77,9 @@ mod tests {
             assert!(rgba.as_chunks::<4>().0.iter().any(|p| p[3] == 255), "{id}");
         }
         for (_, item) in catalog.iter() {
-            if (item.id.starts_with("builder:") || item.id.starts_with("flora:"))
+            if (item.id.starts_with("builder:")
+                || item.id.starts_with("flora:")
+                || item.id.starts_with("mine:"))
                 && !matches!(item.kind, ItemKind::Block { .. })
             {
                 assert!(pixels(&item.id).is_some(), "{} has no icon", item.id);

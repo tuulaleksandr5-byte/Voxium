@@ -141,10 +141,7 @@ pub fn stream_world(
                         ),
                     ))
                     .id();
-                if matches!(
-                    usize::from(id),
-                    game_render::GLASS_LAYER | game_render::WATER_LAYER | game_render::ICE_LAYER
-                ) {
+                if game_render::is_blend_layer(usize::from(id)) {
                     commands.entity(entity).insert(bevy::light::NotShadowCaster);
                 }
                 tiles.push((entity, handle));

@@ -1,4 +1,4 @@
-use crate::{BlockAtlas, GLASS_LAYER, ICE_LAYER, LAMP_LAYER, MATERIAL_COUNT, WATER_LAYER};
+use crate::{BlockAtlas, GLASS_LAYER, LAMP_LAYER, MATERIAL_COUNT, WATER_LAYER};
 use bevy::{
     asset::{RenderAssetUsages, embedded_asset},
     image::{ImageAddressMode, ImageFilterMode, ImageSampler, ImageSamplerDescriptor},
@@ -13,7 +13,7 @@ use bevy::{
 
 pub const TEXTURE_SIZE: u32 = 128;
 const ATLAS_WIDTH: u32 = TEXTURE_SIZE * 6;
-const ATLAS_HEIGHT: u32 = TEXTURE_SIZE * 24;
+const ATLAS_HEIGHT: u32 = TEXTURE_SIZE * 36;
 const LEGACY_EXPANDED_HEIGHT: u32 = TEXTURE_SIZE * 6;
 
 pub type VoxelMaterial = ExtendedMaterial<StandardMaterial, TileArray>;
@@ -66,7 +66,7 @@ pub fn atlas_array(rgba: &[u8]) -> Result<Image, String> {
         return atlas_array(&padded);
     }
     if rgba.len() != (ATLAS_WIDTH * ATLAS_HEIGHT * 4) as usize {
-        return Err("atlas RGBA byte count does not match 768×384, 768×768 or 768×3072".into());
+        return Err("atlas RGBA byte count does not match 768×384, 768×768 or 768×4608".into());
     }
     let mut data = Vec::new();
     for layer in 0..MATERIAL_COUNT {
@@ -205,8 +205,7 @@ pub fn create_materials_from_atlas(
                             _ => 1.,
                         },
                     ),
-                    perceptual_roughness: if matches!(layer, GLASS_LAYER | WATER_LAYER | ICE_LAYER)
-                    {
+                    perceptual_roughness: if crate::is_blend_layer(layer) {
                         0.28
                     } else {
                         0.92
@@ -219,7 +218,7 @@ pub fn create_materials_from_atlas(
                         LinearRgba::BLACK
                     },
                     alpha_mode: match layer {
-                        GLASS_LAYER | WATER_LAYER | ICE_LAYER => AlphaMode::Blend,
+                        layer if crate::is_blend_layer(layer) => AlphaMode::Blend,
                         layer if crate::is_cutout_layer(layer) => AlphaMode::Mask(0.45),
                         _ => AlphaMode::Opaque,
                     },

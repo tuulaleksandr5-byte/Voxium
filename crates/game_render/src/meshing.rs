@@ -4,7 +4,7 @@ use bevy::{
     mesh::{Indices, PrimitiveTopology},
     prelude::Mesh,
 };
-use game_core::{AIR, BLOCKS, SECTION_SIZE, is_leaves, is_opaque, is_plant};
+use game_core::{AIR, BLOCKS, SECTION_SIZE, is_leaves, is_opaque, is_plant, is_slab};
 
 const SIZE: usize = SECTION_SIZE as usize;
 const PADDED_SIZE: usize = SIZE + 2;
@@ -66,7 +66,7 @@ pub fn mesh_section_with_textures(
                         local[u_axis] = u as i32;
                         local[v_axis] = v as i32;
                         let id = blocks[padded_index(local)];
-                        if id == AIR || is_plant(id) {
+                        if id == AIR || is_plant(id) || is_slab(id) {
                             continue;
                         }
                         local[axis] += if positive { 1 } else { -1 };
@@ -139,6 +139,27 @@ pub fn mesh_section_with_textures(
                     let world = std::array::from_fn(|axis| origin[axis] + i64::from(local[axis]));
                     let material = textures.layer(id, 0, true);
                     builders[usize::from(material)].cross(local, leaf_hash(world));
+                    continue;
+                }
+                if is_slab(id) {
+                    // Плита: половина куба. Верх виден всегда, бока прячутся за
+                    // непрозрачным соседом или другой плитой.
+                    for axis in 0..3 {
+                        for positive in [false, true] {
+                            let mut neighbor = local;
+                            neighbor[axis] += if positive { 1 } else { -1 };
+                            let other = blocks[padded_index(neighbor)];
+                            let hidden = match (axis, positive) {
+                                (1, true) => false,
+                                (1, false) => is_opaque(other),
+                                _ => is_opaque(other) || is_slab(other),
+                            };
+                            if !hidden {
+                                let material = textures.layer(id, axis, positive);
+                                builders[usize::from(material)].slab_face(local, axis, positive);
+                            }
+                        }
+                    }
                     continue;
                 }
                 if !is_leaves(id) {
@@ -282,6 +303,47 @@ impl MeshBuilder {
             indices.swap(4, 5);
         }
         self.indices.extend(indices.map(|index| first + index));
+    }
+
+    /// Одна грань плиты высотой в полблока; бока берут нижнюю половину тайла.
+    fn slab_face(&mut self, local: [i32; 3], axis: usize, positive: bool) {
+        let half = [0.5_f32, 0.25, 0.5];
+        let center = [
+            local[0] as f32 + 0.5,
+            local[1] as f32 + 0.25,
+            local[2] as f32 + 0.5,
+        ];
+        let mut normal = [0.0_f32; 3];
+        normal[axis] = if positive { 1.0 } else { -1.0 };
+        let up: [f32; 3] = match (axis, positive) {
+            (1, true) => [0.0, 0.0, -1.0],
+            (1, false) => [0.0, 0.0, 1.0],
+            _ => [0.0, 1.0, 0.0],
+        };
+        let across = [
+            up[1] * normal[2] - up[2] * normal[1],
+            up[2] * normal[0] - up[0] * normal[2],
+            up[0] * normal[1] - up[1] * normal[0],
+        ];
+        let extent =
+            |direction: [f32; 3]| -> f32 { (0..3).map(|i| direction[i].abs() * half[i]).sum() };
+        let (reach_across, reach_up, reach_out) = (extent(across), extent(up), extent(normal));
+        let top_v = if axis == 1 { 0.0 } else { 0.5 };
+        let first = self.positions.len() as u32;
+        for (a, b) in [(-1.0, -1.0), (1.0, -1.0), (1.0, 1.0), (-1.0, 1.0)] {
+            self.positions.push(std::array::from_fn(|i| {
+                center[i]
+                    + normal[i] * reach_out
+                    + across[i] * a * reach_across
+                    + up[i] * b * reach_up
+            }));
+        }
+        self.normals.extend([normal; 4]);
+        self.uvs
+            .extend([[0.0, 1.0], [1.0, 1.0], [1.0, top_v], [0.0, top_v]]);
+        self.colors.extend([[1.0, 1.0, 1.0, 1.0]; 4]);
+        self.indices
+            .extend([0, 1, 2, 0, 2, 3].map(|index| first + index));
     }
 
     /// Растение: две вертикальные плоскости крест-накрест с небольшим сдвигом,

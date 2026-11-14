@@ -124,8 +124,54 @@ pub fn can_stand(feet: [f32; 3], sample: impl Fn([i32; 3]) -> u8) -> bool {
 /// crossed plane is tested, including during long falls or unusually large dt;
 /// velocity is cleared on blocked axes. Gravity and jumping belong to callers.
 /// Invalid motion leaves the position unchanged and clears velocity.
+///
+/// Плиты занимают нижнюю половину клетки. Чтобы не усложнять развёртку, ось Y
+/// считается в полублоках: координаты и скорость по Y удваиваются, а выборка
+/// блока отвечает «воздух» для верхней половины плиты. Деление и умножение на
+/// два точны в f32, поэтому для обычных блоков результат не меняется.
 #[must_use]
 pub fn move_player(
+    feet: [f32; 3],
+    velocity: [f32; 3],
+    dt: f32,
+    height: f32,
+    sample: impl Fn([i32; 3]) -> u8,
+) -> Movement {
+    let scaled = [feet[1] * 2.0, velocity[1] * 2.0, height * 2.0];
+    if !scaled.into_iter().all(f32::is_finite) {
+        return move_cells(feet, velocity, dt, height, sample);
+    }
+    let halves = |p: [i32; 3]| {
+        let id = sample([p[0], p[1].div_euclid(2), p[2]]);
+        if crate::is_slab(id) && p[1].rem_euclid(2) == 1 {
+            crate::AIR
+        } else {
+            id
+        }
+    };
+    let moved = move_cells(
+        [feet[0], scaled[0], feet[2]],
+        [velocity[0], scaled[1], velocity[2]],
+        dt,
+        scaled[2],
+        halves,
+    );
+    Movement {
+        position: [
+            moved.position[0],
+            moved.position[1] * 0.5,
+            moved.position[2],
+        ],
+        velocity: [
+            moved.velocity[0],
+            moved.velocity[1] * 0.5,
+            moved.velocity[2],
+        ],
+        grounded: moved.grounded,
+    }
+}
+
+fn move_cells(
     feet: [f32; 3],
     velocity: [f32; 3],
     dt: f32,
@@ -523,5 +569,42 @@ mod tests {
             if p[0] == 2 { 8 } else { 0 }
         });
         close(leaves.position[0], 1.7);
+    }
+
+    #[test]
+    fn slabs_stop_a_fall_half_a_block_high_and_leave_headroom_above() {
+        // Плита в клетке y = 5, под ней пусто; рядом обычный блок y = 5.
+        let world = |p: [i32; 3]| match p {
+            [0, 5, 0] => crate::OAK_SLAB,
+            [3, 5, 0] => crate::STONE,
+            _ => crate::AIR,
+        };
+        let mut on_slab = Movement {
+            position: [0.5, 8.0, 0.5],
+            velocity: [0.0, -6.0, 0.0],
+            grounded: false,
+        };
+        let mut on_block = on_slab;
+        on_block.position[0] = 3.5;
+        for _ in 0..40 {
+            on_slab = move_player(on_slab.position, [0.0, -6.0, 0.0], 0.05, 1.8, world);
+            on_block = move_player(on_block.position, [0.0, -6.0, 0.0], 0.05, 1.8, world);
+        }
+        close(on_slab.position[1], 5.5);
+        close(on_block.position[1], 6.0);
+        assert!(on_slab.grounded && on_block.grounded);
+        // Низкий потолок: над плитой остаётся полблока, которого нет над блоком.
+        let roofed = |p: [i32; 3]| match p {
+            [0, 5, 0] => crate::OAK_SLAB,
+            [0, 7, 0] => crate::STONE,
+            _ => crate::AIR,
+        };
+        let jump = move_player([0.5, 5.5, 0.5], [0.0, 4.0, 0.0], 0.2, 1.3, roofed);
+        close(jump.position[1], 5.7);
+        // Сбоку плита мешает только на своей высоте.
+        let low = move_player([1.5, 5.0, 0.5], [-4.0, 0.0, 0.0], 0.2, 1.8, world);
+        close(low.position[0], 1.3);
+        let high = move_player([1.5, 5.5, 0.5], [-4.0, 0.0, 0.0], 0.2, 1.8, world);
+        close(high.position[0], 0.7);
     }
 }

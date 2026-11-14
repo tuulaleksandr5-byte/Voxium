@@ -1,4 +1,4 @@
-// Stable block IDs; texture layers are row-major in the 6×24 internal atlas.
+// Stable block IDs; texture layers are row-major in the 6×36 internal atlas.
 // Layers 36+ are the pixel-art tiles from assets/textures/pixel.
 [
     (top: 17, side: 17, bottom: 17), // air (never meshed)
@@ -104,4 +104,86 @@
     (top: 120, side: 120, bottom: 120), // cornflower
     (top: 121, side: 121, bottom: 121), // daisy
     (top: 122, side: 122, bottom: 122), // tall_grass
+    (top: 124, side: 123, bottom: 124), // acacia_log
+    (top: 125, side: 125, bottom: 125), // acacia_leaves
+    (top: 126, side: 126, bottom: 126), // acacia_planks
+    (top: 128, side: 127, bottom: 128), // jungle_log
+    (top: 129, side: 129, bottom: 129), // jungle_leaves
+    (top: 130, side: 130, bottom: 130), // jungle_planks
+    (top: 132, side: 131, bottom: 132), // dark_oak_log
+    (top: 133, side: 133, bottom: 133), // dark_oak_leaves
+    (top: 134, side: 134, bottom: 134), // dark_oak_planks
+    (top: 136, side: 135, bottom: 136), // mangrove_log
+    (top: 137, side: 137, bottom: 137), // mangrove_leaves
+    (top: 138, side: 138, bottom: 138), // mangrove_planks
+    (top: 140, side: 139, bottom: 140), // cherry_log
+    (top: 141, side: 141, bottom: 141), // cherry_leaves
+    (top: 142, side: 142, bottom: 142), // cherry_planks
+    (top: 143, side: 143, bottom: 143), // copper_ore
+    (top: 144, side: 144, bottom: 144), // emerald_ore
+    (top: 145, side: 145, bottom: 145), // lapis_ore
+    (top: 146, side: 146, bottom: 146), // copper_block
+    (top: 147, side: 147, bottom: 147), // emerald_block
+    (top: 148, side: 148, bottom: 148), // lapis_block
+    (top: 149, side: 149, bottom: 149), // glass_white
+    (top: 150, side: 150, bottom: 150), // glass_orange
+    (top: 151, side: 151, bottom: 151), // glass_magenta
+    (top: 152, side: 152, bottom: 152), // glass_light_blue
+    (top: 153, side: 153, bottom: 153), // glass_yellow
+    (top: 154, side: 154, bottom: 154), // glass_lime
+    (top: 155, side: 155, bottom: 155), // glass_pink
+    (top: 156, side: 156, bottom: 156), // glass_gray
+    (top: 157, side: 157, bottom: 157), // glass_light_gray
+    (top: 158, side: 158, bottom: 158), // glass_cyan
+    (top: 159, side: 159, bottom: 159), // glass_purple
+    (top: 160, side: 160, bottom: 160), // glass_blue
+    (top: 161, side: 161, bottom: 161), // glass_brown
+    (top: 162, side: 162, bottom: 162), // glass_green
+    (top: 163, side: 163, bottom: 163), // glass_red
+    (top: 164, side: 164, bottom: 164), // glass_black
+    (top: 165, side: 165, bottom: 165), // terracotta_white
+    (top: 166, side: 166, bottom: 166), // terracotta_orange
+    (top: 167, side: 167, bottom: 167), // terracotta_magenta
+    (top: 168, side: 168, bottom: 168), // terracotta_light_blue
+    (top: 169, side: 169, bottom: 169), // terracotta_yellow
+    (top: 170, side: 170, bottom: 170), // terracotta_lime
+    (top: 171, side: 171, bottom: 171), // terracotta_pink
+    (top: 172, side: 172, bottom: 172), // terracotta_gray
+    (top: 173, side: 173, bottom: 173), // terracotta_light_gray
+    (top: 174, side: 174, bottom: 174), // terracotta_cyan
+    (top: 175, side: 175, bottom: 175), // terracotta_purple
+    (top: 176, side: 176, bottom: 176), // terracotta_blue
+    (top: 177, side: 177, bottom: 177), // terracotta_brown
+    (top: 178, side: 178, bottom: 178), // terracotta_green
+    (top: 179, side: 179, bottom: 179), // terracotta_red
+    (top: 180, side: 180, bottom: 180), // terracotta_black
+    (top: 181, side: 181, bottom: 181), // sponge
+    (top: 183, side: 182, bottom: 183), // melon
+    (top: 185, side: 184, bottom: 185), // pumpkin
+    (top: 187, side: 186, bottom: 187), // hay_bale
+    (top: 189, side: 188, bottom: 189), // bone_block
+    (top: 190, side: 190, bottom: 190), // mud
+    (top: 191, side: 191, bottom: 191), // packed_mud
+    (top: 192, side: 192, bottom: 192), // mud_bricks
+    (top: 193, side: 193, bottom: 193), // moss_block
+    (top: 194, side: 195, bottom: 2), // podzol
+    (top: 196, side: 196, bottom: 196), // coarse_dirt
+    (top: 197, side: 197, bottom: 197), // red_sand
+    (top: 198, side: 198, bottom: 198), // red_sandstone
+    (top: 199, side: 199, bottom: 199), // calcite
+    (top: 200, side: 200, bottom: 200), // tuff
+    (top: 201, side: 201, bottom: 201), // amethyst_block
+    (top: 202, side: 202, bottom: 202), // quartz_block
+    (top: 10, side: 10, bottom: 10), // oak_slab
+    (top: 42, side: 42, bottom: 42), // birch_slab
+    (top: 112, side: 112, bottom: 112), // pine_slab
+    (top: 3, side: 3, bottom: 3), // stone_slab
+    (top: 11, side: 11, bottom: 11), // cobblestone_slab
+    (top: 37, side: 37, bottom: 37), // stone_brick_slab
+    (top: 50, side: 50, bottom: 50), // smooth_stone_slab
+    (top: 16, side: 15, bottom: 16), // sandstone_slab
+    (top: 36, side: 36, bottom: 36), // brick_slab
+    (top: 100, side: 100, bottom: 100), // granite_slab
+    (top: 102, side: 102, bottom: 102), // marble_slab
+    (top: 116, side: 116, bottom: 116), // dark_brick_slab
 ]

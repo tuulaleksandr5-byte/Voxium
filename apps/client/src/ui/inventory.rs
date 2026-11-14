@@ -588,6 +588,29 @@ fn catalog_tab(game: &Game, id: ItemId) -> usize {
             | game_core::DANDELION
             | game_core::CORNFLOWER
             | game_core::DAISY
+            | game_core::MUD
+            | game_core::MOSS_BLOCK
+            | game_core::PODZOL
+            | game_core::COARSE_DIRT
+            | game_core::RED_SAND
+            | game_core::CALCITE
+            | game_core::TUFF
+            | game_core::MELON
+            | game_core::PUMPKIN
+            | game_core::SPONGE
+            | game_core::COPPER_ORE
+            | game_core::EMERALD_ORE
+            | game_core::LAPIS_ORE
+            | game_core::ACACIA_LOG
+            | game_core::JUNGLE_LOG
+            | game_core::DARK_OAK_LOG
+            | game_core::MANGROVE_LOG
+            | game_core::CHERRY_LOG
+            | game_core::ACACIA_LEAVES
+            | game_core::JUNGLE_LEAVES
+            | game_core::DARK_OAK_LEAVES
+            | game_core::MANGROVE_LEAVES
+            | game_core::CHERRY_LEAVES
             | game_core::TALL_GRASS => 2,
             _ => 1,
         },

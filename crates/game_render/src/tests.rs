@@ -244,7 +244,7 @@ fn array_materials_share_image_and_use_linear_anisotropic_filtering() {
     let mut png = std::io::Cursor::new(Vec::new());
     fixture.write_to(&mut png, image::ImageFormat::Png).unwrap();
     let handles = create_materials(&mut images, &mut materials, png.get_ref()).unwrap();
-    assert_eq!(handles.len(), 144);
+    assert_eq!(handles.len(), 216);
     let first = materials.get(&handles[0]).unwrap().extension.image.clone();
     for (layer, handle) in handles.iter().enumerate() {
         let m = materials.get(handle).unwrap();
@@ -253,7 +253,7 @@ fn array_materials_share_image_and_use_linear_anisotropic_filtering() {
     }
     let image = images.get(&first).unwrap();
     assert_eq!((image.width(), image.height()), (128, 128));
-    assert_eq!(image.texture_descriptor.size.depth_or_array_layers, 144);
+    assert_eq!(image.texture_descriptor.size.depth_or_array_layers, 216);
     assert_eq!(image.texture_descriptor.mip_level_count, 8);
     let ImageSampler::Descriptor(s) = &image.sampler else {
         panic!("explicit sampler required");
@@ -361,4 +361,34 @@ fn workstation_front_faces_are_meshed_on_negative_z() {
             3,
         );
     }
+}
+
+#[test]
+fn slab_is_a_half_height_box_and_does_not_hide_neighbor_faces() {
+    let slab = game_core::OAK_SLAB;
+    let meshes = mesh_section([0; 3], move |p| if p == [4, 4, 4] { slab } else { 0 });
+    assert_eq!(meshes.len(), 1);
+    assert_quads(&meshes[0].1, 6);
+    let VertexAttributeValues::Float32x3(points) =
+        meshes[0].1.attribute(Mesh::ATTRIBUTE_POSITION).unwrap()
+    else {
+        unreachable!()
+    };
+    assert!(points.iter().all(|p| (4.0..=4.5).contains(&p[1])));
+    assert!(points.iter().any(|p| p[1] == 4.5));
+    let normal_sum: [f32; 3] = normals(&meshes[0].1).iter().fold([0.0; 3], |sum, n| {
+        [sum[0] + n[0], sum[1] + n[1], sum[2] + n[2]]
+    });
+    assert_eq!(normal_sum, [0.0; 3]);
+    // Камень под плитой сохраняет верхнюю грань, а плита теряет нижнюю.
+    let stacked = mesh_section([0; 3], move |p| match p {
+        [4, 4, 4] => slab,
+        [4, 3, 4] => 3,
+        _ => 0,
+    });
+    let quads: usize = stacked
+        .iter()
+        .map(|(_, mesh)| mesh.count_vertices() / 4)
+        .sum();
+    assert_eq!(quads, 6 + 5);
 }

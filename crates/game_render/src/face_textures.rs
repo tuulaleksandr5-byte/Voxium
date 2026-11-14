@@ -1,8 +1,8 @@
 use game_core::BLOCKS;
 use serde::Deserialize;
 
-/// Слои 0…35 — исходный атлас 6×6, слои 36…143 — дополнительные пиксельные тайлы.
-pub const MATERIAL_COUNT: usize = 144;
+/// Слои 0…35 — исходный атлас 6×6, слои 36…215 — дополнительные пиксельные тайлы.
+pub const MATERIAL_COUNT: usize = 216;
 /// Слой листвы дуба в исходном атласе.
 pub const OAK_LEAVES_LAYER: usize = 9;
 pub const GLASS_LAYER: usize = 12;
@@ -19,6 +19,16 @@ pub fn is_cutout_layer(layer: usize) -> bool {
         layer,
         OAK_LEAVES_LAYER | BIRCH_LEAVES_LAYER | PINE_LEAVES_LAYER
     ) || PLANT_LAYERS.contains(&layer)
+        || matches!(layer, 125 | 129 | 133 | 137 | 141)
+}
+
+/// Слои цветного стекла.
+pub const STAINED_GLASS_LAYERS: std::ops::RangeInclusive<usize> = 149..=164;
+
+/// Полупрозрачный слой: стекло, вода, лёд.
+#[must_use]
+pub fn is_blend_layer(layer: usize) -> bool {
+    matches!(layer, GLASS_LAYER | WATER_LAYER | ICE_LAYER) || STAINED_GLASS_LAYERS.contains(&layer)
 }
 pub const LAMP_LAYER: usize = 45;
 pub const ICE_LAYER: usize = 46;
@@ -69,7 +79,7 @@ impl BlockTextures {
                 .flatten()
                 .any(|i| i as usize >= MATERIAL_COUNT)
         }) {
-            return Err("texture layer must be in 0..144".into());
+            return Err("texture layer must be in 0..216".into());
         }
         Ok(Self(faces.try_into().expect("length checked")))
     }
@@ -161,9 +171,9 @@ mod tests {
     #[test]
     fn rejects_missing_blocks_and_out_of_range_layers() {
         assert!(BlockTextures::from_ron("[]").is_err());
-        let source = include_str!("../../../assets/blocks.ron").replace("top: 0", "top: 144");
+        let source = include_str!("../../../assets/blocks.ron").replace("top: 0", "top: 216");
         assert!(BlockTextures::from_ron(&source).is_err());
-        let source = include_str!("../../../assets/blocks.ron").replace("Some(26)", "Some(144)");
+        let source = include_str!("../../../assets/blocks.ron").replace("Some(26)", "Some(216)");
         assert!(BlockTextures::from_ron(&source).is_err());
     }
 }
