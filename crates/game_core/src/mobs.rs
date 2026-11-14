@@ -581,8 +581,10 @@ impl MobStore {
         let top = player[1].floor() as i32 + 20;
         let Some(ground) = (top - 44..=top).rev().find(|&y| {
             sample([x, y, z]).is_some_and(is_solid)
-                && sample([x, y + 1, z]) == Some(crate::AIR)
-                && sample([x, y + 2, z]) == Some(crate::AIR)
+                && (1..=2).all(|dy| {
+                    sample([x, y + dy, z])
+                        .is_some_and(|block| block == crate::AIR || crate::is_plant(block))
+                })
         }) else {
             return;
         };

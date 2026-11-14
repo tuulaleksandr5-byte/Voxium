@@ -99,5 +99,10 @@
         (block: 95, hardness: 1.8, tool: Pickaxe, harvest_tier: 1, seconds: None),
         (block: 96, hardness: 1.8, tool: Pickaxe, harvest_tier: 1, seconds: None),
         (block: 97, hardness: 1.8, tool: Pickaxe, harvest_tier: 1, seconds: None),
+        (block: 98, hardness: 0.05, tool: Hand, harvest_tier: 0, seconds: None),
+        (block: 99, hardness: 0.05, tool: Hand, harvest_tier: 0, seconds: None),
+        (block: 100, hardness: 0.05, tool: Hand, harvest_tier: 0, seconds: None),
+        (block: 101, hardness: 0.05, tool: Hand, harvest_tier: 0, seconds: None),
+        (block: 102, hardness: 0.05, tool: Hand, harvest_tier: 0, seconds: None),
     ],
 )

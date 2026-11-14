@@ -224,7 +224,10 @@ fn update(
                 Visibility::Hidden
             }
         };
-        let block = stack.and_then(|item| game.content.block_for_item(item));
+        // Растения в руке — плоский значок, а не куб.
+        let block = stack
+            .and_then(|item| game.content.block_for_item(item))
+            .filter(|block| !game_core::is_plant(*block));
         commands.entity(root).insert(show(visible));
         if let (Some(arm), Some(cube), Some(item)) = (hand.arm, hand.block, hand.item) {
             commands.entity(arm).insert(show(stack.is_none()));

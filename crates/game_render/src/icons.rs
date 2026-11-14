@@ -73,6 +73,18 @@ pub fn bake_atlas_icons(
         .map(|block| {
             let pixels = if block == AIR as usize {
                 vec![0; (ICON_SIZE * ICON_SIZE * 4) as usize]
+            } else if game_core::is_plant(block as u8) {
+                // Растения показываются плоским значком, а не кубом.
+                let layer = u32::from(textures.0[block].side);
+                image::imageops::crop_imm(
+                    &atlas.rgba,
+                    (layer % 6) * TILE_SIZE,
+                    (layer / 6) * TILE_SIZE,
+                    TILE_SIZE,
+                    TILE_SIZE,
+                )
+                .to_image()
+                .into_raw()
             } else {
                 bake_cube(&atlas.rgba, textures, block as u8)
             };

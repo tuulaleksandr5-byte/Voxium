@@ -946,6 +946,69 @@ def stone_tiles():
     return image
 
 
+# ----------------------------------------------------------------- plants
+
+
+def plant(name, petals, center, tall=False):
+    def build():
+        r = rng(name)
+        image = np.zeros((N, N, 4))
+        image[..., :3] = rgb("#4c8c30")
+        stem = ["#356b24", "#4c8c30", "#6aad42"]
+        if tall:
+            for blade in range(11):
+                x = 3 + blade * 2.5 + r.uniform(-1, 1)
+                height = int(r.integers(12, 27))
+                lean = r.uniform(-0.25, 0.25)
+                for step in range(height):
+                    put(image, int(x + lean * step), N - 1 - step, stem[min(2, step * 3 // height)])
+                    if step < height * 0.6:
+                        put(image, int(x + lean * step) + 1, N - 1 - step, stem[0])
+            return image
+        for y in range(13, N):
+            put(image, 15 + (1 if y % 7 == 0 else 0), y, stem[1])
+            put(image, 16 + (1 if y % 7 == 0 else 0), y, stem[0])
+        for side, y0 in ((-1, 22), (1, 25)):
+            for step in range(5):
+                put(image, 15 + side * (step + 1), y0 - step // 2, stem[2])
+                put(image, 15 + side * (step + 1), y0 - step // 2 + 1, stem[0])
+        light, mid, dark = petals
+        for y in range(2, 16):
+            for x in range(8, 24):
+                d = math.hypot(x - 15.5, (y - 8.5) * 1.15)
+                angle = math.atan2(y - 8.5, x - 15.5)
+                edge = 5.6 + 1.3 * math.cos(angle * 5)
+                if d < edge:
+                    put(image, x, y, light if (x - 15.5) + (y - 8.5) < -2 else mid if d < edge - 1.2 else dark)
+                if d < 1.9:
+                    put(image, x, y, center)
+        return image
+
+    TILES[name] = build
+
+
+plant("poppy", ("#f0554a", "#d0302a", "#8e1c1c"), "#2a1a1a")
+plant("dandelion", ("#fff07a", "#f8c627", "#c8901a"), "#e0a020")
+plant("cornflower", ("#7a9cf2", "#4668d8", "#2a3f9a"), "#1c2a6e")
+plant("daisy", ("#ffffff", "#e9ecec", "#b8bcc0"), "#f8c627")
+plant("tall_grass", None, None, tall=True)
+
+
+def dye_icon(color):
+    def build():
+        r = rng("dye")
+        mask = ellipse(15.5, 19, 10, 6.5) | ellipse(13, 14, 5, 4.5) | ellipse(19, 15, 4.5, 4)
+        palette = shades(color, 0.22)
+        dark = "#%02x%02x%02x" % tuple(int(v * 0.45) for v in rgb(color))
+        return sprite(mask, [dark, palette[0], palette[2], palette[3]], r, 0.7)
+
+    return build
+
+
+for _color, _hex in COLORS.items():
+    ICONS[f"dye_{_color}"] = dye_icon(_hex)
+
+
 # ------------------------------------------------------- functional blocks
 
 

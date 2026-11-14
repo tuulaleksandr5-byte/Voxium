@@ -203,6 +203,105 @@ impl Chunk {
             }
         }
     }
+    /// Дополнения генератора 4: сосны, линзы пород камня, цветы и трава.
+    /// Как и в генераторе 3, каждая замена зависит только от seed и координат.
+    pub(crate) fn decorate_v4(&mut self, seed: u64) {
+        let min_x = i64::from(self.position[0]) * 16;
+        let min_z = i64::from(self.position[1]) * 16;
+        if self.sections.is_empty() {
+            return;
+        }
+        for gx in (min_x - 2).div_euclid(5)..=(min_x + 17).div_euclid(5) {
+            for gz in (min_z - 2).div_euclid(5)..=(min_z + 17).div_euclid(5) {
+                let Some(tree) = tree_at_cell(seed, gx, gz) else {
+                    continue;
+                };
+                if !coordinate_hash(seed ^ 0x9193, gx, gz).is_multiple_of(3) {
+                    continue;
+                }
+                let top = tree.ground + tree.height;
+                for dy in -1_i32..=1 {
+                    for dx in -2_i32..=2 {
+                        for dz in -2_i32..=2 {
+                            let (Some(x), Some(z)) =
+                                (tree.x.checked_add(dx), tree.z.checked_add(dz))
+                            else {
+                                continue;
+                            };
+                            let p = [x, top + dy, z];
+                            if self.block(p) == LEAVES {
+                                self.write(p, PINE_LEAVES);
+                            }
+                        }
+                    }
+                }
+                for y in tree.ground + 1..=top {
+                    let p = [tree.x, y, tree.z];
+                    if self.block(p) == WOOD {
+                        self.write(p, PINE_LOG);
+                    }
+                }
+            }
+        }
+        // (порода, заменяемый камень, центр пласта, разброс центра).
+        let rocks = [
+            (LIMESTONE, STONE, 52.0, 16.0),
+            (GRANITE, STONE, 30.0, 20.0),
+            (MARBLE, STONE, 12.0, 14.0),
+            (SLATE, STONE, -2.0, 8.0),
+            (BASALT, DEEP_STONE, -36.0, 14.0),
+        ];
+        for x in min_x as i32..=(min_x + 15) as i32 {
+            for z in min_z as i32..=(min_z + 15) as i32 {
+                let (fx, fz) = (f64::from(x), f64::from(z));
+                let height = terrain_column(seed, x, z).height;
+                for (index, (rock, host, center, spread)) in rocks.into_iter().enumerate() {
+                    let salt = 0x60C0 + index as u64 * 0x101;
+                    let strength = noise(seed ^ salt, fx / 21.0, fz / 21.0);
+                    if strength < 0.45 {
+                        continue;
+                    }
+                    let middle = center + noise(seed ^ (salt + 7), fx / 37.0, fz / 37.0) * spread;
+                    let thickness = (strength - 0.45) * 22.0;
+                    let low = (middle - thickness).floor() as i32;
+                    let high = (middle + thickness).ceil() as i32;
+                    for y in low.max(WORLD_MIN_Y + 3)..=high.min(height - 5) {
+                        if self.block([x, y, z]) == host {
+                            self.write([x, y, z], rock);
+                        }
+                    }
+                }
+                if self.block([x, height, z]) != GRASS
+                    || height >= WORLD_MAX_Y
+                    || self.block([x, height + 1, z]) != AIR
+                {
+                    continue;
+                }
+                let roll = coordinate_hash(seed ^ 0xF10A, i64::from(x), i64::from(z)) % 100;
+                let meadow = noise(seed ^ 0xF10B, fx / 14.0, fz / 14.0);
+                let plant = if roll < 3 || (meadow > 0.35 && roll < 14) {
+                    // Поляны одного цветка: вид задаёт крупный шум.
+                    let kind = noise(seed ^ 0xF10C, fx / 60.0, fz / 60.0);
+                    Some(if kind < -0.3 {
+                        POPPY
+                    } else if kind < 0.0 {
+                        DANDELION
+                    } else if kind < 0.3 {
+                        CORNFLOWER
+                    } else {
+                        DAISY
+                    })
+                } else if roll < 30 {
+                    Some(TALL_GRASS)
+                } else {
+                    None
+                };
+                if let Some(plant) = plant {
+                    self.write([x, height + 1, z], plant);
+                }
+            }
+        }
+    }
     fn plant(&mut self, tree: Tree) {
         let top = tree.ground + tree.height;
         for dy in -1_i32..=1 {

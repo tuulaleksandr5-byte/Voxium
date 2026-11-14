@@ -365,8 +365,13 @@ pub fn controls(
                         position: hit.block,
                     })
                 } else if game.selected_block() != game_core::AIR {
+                    // Блок ставится на место растения, а не рядом с ним.
                     Some(InventoryAction::Place {
-                        position: hit.previous,
+                        position: if game_core::is_plant(game.world.block(hit.block)) {
+                            hit.block
+                        } else {
+                            hit.previous
+                        },
                     })
                 } else {
                     None

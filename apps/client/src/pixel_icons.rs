@@ -14,7 +14,7 @@ macro_rules! icon {
     };
 }
 
-const ICONS: [(&str, &[u8]); 15] = [
+const ICONS: [(&str, &[u8]); 31] = [
     icon!("survival:stick", "stick"),
     icon!("survival:egg", "egg"),
     icon!("builder:clay_ball", "clay_ball"),
@@ -30,6 +30,22 @@ const ICONS: [(&str, &[u8]); 15] = [
     icon!("builder:raw_chicken", "raw_chicken"),
     icon!("builder:cooked_chicken", "cooked_chicken"),
     icon!("builder:rotten_meat", "rotten_meat"),
+    icon!("flora:dye_white", "dye_white"),
+    icon!("flora:dye_orange", "dye_orange"),
+    icon!("flora:dye_magenta", "dye_magenta"),
+    icon!("flora:dye_light_blue", "dye_light_blue"),
+    icon!("flora:dye_yellow", "dye_yellow"),
+    icon!("flora:dye_lime", "dye_lime"),
+    icon!("flora:dye_pink", "dye_pink"),
+    icon!("flora:dye_gray", "dye_gray"),
+    icon!("flora:dye_light_gray", "dye_light_gray"),
+    icon!("flora:dye_cyan", "dye_cyan"),
+    icon!("flora:dye_purple", "dye_purple"),
+    icon!("flora:dye_blue", "dye_blue"),
+    icon!("flora:dye_brown", "dye_brown"),
+    icon!("flora:dye_green", "dye_green"),
+    icon!("flora:dye_red", "dye_red"),
+    icon!("flora:dye_black", "dye_black"),
 ];
 
 /// RGBA 128×128 для предмета с пиксельным значком.
@@ -57,7 +73,9 @@ mod tests {
             assert!(rgba.as_chunks::<4>().0.iter().any(|p| p[3] == 255), "{id}");
         }
         for (_, item) in catalog.iter() {
-            if item.id.starts_with("builder:") && !matches!(item.kind, ItemKind::Block { .. }) {
+            if (item.id.starts_with("builder:") || item.id.starts_with("flora:"))
+                && !matches!(item.kind, ItemKind::Block { .. })
+            {
                 assert!(pixels(&item.id).is_some(), "{} has no icon", item.id);
             }
         }

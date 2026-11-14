@@ -9,6 +9,17 @@ pub const GLASS_LAYER: usize = 12;
 pub const WATER_LAYER: usize = 13;
 pub const BIRCH_LEAVES_LAYER: usize = 41;
 pub const PINE_LEAVES_LAYER: usize = 111;
+/// Слои растений: первый и последний.
+pub const PLANT_LAYERS: std::ops::RangeInclusive<usize> = 118..=122;
+
+/// Слой с вырезанными текселями: листва и растения.
+#[must_use]
+pub fn is_cutout_layer(layer: usize) -> bool {
+    matches!(
+        layer,
+        OAK_LEAVES_LAYER | BIRCH_LEAVES_LAYER | PINE_LEAVES_LAYER
+    ) || PLANT_LAYERS.contains(&layer)
+}
 pub const LAMP_LAYER: usize = 45;
 pub const ICE_LAYER: usize = 46;
 pub const GRASS_TOP: u8 = 0;

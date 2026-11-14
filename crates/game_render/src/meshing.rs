@@ -4,7 +4,7 @@ use bevy::{
     mesh::{Indices, PrimitiveTopology},
     prelude::Mesh,
 };
-use game_core::{AIR, BLOCKS, SECTION_SIZE, is_leaves, is_opaque};
+use game_core::{AIR, BLOCKS, SECTION_SIZE, is_leaves, is_opaque, is_plant};
 
 const SIZE: usize = SECTION_SIZE as usize;
 const PADDED_SIZE: usize = SIZE + 2;
@@ -66,7 +66,7 @@ pub fn mesh_section_with_textures(
                         local[u_axis] = u as i32;
                         local[v_axis] = v as i32;
                         let id = blocks[padded_index(local)];
-                        if id == AIR {
+                        if id == AIR || is_plant(id) {
                             continue;
                         }
                         local[axis] += if positive { 1 } else { -1 };
@@ -135,6 +135,12 @@ pub fn mesh_section_with_textures(
             for x in 0..SECTION_SIZE {
                 let local = [x, y, z];
                 let id = blocks[padded_index(local)];
+                if is_plant(id) {
+                    let world = std::array::from_fn(|axis| origin[axis] + i64::from(local[axis]));
+                    let material = textures.layer(id, 0, true);
+                    builders[usize::from(material)].cross(local, leaf_hash(world));
+                    continue;
+                }
                 if !is_leaves(id) {
                     continue;
                 }
@@ -276,6 +282,31 @@ impl MeshBuilder {
             indices.swap(4, 5);
         }
         self.indices.extend(indices.map(|index| first + index));
+    }
+
+    /// Растение: две вертикальные плоскости крест-накрест с небольшим сдвигом,
+    /// чтобы цветы на лугу не стояли по линейке.
+    fn cross(&mut self, local: [i32; 3], hash: u64) {
+        let unit = |shift: u32| ((hash >> shift) & 0xff) as f32 / 255.0;
+        let x = local[0] as f32 + 0.5 + (unit(0) - 0.5) * 0.3;
+        let z = local[2] as f32 + 0.5 + (unit(8) - 0.5) * 0.3;
+        let y = local[1] as f32;
+        let half = 0.36;
+        for (dx, dz) in [(half, half), (half, -half)] {
+            let first = self.positions.len() as u32;
+            self.positions.extend([
+                [x - dx, y, z - dz],
+                [x + dx, y, z + dz],
+                [x + dx, y + 1.0, z + dz],
+                [x - dx, y + 1.0, z - dz],
+            ]);
+            self.normals.extend([[0.0, 1.0, 0.0]; 4]);
+            self.uvs
+                .extend([[0.0, 1.0], [1.0, 1.0], [1.0, 0.0], [0.0, 0.0]]);
+            self.colors.extend([[1.0, 1.0, 1.0, 1.0]; 4]);
+            self.indices
+                .extend([0, 1, 2, 0, 2, 3].map(|index| first + index));
+        }
     }
 
     /// Три пересекающиеся плоскости листвы вокруг центра блока. Материал листвы

@@ -229,18 +229,12 @@ pub fn create_materials_from_atlas(
                         _ => AlphaMode::Opaque,
                     },
                     // Объёмная листва состоит из двусторонних плоскостей.
-                    cull_mode: if matches!(
-                        layer,
-                        OAK_LEAVES_LAYER | BIRCH_LEAVES_LAYER | PINE_LEAVES_LAYER
-                    ) {
+                    cull_mode: if crate::is_cutout_layer(layer) {
                         None
                     } else {
                         Some(bevy::render::render_resource::Face::Back)
                     },
-                    double_sided: matches!(
-                        layer,
-                        OAK_LEAVES_LAYER | BIRCH_LEAVES_LAYER | PINE_LEAVES_LAYER
-                    ),
+                    double_sided: crate::is_cutout_layer(layer),
                     ..default()
                 },
                 extension: TileArray {

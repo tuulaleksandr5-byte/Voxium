@@ -12,7 +12,7 @@ use std::{
 /// Increase when the save schema changes, with an explicit migration before loading it.
 pub const CURRENT_FORMAT_VERSION: u32 = 2;
 /// Generation must remain deterministic for every supported generator version.
-pub const CURRENT_GENERATOR_VERSION: u32 = 3;
+pub const CURRENT_GENERATOR_VERSION: u32 = 4;
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]

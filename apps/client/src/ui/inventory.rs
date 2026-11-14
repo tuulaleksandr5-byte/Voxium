@@ -583,7 +583,12 @@ fn catalog_tab(game: &Game, id: ItemId) -> usize {
             | game_core::SLATE
             | game_core::LIMESTONE
             | game_core::PINE_LOG
-            | game_core::PINE_LEAVES => 2,
+            | game_core::PINE_LEAVES
+            | game_core::POPPY
+            | game_core::DANDELION
+            | game_core::CORNFLOWER
+            | game_core::DAISY
+            | game_core::TALL_GRASS => 2,
             _ => 1,
         },
     }

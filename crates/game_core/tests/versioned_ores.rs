@@ -47,7 +47,7 @@ fn default_ore_bands_replace_only_stone_and_are_load_order_independent() {
 #[test]
 fn version_selection_requires_valid_snapshot_and_leaves_legacy_exact() {
     assert!(WorldGenerator::from_snapshot(2, None).is_err());
-    assert!(WorldGenerator::from_snapshot(4, Some(OreConfig::default())).is_err());
+    assert!(WorldGenerator::from_snapshot(5, Some(OreConfig::default())).is_err());
     assert!(WorldGenerator::from_snapshot(1, Some(OreConfig::default())).is_err());
     let legacy = WorldGenerator::from_snapshot(1, None).unwrap();
     assert_eq!(legacy.generate(3, [-1, -1]), Chunk::generate(3, [-1, -1]));
@@ -110,7 +110,7 @@ fn generator_three_only_adds_birch_clay_and_obsidian_on_top_of_generator_two() {
     let three = WorldGenerator::from_snapshot(3, Some(OreConfig::default())).unwrap();
     assert_eq!((two.version(), three.version()), (2, 3));
     assert!(WorldGenerator::from_snapshot(3, None).is_err());
-    assert!(WorldGenerator::from_snapshot(4, Some(OreConfig::default())).is_err());
+    assert!(WorldGenerator::from_snapshot(5, Some(OreConfig::default())).is_err());
     let seed = 5;
     // Лесной чанк гарантирует деревья, остальные дают воду и глубину.
     let forest = (-40..40)
@@ -139,6 +139,56 @@ fn generator_three_only_adds_birch_clay_and_obsidian_on_top_of_generator_two() {
                             (DEEP_STONE, OBSIDIAN) => 3,
                             other => panic!("unexpected replacement {other:?} at {p:?}"),
                         };
+                        found[index] += 1;
+                    }
+                }
+            }
+        }
+    }
+    assert!(found.iter().all(|count| *count > 0), "{found:?}");
+}
+
+#[test]
+fn generator_four_adds_pines_rocks_and_plants_only_where_expected() {
+    use game_core::{
+        BASALT, CORNFLOWER, DAISY, DANDELION, GRANITE, GRASS, LEAVES, LIMESTONE, MARBLE,
+        PINE_LEAVES, PINE_LOG, POPPY, SLATE, TALL_GRASS, WOOD, biome_at, world::Biome,
+    };
+    let three = WorldGenerator::from_snapshot(3, Some(OreConfig::default())).unwrap();
+    let four = WorldGenerator::from_snapshot(4, Some(OreConfig::default())).unwrap();
+    assert_eq!(four.version(), 4);
+    let seed = 5;
+    let forest = (-40..40)
+        .flat_map(|x| (-40..40).map(move |z| [x, z]))
+        .find(|p| biome_at(seed, p[0] * 16 + 8, p[1] * 16 + 8) == Biome::Forest)
+        .expect("seed has a forest");
+    // [сосна, породы, цветы, трава]
+    let mut found = [0_usize; 4];
+    for dx in -4..=4 {
+        for dz in -4..=4 {
+            let pos = [forest[0] + dx, forest[1] + dz];
+            let old = three.generate(seed, pos);
+            let new = four.generate(seed, pos);
+            assert_eq!(new, four.generate(seed, pos));
+            for y in WORLD_MIN_Y..=WORLD_MAX_Y {
+                for z in 0..16 {
+                    for x in 0..16 {
+                        let p = [pos[0] * 16 + x, y, pos[1] * 16 + z];
+                        let (before, after) = (old.block(p), new.block(p));
+                        if before == after {
+                            continue;
+                        }
+                        let index = match (before, after) {
+                            (WOOD, PINE_LOG) | (LEAVES, PINE_LEAVES) => 0,
+                            (STONE, LIMESTONE | GRANITE | MARBLE | SLATE)
+                            | (DEEP_STONE, BASALT) => 1,
+                            (AIR, POPPY | DANDELION | CORNFLOWER | DAISY) => 2,
+                            (AIR, TALL_GRASS) => 3,
+                            other => panic!("unexpected replacement {other:?} at {p:?}"),
+                        };
+                        if index >= 2 {
+                            assert_eq!(new.block([p[0], p[1] - 1, p[2]]), GRASS);
+                        }
                         found[index] += 1;
                     }
                 }

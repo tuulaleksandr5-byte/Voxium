@@ -112,6 +112,12 @@ pub const MOSSY_STONE_BRICKS: u8 = 94;
 pub const CRACKED_STONE_BRICKS: u8 = 95;
 pub const DARK_BRICKS: u8 = 96;
 pub const STONE_TILES: u8 = 97;
+// Растения: крестовая модель без столкновений.
+pub const POPPY: u8 = 98;
+pub const DANDELION: u8 = 99;
+pub const CORNFLOWER: u8 = 100;
+pub const DAISY: u8 = 101;
+pub const TALL_GRASS: u8 = 102;
 
 const fn block(
     id: u8,
@@ -132,7 +138,7 @@ const fn block(
     }
 }
 
-pub const BLOCKS: [BlockDef; 98] = [
+pub const BLOCKS: [BlockDef; 103] = [
     block(AIR, "Air", "air", 0.0, false, false),
     block(GRASS, "Grass", "grass", 0.6, true, true),
     block(DIRT, "Dirt", "dirt", 0.5, true, true),
@@ -496,7 +502,18 @@ pub const BLOCKS: [BlockDef; 98] = [
     ),
     block(DARK_BRICKS, "Dark Bricks", "dark_bricks", 1.8, true, true),
     block(STONE_TILES, "Stone Tiles", "stone_tiles", 1.8, true, true),
+    block(POPPY, "Poppy", "poppy", 0.05, false, false),
+    block(DANDELION, "Dandelion", "dandelion", 0.05, false, false),
+    block(CORNFLOWER, "Cornflower", "cornflower", 0.05, false, false),
+    block(DAISY, "Daisy", "daisy", 0.05, false, false),
+    block(TALL_GRASS, "Tall Grass", "tall_grass", 0.05, false, false),
 ];
+
+/// Растения рисуются двумя скрещёнными плоскостями и не мешают ходьбе.
+#[must_use]
+pub fn is_plant(id: u8) -> bool {
+    (POPPY..=TALL_GRASS).contains(&id)
+}
 
 /// Блок без состояния «горит»: в таком виде он выпадает и сохраняется.
 #[must_use]
@@ -545,7 +562,7 @@ mod tests {
             "Crafting Table",
             "Furnace",
         ];
-        assert_eq!(BLOCKS.len(), 98);
+        assert_eq!(BLOCKS.len(), 103);
         for (offset, name) in expected.iter().enumerate() {
             let id = 17 + offset;
             assert_eq!(BLOCKS[id].id as usize, id);
@@ -556,7 +573,7 @@ mod tests {
 
     #[test]
     fn chest_extends_registry_without_changing_foundation_ids() {
-        assert_eq!(BLOCKS.len(), 98);
+        assert_eq!(BLOCKS.len(), 103);
         let chest = BLOCKS.get(16).expect("сундук зарегистрирован");
         assert_eq!(chest.name, "Chest");
         assert!(is_solid(16));

@@ -99,4 +99,9 @@
     (top: 115, side: 115, bottom: 115), // cracked_stone_bricks
     (top: 116, side: 116, bottom: 116), // dark_bricks
     (top: 117, side: 117, bottom: 117), // stone_tiles
+    (top: 118, side: 118, bottom: 118), // poppy
+    (top: 119, side: 119, bottom: 119), // dandelion
+    (top: 120, side: 120, bottom: 120), // cornflower
+    (top: 121, side: 121, bottom: 121), // daisy
+    (top: 122, side: 122, bottom: 122), // tall_grass
 ]

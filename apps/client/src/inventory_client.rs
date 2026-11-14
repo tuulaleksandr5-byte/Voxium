@@ -278,8 +278,13 @@ fn process_action(game: &mut Game, action: &InventoryAction) -> Effects {
         {
             let block = game.selected_block();
             if block != AIR
-                && visible_hit(game).is_some_and(|hit| hit.previous == *position)
-                && loaded_block(&game.world, *position) == Some(AIR)
+                && visible_hit(game).is_some_and(|hit| {
+                    hit.previous == *position
+                        || (hit.block == *position
+                            && game_core::is_plant(game.world.block(hit.block)))
+                })
+                && loaded_block(&game.world, *position)
+                    .is_some_and(|old| old == AIR || game_core::is_plant(old))
                 && !player_intersects_block(game.feet.to_array(), game.height, *position)
                 && game.world.set(*position, block)
             {

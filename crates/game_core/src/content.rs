@@ -64,7 +64,7 @@ pub struct ContentRegistry {
 }
 
 // Имена соответствуют стабильным сохранённым ID; новые блоки только дописываются.
-const BLOCK_NAMES: [&str; 98] = [
+const BLOCK_NAMES: [&str; 103] = [
     "foundation:air",
     "foundation:grass",
     "foundation:dirt",
@@ -163,6 +163,11 @@ const BLOCK_NAMES: [&str; 98] = [
     "palette:cracked_stone_bricks",
     "palette:dark_bricks",
     "palette:stone_tiles",
+    "flora:poppy",
+    "flora:dandelion",
+    "flora:cornflower",
+    "flora:daisy",
+    "flora:tall_grass",
 ];
 
 impl Default for ContentRegistry {
@@ -421,7 +426,7 @@ mod tests {
                 assert_eq!(def.max_stack, 1);
             }
         }
-        assert_eq!(registry.len(), 156);
+        assert_eq!(registry.len(), 177);
     }
 
     fn material(id: &str, max_stack: u16) -> String {
@@ -431,7 +436,7 @@ mod tests {
     #[test]
     fn default_catalog_preserves_original_stage_three_blocks_and_fixtures() {
         let registry = ContentRegistry::default();
-        assert_eq!(registry.len(), 156);
+        assert_eq!(registry.len(), 177);
         assert!(!registry.is_empty());
         let names = [
             "foundation:air",
@@ -590,7 +595,7 @@ mod tests {
         ] {
             assert!(original.reload(&changed).is_err());
         }
-        assert_eq!(original.len(), 156);
+        assert_eq!(original.len(), 177);
         assert_eq!(
             original.max_stack(original.find("survival:egg").unwrap()),
             16
