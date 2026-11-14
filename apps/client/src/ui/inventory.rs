@@ -431,6 +431,212 @@ fn furnace(
     );
 }
 
+/// Вкладки творческого каталога; нулевая показывает всё.
+pub(crate) const CATALOG_TABS: [&str; 7] = [
+    "Все",
+    "Строительство",
+    "Природа",
+    "Механизмы",
+    "Инструменты",
+    "Броня",
+    "Еда и материалы",
+];
+
+/// Номер вкладки каталога для предмета.
+fn catalog_tab(game: &Game, id: ItemId) -> usize {
+    use game_core::content::ItemKind;
+    let Some(definition) = game.content.get(id) else {
+        return 0;
+    };
+    match &definition.kind {
+        ItemKind::Tool => 4,
+        ItemKind::Armor { .. } => 5,
+        ItemKind::Food | ItemKind::Material => 6,
+        ItemKind::Block { .. } => match game.content.block_for_item(id).unwrap_or(0) {
+            game_core::CHEST
+            | game_core::CRAFTING_TABLE
+            | game_core::FURNACE
+            | game_core::LAMP
+            | game_core::BOOKSHELF => 3,
+            game_core::GRASS
+            | game_core::DIRT
+            | game_core::STONE
+            | game_core::DEEP_STONE
+            | game_core::SAND
+            | game_core::GRAVEL
+            | game_core::WOOD
+            | game_core::LEAVES
+            | game_core::WATER
+            | game_core::SNOW
+            | game_core::COAL_ORE
+            | game_core::IRON_ORE
+            | game_core::GOLD_ORE
+            | game_core::DIAMOND_ORE
+            | game_core::BIRCH_LOG
+            | game_core::BIRCH_LEAVES
+            | game_core::CLAY
+            | game_core::ICE
+            | game_core::OBSIDIAN => 2,
+            _ => 1,
+        },
+    }
+}
+
+/// Творческий каталог: вкладки категорий, слот выдачи и сетка предметов.
+fn catalog(
+    commands: &mut Commands,
+    panel: Entity,
+    game: &Game,
+    icons: &ItemIcons,
+    blocks: &BlockIcons,
+) {
+    label(
+        commands,
+        panel,
+        format!("КАТАЛОГ ∞ · выдача в слот {}", game.selected + 1),
+        13.,
+        AMBER,
+    );
+    label(
+        commands,
+        panel,
+        "1–9: выбрать слот выдачи · каждый предмет доступен без ограничений",
+        12.,
+        MUTED,
+    );
+    let targets = row(commands, panel, 6.);
+    for index in 0..9 {
+        let target = button(
+            commands,
+            targets,
+            (index + 1).to_string(),
+            Action::SelectSlot(index),
+            if game.selected == index {
+                Tone::Gold
+            } else {
+                Tone::Normal
+            },
+        );
+        commands.entity(target).insert(Node {
+            width: px(44),
+            height: px(44),
+            min_height: px(44),
+            flex_shrink: 0.,
+            padding: UiRect::all(px(0)),
+            border: UiRect::all(px(1)),
+            border_radius: BorderRadius::all(px(4)),
+            align_items: AlignItems::Center,
+            justify_content: JustifyContent::Center,
+            ..default()
+        });
+    }
+    let tabs = node(
+        commands,
+        panel,
+        Node {
+            width: percent(100),
+            flex_wrap: FlexWrap::Wrap,
+            column_gap: px(6),
+            row_gap: px(6),
+            flex_shrink: 0.,
+            ..default()
+        },
+        Color::NONE,
+    );
+    let compact = Node {
+        min_height: px(36),
+        flex_shrink: 0.,
+        padding: UiRect::axes(px(12), px(4)),
+        border: UiRect::all(px(1)),
+        border_radius: BorderRadius::all(px(4)),
+        align_items: AlignItems::Center,
+        justify_content: JustifyContent::Center,
+        ..default()
+    };
+    for (index, name) in CATALOG_TABS.iter().enumerate() {
+        let tab = button(
+            commands,
+            tabs,
+            *name,
+            Action::CatalogTab(index),
+            if game.catalog_tab == index {
+                Tone::Gold
+            } else {
+                Tone::Normal
+            },
+        );
+        commands.entity(tab).insert(compact.clone());
+    }
+    if game.inventory.cursor.is_some() {
+        let trash = button(
+            commands,
+            tabs,
+            "✕ Убрать с курсора",
+            Action::TrashCursor,
+            Tone::Normal,
+        );
+        commands.entity(trash).insert(compact);
+    }
+    let catalog = node(
+        commands,
+        panel,
+        Node {
+            width: percent(100),
+            flex_wrap: FlexWrap::Wrap,
+            column_gap: px(6),
+            row_gap: px(6),
+            flex_shrink: 0.,
+            ..default()
+        },
+        Color::NONE,
+    );
+    for (id, definition) in game.content.iter() {
+        if game.catalog_tab != 0 && catalog_tab(game, id) != game.catalog_tab {
+            continue;
+        }
+        let child = node(
+            commands,
+            catalog,
+            Node {
+                width: px(54),
+                height: px(54),
+                border: UiRect::all(px(1)),
+                border_radius: BorderRadius::all(px(4)),
+                align_items: AlignItems::Center,
+                justify_content: JustifyContent::Center,
+                ..default()
+            },
+            Color::srgba(0.16, 0.07, 0.23, 0.96),
+        );
+        commands.entity(child).insert((
+            Button,
+            Hovered::default(),
+            CatalogItem(id),
+            SlotHint(format!("{} · ∞", definition.name)),
+            BorderColor::all(LINE),
+        ));
+        let image = commands
+            .spawn((
+                ImageNode::new(icons.get(id, &game.content, blocks)),
+                Node {
+                    width: px(46),
+                    height: px(46),
+                    ..default()
+                },
+                Pickable::IGNORE,
+            ))
+            .id();
+        commands.entity(child).add_child(image);
+        let infinity = label(commands, child, "∞", 13., AMBER);
+        commands.entity(infinity).insert(Node {
+            position_type: PositionType::Absolute,
+            right: px(3),
+            bottom: px(1),
+            ..default()
+        });
+    }
+}
+
 pub(super) fn menu(
     commands: &mut Commands,
     panel: Entity,
@@ -457,6 +663,9 @@ pub(super) fn menu(
         12.,
         MUTED,
     );
+    if game.game_mode == GameMode::Creative {
+        catalog(commands, panel, game, icons, blocks);
+    }
     let content = row(commands, panel, 24.);
     commands.entity(content).insert(Node {
         width: percent(100),
@@ -559,103 +768,6 @@ pub(super) fn menu(
     slot(commands, cells, game, icons, blocks, SlotRef::Offhand, "");
     label(commands, cells, "Вторая рука", 12., MUTED);
     label(commands, equipment, "Броня пока\nбез бонусов.", 12., MUTED);
-    if game.game_mode == GameMode::Creative {
-        label(
-            commands,
-            panel,
-            format!("КАТАЛОГ ∞ · выдача в слот {}", game.selected + 1),
-            13.,
-            AMBER,
-        );
-        label(
-            commands,
-            panel,
-            "1–9: выбрать слот выдачи · каждый предмет доступен без ограничений",
-            12.,
-            MUTED,
-        );
-        let targets = row(commands, panel, 6.);
-        for index in 0..9 {
-            let target = button(
-                commands,
-                targets,
-                (index + 1).to_string(),
-                Action::SelectSlot(index),
-                if game.selected == index {
-                    Tone::Gold
-                } else {
-                    Tone::Normal
-                },
-            );
-            commands.entity(target).insert(Node {
-                width: px(44),
-                height: px(44),
-                min_height: px(44),
-                flex_shrink: 0.,
-                padding: UiRect::all(px(0)),
-                border: UiRect::all(px(1)),
-                border_radius: BorderRadius::all(px(4)),
-                align_items: AlignItems::Center,
-                justify_content: JustifyContent::Center,
-                ..default()
-            });
-        }
-        let catalog = node(
-            commands,
-            panel,
-            Node {
-                width: percent(100),
-                flex_wrap: FlexWrap::Wrap,
-                column_gap: px(6),
-                row_gap: px(6),
-                flex_shrink: 0.,
-                ..default()
-            },
-            Color::NONE,
-        );
-        for (id, definition) in game.content.iter() {
-            let child = node(
-                commands,
-                catalog,
-                Node {
-                    width: px(54),
-                    height: px(54),
-                    border: UiRect::all(px(1)),
-                    border_radius: BorderRadius::all(px(4)),
-                    align_items: AlignItems::Center,
-                    justify_content: JustifyContent::Center,
-                    ..default()
-                },
-                Color::srgba(0.16, 0.07, 0.23, 0.96),
-            );
-            commands.entity(child).insert((
-                Button,
-                Hovered::default(),
-                CatalogItem(id),
-                SlotHint(format!("{} · ∞", definition.name)),
-                BorderColor::all(LINE),
-            ));
-            let image = commands
-                .spawn((
-                    ImageNode::new(icons.get(id, &game.content, blocks)),
-                    Node {
-                        width: px(46),
-                        height: px(46),
-                        ..default()
-                    },
-                    Pickable::IGNORE,
-                ))
-                .id();
-            commands.entity(child).add_child(image);
-            let infinity = label(commands, child, "∞", 13., AMBER);
-            commands.entity(infinity).insert(Node {
-                position_type: PositionType::Absolute,
-                right: px(3),
-                bottom: px(1),
-                ..default()
-            });
-        }
-    }
     label(
         commands,
         panel,

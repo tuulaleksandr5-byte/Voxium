@@ -36,6 +36,8 @@ pub struct Game {
     pub mobs: game_core::mobs::MobStore,
     /// ЛКМ уже потрачена на удар по мобу: добыча ждёт отпускания кнопки.
     pub attack_lock: bool,
+    /// Открытая вкладка творческого каталога.
+    pub catalog_tab: usize,
     pub mining_config: game_core::mining::MiningConfig,
     pub mining: game_core::mining::MiningState,
     pub world_mouse: crate::control_input::WorldMouseGate,
@@ -89,6 +91,7 @@ impl Default for Game {
             furnaces: HashMap::new(),
             mobs: Default::default(),
             attack_lock: false,
+            catalog_tab: 0,
             mining_config: Default::default(),
             mining: Default::default(),
             world_mouse: Default::default(),

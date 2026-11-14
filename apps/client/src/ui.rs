@@ -38,6 +38,8 @@ pub enum Action {
     ToggleFullscreen,
     CycleResolution,
     ToggleTextures,
+    CatalogTab(usize),
+    TrashCursor,
     FocusName,
     FocusSeed,
     RandomSeed,
@@ -45,6 +47,8 @@ pub enum Action {
     Respawn,
     CommitSettings,
 }
+
+pub const CATALOG_TAB_COUNT: usize = inventory::CATALOG_TABS.len();
 
 #[derive(Resource, Default)]
 pub struct UiIntent(pub Vec<Action>);

@@ -7,6 +7,7 @@ mod console;
 mod control_input;
 mod footsteps;
 mod graphics_assets;
+mod hand;
 mod inventory_client;
 mod inventory_render;
 mod item_icons;
@@ -93,6 +94,7 @@ fn main() {
     inventory_client::plugin(&mut app);
     mining_client::plugin(&mut app);
     mobs_client::plugin(&mut app);
+    hand::plugin(&mut app);
     item_icons::plugin(&mut app);
     inventory_render::plugin(&mut app);
     ui::plugin(&mut app);
@@ -432,6 +434,16 @@ fn actions(
             Action::SelectSlot(slot) => {
                 game.selected = slot.min(8);
                 game.ui_dirty = true;
+            }
+            Action::CatalogTab(tab) => {
+                game.catalog_tab = tab.min(ui::CATALOG_TAB_COUNT - 1);
+                game.ui_dirty = true;
+            }
+            Action::TrashCursor => {
+                if game.game_mode == game_core::survival::GameMode::Creative {
+                    game.inventory.cursor = None;
+                    game.ui_dirty = true;
+                }
             }
             Action::RandomSeed => {
                 game.seed_input = SystemTime::now()
