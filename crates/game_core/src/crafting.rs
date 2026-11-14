@@ -44,11 +44,11 @@ impl RecipeBook {
             if !valid_id(&recipe.id) || !ids.insert(&recipe.id) {
                 return Err("Недопустимый или повторный ID рецепта".into());
             }
-            if !(1..=2).contains(&recipe.width)
-                || !(1..=2).contains(&recipe.height)
+            if !(1..=3).contains(&recipe.width)
+                || !(1..=3).contains(&recipe.height)
                 || recipe.inputs.len() != recipe.width * recipe.height
             {
-                return Err("Рецепт должен помещаться в сетку 2×2".into());
+                return Err("Рецепт должен помещаться в сетку 3×3".into());
             }
             // Require a tight bounding rectangle, so every translation is unambiguous.
             let occupied = |x: usize, y: usize| recipe.inputs[y * recipe.width + x].is_some();
@@ -84,12 +84,38 @@ impl RecipeBook {
         grid: &[Option<ItemStack>; 4],
         catalog: &ContentRegistry,
     ) -> Option<ItemStack> {
-        self.matching(grid, catalog).map(|(_, _, output)| output)
+        self.preview_grid(grid, 2, catalog)
     }
 
-    /// A result is never stored: transfer a whole portion before consuming its inputs.
+    /// Результат для квадратной сетки `size`×`size` (2 — личная, 3 — верстак).
+    pub fn preview_grid(
+        &self,
+        grid: &[Option<ItemStack>],
+        size: usize,
+        catalog: &ContentRegistry,
+    ) -> Option<ItemStack> {
+        self.matching(grid, size, catalog)
+            .map(|(_, _, output)| output)
+    }
+
     pub fn take_result(
         &self,
+        inventory: &mut Inventory,
+        all: bool,
+        catalog: &ContentRegistry,
+    ) -> bool {
+        let mut grid = inventory.crafting.clone();
+        let changed = self.take_grid_result(&mut grid, 2, inventory, all, catalog);
+        inventory.crafting = grid;
+        changed
+    }
+
+    /// Атомарно переносит результат: ингредиенты списываются только после того,
+    /// как результат поместился на курсор или в хотбар/рюкзак.
+    pub fn take_grid_result(
+        &self,
+        grid: &mut [Option<ItemStack>],
+        size: usize,
         inventory: &mut Inventory,
         all: bool,
         catalog: &ContentRegistry,
@@ -98,11 +124,11 @@ impl RecipeBook {
             return false;
         }
         let target_recipe = self
-            .matching(&inventory.crafting, catalog)
-            .map(|(recipe, _, _)| recipe.id.as_str());
+            .matching(grid, size, catalog)
+            .map(|(recipe, _, _)| recipe.id.clone());
         let mut changed = false;
-        while let Some((recipe, costs, output)) = self.matching(&inventory.crafting, catalog) {
-            if Some(recipe.id.as_str()) != target_recipe {
+        while let Some((recipe, costs, output)) = self.matching(grid, size, catalog) {
+            if Some(&recipe.id) != target_recipe.as_ref() {
                 break;
             }
             let mut candidate = inventory.clone();
@@ -125,7 +151,7 @@ impl RecipeBook {
             } else {
                 candidate.cursor = Some(output);
             }
-            for (slot, cost) in candidate.crafting.iter_mut().zip(costs) {
+            for (slot, cost) in grid.iter_mut().zip(costs) {
                 if cost > 0
                     && let Some(stack) = slot
                 {
@@ -144,7 +170,6 @@ impl RecipeBook {
         changed
     }
 
-    /// Used before committing an item catalog reload.
     pub fn validate_catalog(&self, catalog: &ContentRegistry) -> Result<(), String> {
         for recipe in &self.recipes {
             for ingredient in recipe
@@ -166,29 +191,34 @@ impl RecipeBook {
 
     fn matching(
         &self,
-        grid: &[Option<ItemStack>; 4],
+        grid: &[Option<ItemStack>],
+        size: usize,
         catalog: &ContentRegistry,
-    ) -> Option<(&Recipe, [u16; 4], ItemStack)> {
-        if grid
-            .iter()
-            .flatten()
-            .any(|stack| stack.count == 0 || stack.count > catalog.max_stack(stack.item))
+    ) -> Option<(&Recipe, Vec<u16>, ItemStack)> {
+        if grid.len() != size * size
+            || grid
+                .iter()
+                .flatten()
+                .any(|stack| stack.count == 0 || stack.count > catalog.max_stack(stack.item))
         {
             return None;
         }
         for recipe in &self.recipes {
+            if recipe.width > size || recipe.height > size {
+                continue;
+            }
             let Some(output_item) = catalog.find(&recipe.output.item) else {
                 continue;
             };
             if recipe.output.count > catalog.max_stack(output_item) {
                 continue;
             }
-            for y in 0..=2 - recipe.height {
-                for x in 0..=2 - recipe.width {
-                    let mut costs = [0; 4];
-                    let matches = (0..4).all(|index| {
-                        let gx = index % 2;
-                        let gy = index / 2;
+            for y in 0..=size - recipe.height {
+                for x in 0..=size - recipe.width {
+                    let mut costs = vec![0; grid.len()];
+                    let matches = (0..grid.len()).all(|index| {
+                        let gx = index % size;
+                        let gy = index / size;
                         let ingredient = if gx >= x
                             && gx < x + recipe.width
                             && gy >= y
@@ -438,5 +468,42 @@ mod tests {
             grid[3] = None;
             assert_eq!(book.preview(&grid, &catalog), None);
         }
+    }
+    #[test]
+    fn workbench_grid_matches_three_by_three_recipes_and_keeps_small_ones() {
+        let catalog = ContentRegistry::default();
+        let book = RecipeBook::default();
+        let planks = stack(&catalog, "foundation:oak_planks", 1);
+        let stick = stack(&catalog, "survival:stick", 1);
+        let mut grid: Vec<Option<ItemStack>> = vec![None; 9];
+        grid[..3].fill(planks.clone());
+        grid[4] = stick.clone();
+        grid[7] = stick;
+        assert_eq!(
+            book.preview_grid(&grid, 3, &catalog),
+            stack(&catalog, "survival:wooden_pickaxe", 1)
+        );
+        // Рецепт 3×3 не появляется в личной сетке 2×2.
+        assert_eq!(book.preview_grid(&grid[..4], 2, &catalog), None);
+        let mut inventory = Inventory::default();
+        assert!(book.take_grid_result(&mut grid, 3, &mut inventory, false, &catalog));
+        assert!(grid.iter().all(Option::is_none));
+        assert_eq!(
+            inventory.cursor,
+            stack(&catalog, "survival:wooden_pickaxe", 1)
+        );
+        let mut ring: Vec<Option<ItemStack>> =
+            vec![stack(&catalog, "foundation:cobblestone", 2); 9];
+        ring[4] = None;
+        assert_eq!(
+            book.preview_grid(&ring, 3, &catalog),
+            stack(&catalog, "survival:furnace", 1)
+        );
+        let mut small: Vec<Option<ItemStack>> = vec![None; 9];
+        small[8] = stack(&catalog, "foundation:oak_log", 1);
+        assert_eq!(
+            book.preview_grid(&small, 3, &catalog),
+            stack(&catalog, "foundation:oak_planks", 4)
+        );
     }
 }

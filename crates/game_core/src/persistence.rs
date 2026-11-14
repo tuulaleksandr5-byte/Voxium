@@ -12,7 +12,7 @@ use std::{
 /// Increase when the save schema changes, with an explicit migration before loading it.
 pub const CURRENT_FORMAT_VERSION: u32 = 2;
 /// Generation must remain deterministic for every supported generator version.
-pub const CURRENT_GENERATOR_VERSION: u32 = 2;
+pub const CURRENT_GENERATOR_VERSION: u32 = 3;
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -549,7 +549,7 @@ mod tests {
         let root = TestRoot::new();
         let mut value = serde_json::to_value(example()).unwrap();
         assert_eq!(value["format_version"], 2);
-        assert_eq!(value["generator_version"], 2);
+        assert_eq!(value["generator_version"], CURRENT_GENERATOR_VERSION);
         value["ore_config"]["ores"][0]["veins"] = 1.into();
         let data: SaveData = serde_json::from_value(value.clone()).unwrap();
         save_world(&root.0, "snapshot", &data).unwrap();
@@ -559,9 +559,11 @@ mod tests {
             loaded.ore_config.clone(),
         )
         .unwrap();
-        let current_defaults =
-            crate::ores::WorldGenerator::from_snapshot(2, Some(crate::ores::OreConfig::default()))
-                .unwrap();
+        let current_defaults = crate::ores::WorldGenerator::from_snapshot(
+            CURRENT_GENERATOR_VERSION,
+            Some(crate::ores::OreConfig::default()),
+        )
+        .unwrap();
         assert_ne!(
             generator.generate(data.seed, [-1, 0]),
             current_defaults.generate(data.seed, [-1, 0])

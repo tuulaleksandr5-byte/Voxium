@@ -37,6 +37,23 @@ pub const GOLD_BLOCK: u8 = 22;
 pub const DIAMOND_BLOCK: u8 = 23;
 pub const CRAFTING_TABLE: u8 = 24;
 pub const FURNACE: u8 = 25;
+pub const BRICKS: u8 = 26;
+pub const STONE_BRICKS: u8 = 27;
+pub const MOSSY_COBBLE: u8 = 28;
+pub const BIRCH_LOG: u8 = 29;
+pub const BIRCH_LEAVES: u8 = 30;
+pub const BIRCH_PLANKS: u8 = 31;
+pub const CLAY: u8 = 32;
+pub const BOOKSHELF: u8 = 33;
+pub const LAMP: u8 = 34;
+pub const ICE: u8 = 35;
+pub const OBSIDIAN: u8 = 36;
+pub const WOOL: u8 = 37;
+pub const TERRACOTTA: u8 = 38;
+pub const SMOOTH_STONE: u8 = 39;
+pub const COAL_BLOCK: u8 = 40;
+/// Работающая печь: состояние блока, а не отдельный предмет.
+pub const FURNACE_LIT: u8 = 41;
 
 const fn block(
     id: u8,
@@ -57,7 +74,7 @@ const fn block(
     }
 }
 
-pub const BLOCKS: [BlockDef; 26] = [
+pub const BLOCKS: [BlockDef; 42] = [
     block(AIR, "Air", "air", 0.0, false, false),
     block(GRASS, "Grass", "grass", 0.6, true, true),
     block(DIRT, "Dirt", "dirt", 0.5, true, true),
@@ -99,7 +116,70 @@ pub const BLOCKS: [BlockDef; 26] = [
         true,
     ),
     block(FURNACE, "Furnace", "furnace", 3.5, true, true),
+    block(BRICKS, "Bricks", "bricks", 2.0, true, true),
+    block(
+        STONE_BRICKS,
+        "Stone Bricks",
+        "stone_bricks",
+        1.5,
+        true,
+        true,
+    ),
+    block(
+        MOSSY_COBBLE,
+        "Mossy Cobblestone",
+        "mossy_cobblestone",
+        2.0,
+        true,
+        true,
+    ),
+    block(BIRCH_LOG, "Birch Log", "birch_log", 2.0, true, true),
+    block(
+        BIRCH_LEAVES,
+        "Birch Leaves",
+        "birch_leaves",
+        0.2,
+        true,
+        false,
+    ),
+    block(
+        BIRCH_PLANKS,
+        "Birch Planks",
+        "birch_planks",
+        2.0,
+        true,
+        true,
+    ),
+    block(CLAY, "Clay", "clay", 0.6, true, true),
+    block(BOOKSHELF, "Bookshelf", "bookshelf", 1.5, true, true),
+    BlockDef {
+        light_emission: 15,
+        ..block(LAMP, "Lamp", "lamp", 0.3, true, true)
+    },
+    block(ICE, "Ice", "ice", 0.5, true, false),
+    block(OBSIDIAN, "Obsidian", "obsidian", 50.0, true, true),
+    block(WOOL, "Wool", "wool", 0.8, true, true),
+    block(TERRACOTTA, "Terracotta", "terracotta", 1.25, true, true),
+    block(
+        SMOOTH_STONE,
+        "Smooth Stone",
+        "smooth_stone",
+        2.0,
+        true,
+        true,
+    ),
+    block(COAL_BLOCK, "Coal Block", "coal_block", 5.0, true, true),
+    BlockDef {
+        light_emission: 13,
+        ..block(FURNACE_LIT, "Lit Furnace", "furnace", 3.5, true, true)
+    },
 ];
+
+/// Листва получает объёмную геометрию и не сливается в greedy-грани.
+#[must_use]
+pub fn is_leaves(id: u8) -> bool {
+    matches!(id, LEAVES | BIRCH_LEAVES)
+}
 
 #[must_use]
 pub fn is_solid(id: u8) -> bool {
@@ -131,7 +211,7 @@ mod tests {
             "Crafting Table",
             "Furnace",
         ];
-        assert_eq!(BLOCKS.len(), 26);
+        assert_eq!(BLOCKS.len(), 42);
         for (offset, name) in expected.iter().enumerate() {
             let id = 17 + offset;
             assert_eq!(BLOCKS[id].id as usize, id);
@@ -142,7 +222,7 @@ mod tests {
 
     #[test]
     fn chest_extends_registry_without_changing_foundation_ids() {
-        assert_eq!(BLOCKS.len(), 26);
+        assert_eq!(BLOCKS.len(), 42);
         let chest = BLOCKS.get(16).expect("сундук зарегистрирован");
         assert_eq!(chest.name, "Chest");
         assert!(is_solid(16));

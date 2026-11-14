@@ -53,6 +53,7 @@ fn cache_icons(
             TextureDimension::D2,
             crate::tool_textures::pixels(&definition.id)
                 .or_else(|| crate::item_textures::pixels(&definition.id))
+                .or_else(|| crate::pixel_icons::pixels(&definition.id))
                 .unwrap_or_else(|| placeholder_pixels(&definition.id, &definition.kind)),
             TextureFormat::Rgba8UnormSrgb,
             RenderAssetUsages::default(),

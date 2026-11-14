@@ -10,10 +10,11 @@ mod icons;
 mod materials;
 mod meshing;
 
-pub use atlas::{ADDITIONAL_TILE_NAMES, BlockAtlas};
+pub use atlas::{ADDITIONAL_TILE_NAMES, BlockAtlas, extra_tile_names};
 pub use environment::gradient_sky;
 pub use face_textures::{
-    BlockTextures, FaceTextures, GRASS_BOTTOM, GRASS_TOP, MATERIAL_COUNT, WOOD_END,
+    BIRCH_LEAVES_LAYER, BlockTextures, FaceTextures, GLASS_LAYER, GRASS_BOTTOM, GRASS_TOP,
+    ICE_LAYER, LAMP_LAYER, MATERIAL_COUNT, OAK_LEAVES_LAYER, WATER_LAYER, WOOD_END,
 };
 pub use icons::{bake_atlas_icons, bake_block_icons};
 pub use materials::{

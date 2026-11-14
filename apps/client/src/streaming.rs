@@ -141,7 +141,10 @@ pub fn stream_world(
                         ),
                     ))
                     .id();
-                if matches!(id, 12 | 13) {
+                if matches!(
+                    usize::from(id),
+                    game_render::GLASS_LAYER | game_render::WATER_LAYER | game_render::ICE_LAYER
+                ) {
                     commands.entity(entity).insert(bevy::light::NotShadowCaster);
                 }
                 tiles.push((entity, handle));

@@ -122,8 +122,23 @@ pub fn parse_command(text: &str) -> Result<PlayerAction, String> {
             };
             Ok(PlayerAction::SetRule(rule, value))
         }
+        Some("/summon") => {
+            let (Some(name), None) = (arguments.next(), arguments.next()) else {
+                return Err("Использование: /summon cow|pig|sheep|chicken|ghoul|spider".into());
+            };
+            game_core::mobs::MobKind::ALL
+                .into_iter()
+                .find(|kind| kind.spec().id == name)
+                .map(PlayerAction::Summon)
+                .ok_or_else(|| format!("Неизвестный моб: {name}"))
+        }
+        Some("/time") => match (arguments.next(), arguments.next()) {
+            (Some("day"), None) => Ok(PlayerAction::SetDay(true)),
+            (Some("night"), None) => Ok(PlayerAction::SetDay(false)),
+            _ => Err("Использование: /time day|night".into()),
+        },
         Some(command) => Err(format!("Неизвестная команда: {command}")),
-        None => Err("Введите команду /gamemode или /gamerule".into()),
+        None => Err("Введите команду: /gamemode, /gamerule, /summon или /time".into()),
     }
 }
 
@@ -315,5 +330,32 @@ mod tests {
         let console = app.world().resource::<ConsoleState>();
         assert_eq!(console.input.chars().count(), 255);
         assert!(console.input.ends_with('я'));
+    }
+
+    #[test]
+    fn parses_summon_for_every_mob_and_time_of_day() {
+        for kind in game_core::mobs::MobKind::ALL {
+            let command = format!("/summon {}", kind.spec().id);
+            assert!(
+                matches!(parse_command(&command), Ok(PlayerAction::Summon(found)) if found == kind)
+            );
+        }
+        assert!(matches!(
+            parse_command("/time day"),
+            Ok(PlayerAction::SetDay(true))
+        ));
+        assert!(matches!(
+            parse_command("/time night"),
+            Ok(PlayerAction::SetDay(false))
+        ));
+        for invalid in [
+            "/summon",
+            "/summon dragon",
+            "/summon cow extra",
+            "/time",
+            "/time noon",
+        ] {
+            assert!(parse_command(invalid).is_err(), "{invalid}");
+        }
     }
 }

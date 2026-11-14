@@ -6,7 +6,8 @@ use std::io::Cursor;
 const TILE_SIZE: u32 = 128;
 const ATLAS_WIDTH: u32 = TILE_SIZE * 6;
 const SOURCE_HEIGHT: u32 = TILE_SIZE * 3;
-const ATLAS_HEIGHT: u32 = TILE_SIZE * 6;
+const ATLAS_HEIGHT: u32 = TILE_SIZE * 12;
+const EXTRA_FIRST_LAYER: usize = 36;
 const SOURCE_TILE_COUNT: usize = 17;
 
 /// Layer order for the fifteen additional 128×128 PNGs (layers 18…32).
@@ -45,6 +46,84 @@ const ADDITIONAL_TILES: [&[u8]; 15] = [
     include_bytes!("../../../assets/textures/blocks/128x128/furnace_top.png"),
 ];
 
+macro_rules! pixel_tile {
+    ($name:literal) => {
+        (
+            $name,
+            include_bytes!(concat!(
+                "../../../assets/textures/pixel/128x128/",
+                $name,
+                ".png"
+            )) as &[u8],
+        )
+    };
+}
+/// Пиксельные тайлы новых блоков: слои 36…54 в обоих стилях графики.
+const EXTRA_TILES: [(&str, &[u8]); 19] = [
+    pixel_tile!("bricks"),
+    pixel_tile!("stone_bricks"),
+    pixel_tile!("mossy_cobblestone"),
+    pixel_tile!("birch_log"),
+    pixel_tile!("birch_log_top"),
+    pixel_tile!("birch_leaves"),
+    pixel_tile!("birch_planks"),
+    pixel_tile!("clay"),
+    pixel_tile!("bookshelf"),
+    pixel_tile!("lamp"),
+    pixel_tile!("ice"),
+    pixel_tile!("obsidian"),
+    pixel_tile!("wool"),
+    pixel_tile!("terracotta"),
+    pixel_tile!("smooth_stone"),
+    pixel_tile!("coal_block"),
+    pixel_tile!("chest_front"),
+    pixel_tile!("chest_side"),
+    pixel_tile!("chest_top"),
+];
+/// Пиксельные версии семнадцати исходных тайлов (слои 0…16).
+const PIXEL_SOURCE_TILES: [(&str, &[u8]); 17] = [
+    pixel_tile!("grass_top"),
+    pixel_tile!("grass_side"),
+    pixel_tile!("dirt"),
+    pixel_tile!("stone"),
+    pixel_tile!("deepslate"),
+    pixel_tile!("sand"),
+    pixel_tile!("gravel"),
+    pixel_tile!("oak_log"),
+    pixel_tile!("oak_log_top"),
+    pixel_tile!("oak_leaves"),
+    pixel_tile!("oak_planks"),
+    pixel_tile!("cobblestone"),
+    pixel_tile!("glass"),
+    pixel_tile!("water"),
+    pixel_tile!("snow"),
+    pixel_tile!("sandstone"),
+    pixel_tile!("sandstone_top"),
+];
+/// Пиксельные версии пятнадцати дополнительных тайлов (слои 18…32).
+const PIXEL_ADDITIONAL_TILES: [(&str, &[u8]); 15] = [
+    pixel_tile!("gold_ore"),
+    pixel_tile!("coal_ore"),
+    pixel_tile!("diamond_ore"),
+    pixel_tile!("gold_block"),
+    pixel_tile!("diamond_block"),
+    pixel_tile!("iron_ore"),
+    pixel_tile!("iron_block"),
+    pixel_tile!("crafting_table_top"),
+    pixel_tile!("crafting_table_front"),
+    pixel_tile!("crafting_table_side"),
+    pixel_tile!("crafting_table_bottom"),
+    pixel_tile!("furnace_front"),
+    pixel_tile!("furnace_front_on"),
+    pixel_tile!("furnace_side"),
+    pixel_tile!("furnace_top"),
+];
+
+/// Имена дополнительных пиксельных тайлов в порядке слоёв, начиная с 36.
+pub fn extra_tile_names() -> impl Iterator<Item = &'static str> {
+    EXTRA_TILES.iter().map(|(name, _)| *name)
+}
+
 /// Decoded original block artwork, shared by world materials and hotbar icons.
 ///
 /// Assembly copies decoded RGBA pixels without resizing, flipping, repainting,
@@ -55,6 +134,8 @@ const ADDITIONAL_TILES: [&[u8]; 15] = [
 #[derive(Clone, Debug)]
 pub struct BlockAtlas {
     pub(crate) rgba: RgbaImage,
+    /// Пиксельный стиль: тайлы 32×32, заранее увеличенные 4× без сглаживания.
+    pub pixelated: bool,
 }
 
 impl BlockAtlas {
@@ -84,13 +165,58 @@ impl BlockAtlas {
             )
             .map_err(|e| format!("cannot copy tile {layer}: {e}"))?;
         }
-        Self { rgba }.with_additional_tiles(&ADDITIONAL_TILES)
+        Self {
+            rgba,
+            pixelated: false,
+        }
+        .with_extra_tiles()?
+        .with_additional_tiles(&ADDITIONAL_TILES)
     }
 
     pub(crate) fn from_legacy_rgba(source: &RgbaImage) -> Result<Self, String> {
         let mut rgba = RgbaImage::new(ATLAS_WIDTH, ATLAS_HEIGHT);
         rgba.copy_from(source, 0, 0).map_err(|e| e.to_string())?;
-        Self { rgba }.with_additional_tiles(&ADDITIONAL_TILES)
+        Self {
+            rgba,
+            pixelated: false,
+        }
+        .with_extra_tiles()?
+        .with_additional_tiles(&ADDITIONAL_TILES)
+    }
+
+    /// Полностью пиксельный набор: оригинальная графика 32×32, увеличенная в
+    /// 4 раза без сглаживания. Исходные PNG при этом не читаются и не меняются.
+    pub fn pixel() -> Result<Self, String> {
+        let mut atlas = Self {
+            rgba: RgbaImage::new(ATLAS_WIDTH, ATLAS_HEIGHT),
+            pixelated: true,
+        }
+        .with_extra_tiles()?;
+        for (layer, (name, bytes)) in PIXEL_SOURCE_TILES.iter().enumerate() {
+            atlas.copy_tile(layer, bytes, name)?;
+        }
+        for (offset, (name, bytes)) in PIXEL_ADDITIONAL_TILES.iter().enumerate() {
+            atlas.copy_tile(offset + 18, bytes, name)?;
+        }
+        Ok(atlas)
+    }
+
+    fn with_extra_tiles(mut self) -> Result<Self, String> {
+        for (offset, (name, bytes)) in EXTRA_TILES.iter().enumerate() {
+            self.copy_tile(EXTRA_FIRST_LAYER + offset, bytes, name)?;
+        }
+        Ok(self)
+    }
+
+    fn copy_tile(&mut self, layer: usize, bytes: &[u8], name: &str) -> Result<(), String> {
+        let tile = decode_png(bytes, (TILE_SIZE, TILE_SIZE), name)?;
+        self.rgba
+            .copy_from(
+                &tile,
+                (layer as u32 % 6) * TILE_SIZE,
+                (layer as u32 / 6) * TILE_SIZE,
+            )
+            .map_err(|e| format!("cannot copy tile {layer}: {e}"))
     }
 
     /// Replace layers 18…32 with exactly fifteen supplied 128×128 PNGs.
@@ -213,7 +339,7 @@ mod tests {
         let expanded_gpu = atlas_array(atlas.rgba.as_raw()).unwrap();
         assert_eq!(legacy_gpu.data, expanded_gpu.data);
         let data = expanded_gpu.data.unwrap();
-        let stride = data.len() / 36;
+        let stride = data.len() / 72;
         for layer in 0..18 {
             let expected =
                 image::imageops::crop_imm(&source, (layer % 6) * 128, (layer / 6) * 128, 128, 128)
@@ -312,10 +438,10 @@ mod tests {
             BlockAtlas::from_tiles(&ORIGINAL_TILES).unwrap(),
             BlockAtlas::from_png(source.get_ref()).unwrap(),
         ] {
-            assert_eq!(atlas.rgba.dimensions(), (768, 768));
+            assert_eq!(atlas.rgba.dimensions(), (768, 1536));
             let gpu = atlas_array(atlas.rgba.as_raw()).unwrap();
             let data = gpu.data.unwrap();
-            let stride = data.len() / 36;
+            let stride = data.len() / 72;
             for (offset, png) in tiles.iter().enumerate() {
                 let layer = offset + 18;
                 let expected = image::load_from_memory(png).unwrap().into_rgba8();
@@ -383,7 +509,7 @@ mod tests {
         let atlas = BlockAtlas::from_tiles(&ORIGINAL_TILES).unwrap();
         let combined = atlas_array(atlas.rgba.as_raw()).unwrap();
         let combined_bytes = combined.data.as_ref().unwrap();
-        let layer_stride = combined_bytes.len() / 36;
+        let layer_stride = combined_bytes.len() / 72;
         for (layer, bytes) in ORIGINAL_TILES.iter().enumerate() {
             // Repeat just this source tile into every slot. Its mip chain must
             // match the chain built among the seventeen different real images,
@@ -419,5 +545,43 @@ mod tests {
                 .unwrap_err()
                 .contains("tile 6")
         );
+    }
+
+    #[test]
+    fn pixel_set_fills_every_mapped_layer_and_keeps_leaf_cutouts() {
+        let atlas = BlockAtlas::pixel().unwrap();
+        assert!(atlas.pixelated);
+        assert!(!BlockAtlas::from_tiles(&ORIGINAL_TILES).unwrap().pixelated);
+        assert_eq!(extra_tile_names().count(), EXTRA_TILES.len());
+        let tile = |layer: u32| {
+            image::imageops::crop_imm(&atlas.rgba, (layer % 6) * 128, (layer / 6) * 128, 128, 128)
+                .to_image()
+        };
+        for faces in crate::BlockTextures::default().0.iter().skip(1) {
+            for layer in [
+                Some(faces.top),
+                Some(faces.side),
+                Some(faces.bottom),
+                faces.front,
+            ]
+            .into_iter()
+            .flatten()
+            {
+                assert!(
+                    tile(u32::from(layer)).pixels().any(|p| p[3] > 0),
+                    "layer {layer} is empty"
+                );
+            }
+        }
+        for layer in [9, 41] {
+            let leaves = tile(layer);
+            assert!(leaves.pixels().any(|p| p[3] == 0));
+            assert!(leaves.pixels().any(|p| p[3] == 255));
+        }
+        // 32×32 → 128×128 без сглаживания: каждый блок 4×4 одноцветный.
+        let stone = tile(3);
+        for (x, y, pixel) in stone.enumerate_pixels() {
+            assert_eq!(pixel, stone.get_pixel(x / 4 * 4, y / 4 * 4));
+        }
     }
 }

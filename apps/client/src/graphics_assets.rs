@@ -7,6 +7,8 @@ include!(concat!(env!("OUT_DIR"), "/atlas_asset.rs"));
 pub struct BlockIcons {
     pub handles: Vec<Handle<Image>>,
     pub error: Option<String>,
+    /// Стиль, из которого собраны текущие материалы и иконки.
+    pub pixel: Option<bool>,
 }
 impl BlockIcons {
     pub fn get(&self, block: u8) -> Handle<Image> {
@@ -85,6 +87,61 @@ const ORIGINAL_TILES: [&[u8]; 17] = [
     original_tile!("sandstone"),
     original_tile!("sandstone_top"),
 ];
+
+/// Пиксельный набор полностью встроен; рисованный читает исходные PNG и замены.
+pub fn load_atlas_for(pixel: bool) -> Result<game_render::BlockAtlas, String> {
+    if pixel {
+        game_render::BlockAtlas::pixel()
+    } else {
+        load_atlas()
+    }
+}
+
+/// Переключение стиля в настройках: новые материалы и иконки без перезапуска.
+pub fn apply_style(
+    mut game: ResMut<crate::session::Game>,
+    mut stream: ResMut<crate::streaming::Streaming>,
+    mut icons: ResMut<BlockIcons>,
+    mut images: ResMut<Assets<Image>>,
+    mut materials: ResMut<Assets<game_render::VoxelMaterial>>,
+) {
+    let wanted = game.settings.pixel_textures;
+    if icons.pixel.is_none() || icons.pixel == Some(wanted) {
+        return;
+    }
+    icons.pixel = Some(wanted);
+    let loaded = load_atlas_for(wanted).and_then(|atlas| {
+        let baked = game_render::bake_atlas_icons(&atlas, &stream.textures)?;
+        let handles =
+            game_render::create_materials_from_atlas(&mut images, &mut materials, &atlas)?;
+        Ok((baked, handles))
+    });
+    match loaded {
+        Ok((baked, handles)) => {
+            icons.handles = baked.into_iter().map(|image| images.add(image)).collect();
+            stream.materials = handles;
+            // Секции перестраиваются с новыми материалами по обычной очереди.
+            let sections: Vec<[i32; 3]> = game
+                .world
+                .chunks
+                .values()
+                .flat_map(|chunk| {
+                    chunk
+                        .sections
+                        .keys()
+                        .map(|y| [chunk.position[0], *y, chunk.position[1]])
+                        .collect::<Vec<_>>()
+                })
+                .collect();
+            game.world.dirty.extend(sections);
+        }
+        Err(error) => {
+            warn!("Не удалось сменить графику: {error}");
+            game.status = error;
+        }
+    }
+    game.ui_dirty = true;
+}
 
 pub fn load_atlas() -> Result<game_render::BlockAtlas, String> {
     load_atlas_with_overrides(load_original_atlas, asset_path)
@@ -253,8 +310,8 @@ mod tests {
             game_render::create_materials_from_atlas(&mut images, &mut materials, atlas).unwrap();
         let array = materials.get(&handles[0]).unwrap().extension.image.clone();
         let gpu = images.get(&array).unwrap().clone();
-        assert_eq!(handles.len(), 36);
-        assert_eq!(gpu.texture_descriptor.size.depth_or_array_layers, 36);
+        assert_eq!(handles.len(), 72);
+        assert_eq!(gpu.texture_descriptor.size.depth_or_array_layers, 72);
         (
             gpu,
             game_render::bake_atlas_icons(atlas, &game_render::BlockTextures::default()).unwrap(),
@@ -263,13 +320,13 @@ mod tests {
 
     fn layer(gpu: &Image, index: usize) -> &[u8] {
         let bytes = gpu.data.as_ref().unwrap();
-        &bytes[index * (bytes.len() / 36)..][..128 * 128 * 4]
+        &bytes[index * (bytes.len() / 72)..][..128 * 128 * 4]
     }
 
     fn assert_composition(atlas: &game_render::BlockAtlas, changed: &[(usize, u8, [u8; 4])]) {
         let (gpu, icons) = outputs(atlas);
         let (defaults, default_icons) = outputs(&embedded().unwrap());
-        for index in 0..36 {
+        for index in 0..72 {
             if let Some((_, _, rgba)) = changed.iter().find(|&&(i, _, _)| i == index) {
                 assert!(
                     layer(&gpu, index)

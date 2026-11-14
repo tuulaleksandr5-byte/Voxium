@@ -1,7 +1,15 @@
 use game_core::BLOCKS;
 use serde::Deserialize;
 
-pub const MATERIAL_COUNT: usize = 36;
+/// Слои 0…35 — исходный атлас 6×6, слои 36…71 — дополнительные пиксельные тайлы.
+pub const MATERIAL_COUNT: usize = 72;
+/// Слой листвы дуба в исходном атласе.
+pub const OAK_LEAVES_LAYER: usize = 9;
+pub const GLASS_LAYER: usize = 12;
+pub const WATER_LAYER: usize = 13;
+pub const BIRCH_LEAVES_LAYER: usize = 41;
+pub const LAMP_LAYER: usize = 45;
+pub const ICE_LAYER: usize = 46;
 pub const GRASS_TOP: u8 = 0;
 pub const GRASS_BOTTOM: u8 = 2;
 pub const WOOD_END: u8 = 8;
@@ -49,7 +57,7 @@ impl BlockTextures {
                 .flatten()
                 .any(|i| i as usize >= MATERIAL_COUNT)
         }) {
-            return Err("texture layer must be in 0..36".into());
+            return Err("texture layer must be in 0..72".into());
         }
         Ok(Self(faces.try_into().expect("length checked")))
     }
@@ -141,9 +149,9 @@ mod tests {
     #[test]
     fn rejects_missing_blocks_and_out_of_range_layers() {
         assert!(BlockTextures::from_ron("[]").is_err());
-        let source = include_str!("../../../assets/blocks.ron").replace("top: 0", "top: 36");
+        let source = include_str!("../../../assets/blocks.ron").replace("top: 0", "top: 72");
         assert!(BlockTextures::from_ron(&source).is_err());
-        let source = include_str!("../../../assets/blocks.ron").replace("Some(26)", "Some(36)");
+        let source = include_str!("../../../assets/blocks.ron").replace("Some(26)", "Some(72)");
         assert!(BlockTextures::from_ron(&source).is_err());
     }
 }

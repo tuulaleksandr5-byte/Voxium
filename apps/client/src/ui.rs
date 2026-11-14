@@ -37,6 +37,7 @@ pub enum Action {
     ToggleVsync,
     ToggleFullscreen,
     CycleResolution,
+    ToggleTextures,
     FocusName,
     FocusSeed,
     RandomSeed,
@@ -975,6 +976,18 @@ fn settings_menu(commands: &mut Commands, panel: Entity, game: &Game) {
         "Оконное разрешение",
         ["1280 × 720  ↻", "1600 × 900  ↻", "1920 × 1080  ↻"][settings.resolution].into(),
         Action::CycleResolution,
+    );
+    settings_row(
+        commands,
+        panel,
+        "Графика блоков",
+        if settings.pixel_textures {
+            "Пиксельная 32×  ↻"
+        } else {
+            "Рисованная  ↻"
+        }
+        .into(),
+        Action::ToggleTextures,
     );
     presentation::section(commands, panel, "УПРАВЛЕНИЕ");
     presentation::range(

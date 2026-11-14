@@ -47,7 +47,7 @@ fn default_ore_bands_replace_only_stone_and_are_load_order_independent() {
 #[test]
 fn version_selection_requires_valid_snapshot_and_leaves_legacy_exact() {
     assert!(WorldGenerator::from_snapshot(2, None).is_err());
-    assert!(WorldGenerator::from_snapshot(3, Some(OreConfig::default())).is_err());
+    assert!(WorldGenerator::from_snapshot(4, Some(OreConfig::default())).is_err());
     assert!(WorldGenerator::from_snapshot(1, Some(OreConfig::default())).is_err());
     let legacy = WorldGenerator::from_snapshot(1, None).unwrap();
     assert_eq!(legacy.generate(3, [-1, -1]), Chunk::generate(3, [-1, -1]));
@@ -99,4 +99,51 @@ fn config_rejects_unknown_duplicate_missing_or_unbounded_rules() {
         assert!(OreConfig::from_ron(&invalid).is_err(), "{invalid}");
     }
     assert!(OreConfig::from_ron("(ores: [])").is_err());
+}
+
+#[test]
+fn generator_three_only_adds_birch_clay_and_obsidian_on_top_of_generator_two() {
+    use game_core::{
+        BIRCH_LEAVES, BIRCH_LOG, CLAY, GRAVEL, LEAVES, OBSIDIAN, SAND, WOOD, biome_at, world::Biome,
+    };
+    let two = WorldGenerator::from_snapshot(2, Some(OreConfig::default())).unwrap();
+    let three = WorldGenerator::from_snapshot(3, Some(OreConfig::default())).unwrap();
+    assert_eq!((two.version(), three.version()), (2, 3));
+    assert!(WorldGenerator::from_snapshot(3, None).is_err());
+    assert!(WorldGenerator::from_snapshot(4, Some(OreConfig::default())).is_err());
+    let seed = 5;
+    // Лесной чанк гарантирует деревья, остальные дают воду и глубину.
+    let forest = (-40..40)
+        .flat_map(|x| (-40..40).map(move |z| [x, z]))
+        .find(|p| biome_at(seed, p[0] * 16 + 8, p[1] * 16 + 8) == Biome::Forest)
+        .expect("seed has a forest");
+    let mut found = [0_usize; 4];
+    for dx in -4..=4 {
+        for dz in -4..=4 {
+            let pos = [forest[0] + dx, forest[1] + dz];
+            let old = two.generate(seed, pos);
+            let new = three.generate(seed, pos);
+            assert_eq!(new, three.generate(seed, pos));
+            for y in WORLD_MIN_Y..=WORLD_MAX_Y {
+                for z in 0..16 {
+                    for x in 0..16 {
+                        let p = [pos[0] * 16 + x, y, pos[1] * 16 + z];
+                        let (before, after) = (old.block(p), new.block(p));
+                        if before == after {
+                            continue;
+                        }
+                        let index = match (before, after) {
+                            (WOOD, BIRCH_LOG) => 0,
+                            (LEAVES, BIRCH_LEAVES) => 1,
+                            (SAND | GRAVEL, CLAY) => 2,
+                            (DEEP_STONE, OBSIDIAN) => 3,
+                            other => panic!("unexpected replacement {other:?} at {p:?}"),
+                        };
+                        found[index] += 1;
+                    }
+                }
+            }
+        }
+    }
+    assert!(found.iter().all(|count| *count > 0), "{found:?}");
 }

@@ -5,7 +5,7 @@ use crate::{
 };
 use bevy::prelude::*;
 use game_core::{
-    AIR, BEDROCK, CHEST, World,
+    AIR, BEDROCK, CHEST, CRAFTING_TABLE, FURNACE, FURNACE_LIT, World,
     content::ItemId,
     crafting::RecipeBook,
     drops::DropConfig,
@@ -56,6 +56,12 @@ pub fn plugin(app: &mut App) {
         )
         .add_systems(
             Update,
+            tick_furnaces
+                .after(crate::survival_client::simulate)
+                .before(crate::player::sky),
+        )
+        .add_systems(
+            Update,
             tick_drops
                 .after(crate::survival_client::simulate)
                 .before(crate::player::sky),
@@ -67,6 +73,9 @@ pub fn reset_session(game: &mut Game, creative: bool) {
     game.world_mouse.disarm();
     game.inventory = Inventory::default();
     game.containers.clear();
+    game.furnaces.clear();
+    game.mobs.clear();
+    game.attack_lock = false;
     game.open_container = None;
     game.drops.clear();
     game.selected = 0;
@@ -156,10 +165,24 @@ fn process_action(game: &mut Game, action: &InventoryAction) -> Effects {
             }
         }
         InventoryAction::TakeCraftResult { all } if game.mode == Mode::Inventory => {
-            if game
-                .recipes
-                .take_result(&mut game.inventory, *all, &game.content)
-            {
+            let changed = if open_block(game) == Some(CRAFTING_TABLE) {
+                // Верстак хранит сетку 3×3 в своём контейнере.
+                let position = game.open_container.expect("верстак открыт");
+                let Some(bench) = game.containers.get_mut(&position) else {
+                    return effects;
+                };
+                game.recipes.take_grid_result(
+                    &mut bench.slots,
+                    3,
+                    &mut game.inventory,
+                    *all,
+                    &game.content,
+                )
+            } else {
+                game.recipes
+                    .take_result(&mut game.inventory, *all, &game.content)
+            };
+            if changed {
                 game.ui_dirty = true;
             }
         }
@@ -227,6 +250,7 @@ fn process_action(game: &mut Game, action: &InventoryAction) -> Effects {
             }
             if game.world.set(*position, AIR) {
                 let center = block_center(*position);
+                game.furnaces.remove(position);
                 if let Some(container) = game.containers.remove(position) {
                     for stack in container.slots.into_iter().flatten() {
                         spawn_drop(game, stack, center, Vec3::Y * 1.5);
@@ -234,7 +258,9 @@ fn process_action(game: &mut Game, action: &InventoryAction) -> Effects {
                 }
                 if game.game_mode == GameMode::Survival {
                     if can_harvest && let Some(item) = game.content.drop_for_block(block) {
-                        spawn_drop(game, ItemStack::new(item, 1), center, Vec3::Y * 1.5);
+                        // Глина рассыпается на четыре комка, остальные блоки дают один предмет.
+                        let count = if block == game_core::CLAY { 4 } else { 1 };
+                        spawn_drop(game, ItemStack::new(item, count), center, Vec3::Y * 1.5);
                     }
                     effects.mined = true;
                 }
@@ -260,10 +286,10 @@ fn process_action(game: &mut Game, action: &InventoryAction) -> Effects {
                 if game.game_mode == GameMode::Survival {
                     game.inventory.take_selected(game.selected, false);
                 }
-                if block == CHEST {
+                if let Some(size) = container_size(block) {
                     game.containers
                         .entry(*position)
-                        .or_insert_with(|| Container::new(27));
+                        .or_insert_with(|| Container::new(size));
                 }
                 effects.sounds.push(BlockSound {
                     block,
@@ -277,12 +303,20 @@ fn process_action(game: &mut Game, action: &InventoryAction) -> Effects {
         InventoryAction::OpenContainer { position }
             if game.mode == Mode::Playing
                 && game.world_mouse.allowed()
-                && loaded_block(&game.world, *position) == Some(CHEST)
+                && loaded_block(&game.world, *position)
+                    .and_then(container_size)
+                    .is_some()
                 && visible_hit(game).is_some_and(|hit| hit.block == *position) =>
         {
-            game.containers
+            let size = container_size(game.world.block(*position)).expect("проверено выше");
+            let container = game
+                .containers
                 .entry(*position)
-                .or_insert_with(|| Container::new(27));
+                .or_insert_with(|| Container::new(size));
+            // Блок на месте старого контейнера мог смениться: приводим размер.
+            if container.slots.len() != size {
+                *container = Container::new(size);
+            }
             game.open_container = Some(*position);
             game.screen(Mode::Inventory);
         }
@@ -292,7 +326,33 @@ fn process_action(game: &mut Game, action: &InventoryAction) -> Effects {
     effects
 }
 
-fn look_direction(game: &Game) -> Vec3 {
+/// Число ячеек блока-контейнера: сундук 27, верстак 3×3, печь 3.
+pub(crate) fn container_size(block: u8) -> Option<usize> {
+    match block {
+        CHEST => Some(27),
+        CRAFTING_TABLE => Some(9),
+        FURNACE | FURNACE_LIT => Some(game_core::smelting::FURNACE_SLOTS),
+        _ => None,
+    }
+}
+
+/// Блок открытого сейчас контейнера.
+pub(crate) fn open_block(game: &Game) -> Option<u8> {
+    let position = game.open_container?;
+    loaded_block(&game.world, position)
+        .filter(|block| container_size(*block).is_some())
+        .or_else(|| {
+            // Чанк мог выгрузиться: вид контейнера определяется числом ячеек.
+            match game.containers.get(&position)?.slots.len() {
+                27 => Some(CHEST),
+                9 => Some(CRAFTING_TABLE),
+                game_core::smelting::FURNACE_SLOTS => Some(FURNACE),
+                _ => None,
+            }
+        })
+}
+
+pub(crate) fn look_direction(game: &Game) -> Vec3 {
     Quat::from_rotation_y(game.yaw) * Quat::from_rotation_x(game.pitch) * Vec3::NEG_Z
 }
 
@@ -300,7 +360,7 @@ fn block_center(position: [i32; 3]) -> Vec3 {
     Vec3::from_array(position.map(|value| value as f32)) + Vec3::splat(0.5)
 }
 
-fn loaded_block(world: &World, position: [i32; 3]) -> Option<u8> {
+pub(crate) fn loaded_block(world: &World, position: [i32; 3]) -> Option<u8> {
     (game_core::valid_world_height(position[1])
         && world
             .chunks
@@ -319,7 +379,7 @@ pub(crate) fn visible_hit(game: &Game) -> Option<game_core::interaction::RayHit>
     loaded_block(&game.world, hit.block).map(|_| hit)
 }
 
-fn spawn_drop(game: &mut Game, stack: ItemStack, position: Vec3, velocity: Vec3) {
+pub(crate) fn spawn_drop(game: &mut Game, stack: ItemStack, position: Vec3, velocity: Vec3) {
     game.drops.spawn(
         stack,
         position.to_array(),
@@ -343,6 +403,54 @@ fn apply_actions(
             player_actions.write(crate::survival_client::PlayerActionMessage(
                 crate::survival_client::PlayerAction::MinedBlock,
             ));
+        }
+    }
+}
+
+/// Печи работают, пока мир загружен: и во время игры, и при открытом инвентаре.
+pub fn tick_furnaces(time: Res<Time<Real>>, mut game: ResMut<Game>) {
+    if game.world_id.is_none() || !matches!(game.mode, Mode::Playing | Mode::Inventory) {
+        return;
+    }
+    let game = &mut *game;
+    let positions: Vec<[i32; 3]> = game
+        .containers
+        .iter()
+        .filter(|(_, container)| container.slots.len() == game_core::smelting::FURNACE_SLOTS)
+        .map(|(position, _)| *position)
+        .collect();
+    for position in positions {
+        let Some(block) = loaded_block(&game.world, position) else {
+            continue;
+        };
+        if !matches!(block, FURNACE | FURNACE_LIT) {
+            game.furnaces.remove(&position);
+            continue;
+        }
+        let state = game.furnaces.entry(position).or_default();
+        let before = (
+            state.lit(),
+            (state.progress_fraction(&game.smelting) * 20.) as u8,
+            (state.fuel_fraction() * 20.) as u8,
+        );
+        let container = game
+            .containers
+            .get_mut(&position)
+            .expect("позиция из списка");
+        let changed = state.tick(container, time.delta_secs(), &game.smelting, &game.content);
+        let after = (
+            state.lit(),
+            (state.progress_fraction(&game.smelting) * 20.) as u8,
+            (state.fuel_fraction() * 20.) as u8,
+        );
+        if after.0 != before.0 {
+            let lit = if after.0 { FURNACE_LIT } else { FURNACE };
+            if game.world.set(position, lit) {
+                game.revision += 1;
+            }
+        }
+        if game.open_container == Some(position) && (changed || before != after) {
+            game.ui_dirty = true;
         }
     }
 }

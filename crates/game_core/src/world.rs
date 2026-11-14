@@ -136,6 +136,73 @@ impl Chunk {
                 .set(position.map(local_coordinate), id);
         }
     }
+    /// Дополнения генератора 3: берёзы, глина на мелководье и обсидиан у дна.
+    /// Каждая замена — чистая функция seed и координат, поэтому результат не
+    /// зависит от порядка загрузки чанков.
+    pub(crate) fn decorate_v3(&mut self, seed: u64) {
+        let min_x = i64::from(self.position[0]) * 16;
+        let min_z = i64::from(self.position[1]) * 16;
+        if self.sections.is_empty() {
+            return;
+        }
+        for gx in (min_x - 2).div_euclid(5)..=(min_x + 17).div_euclid(5) {
+            for gz in (min_z - 2).div_euclid(5)..=(min_z + 17).div_euclid(5) {
+                let Some(tree) = tree_at_cell(seed, gx, gz) else {
+                    continue;
+                };
+                if !coordinate_hash(seed ^ 0xB12C, gx, gz).is_multiple_of(3) {
+                    continue;
+                }
+                let top = tree.ground + tree.height;
+                for dy in -1_i32..=1 {
+                    let radius: i32 = if dy == 1 { 1 } else { 2 };
+                    for dx in -radius..=radius {
+                        for dz in -radius..=radius {
+                            let (Some(x), Some(z)) =
+                                (tree.x.checked_add(dx), tree.z.checked_add(dz))
+                            else {
+                                continue;
+                            };
+                            let p = [x, top + dy, z];
+                            if self.block(p) == LEAVES {
+                                self.write(p, BIRCH_LEAVES);
+                            }
+                        }
+                    }
+                }
+                for y in tree.ground + 1..=top {
+                    let p = [tree.x, y, tree.z];
+                    if self.block(p) == WOOD {
+                        self.write(p, BIRCH_LOG);
+                    }
+                }
+            }
+        }
+        for x in min_x as i32..=(min_x + 15) as i32 {
+            for z in min_z as i32..=(min_z + 15) as i32 {
+                let (fx, fz) = (f64::from(x), f64::from(z));
+                let height = terrain_column(seed, x, z).height;
+                if (SEA_LEVEL - 6..SEA_LEVEL).contains(&height)
+                    && noise(seed ^ 0xC1A7, fx / 9.0, fz / 9.0) > 0.42
+                {
+                    for y in height - 1..=height {
+                        if matches!(self.block([x, y, z]), SAND | GRAVEL) {
+                            self.write([x, y, z], CLAY);
+                        }
+                    }
+                }
+                let glass = noise(seed ^ 0x0B51, fx / 7.0, fz / 7.0);
+                if glass > 0.58 {
+                    let top = if glass > 0.72 { 2 } else { 1 };
+                    for y in WORLD_MIN_Y + 1..=WORLD_MIN_Y + top {
+                        if self.block([x, y, z]) == DEEP_STONE {
+                            self.write([x, y, z], OBSIDIAN);
+                        }
+                    }
+                }
+            }
+        }
+    }
     fn plant(&mut self, tree: Tree) {
         let top = tree.ground + tree.height;
         for dy in -1_i32..=1 {
@@ -582,7 +649,7 @@ mod tests {
         world.insert(Chunk::generate(1, [0, 0]));
         assert!(!world.set([0, -65, 0], STONE));
         assert!(!world.set([0, 321, 0], STONE));
-        assert!(!world.set([0, 70, 0], 26));
+        assert!(!world.set([0, 70, 0], BLOCKS.len() as u8));
         assert!(!world.set([0, -64, 0], AIR));
         assert!(!world.set([0, -64, 0], STONE));
         assert_eq!(world.block([0, -64, 0]), BEDROCK);

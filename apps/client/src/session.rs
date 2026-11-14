@@ -31,6 +31,11 @@ pub enum Mode {
 pub struct Game {
     pub content: ContentRegistry,
     pub recipes: RecipeBook,
+    pub smelting: game_core::smelting::SmeltingBook,
+    pub furnaces: HashMap<[i32; 3], game_core::smelting::FurnaceState>,
+    pub mobs: game_core::mobs::MobStore,
+    /// ЛКМ уже потрачена на удар по мобу: добыча ждёт отпускания кнопки.
+    pub attack_lock: bool,
     pub mining_config: game_core::mining::MiningConfig,
     pub mining: game_core::mining::MiningState,
     pub world_mouse: crate::control_input::WorldMouseGate,
@@ -80,6 +85,10 @@ impl Default for Game {
         Self {
             content: ContentRegistry::default(),
             recipes: RecipeBook::default(),
+            smelting: Default::default(),
+            furnaces: HashMap::new(),
+            mobs: Default::default(),
+            attack_lock: false,
             mining_config: Default::default(),
             mining: Default::default(),
             world_mouse: Default::default(),
@@ -153,10 +162,12 @@ impl Game {
             .map(|(p, b)| {
                 (
                     *p,
-                    if *b == game_core::CHEST {
-                        game_core::AIR
-                    } else {
-                        *b
+                    // Содержимое контейнеров пока не сохраняется: сундук исчезает,
+                    // а горящая печь записывается обычной.
+                    match *b {
+                        game_core::CHEST => game_core::AIR,
+                        game_core::FURNACE_LIT => game_core::FURNACE,
+                        other => other,
                     },
                 )
             })
@@ -200,6 +211,9 @@ mod inventory_save_tests {
             game_core::ores::WorldGenerator::from_snapshot(2, Some(config.clone())).unwrap();
         let snapshot = game.save_data();
         assert_eq!(snapshot.generator_version, 2);
+        game.generator =
+            game_core::ores::WorldGenerator::from_snapshot(3, snapshot.ore_config.clone()).unwrap();
+        assert_eq!(game.save_data().generator_version, 3);
         assert_eq!(snapshot.ore_config, Some(config));
     }
 

@@ -5504,6 +5504,7 @@ dependencies = [
  "game_render",
  "image",
  "rodio",
+ "ron",
  "serde",
  "serde_json",
  "winit",

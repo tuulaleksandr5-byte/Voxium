@@ -58,15 +58,18 @@ impl OreConfig {
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct WorldGenerator {
     ore_config: Option<OreConfig>,
+    /// Генератор 3: берёзы, глина и обсидиан поверх руд генератора 2.
+    flora: bool,
 }
 impl WorldGenerator {
     pub fn from_snapshot(version: u32, snapshot: Option<OreConfig>) -> Result<Self, String> {
         match (version, snapshot) {
             (1, None) => Ok(Self::default()),
-            (2, Some(config)) => {
+            (2 | 3, Some(config)) => {
                 config.validate()?;
                 Ok(Self {
                     ore_config: Some(config),
+                    flora: version == 3,
                 })
             }
             _ => Err("Неподдерживаемый генератор или отсутствующий/лишний снимок руд".into()),
@@ -74,7 +77,11 @@ impl WorldGenerator {
     }
     #[must_use]
     pub fn version(&self) -> u32 {
-        if self.ore_config.is_some() { 2 } else { 1 }
+        match (&self.ore_config, self.flora) {
+            (None, _) => 1,
+            (Some(_), false) => 2,
+            (Some(_), true) => 3,
+        }
     }
     #[must_use]
     pub fn snapshot(&self) -> Option<&OreConfig> {
@@ -121,6 +128,9 @@ impl WorldGenerator {
                     }
                 }
             }
+        }
+        if self.flora {
+            chunk.decorate_v3(seed);
         }
         chunk
     }

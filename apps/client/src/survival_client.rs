@@ -15,10 +15,22 @@ pub enum PlayerAction {
     SetMode(GameMode),
     SetRule(GameRule, bool),
     Respawn,
-    Travel { meters: f32, sprinting: bool },
-    Jump { sprinting: bool },
-    Damage { amount: f32, source: DamageSource },
+    Travel {
+        meters: f32,
+        sprinting: bool,
+    },
+    Jump {
+        sprinting: bool,
+    },
+    Damage {
+        amount: f32,
+        source: DamageSource,
+    },
     MinedBlock,
+    /// Консоль: создать моба перед игроком.
+    Summon(game_core::mobs::MobKind),
+    /// Консоль: перевести часы на полдень (`true`) или полночь.
+    SetDay(bool),
 }
 #[derive(Message)]
 pub struct PlayerActionMessage(pub PlayerAction);
@@ -207,6 +219,27 @@ pub fn apply_actions(
                 &cfg,
             ),
             PlayerAction::MinedBlock => game.vitals.exhaust(cfg.mining_exhaustion, mode, &cfg),
+            PlayerAction::Summon(kind) => {
+                let forward = Quat::from_rotation_y(game.yaw) * Vec3::NEG_Z;
+                let position = game.feet + forward * 3.0 + Vec3::Y * 0.5;
+                game.mobs.spawn(kind, position.to_array());
+                console.feedback = format!("Появился моб: {}", kind.spec().name);
+                game.status.clone_from(&console.feedback);
+                game.ui_dirty = true;
+            }
+            PlayerAction::SetDay(day) => {
+                // Сутки длятся 1200 секунд: 300 — полдень, 900 — полночь.
+                let start = (game.clock / 1200.0).floor() * 1200.0;
+                game.clock = start + if day { 300.0 } else { 900.0 };
+                console.feedback = if day {
+                    "Время: день"
+                } else {
+                    "Время: ночь"
+                }
+                .into();
+                game.status.clone_from(&console.feedback);
+                game.ui_dirty = true;
+            }
             PlayerAction::Damage { amount, source } => {
                 let events = game.vitals.damage(amount, source, mode, &cfg);
                 publish(&mut game, events, &mut changed);

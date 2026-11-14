@@ -187,8 +187,39 @@ fn identical_transparent_blocks_hide_their_shared_face() {
             }
         });
         assert_eq!(meshes.len(), 1);
-        assert_quads(&meshes[0].1, 6);
+        // Листва добавляет по три объёмные плоскости на каждый открытый блок.
+        assert_quads(&meshes[0].1, if id == 8 { 6 + 2 * 3 } else { 6 });
     }
+}
+
+#[test]
+fn buried_leaves_get_no_bush_planes_and_bushes_are_position_stable() {
+    // Сплошной объём листвы не создаёт ни граней, ни кустов внутри.
+    assert!(mesh_section([0; 3], |_| 8).is_empty());
+    let inner = mesh_section([0; 3], |[x, y, z]| {
+        if [x, y, z].iter().all(|n| (4..=6).contains(n)) {
+            8
+        } else {
+            0
+        }
+    });
+    // 6 сторон куба 3×3×3 без AO-разбиения + 26 открытых блоков по 3 плоскости.
+    assert_eq!(inner[0].1.count_vertices(), (6 + 26 * 3) * 4);
+    let single = |section: [i32; 3], block: [i32; 3]| {
+        let meshes = mesh_section(section, move |p| if p == block { 30 } else { 0 });
+        assert_eq!(meshes.len(), 1);
+        assert_eq!(meshes[0].0, 41, "берёзовая листва использует свой слой");
+        match meshes[0].1.attribute(Mesh::ATTRIBUTE_POSITION).unwrap() {
+            VertexAttributeValues::Float32x3(values) => values[24..].to_vec(),
+            _ => unreachable!(),
+        }
+    };
+    assert_eq!(single([0; 3], [3, 4, 5]), single([0; 3], [3, 4, 5]));
+    assert_ne!(
+        single([0; 3], [3, 4, 5]),
+        single([1, 0, 0], [19, 4, 5]),
+        "соседние блоки получают разный поворот"
+    );
 }
 
 #[test]
@@ -213,7 +244,7 @@ fn array_materials_share_image_and_use_linear_anisotropic_filtering() {
     let mut png = std::io::Cursor::new(Vec::new());
     fixture.write_to(&mut png, image::ImageFormat::Png).unwrap();
     let handles = create_materials(&mut images, &mut materials, png.get_ref()).unwrap();
-    assert_eq!(handles.len(), 36);
+    assert_eq!(handles.len(), 72);
     let first = materials.get(&handles[0]).unwrap().extension.image.clone();
     for (layer, handle) in handles.iter().enumerate() {
         let m = materials.get(handle).unwrap();
@@ -222,7 +253,7 @@ fn array_materials_share_image_and_use_linear_anisotropic_filtering() {
     }
     let image = images.get(&first).unwrap();
     assert_eq!((image.width(), image.height()), (128, 128));
-    assert_eq!(image.texture_descriptor.size.depth_or_array_layers, 36);
+    assert_eq!(image.texture_descriptor.size.depth_or_array_layers, 72);
     assert_eq!(image.texture_descriptor.mip_level_count, 8);
     let ImageSampler::Descriptor(s) = &image.sampler else {
         panic!("explicit sampler required");

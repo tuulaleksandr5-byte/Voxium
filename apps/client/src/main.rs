@@ -12,6 +12,8 @@ mod inventory_render;
 mod item_icons;
 mod item_textures;
 mod mining_client;
+mod mobs_client;
+mod pixel_icons;
 mod player;
 mod session;
 mod settings;
@@ -43,7 +45,7 @@ fn main() {
                 title: concat!(
                     "Voxel Sandbox — ",
                     env!("CARGO_PKG_VERSION"),
-                    " · добыча и крафт"
+                    " · блоки, мобы и пиксели"
                 )
                 .into(),
                 resolution: (1280, 720).into(),
@@ -71,6 +73,7 @@ fn main() {
     .add_systems(Startup, setup)
     .add_systems(Update, survival_client::reload_config.before(actions))
     .add_systems(Update, app_icon::set_icon)
+    .add_systems(Update, graphics_assets::apply_style.after(actions))
     .add_systems(
         Update,
         (
@@ -89,6 +92,7 @@ fn main() {
     console::plugin(&mut app);
     inventory_client::plugin(&mut app);
     mining_client::plugin(&mut app);
+    mobs_client::plugin(&mut app);
     item_icons::plugin(&mut app);
     inventory_render::plugin(&mut app);
     ui::plugin(&mut app);
@@ -107,7 +111,7 @@ fn setup(
     mut volume: ResMut<bevy::audio::GlobalVolume>,
 ) {
     stream.textures = graphics_assets::load_face_textures();
-    let loaded = graphics_assets::load_atlas().and_then(|atlas| {
+    let loaded = graphics_assets::load_atlas_for(game.settings.pixel_textures).and_then(|atlas| {
         let baked = game_render::bake_atlas_icons(&atlas, &stream.textures)?;
         let handles =
             game_render::create_materials_from_atlas(&mut images, &mut materials, &atlas)?;
@@ -116,6 +120,7 @@ fn setup(
     match loaded {
         Ok((baked, handles)) => {
             icons.handles = baked.into_iter().map(|image| images.add(image)).collect();
+            icons.pixel = Some(game.settings.pixel_textures);
             stream.materials = handles;
         }
         Err(error) => {
@@ -459,6 +464,9 @@ fn actions(
                     }
                     Action::CycleResolution => {
                         game.settings.resolution = (game.settings.resolution + 1) % 3
+                    }
+                    Action::ToggleTextures => {
+                        game.settings.pixel_textures = !game.settings.pixel_textures
                     }
                     _ => {}
                 }

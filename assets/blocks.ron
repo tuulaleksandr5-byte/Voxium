@@ -1,4 +1,5 @@
-// Stable block IDs; texture layers are row-major in the 6×6 internal atlas.
+// Stable block IDs; texture layers are row-major in the 6×12 internal atlas.
+// Layers 36+ are the pixel-art tiles from assets/textures/pixel.
 [
     (top: 17, side: 17, bottom: 17), // air (never meshed)
     (top: 0, side: 1, bottom: 2),    // grass
@@ -16,7 +17,7 @@
     (top: 4, side: 4, bottom: 4),    // bedrock
     (top: 14, side: 14, bottom: 14), // snow/ice
     (top: 16, side: 15, bottom: 16), // sandstone
-    (top: 10, side: 10, bottom: 10), // TODO(art): сундук, исходные доски без изменений
+    (top: 54, side: 53, bottom: 54, front: Some(52)), // chest
     (top: 19, side: 19, bottom: 19), // coal ore
     (top: 23, side: 23, bottom: 23), // iron ore
     (top: 18, side: 18, bottom: 18), // gold ore
@@ -26,4 +27,20 @@
     (top: 22, side: 22, bottom: 22), // diamond block
     (top: 25, side: 27, bottom: 28, front: Some(26)), // crafting table
     (top: 32, side: 31, bottom: 32, front: Some(29)), // furnace, fixed negative-Z front
+    (top: 36, side: 36, bottom: 36), // bricks
+    (top: 37, side: 37, bottom: 37), // stone bricks
+    (top: 38, side: 38, bottom: 38), // mossy cobblestone
+    (top: 40, side: 39, bottom: 40), // birch log
+    (top: 41, side: 41, bottom: 41), // birch leaves
+    (top: 42, side: 42, bottom: 42), // birch planks
+    (top: 43, side: 43, bottom: 43), // clay
+    (top: 10, side: 44, bottom: 10), // bookshelf
+    (top: 45, side: 45, bottom: 45), // lamp
+    (top: 46, side: 46, bottom: 46), // ice
+    (top: 47, side: 47, bottom: 47), // obsidian
+    (top: 48, side: 48, bottom: 48), // wool
+    (top: 49, side: 49, bottom: 49), // terracotta
+    (top: 50, side: 50, bottom: 50), // smooth stone
+    (top: 51, side: 51, bottom: 51), // coal block
+    (top: 32, side: 31, bottom: 32, front: Some(30)), // lit furnace
 ]

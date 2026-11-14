@@ -348,6 +348,7 @@ pub fn controls(
             );
             use crate::inventory_client::{InventoryAction, InventoryActionMessage};
             if world_mouse
+                && !game.attack_lock
                 && game.game_mode == GameMode::Creative
                 && mouse.just_pressed(MouseButton::Left)
             {
@@ -356,7 +357,8 @@ pub fn controls(
                 }));
             }
             if world_mouse && mouse.just_pressed(MouseButton::Right) {
-                let action = if game.world.block(hit.block) == game_core::CHEST
+                let action = if crate::inventory_client::container_size(game.world.block(hit.block))
+                    .is_some()
                     && !(keys.pressed(KeyCode::ShiftLeft) || keys.pressed(KeyCode::ShiftRight))
                 {
                     Some(InventoryAction::OpenContainer {
@@ -377,11 +379,9 @@ pub fn controls(
     }
     if captured {
         // Добыча использует всё реальное время, а не ограниченный dt движения.
-        if let Some(position) = crate::mining_client::advance(
-            &mut game,
-            mouse.pressed(MouseButton::Left),
-            time.delta_secs(),
-        ) {
+        let mining = mouse.pressed(MouseButton::Left) && !game.attack_lock;
+        if let Some(position) = crate::mining_client::advance(&mut game, mining, time.delta_secs())
+        {
             inventory_actions.write(crate::inventory_client::InventoryActionMessage(
                 crate::inventory_client::InventoryAction::Break { position },
             ));
