@@ -66,7 +66,7 @@ cargo run --locked -p voxel-client
 | ЛКМ / Shift + ЛКМ по результату крафта | Сделать одну порцию на курсор / максимум полных порций в хотбар и рюкзак |
 | Esc | Пауза / продолжение |
 | F5 | Сохранить мир |
-| / | Консоль: `/gamemode survival`, `/gamemode creative`, `/gamerule keepInventory true`, `/gamerule naturalRegeneration false` |
+| / | Консоль: `/gamemode survival`, `/gamemode creative`, `/gamerule keepInventory true`, `/gamerule naturalRegeneration false`, `/summon cow`, `/time night` |
 
 Прогресс добычи и трещины появляются на выбранном блоке; смена цели, инструмента или слота, отпускание ЛКМ и открытие меню сбрасывают прогресс. Точные секунды из пользовательской таблицы хранятся в `assets/data/mining.ron`; скорость инструмента и право получить ресурс проверяются независимо. После закрытия интерфейса нужно отпустить кнопки мыши перед следующим действием в мире.
 
