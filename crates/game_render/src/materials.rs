@@ -225,13 +225,13 @@ pub fn create_materials_from_atlas(
                         layer if crate::is_cutout_layer(layer) => AlphaMode::Mask(0.45),
                         _ => AlphaMode::Opaque,
                     },
-                    // Объёмная листва состоит из двусторонних плоскостей.
-                    cull_mode: if crate::is_cutout_layer(layer) {
+                    // Растения — скрещённые плоскости, их видно с обеих сторон.
+                    cull_mode: if crate::is_double_sided_layer(layer) {
                         None
                     } else {
                         Some(bevy::render::render_resource::Face::Back)
                     },
-                    double_sided: crate::is_cutout_layer(layer),
+                    double_sided: crate::is_double_sided_layer(layer),
                     ..default()
                 },
                 extension: TileArray {
@@ -357,7 +357,7 @@ mod tests {
     }
 
     #[test]
-    fn every_cutout_layer_is_alpha_masked_and_double_sided() {
+    fn cutout_layers_are_alpha_masked_and_only_plants_are_double_sided() {
         let atlas = BlockAtlas::pixel().unwrap();
         let mut images = Assets::default();
         let mut materials = Assets::default();
@@ -370,7 +370,11 @@ mod tests {
                 cutout,
                 "layer {layer}"
             );
-            assert_eq!(base.cull_mode.is_none(), cutout, "layer {layer}");
+            assert_eq!(
+                base.cull_mode.is_none(),
+                crate::is_double_sided_layer(layer),
+                "layer {layer}"
+            );
         }
         assert!(crate::PLANT_LAYERS.clone().all(crate::is_cutout_layer));
     }

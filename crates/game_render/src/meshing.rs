@@ -7,7 +7,7 @@ use bevy::{
 use game_core::{
     AIR, BLOCKS, SECTION_SIZE, WATER,
     fluids::{fluid_of, surface_height},
-    is_fluid, is_leaves, is_opaque, is_plant, is_slab, is_water,
+    is_fluid, is_opaque, is_plant, is_slab, is_water,
 };
 
 const SIZE: usize = SECTION_SIZE as usize;
@@ -135,9 +135,9 @@ pub fn mesh_section_with_textures(
         }
     }
 
-    // Объёмная листва: у каждого открытого блока листвы три наклонные
-    // плоскости, выходящие за пределы куба. Угол и наклон зависят только от
-    // мировых координат, поэтому крона не «прыгает» при перестройке секции.
+    // Растения, плиты и жидкости строятся отдельно от greedy-граней. Сдвиг
+    // растений зависит только от мировых координат и не «прыгает» при
+    // перестройке секции.
     for y in 0..SECTION_SIZE {
         for z in 0..SECTION_SIZE {
             for x in 0..SECTION_SIZE {
@@ -174,23 +174,6 @@ pub fn mesh_section_with_textures(
                     }
                     continue;
                 }
-                if !is_leaves(id) {
-                    continue;
-                }
-                let exposed = (0..3).any(|axis| {
-                    [-1, 1].into_iter().any(|step| {
-                        let mut neighbor = local;
-                        neighbor[axis] += step;
-                        let other = blocks[padded_index(neighbor)];
-                        !is_opaque(other) && other != id
-                    })
-                });
-                if !exposed {
-                    continue;
-                }
-                let world = std::array::from_fn(|axis| origin[axis] + i64::from(local[axis]));
-                let material = textures.layer(id, 0, true);
-                builders[usize::from(material)].bush(local, leaf_hash(world));
             }
         }
     }
@@ -460,43 +443,6 @@ impl MeshBuilder {
             self.uvs
                 .extend([[0.0, 1.0], [1.0, 1.0], [1.0, 0.0], [0.0, 0.0]]);
             self.colors.extend([[1.0, 1.0, 1.0, 1.0]; 4]);
-            self.indices
-                .extend([0, 1, 2, 0, 2, 3].map(|index| first + index));
-        }
-    }
-
-    /// Три пересекающиеся плоскости листвы вокруг центра блока. Материал листвы
-    /// двусторонний, поэтому каждая плоскость задаётся одним квадом.
-    fn bush(&mut self, local: [i32; 3], hash: u64) {
-        let unit = |shift: u32| ((hash >> shift) & 0xff) as f32 / 255.0;
-        let center = [
-            local[0] as f32 + 0.5 + (unit(0) - 0.5) * 0.18,
-            local[1] as f32 + 0.5 + (unit(8) - 0.5) * 0.18,
-            local[2] as f32 + 0.5 + (unit(16) - 0.5) * 0.18,
-        ];
-        let angle = unit(24) * std::f32::consts::FRAC_PI_2;
-        let (sin, cos) = angle.sin_cos();
-        let reach = 0.78 + unit(32) * 0.14;
-        let tilt = (unit(40) - 0.5) * 0.5;
-        let light = 0.86 + unit(48) * 0.14;
-        // (горизонтальная полуось, вертикальная полуось) каждой плоскости.
-        let planes = [
-            ([cos, 0.0, sin], [-sin * tilt, 1.0, cos * tilt]),
-            ([-sin, 0.0, cos], [cos * tilt, 1.0, sin * tilt]),
-            ([cos, 0.35, sin], [-sin, 0.35 + tilt, cos]),
-        ];
-        for (across, up) in planes {
-            let first = self.positions.len() as u32;
-            for (a, b) in [(-1.0, -1.0), (1.0, -1.0), (1.0, 1.0), (-1.0, 1.0)] {
-                self.positions.push(std::array::from_fn(|axis| {
-                    center[axis] + (across[axis] * a + up[axis] * b) * reach
-                }));
-            }
-            // Нормаль вверх даёт кроне ровный мягкий свет без тёмных изнанок.
-            self.normals.extend([[0.0, 1.0, 0.0]; 4]);
-            self.uvs
-                .extend([[0.0, 1.0], [1.0, 1.0], [1.0, 0.0], [0.0, 0.0]]);
-            self.colors.extend([[light, light, light, 1.0]; 4]);
             self.indices
                 .extend([0, 1, 2, 0, 2, 3].map(|index| first + index));
         }

@@ -4,6 +4,7 @@ pub mod blocks;
 pub use blocks::*;
 pub mod world;
 pub use world::*;
+pub mod catalog;
 pub mod content;
 pub mod crafting;
 pub mod drops;

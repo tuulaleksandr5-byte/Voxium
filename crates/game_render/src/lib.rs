@@ -16,6 +16,7 @@ pub use face_textures::{
     BIRCH_LEAVES_LAYER, BlockTextures, FaceTextures, GLASS_LAYER, GRASS_BOTTOM, GRASS_TOP,
     ICE_LAYER, LAMP_LAYER, LAVA_LAYER, MATERIAL_COUNT, OAK_LEAVES_LAYER, PINE_LEAVES_LAYER,
     PLANT_LAYERS, STAINED_GLASS_LAYERS, WATER_LAYER, WOOD_END, is_blend_layer, is_cutout_layer,
+    is_double_sided_layer,
 };
 pub use icons::{bake_atlas_icons, bake_block_icons};
 pub use materials::{

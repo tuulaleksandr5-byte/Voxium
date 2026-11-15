@@ -187,15 +187,15 @@ fn identical_transparent_blocks_hide_their_shared_face() {
             }
         });
         assert_eq!(meshes.len(), 1);
-        // Листва добавляет по три объёмные плоскости на каждый открытый блок.
-        assert_quads(&meshes[0].1, if id == 8 { 6 + 2 * 3 } else { 6 });
+        assert_quads(&meshes[0].1, 6);
     }
 }
 
 #[test]
-fn buried_leaves_get_no_bush_planes_and_bushes_are_position_stable() {
-    // Сплошной объём листвы не создаёт ни граней, ни кустов внутри.
+fn leaves_are_plain_cubes_that_hide_faces_between_neighbors() {
+    // Сплошной объём листвы без границ секции не создаёт ни одной грани.
     assert!(mesh_section([0; 3], |_| 8).is_empty());
+    // Куб 3×3×3: видна только оболочка, 6 сторон по 9 клеток в слитых гранях.
     let inner = mesh_section([0; 3], |[x, y, z]| {
         if [x, y, z].iter().all(|n| (4..=6).contains(n)) {
             8
@@ -203,23 +203,13 @@ fn buried_leaves_get_no_bush_planes_and_bushes_are_position_stable() {
             0
         }
     });
-    // 6 сторон куба 3×3×3 без AO-разбиения + 26 открытых блоков по 3 плоскости.
-    assert_eq!(inner[0].1.count_vertices(), (6 + 26 * 3) * 4);
-    let single = |section: [i32; 3], block: [i32; 3]| {
-        let meshes = mesh_section(section, move |p| if p == block { 30 } else { 0 });
-        assert_eq!(meshes.len(), 1);
-        assert_eq!(meshes[0].0, 41, "берёзовая листва использует свой слой");
-        match meshes[0].1.attribute(Mesh::ATTRIBUTE_POSITION).unwrap() {
-            VertexAttributeValues::Float32x3(values) => values[24..].to_vec(),
-            _ => unreachable!(),
-        }
-    };
-    assert_eq!(single([0; 3], [3, 4, 5]), single([0; 3], [3, 4, 5]));
-    assert_ne!(
-        single([0; 3], [3, 4, 5]),
-        single([1, 0, 0], [19, 4, 5]),
-        "соседние блоки получают разный поворот"
-    );
+    assert_eq!(inner.len(), 1);
+    assert_quads(&inner[0].1, 6);
+    // Берёзовая листва (30) использует свой слой и тоже строится кубом.
+    let birch = mesh_section([0; 3], |p| if p == [3, 4, 5] { 30 } else { 0 });
+    assert_eq!(birch.len(), 1);
+    assert_eq!(birch[0].0, 41);
+    assert_quads(&birch[0].1, 6);
 }
 
 #[test]

@@ -64,7 +64,7 @@ pub struct ContentRegistry {
 }
 
 // Имена соответствуют стабильным сохранённым ID; новые блоки только дописываются.
-const BLOCK_NAMES: [&str; 196] = [
+pub(crate) const BLOCK_NAMES: [&str; 196] = [
     "foundation:air",
     "foundation:grass",
     "foundation:dirt",

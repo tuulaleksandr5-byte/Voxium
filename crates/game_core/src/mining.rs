@@ -135,6 +135,11 @@ impl MiningConfig {
         }
         Ok(config)
     }
+    /// Нужный инструмент и минимальный уровень для добычи блока.
+    #[must_use]
+    pub fn rule_info(&self, block: u8) -> Option<(ToolKind, u8)> {
+        self.rule(block).map(|rule| (rule.tool, rule.harvest_tier))
+    }
     fn rule(&self, block: u8) -> Option<&MiningRule> {
         self.rules.iter().find(|r| r.block == block)
     }

@@ -12,7 +12,7 @@ pub const PINE_LEAVES_LAYER: usize = 111;
 /// Слои растений: первый и последний.
 pub const PLANT_LAYERS: std::ops::RangeInclusive<usize> = 118..=122;
 
-/// Слой с вырезанными текселями: листва и растения.
+/// Слой с вырезанными текселями: листва (обычные кубы) и растения.
 #[must_use]
 pub fn is_cutout_layer(layer: usize) -> bool {
     matches!(
@@ -20,6 +20,12 @@ pub fn is_cutout_layer(layer: usize) -> bool {
         OAK_LEAVES_LAYER | BIRCH_LEAVES_LAYER | PINE_LEAVES_LAYER
     ) || PLANT_LAYERS.contains(&layer)
         || matches!(layer, 125 | 129 | 133 | 137 | 141)
+}
+
+/// Слои растений: рисуются крест-накрест, видны с обеих сторон.
+#[must_use]
+pub fn is_double_sided_layer(layer: usize) -> bool {
+    PLANT_LAYERS.contains(&layer)
 }
 
 /// Слои цветного стекла.
