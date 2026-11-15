@@ -7,6 +7,7 @@ pub use world::*;
 pub mod content;
 pub mod crafting;
 pub mod drops;
+pub mod fluids;
 pub mod food;
 pub mod interaction;
 pub mod inventory;

@@ -384,4 +384,8 @@
      inputs: [(item: "palette:polished_marble", count: 1), (item: "palette:polished_marble", count: 1), (item: "palette:polished_marble", count: 1)], output: (item: "mine:marble_slab", count: 6)),
     (id: "mine:dark_brick_slab", width: 3, height: 1,
      inputs: [(item: "palette:dark_bricks", count: 1), (item: "palette:dark_bricks", count: 1), (item: "palette:dark_bricks", count: 1)], output: (item: "mine:dark_brick_slab", count: 6)),
+    // Жидкости.
+    (id: "fluid:bucket", width: 3, height: 2,
+     inputs: [(item: "survival:iron_ingot", count: 1), None, (item: "survival:iron_ingot", count: 1),
+              None, (item: "survival:iron_ingot", count: 1), None], output: (item: "fluid:bucket", count: 1)),
 ]

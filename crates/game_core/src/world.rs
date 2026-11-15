@@ -445,6 +445,8 @@ pub struct World {
     /// Edits outlive loaded chunk data and are replayed when a chunk is inserted.
     pub edits: HashMap<[i32; 3], u8>,
     pub dirty: HashSet<[i32; 3]>,
+    /// Клетки, рядом с которыми менялась жидкость; их обрабатывает `fluids::tick`.
+    pub fluid_active: HashSet<[i32; 3]>,
 }
 impl World {
     #[must_use]
@@ -454,6 +456,7 @@ impl World {
             chunks: HashMap::new(),
             edits: HashMap::new(),
             dirty: HashSet::new(),
+            fluid_active: HashSet::new(),
         }
     }
     #[must_use]
@@ -483,6 +486,7 @@ impl World {
         }
         Arc::make_mut(chunk).write(position, id);
         self.edits.insert(position, id);
+        self.wake_fluids(position);
         let section = position.map(section_coordinate);
         // AO samples diagonals too: an edit at a section corner can affect
         // eight sections, not just the three face-adjacent neighbors.
@@ -501,7 +505,22 @@ impl World {
         }
         true
     }
+    /// Будит жидкость вокруг клетки, если в ней самой или рядом есть жидкость.
+    fn wake_fluids(&mut self, position: [i32; 3]) {
+        let mut cells = vec![position];
+        for axis in 0..3 {
+            for step in [-1, 1] {
+                let mut cell = position;
+                cell[axis] += step;
+                cells.push(cell);
+            }
+        }
+        if cells.iter().any(|cell| is_fluid(self.block(*cell))) {
+            self.fluid_active.extend(cells);
+        }
+    }
     pub fn insert(&mut self, mut chunk: Chunk) {
+        let mut settled = Vec::new();
         for (&position, &id) in &self.edits {
             if [
                 section_coordinate(position[0]),
@@ -512,8 +531,12 @@ impl World {
                 && chunk.block(position) != BEDROCK
             {
                 chunk.write(position, id);
+                if is_fluid(id) {
+                    settled.push(position);
+                }
             }
         }
+        self.fluid_active.extend(settled);
         if let Some(old) = self.chunks.remove(&chunk.position) {
             self.dirty_chunk(&old);
         }

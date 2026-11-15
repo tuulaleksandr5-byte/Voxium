@@ -1,4 +1,4 @@
-use crate::{BlockAtlas, GLASS_LAYER, LAMP_LAYER, MATERIAL_COUNT, WATER_LAYER};
+use crate::{BlockAtlas, GLASS_LAYER, LAMP_LAYER, LAVA_LAYER, MATERIAL_COUNT, WATER_LAYER};
 use bevy::{
     asset::{RenderAssetUsages, embedded_asset},
     image::{ImageAddressMode, ImageFilterMode, ImageSampler, ImageSamplerDescriptor},
@@ -214,6 +214,8 @@ pub fn create_materials_from_atlas(
                     // Лампа светится сама: её видно ночью и в пещерах.
                     emissive: if layer == LAMP_LAYER {
                         LinearRgba::rgb(900., 640., 260.)
+                    } else if layer == LAVA_LAYER {
+                        LinearRgba::rgb(1500., 520., 110.)
                     } else {
                         LinearRgba::BLACK
                     },

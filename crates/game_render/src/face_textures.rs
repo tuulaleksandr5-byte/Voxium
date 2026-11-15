@@ -30,6 +30,8 @@ pub const STAINED_GLASS_LAYERS: std::ops::RangeInclusive<usize> = 149..=164;
 pub fn is_blend_layer(layer: usize) -> bool {
     matches!(layer, GLASS_LAYER | WATER_LAYER | ICE_LAYER) || STAINED_GLASS_LAYERS.contains(&layer)
 }
+/// Слой лавы: светится и не бывает прозрачным.
+pub const LAVA_LAYER: usize = 203;
 pub const LAMP_LAYER: usize = 45;
 pub const ICE_LAYER: usize = 46;
 pub const GRASS_TOP: u8 = 0;

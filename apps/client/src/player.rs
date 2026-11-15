@@ -13,6 +13,7 @@ use bevy::{
 };
 use game_core::{
     BEDROCK, World,
+    fluids::{BodyFluid, body_fluid, flow_direction},
     interaction::{can_stand, move_player, raycast},
     survival::{DamageSource, GameMode, fall_damage},
     valid_world_height,
@@ -244,15 +245,40 @@ pub fn controls(
         } else {
             4.8
         };
+        let fluid = if game.flying {
+            BodyFluid::default()
+        } else {
+            body_fluid(game.feet.to_array(), game.height, |p| {
+                collision_block(&game.world, p)
+            })
+        };
+        // В воде и лаве ходьба замедляется, течение сносит тело.
+        let speed = if fluid.lava {
+            1.5
+        } else if fluid.water {
+            if sprint { 4.4 } else { 3.0 }
+        } else {
+            speed
+        };
         let horizontal = rotation * movement.normalize_or_zero() * speed;
         game.velocity.x = horizontal.x;
         game.velocity.z = horizontal.z;
+        if fluid.water {
+            let cell = [
+                game.feet.x.floor() as i32,
+                (game.feet.y + 0.05).floor() as i32,
+                game.feet.z.floor() as i32,
+            ];
+            let flow = flow_direction(cell, |p| collision_block(&game.world, p));
+            game.velocity.x += flow[0] * 1.8;
+            game.velocity.z += flow[1] * 1.8;
+        }
         let chunk = [
             (game.feet.x.floor() as i32).div_euclid(16),
             (game.feet.z.floor() as i32).div_euclid(16),
         ];
         if game.world.chunks.contains_key(&chunk) {
-            if !game.flying && keys.just_pressed(KeyCode::Space) && game.grounded {
+            if !game.flying && keys.just_pressed(KeyCode::Space) && game.grounded && !fluid.any() {
                 game.velocity.y = 8.0;
                 player_actions.write(crate::survival_client::PlayerActionMessage(
                     crate::survival_client::PlayerAction::Jump { sprinting: sprint },
@@ -264,6 +290,24 @@ pub fn controls(
                         keys.pressed(KeyCode::ShiftLeft) || keys.pressed(KeyCode::ShiftRight),
                     )) as f32
                     * speed;
+            } else if fluid.lava {
+                // Лава вязкая: тело медленно тонет, пробка вверх по пробелу.
+                let target = if keys.pressed(KeyCode::Space) {
+                    1.6
+                } else {
+                    -1.2
+                };
+                game.velocity.y += (target - game.velocity.y) * (6.0 * dt).min(1.0);
+            } else if fluid.water {
+                let target = if keys.pressed(KeyCode::Space) {
+                    // Голова над водой: пробел выталкивает на берег.
+                    if fluid.head { 3.6 } else { 6.5 }
+                } else if crouch {
+                    -3.5
+                } else {
+                    -1.6
+                };
+                game.velocity.y += (target - game.velocity.y) * (5.0 * dt).min(1.0);
             } else {
                 game.velocity.y = (game.velocity.y - 24.0 * dt).max(-45.0);
             }
@@ -288,7 +332,10 @@ pub fn controls(
             },
         ));
         if game.game_mode == GameMode::Survival {
-            let wet = game.world.block(game.feet.floor().as_ivec3().to_array()) == game_core::WATER;
+            let wet = body_fluid(game.feet.to_array(), game.height, |p| {
+                collision_block(&game.world, p)
+            })
+            .any();
             if wet {
                 game.fall_peak = None;
             } else if game.grounded {
@@ -337,7 +384,7 @@ pub fn controls(
         let eye = game.feet + Vec3::Y * (game.height - 0.15);
         let look = rotation * Quat::from_rotation_x(game.pitch);
         if let Some(hit) = raycast(eye.to_array(), (look * Vec3::NEG_Z).to_array(), 6.0, |p| {
-            game.world.block(p)
+            crate::inventory_client::target_block(&game, p)
         }) {
             gizmos.cube(
                 Transform::from_translation(
@@ -363,6 +410,11 @@ pub fn controls(
                 {
                     Some(InventoryAction::OpenContainer {
                         position: hit.block,
+                    })
+                } else if crate::inventory_client::bucket_kind(&game).is_some() {
+                    Some(InventoryAction::UseBucket {
+                        target: hit.block,
+                        previous: hit.previous,
                     })
                 } else if game.selected_block() != game_core::AIR {
                     // Блок ставится на место растения, а не рядом с ним.

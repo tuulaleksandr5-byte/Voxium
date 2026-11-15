@@ -392,3 +392,102 @@ fn slab_is_a_half_height_box_and_does_not_hide_neighbor_faces() {
         .sum();
     assert_eq!(quads, 6 + 5);
 }
+
+/// Каждый треугольник смотрит туда же, куда его нормаль: иначе грань пропала бы из-за отсечения.
+fn assert_outward_winding(mesh: &Mesh) {
+    let (points, normals) = (positions(mesh).to_vec(), normals(mesh).to_vec());
+    let indices: Vec<usize> = mesh.indices().unwrap().iter().collect();
+    for triangle in indices.chunks(3) {
+        let [a, b, c] = [0, 1, 2].map(|i| Vec3::from_array(points[triangle[i]]));
+        let geometric = (b - a).cross(c - a);
+        let declared = Vec3::from_array(normals[triangle[0]]);
+        assert!(geometric.dot(declared) > 0.0, "{triangle:?}");
+    }
+}
+
+fn single(block: u8) -> Vec<(u8, Mesh)> {
+    mesh_section([0; 3], move |p| if p == [4, 4, 4] { block } else { 0 })
+}
+
+#[test]
+fn lava_is_one_full_box_in_the_lava_layer_with_outward_faces() {
+    let meshes = single(game_core::LAVA);
+    assert_eq!(meshes.len(), 1);
+    assert_eq!(usize::from(meshes[0].0), crate::LAVA_LAYER);
+    assert_quads(&meshes[0].1, 6);
+    assert_outward_winding(&meshes[0].1);
+    let points = positions(&meshes[0].1).to_vec();
+    assert!(points.iter().all(|p| (4.0..=5.0).contains(&p[1])));
+    assert!(points.iter().any(|p| p[1] == 5.0));
+}
+
+#[test]
+fn flowing_water_height_follows_its_level_and_shares_the_water_material() {
+    let level_four = game_core::fluids::FluidKind::Water.block(4);
+    let meshes = single(level_four);
+    assert_eq!(meshes.len(), 1);
+    assert_eq!(usize::from(meshes[0].0), crate::WATER_LAYER);
+    assert_quads(&meshes[0].1, 6);
+    assert_outward_winding(&meshes[0].1);
+    let top = positions(&meshes[0].1)
+        .iter()
+        .map(|p| p[1])
+        .fold(f32::MIN, f32::max);
+    assert!((top - 4.5).abs() < 1e-5, "{top}");
+    // Столб воды: внутренние грани между клетками одной жидкости скрыты.
+    let column = mesh_section([0; 3], move |p| {
+        if p[0] == 4 && p[2] == 4 && (4..=5).contains(&p[1]) {
+            level_four
+        } else {
+            0
+        }
+    });
+    assert_quads(&column[0].1, 4 * 2 + 2);
+    assert_outward_winding(&column[0].1);
+    // Два одинаковых течения рядом скрывают общие боковые грани.
+    let pair = mesh_section([0; 3], move |p| {
+        if p[1] == 4 && p[2] == 4 && (4..=5).contains(&p[0]) {
+            level_four
+        } else {
+            0
+        }
+    });
+    assert_quads(&pair[0].1, 10);
+}
+
+#[test]
+fn level_steps_show_a_strip_on_the_taller_side_and_source_water_merges_with_flow() {
+    let high = game_core::fluids::FluidKind::Water.block(7);
+    let low = game_core::fluids::FluidKind::Water.block(3);
+    let meshes = mesh_section([0; 3], move |p| match p {
+        [4, 4, 4] => high,
+        [5, 4, 4] => low,
+        _ => 0,
+    });
+    // Высокая клетка: верх, низ, три полноценных бока и полоска к низкой; низкая: верх, низ и три бока.
+    assert_quads(&meshes[0].1, 6 + 5);
+    assert_outward_winding(&meshes[0].1);
+    let strip = positions(&meshes[0].1)
+        .iter()
+        .copied()
+        .filter(|p| p[0] == 5.0 && p[2] >= 4.0 && p[2] <= 5.0 && p[1] > 4.3 && p[1] < 4.9)
+        .count();
+    assert!(strip >= 4, "полоска между уровнями 0.375 и 0.875");
+    // Источник и течение рядом: общая боковая грань не рисуется ни у кого.
+    let mixed = mesh_section([0; 3], move |p| match p {
+        [4, 4, 4] => game_core::WATER,
+        [5, 4, 4] => low,
+        _ => 0,
+    });
+    let quads: usize = mixed.iter().map(|(_, m)| m.count_vertices() / 4).sum();
+    assert_eq!(quads, 5 + 5);
+    for (_, mesh) in &mixed {
+        assert_outward_winding(mesh);
+    }
+}
+
+#[test]
+fn slab_faces_wind_outward_too() {
+    let meshes = single(game_core::OAK_SLAB);
+    assert_outward_winding(&meshes[0].1);
+}

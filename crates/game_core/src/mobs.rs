@@ -5,8 +5,8 @@
 //! публичные поля `Mob`: фазу шага, скорость, вспышку урона и таймер гибели.
 
 use crate::{
-    BEDROCK, GRASS, WATER, WORLD_MIN_Y, interaction::move_player, is_leaves, is_solid,
-    valid_world_height,
+    BEDROCK, GRASS, WORLD_MIN_Y, interaction::move_player, is_fluid, is_lava, is_leaves, is_solid,
+    is_water, valid_world_height,
 };
 use std::collections::BTreeMap;
 
@@ -472,7 +472,16 @@ impl MobStore {
             mob.head_pitch += (pitch - mob.head_pitch) * (dt * 6.0).min(1.0);
 
             let direction = [-mob.yaw.sin(), -mob.yaw.cos()];
-            let in_water = solid(cell) == WATER;
+            let in_water = is_water(solid(cell));
+            if is_lava(solid(cell)) {
+                // Лава жжёт: моб быстро гибнет, добыча не выпадает.
+                mob.health -= 6.0 * dt;
+                mob.hurt = mob.hurt.max(0.15);
+                if mob.health <= 0.0 {
+                    mob.dying = Some(0.0);
+                    continue;
+                }
+            }
             if wanted > 0.0 && mob.behavior != Behavior::Chase && mob.grounded {
                 // Не шагать с обрыва и не заходить в воду во время прогулки.
                 let ahead = [
@@ -483,7 +492,7 @@ impl MobStore {
                 let drop =
                     (0..=3).all(|dy| !is_solid(solid([ahead[0], ahead[1] - dy - 1, ahead[2]])));
                 let wet =
-                    solid([ahead[0], ahead[1] - 1, ahead[2]]) == WATER || solid(ahead) == WATER;
+                    is_fluid(solid([ahead[0], ahead[1] - 1, ahead[2]])) || is_fluid(solid(ahead));
                 if drop || (wet && !in_water) {
                     mob.target_yaw = mob.yaw + self.rng.range(1.6, 3.1);
                     wanted = 0.0;
@@ -785,5 +794,41 @@ mod tests {
             }
         }
         assert!(catalog.find("survival:egg").is_some());
+    }
+
+    #[test]
+    fn lava_kills_a_mob_without_drops_and_mobs_turn_away_from_fluids() {
+        let lava_floor = |p: [i32; 3]| {
+            Some(match p[1] {
+                ..=62 => STONE,
+                63 => GRASS,
+                64 => crate::LAVA,
+                _ => AIR,
+            })
+        };
+        let mut store = MobStore::new(2);
+        let id = store.spawn(MobKind::Cow, [0.5, 64.0, 0.5]);
+        let mut loot = Vec::new();
+        for _ in 0..200 {
+            loot.extend(store.tick(0.05, FAR, false, 1.0, lava_floor).drops);
+        }
+        assert!(!store.mobs.contains_key(&id));
+        assert!(loot.iter().all(|drop| drop.0 == "survival:egg"));
+        assert!(loot.is_empty(), "корова ничего не роняет в лаве");
+        // Лужа воды перед мобом не заманивает его: он разворачивается.
+        let pond = |p: [i32; 3]| {
+            Some(match (p[0], p[1]) {
+                (_, ..=62) => STONE,
+                (4.., 63) => crate::WATER,
+                (_, 63) => GRASS,
+                _ => AIR,
+            })
+        };
+        let mut store = MobStore::new(5);
+        let id = store.spawn(MobKind::Pig, [0.5, 64.0, 0.5]);
+        for _ in 0..600 {
+            store.tick(0.05, FAR, false, 1.0, pond);
+        }
+        assert!(store.mobs[&id].position[0] < 4.0);
     }
 }

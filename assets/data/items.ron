@@ -269,4 +269,9 @@
     (id: "mine:copper_ingot", name: "Медный слиток", max_stack: 64, kind: Material),
     (id: "mine:emerald", name: "Изумруд", max_stack: 64, kind: Material),
     (id: "mine:lapis", name: "Лазурит", max_stack: 64, kind: Material),
+    // Обновление «Жидкости»: лава и вёдра.
+    (id: "fluid:lava", name: "Лава", max_stack: 64, kind: Block(block: "fluid:lava"), break_drop: Nothing),
+    (id: "fluid:bucket", name: "Ведро", max_stack: 16, kind: Material),
+    (id: "fluid:water_bucket", name: "Ведро воды", max_stack: 1, kind: Material),
+    (id: "fluid:lava_bucket", name: "Ведро лавы", max_stack: 1, kind: Material),
 ]

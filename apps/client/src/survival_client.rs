@@ -5,7 +5,9 @@ use crate::{
 };
 use bevy::prelude::*;
 use game_core::{
-    AIR, WATER, WORLD_MAX_Y, WORLD_MIN_Y, is_solid,
+    AIR, WORLD_MAX_Y, WORLD_MIN_Y,
+    fluids::body_fluid,
+    is_solid,
     survival::{DamageSource, Environment, GameMode, GameRule, StateEvent, SurvivalConfig},
 };
 use std::{path::PathBuf, time::SystemTime};
@@ -282,11 +284,10 @@ pub fn simulate(
         game.feet = safe_spawn(&game);
         game.pending_respawn = false;
     }
-    let eye = game.feet + Vec3::Y * (game.height - 0.15);
+    let body = body_fluid(game.feet.to_array(), game.height, |p| game.world.block(p));
     let environment = Environment {
-        underwater: game.world.block(eye.floor().as_ivec3().to_array()) == WATER,
-        // Блоки лавы/огня появятся на этапе 4; их урон уже проверяется в ядре.
-        in_lava: false,
+        underwater: body.head,
+        in_lava: body.lava,
         in_fire: false,
         out_of_world: game.feet.y < (WORLD_MIN_Y - 16) as f32
             || game.feet.y > (WORLD_MAX_Y + 16) as f32,

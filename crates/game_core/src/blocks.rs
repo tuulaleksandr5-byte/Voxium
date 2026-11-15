@@ -201,6 +201,18 @@ pub const BRICK_SLAB: u8 = 181;
 pub const GRANITE_SLAB: u8 = 182;
 pub const MARBLE_SLAB: u8 = 183;
 pub const DARK_BRICK_SLAB: u8 = 184;
+// Жидкости: уровни течения. Источники — WATER (12) и LAVA.
+pub const FLOW_WATER_1: u8 = 185;
+pub const FLOW_WATER_2: u8 = 186;
+pub const FLOW_WATER_3: u8 = 187;
+pub const FLOW_WATER_4: u8 = 188;
+pub const FLOW_WATER_5: u8 = 189;
+pub const FLOW_WATER_6: u8 = 190;
+pub const FLOW_WATER_7: u8 = 191;
+pub const LAVA: u8 = 192;
+pub const FLOW_LAVA_1: u8 = 193;
+pub const FLOW_LAVA_2: u8 = 194;
+pub const FLOW_LAVA_3: u8 = 195;
 
 const fn block(
     id: u8,
@@ -221,7 +233,7 @@ const fn block(
     }
 }
 
-pub const BLOCKS: [BlockDef; 185] = [
+pub const BLOCKS: [BlockDef; 196] = [
     block(AIR, "Air", "air", 0.0, false, false),
     block(GRASS, "Grass", "grass", 0.6, true, true),
     block(DIRT, "Dirt", "dirt", 0.5, true, true),
@@ -987,12 +999,102 @@ pub const BLOCKS: [BlockDef; 185] = [
         true,
         false,
     ),
+    block(
+        FLOW_WATER_1,
+        "Flowing Water 1",
+        "water",
+        100.0,
+        false,
+        false,
+    ),
+    block(
+        FLOW_WATER_2,
+        "Flowing Water 2",
+        "water",
+        100.0,
+        false,
+        false,
+    ),
+    block(
+        FLOW_WATER_3,
+        "Flowing Water 3",
+        "water",
+        100.0,
+        false,
+        false,
+    ),
+    block(
+        FLOW_WATER_4,
+        "Flowing Water 4",
+        "water",
+        100.0,
+        false,
+        false,
+    ),
+    block(
+        FLOW_WATER_5,
+        "Flowing Water 5",
+        "water",
+        100.0,
+        false,
+        false,
+    ),
+    block(
+        FLOW_WATER_6,
+        "Flowing Water 6",
+        "water",
+        100.0,
+        false,
+        false,
+    ),
+    block(
+        FLOW_WATER_7,
+        "Flowing Water 7",
+        "water",
+        100.0,
+        false,
+        false,
+    ),
+    BlockDef {
+        light_emission: 15,
+        ..block(LAVA, "Lava", "lava", 100.0, false, false)
+    },
+    BlockDef {
+        light_emission: 15,
+        ..block(FLOW_LAVA_1, "Flowing Lava 1", "lava", 100.0, false, false)
+    },
+    BlockDef {
+        light_emission: 15,
+        ..block(FLOW_LAVA_2, "Flowing Lava 2", "lava", 100.0, false, false)
+    },
+    BlockDef {
+        light_emission: 15,
+        ..block(FLOW_LAVA_3, "Flowing Lava 3", "lava", 100.0, false, false)
+    },
 ];
 
 /// Растения рисуются двумя скрещёнными плоскостями и не мешают ходьбе.
 #[must_use]
 pub fn is_plant(id: u8) -> bool {
     (POPPY..=TALL_GRASS).contains(&id)
+}
+
+/// Любая вода: источник или течение.
+#[must_use]
+pub fn is_water(id: u8) -> bool {
+    id == WATER || (FLOW_WATER_1..=FLOW_WATER_7).contains(&id)
+}
+
+/// Любая лава: источник или течение.
+#[must_use]
+pub fn is_lava(id: u8) -> bool {
+    (LAVA..=FLOW_LAVA_3).contains(&id)
+}
+
+/// Жидкий блок: вода или лава.
+#[must_use]
+pub fn is_fluid(id: u8) -> bool {
+    is_water(id) || is_lava(id)
 }
 
 /// Плита занимает нижнюю половину клетки.
@@ -1058,7 +1160,7 @@ mod tests {
             "Crafting Table",
             "Furnace",
         ];
-        assert_eq!(BLOCKS.len(), 185);
+        assert_eq!(BLOCKS.len(), 196);
         for (offset, name) in expected.iter().enumerate() {
             let id = 17 + offset;
             assert_eq!(BLOCKS[id].id as usize, id);
@@ -1069,7 +1171,7 @@ mod tests {
 
     #[test]
     fn chest_extends_registry_without_changing_foundation_ids() {
-        assert_eq!(BLOCKS.len(), 185);
+        assert_eq!(BLOCKS.len(), 196);
         let chest = BLOCKS.get(16).expect("сундук зарегистрирован");
         assert_eq!(chest.name, "Chest");
         assert!(is_solid(16));

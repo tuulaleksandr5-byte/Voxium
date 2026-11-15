@@ -1201,6 +1201,51 @@ gem_icon("emerald", ["#0a5a26", "#1ea84c", "#3ed874", "#c8ffd8"], "gem")
 gem_icon("lapis", ["#101e5a", "#22409a", "#3a60d0", "#a8c0ff"], "lump")
 
 
+# ----------------------------------------------------------------- fluids
+
+
+@tile("lava")
+def lava():
+    r = rng("lava")
+    field = fbm(r, ((4, 1.0), (8, 0.8), (16, 0.4)))
+    image = fill(canvas(), field, ["#8a1c04", "#b82a08", "#e0480e", "#f8751a", "#ffa72a", "#ffd25a"])
+    crust = fbm(rng("lava-crust"), ((4, 1.0), (8, 0.7), (16, 0.5)))
+    for y in range(N):
+        for x in range(N):
+            if crust[y, x] > 0.74:
+                image[y, x, :3] = rgb("#3a1208" if crust[y, x] > 0.8 else "#5e1c0a")
+    speckle(image, r, ["#fff0a0"], 18)
+    return image
+
+
+def bucket(name, fill_color=None):
+    def build():
+        r = rng("bucket")
+        mask = np.zeros((N, N), dtype=bool)
+        for y in range(10, 27):
+            half = 9.5 - (y - 10) * 0.32
+            mask[y, int(15.5 - half) : int(15.5 + half) + 1] = True
+        body = sprite(mask, ["#3a3a40", "#8e9199", "#bcc0c8", "#e6e9ee"], r, 0.3)
+        ring = ellipse(15.5, 11, 11, 7) & ~ellipse(15.5, 11, 9.6, 5.8)
+        ring[11:] = False
+        handle = sprite(ring, ["#3a3a40", "#8e9199", "#bcc0c8", "#e6e9ee"], r, 0.1)
+        image = overlay(handle, body)
+        rim = ellipse(15.5, 11, 9, 2.6)
+        for y in range(N):
+            for x in range(N):
+                if rim[y, x]:
+                    image[y, x, :3] = rgb(fill_color or "#2a2a30")
+                    image[y, x, 3] = 255
+        return image
+
+    ICONS[name] = build
+
+
+bucket("bucket")
+bucket("water_bucket", "#3a74d8")
+bucket("lava_bucket", "#ff8a1a")
+
+
 # ------------------------------------------------------- functional blocks
 
 

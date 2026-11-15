@@ -40,6 +40,73 @@ pub enum InventoryAction {
     OpenContainer {
         position: [i32; 3],
     },
+    /// Ведро в руке: набрать источник или вылить жидкость.
+    UseBucket {
+        target: [i32; 3],
+        previous: [i32; 3],
+    },
+}
+
+/// Какое ведро выбрано в хотбаре.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Bucket {
+    Empty,
+    Water,
+    Lava,
+}
+
+impl Bucket {
+    fn item(self) -> &'static str {
+        match self {
+            Self::Empty => "fluid:bucket",
+            Self::Water => "fluid:water_bucket",
+            Self::Lava => "fluid:lava_bucket",
+        }
+    }
+}
+
+/// Ведро в выбранном слоте, если оно там.
+pub(crate) fn bucket_kind(game: &Game) -> Option<Bucket> {
+    let id = &game
+        .content
+        .get(game.item_for_slot(game.selected)?.item)?
+        .id;
+    [Bucket::Empty, Bucket::Water, Bucket::Lava]
+        .into_iter()
+        .find(|bucket| bucket.item() == id)
+}
+
+/// Блок, который видит прицел: жидкости прозрачны, пока в руке нет ведра.
+pub(crate) fn target_block(game: &Game, position: [i32; 3]) -> u8 {
+    let block = loaded_block(&game.world, position).unwrap_or(BEDROCK);
+    if game_core::is_fluid(block) && bucket_kind(game).is_none() {
+        AIR
+    } else {
+        block
+    }
+}
+
+/// Заменить одно ведро в выбранном слоте другим; лишние пустые ведра остаются в стопке.
+fn swap_bucket(game: &mut Game, to: Bucket) {
+    let Some(item) = game.content.find(to.item()) else {
+        return;
+    };
+    let slot = game.selected;
+    let remaining = match game.inventory.hotbar[slot].as_mut() {
+        Some(stack) if stack.count > 1 => {
+            stack.count -= 1;
+            true
+        }
+        _ => false,
+    };
+    let filled = ItemStack::new(item, 1);
+    if remaining {
+        if let Some(overflow) = game.inventory.insert(filled, &game.content) {
+            spawn_drop(game, overflow, game.feet + Vec3::Y * 0.6, Vec3::Y * 1.5);
+        }
+    } else {
+        game.inventory.hotbar[slot] = Some(filled);
+    }
 }
 
 #[derive(Message, Clone)]
@@ -283,8 +350,9 @@ fn process_action(game: &mut Game, action: &InventoryAction) -> Effects {
                         || (hit.block == *position
                             && game_core::is_plant(game.world.block(hit.block)))
                 })
-                && loaded_block(&game.world, *position)
-                    .is_some_and(|old| old == AIR || game_core::is_plant(old))
+                && loaded_block(&game.world, *position).is_some_and(|old| {
+                    old == AIR || game_core::is_plant(old) || game_core::is_fluid(old)
+                })
                 && !player_intersects_block(game.feet.to_array(), game.height, *position)
                 && game.world.set(*position, block)
             {
@@ -304,6 +372,70 @@ fn process_action(game: &mut Game, action: &InventoryAction) -> Effects {
                 game.revision += 1;
                 game.ui_dirty = true;
             }
+        }
+        InventoryAction::UseBucket { target, previous }
+            if game.mode == Mode::Playing && game.world_mouse.allowed() =>
+        {
+            let Some(bucket) = bucket_kind(game) else {
+                return effects;
+            };
+            if !visible_hit(game)
+                .is_some_and(|hit| hit.block == *target && hit.previous == *previous)
+            {
+                return effects;
+            }
+            let block = game.world.block(*target);
+            match bucket {
+                Bucket::Empty => {
+                    let filled = match block {
+                        game_core::WATER => Some(Bucket::Water),
+                        game_core::LAVA => Some(Bucket::Lava),
+                        _ => None,
+                    };
+                    if let Some(filled) = filled
+                        && game.world.set(*target, AIR)
+                    {
+                        swap_bucket(game, filled);
+                        effects.sounds.push(BlockSound {
+                            block: game_core::WATER,
+                            kind: crate::block_audio::SoundKind::Break,
+                            position: block_center(*target),
+                        });
+                    }
+                }
+                Bucket::Water | Bucket::Lava => {
+                    // Жидкость выливается в клетку с течением или растением, а
+                    // у твёрдой стены — перед ней.
+                    let position = if game_core::is_fluid(block) || game_core::is_plant(block) {
+                        *target
+                    } else {
+                        *previous
+                    };
+                    let old = loaded_block(&game.world, position);
+                    let free = old.is_some_and(|old| {
+                        old == AIR
+                            || game_core::is_plant(old)
+                            || (game_core::is_fluid(old)
+                                && old != game_core::WATER
+                                && old != game_core::LAVA)
+                    });
+                    let source = if bucket == Bucket::Water {
+                        game_core::WATER
+                    } else {
+                        game_core::LAVA
+                    };
+                    if free && game.world.set(position, source) {
+                        swap_bucket(game, Bucket::Empty);
+                        effects.sounds.push(BlockSound {
+                            block: game_core::WATER,
+                            kind: crate::block_audio::SoundKind::Place,
+                            position: block_center(position),
+                        });
+                    }
+                }
+            }
+            game.revision += 1;
+            game.ui_dirty = true;
         }
         InventoryAction::OpenContainer { position }
             if game.mode == Mode::Playing
@@ -434,7 +566,7 @@ pub(crate) fn visible_hit(game: &Game) -> Option<game_core::interaction::RayHit>
         eye.to_array(),
         look_direction(game).to_array(),
         6.,
-        |position| loaded_block(&game.world, position).unwrap_or(BEDROCK),
+        |position| target_block(game, position),
     )?;
     loaded_block(&game.world, hit.block).map(|_| hit)
 }
@@ -1064,11 +1196,18 @@ mod tests {
     }
 
     #[test]
-    fn bedrock_is_never_breakable_and_water_is_creative_only() {
+    fn bedrock_is_never_breakable_and_water_needs_a_bucket_and_creative_mode() {
         for mode in [GameMode::Survival, GameMode::Creative] {
-            for block in [game_core::BEDROCK, game_core::WATER] {
+            for (block, bucket) in [
+                (game_core::BEDROCK, false),
+                (game_core::WATER, false),
+                (game_core::WATER, true),
+            ] {
                 let mut game = world();
                 game.game_mode = mode;
+                if bucket {
+                    equip(&mut game, "fluid:bucket");
+                }
                 game.world.set([8, 101, 5], block);
                 assert_eq!(crate::mining_client::advance(&mut game, true, 1000.), None);
                 let effects = process_action(
@@ -1077,8 +1216,13 @@ mod tests {
                         position: [8, 101, 5],
                     },
                 );
-                let allowed = mode == GameMode::Creative && block == game_core::WATER;
-                assert_eq!(!effects.sounds.is_empty(), allowed);
+                // Вода без ведра невидима для прицела; с ведром её стирает только Creative.
+                let allowed = mode == GameMode::Creative && block == game_core::WATER && bucket;
+                assert_eq!(
+                    !effects.sounds.is_empty(),
+                    allowed,
+                    "{mode:?} {block} {bucket}"
+                );
                 assert_eq!(
                     game.world.block([8, 101, 5]),
                     if allowed { AIR } else { block }
@@ -1087,6 +1231,95 @@ mod tests {
                 assert!(!effects.mined);
             }
         }
+    }
+
+    #[test]
+    fn fluids_are_see_through_for_the_crosshair_unless_a_bucket_is_held() {
+        let mut game = world();
+        game.world.set([8, 101, 7], game_core::WATER);
+        game.world.set([8, 101, 6], game_core::FLOW_LAVA_2);
+        assert_eq!(target_block(&game, [8, 101, 7]), AIR);
+        assert_eq!(target_block(&game, [8, 101, 6]), AIR);
+        assert_eq!(target_block(&game, [8, 101, 5]), game_core::STONE);
+        let hit = visible_hit(&game).expect("камень виден сквозь воду");
+        assert_eq!(hit.block, [8, 101, 5]);
+        equip(&mut game, "fluid:bucket");
+        assert_eq!(target_block(&game, [8, 101, 7]), game_core::WATER);
+        let hit = visible_hit(&game).expect("с ведром виден сам водоём");
+        assert_eq!(hit.block, [8, 101, 7]);
+        equip(&mut game, "foundation:dirt");
+        assert_eq!(bucket_kind(&game), None);
+    }
+
+    #[test]
+    fn bucket_picks_up_a_source_and_pours_it_back_but_ignores_flowing_water() {
+        let mut game = world();
+        game.world.set([8, 101, 7], game_core::WATER);
+        game.world.set([8, 101, 5], game_core::AIR);
+        game.world.set([8, 100, 5], game_core::STONE);
+        equip(&mut game, "fluid:bucket");
+        game.inventory.hotbar[0].as_mut().unwrap().count = 3;
+        // Набрать: источник пропал, в слоте осталось два пустых ведра, полное ушло в рюкзак.
+        let take = InventoryAction::UseBucket {
+            target: [8, 101, 7],
+            previous: [8, 101, 8],
+        };
+        let hit = visible_hit(&game).unwrap();
+        assert_eq!((hit.block, hit.previous), ([8, 101, 7], [8, 101, 8]));
+        process_action(&mut game, &take);
+        assert_eq!(game.world.block([8, 101, 7]), AIR);
+        assert_eq!(game.inventory.hotbar[0].as_ref().unwrap().count, 2);
+        let water_bucket = game.content.find("fluid:water_bucket").unwrap();
+        assert_eq!(
+            game.inventory.hotbar[1].as_ref().unwrap().item,
+            water_bucket
+        );
+        // Вылить: ведро воды выбрано, у стены появляется источник, ведро снова пустое.
+        game.selected = 1;
+        game.world.set([8, 101, 4], game_core::STONE);
+        let pour = InventoryAction::UseBucket {
+            target: [8, 101, 4],
+            previous: [8, 101, 5],
+        };
+        let hit = visible_hit(&game).unwrap();
+        assert_eq!((hit.block, hit.previous), ([8, 101, 4], [8, 101, 5]));
+        process_action(&mut game, &pour);
+        assert_eq!(game.world.block([8, 101, 5]), game_core::WATER);
+        let empty = game.content.find("fluid:bucket").unwrap();
+        assert_eq!(game.inventory.hotbar[1].as_ref().unwrap().item, empty);
+        assert!(game.world.fluid_active.contains(&[8, 101, 5]));
+        // Течение набрать нельзя: ведро остаётся пустым, блок на месте.
+        game.world.set([8, 101, 6], game_core::FLOW_WATER_3);
+        let sip = InventoryAction::UseBucket {
+            target: [8, 101, 6],
+            previous: [8, 101, 7],
+        };
+        process_action(&mut game, &sip);
+        assert_eq!(game.world.block([8, 101, 6]), game_core::FLOW_WATER_3);
+        assert_eq!(game.inventory.hotbar[1].as_ref().unwrap().item, empty);
+    }
+
+    #[test]
+    fn placing_a_block_into_water_replaces_it_and_buckets_never_empty_into_stone() {
+        let mut game = world();
+        game.world.set([8, 101, 8], game_core::FLOW_WATER_4);
+        game.world.set([8, 100, 8], game_core::STONE);
+        equip(&mut game, "foundation:dirt");
+        let look = visible_hit(&game).unwrap();
+        assert_eq!(look.block, [8, 101, 5]);
+        // Лава из ведра не может занять клетку со сплошным блоком.
+        equip(&mut game, "fluid:lava_bucket");
+        let before = game.world.block([8, 101, 5]);
+        process_action(
+            &mut game,
+            &InventoryAction::UseBucket {
+                target: [8, 101, 5],
+                previous: [8, 101, 5],
+            },
+        );
+        assert_eq!(game.world.block([8, 101, 5]), before);
+        let lava_bucket = game.content.find("fluid:lava_bucket").unwrap();
+        assert_eq!(game.inventory.hotbar[0].as_ref().unwrap().item, lava_bucket);
     }
 
     #[test]

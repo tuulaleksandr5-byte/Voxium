@@ -1341,7 +1341,7 @@ fn update_vitals(
         return;
     }
     let eye = game.feet + Vec3::Y * (game.height - 0.15);
-    let underwater = game.world.block(eye.floor().as_ivec3().to_array()) == game_core::WATER;
+    let underwater = game_core::is_water(game.world.block(eye.floor().as_ivec3().to_array()));
     for (vital, mut node) in &mut nodes {
         match *vital {
             VitalNode::Fill(kind, index) => {

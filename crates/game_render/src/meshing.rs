@@ -4,7 +4,11 @@ use bevy::{
     mesh::{Indices, PrimitiveTopology},
     prelude::Mesh,
 };
-use game_core::{AIR, BLOCKS, SECTION_SIZE, is_leaves, is_opaque, is_plant, is_slab};
+use game_core::{
+    AIR, BLOCKS, SECTION_SIZE, WATER,
+    fluids::{fluid_of, surface_height},
+    is_fluid, is_leaves, is_opaque, is_plant, is_slab, is_water,
+};
 
 const SIZE: usize = SECTION_SIZE as usize;
 const PADDED_SIZE: usize = SIZE + 2;
@@ -66,12 +70,16 @@ pub fn mesh_section_with_textures(
                         local[u_axis] = u as i32;
                         local[v_axis] = v as i32;
                         let id = blocks[padded_index(local)];
-                        if id == AIR || is_plant(id) || is_slab(id) {
+                        // Источник воды сливается в крупные грани; остальные жидкости,
+                        // растения и плиты строятся отдельно ниже.
+                        if id == AIR || is_plant(id) || is_slab(id) || (is_fluid(id) && id != WATER)
+                        {
                             continue;
                         }
                         local[axis] += if positive { 1 } else { -1 };
                         let neighbor = blocks[padded_index(local)];
-                        if !is_opaque(neighbor) && neighbor != id {
+                        let merged_water = id == WATER && is_water(neighbor);
+                        if !is_opaque(neighbor) && neighbor != id && !merged_water {
                             mask[u + v * SIZE] = FaceCell {
                                 id,
                                 ao: corner_ao(&blocks, local, u_axis, v_axis),
@@ -139,6 +147,10 @@ pub fn mesh_section_with_textures(
                     let world = std::array::from_fn(|axis| origin[axis] + i64::from(local[axis]));
                     let material = textures.layer(id, 0, true);
                     builders[usize::from(material)].cross(local, leaf_hash(world));
+                    continue;
+                }
+                if is_fluid(id) && id != WATER {
+                    fluid_cell(&mut builders, textures, &blocks, local, id);
                     continue;
                 }
                 if is_slab(id) {
@@ -214,6 +226,62 @@ fn corner_ao(blocks: &[u8], outside: [i32; 3], u: usize, v: usize) -> [u8; 4] {
         let c = u8::from(is_opaque(blocks[padded_index(corner)]));
         if a == 1 && b == 1 { 0 } else { 3 - a - b - c }
     })
+}
+
+/// Течение воды и вся лава: коробка высотой по уровню жидкости. Грани между
+/// клетками одной жидкости не рисуются; ступенька между уровнями показывается
+/// полоской на боку более высокой клетки.
+fn fluid_cell(
+    builders: &mut [MeshBuilder],
+    textures: &BlockTextures,
+    blocks: &[u8],
+    local: [i32; 3],
+    id: u8,
+) {
+    let Some((kind, _)) = fluid_of(id) else {
+        return;
+    };
+    let same = |other: u8| fluid_of(other).is_some_and(|(k, _)| k == kind);
+    let at = |dx: i32, dy: i32, dz: i32| {
+        blocks[padded_index([local[0] + dx, local[1] + dy, local[2] + dz])]
+    };
+    let height = surface_height(id, at(0, 1, 0));
+    let origin = [local[0] as f32, local[1] as f32, local[2] as f32];
+    let mut emit = |axis: usize, positive: bool, low: f32, high: f32| {
+        let material = textures.layer(id, axis, positive);
+        builders[usize::from(material)].fluid_face(
+            [origin[0], origin[1] + low, origin[2]],
+            [origin[0] + 1.0, origin[1] + high, origin[2] + 1.0],
+            axis,
+            positive,
+        );
+    };
+    let above = at(0, 1, 0);
+    if !is_opaque(above) && !same(above) {
+        emit(1, true, height, height);
+    }
+    let below = at(0, -1, 0);
+    if !is_opaque(below) && !same(below) {
+        emit(1, false, 0.0, 0.0);
+    }
+    for (axis, positive) in [(0, false), (0, true), (2, false), (2, true)] {
+        let step = if positive { 1 } else { -1 };
+        let (dx, dz) = if axis == 0 { (step, 0) } else { (0, step) };
+        let neighbor = at(dx, 0, dz);
+        if is_opaque(neighbor) {
+            continue;
+        }
+        let floor = if same(neighbor) {
+            let lower = surface_height(neighbor, at(dx, 1, dz));
+            if lower >= height - 1e-4 {
+                continue;
+            }
+            lower
+        } else {
+            0.0
+        };
+        emit(axis, positive, floor, height);
+    }
 }
 
 fn leaf_hash([x, y, z]: [i64; 3]) -> u64 {
@@ -307,12 +375,39 @@ impl MeshBuilder {
 
     /// Одна грань плиты высотой в полблока; бока берут нижнюю половину тайла.
     fn slab_face(&mut self, local: [i32; 3], axis: usize, positive: bool) {
-        let half = [0.5_f32, 0.25, 0.5];
         let center = [
             local[0] as f32 + 0.5,
             local[1] as f32 + 0.25,
             local[2] as f32 + 0.5,
         ];
+        let (v_top, v_bottom) = if axis == 1 { (0.0, 1.0) } else { (0.5, 1.0) };
+        self.box_face(center, [0.5, 0.25, 0.5], axis, positive, (v_top, v_bottom));
+    }
+
+    /// Грань жидкости: коробка `min`…`max` внутри клетки секции. Боковые грани
+    /// берут ту часть тайла, которая соответствует их высоте над дном клетки.
+    fn fluid_face(&mut self, min: [f32; 3], max: [f32; 3], axis: usize, positive: bool) {
+        let center = std::array::from_fn(|i| (min[i] + max[i]) * 0.5);
+        let half = std::array::from_fn(|i| (max[i] - min[i]) * 0.5);
+        let floor = min[1] - min[1].floor();
+        let v = if axis == 1 {
+            (0.0, 1.0)
+        } else {
+            (1.0 - (max[1] - min[1].floor()), 1.0 - floor)
+        };
+        self.box_face(center, half, axis, positive, v);
+    }
+
+    /// Грань коробки с центром `center` и полуразмерами `half`; `v` — значения
+    /// текстурной координаты на верхней и нижней кромках грани.
+    fn box_face(
+        &mut self,
+        center: [f32; 3],
+        half: [f32; 3],
+        axis: usize,
+        positive: bool,
+        v: (f32, f32),
+    ) {
         let mut normal = [0.0_f32; 3];
         normal[axis] = if positive { 1.0 } else { -1.0 };
         let up: [f32; 3] = match (axis, positive) {
@@ -328,7 +423,6 @@ impl MeshBuilder {
         let extent =
             |direction: [f32; 3]| -> f32 { (0..3).map(|i| direction[i].abs() * half[i]).sum() };
         let (reach_across, reach_up, reach_out) = (extent(across), extent(up), extent(normal));
-        let top_v = if axis == 1 { 0.0 } else { 0.5 };
         let first = self.positions.len() as u32;
         for (a, b) in [(-1.0, -1.0), (1.0, -1.0), (1.0, 1.0), (-1.0, 1.0)] {
             self.positions.push(std::array::from_fn(|i| {
@@ -340,7 +434,7 @@ impl MeshBuilder {
         }
         self.normals.extend([normal; 4]);
         self.uvs
-            .extend([[0.0, 1.0], [1.0, 1.0], [1.0, top_v], [0.0, top_v]]);
+            .extend([[0.0, v.1], [1.0, v.1], [1.0, v.0], [0.0, v.0]]);
         self.colors.extend([[1.0, 1.0, 1.0, 1.0]; 4]);
         self.indices
             .extend([0, 1, 2, 0, 2, 3].map(|index| first + index));

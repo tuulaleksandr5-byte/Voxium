@@ -5,6 +5,7 @@ mod app_icon;
 mod block_audio;
 mod console;
 mod control_input;
+mod fluids_client;
 mod footsteps;
 mod graphics_assets;
 mod hand;
@@ -94,6 +95,7 @@ fn main() {
     inventory_client::plugin(&mut app);
     mining_client::plugin(&mut app);
     mobs_client::plugin(&mut app);
+    fluids_client::plugin(&mut app);
     hand::plugin(&mut app);
     item_icons::plugin(&mut app);
     inventory_render::plugin(&mut app);

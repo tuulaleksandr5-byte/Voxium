@@ -186,4 +186,15 @@
     (top: 100, side: 100, bottom: 100), // granite_slab
     (top: 102, side: 102, bottom: 102), // marble_slab
     (top: 116, side: 116, bottom: 116), // dark_brick_slab
+    (top: 13, side: 13, bottom: 13), // flowing water
+    (top: 13, side: 13, bottom: 13), // flowing water
+    (top: 13, side: 13, bottom: 13), // flowing water
+    (top: 13, side: 13, bottom: 13), // flowing water
+    (top: 13, side: 13, bottom: 13), // flowing water
+    (top: 13, side: 13, bottom: 13), // flowing water
+    (top: 13, side: 13, bottom: 13), // flowing water
+    (top: 203, side: 203, bottom: 203), // lava
+    (top: 203, side: 203, bottom: 203), // lava
+    (top: 203, side: 203, bottom: 203), // lava
+    (top: 203, side: 203, bottom: 203), // lava
 ]

@@ -1,6 +1,6 @@
 //! Время разрушения и право на дроп вычисляются независимо.
 use crate::{
-    AIR, BEDROCK, BLOCKS, WATER,
+    AIR, BEDROCK, BLOCKS,
     content::{ContentRegistry, ItemId, ItemKind},
 };
 use serde::Deserialize;
@@ -105,7 +105,8 @@ impl MiningConfig {
         for rule in &config.rules {
             let id = usize::from(rule.block);
             if id >= BLOCKS.len()
-                || matches!(rule.block, AIR | WATER | BEDROCK)
+                || matches!(rule.block, AIR | BEDROCK)
+                || crate::is_fluid(rule.block)
                 || seen[id]
                 || !valid(rule.hardness)
                 || rule.harvest_tier > 4
@@ -115,10 +116,9 @@ impl MiningConfig {
             }
             seen[id] = true;
         }
-        if BLOCKS
-            .iter()
-            .any(|b| !matches!(b.id, AIR | WATER | BEDROCK) && !seen[usize::from(b.id)])
-        {
+        if BLOCKS.iter().any(|b| {
+            !matches!(b.id, AIR | BEDROCK) && !crate::is_fluid(b.id) && !seen[usize::from(b.id)]
+        }) {
             return Err("Отсутствует правило добычи блока".into());
         }
         for rule in &config.rules {
