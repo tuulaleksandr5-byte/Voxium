@@ -182,7 +182,6 @@ fn fallback_defaults_cover_unlisted_blocks_with_correct_tools() {
 fn tool_recognition_whitelists_namespace_material_kind_and_catalog_type() {
     for (name, kind) in [
         ("custom:diamond_pickaxe", "Tool"),
-        ("survival:netherite_pickaxe", "Tool"),
         ("survival:diamond_pickaxe_extra", "Tool"),
         ("survival:diamond_sword", "Tool"),
         ("survival:diamond_pickaxe", "Material"),
@@ -193,4 +192,23 @@ fn tool_recognition_whitelists_namespace_material_kind_and_catalog_type() {
         .unwrap();
         assert_eq!(Tool::from_item(catalog.find(name), &catalog), Tool::Hand);
     }
+    // Незеритовые инструменты копают как алмазные.
+    let catalog = ContentRegistry::from_ron(
+        "[(id: \"survival:netherite_pickaxe\", name: \"x\", max_stack: 1, kind: Tool)]",
+    )
+    .unwrap();
+    assert_eq!(
+        Tool::from_item(catalog.find("survival:netherite_pickaxe"), &catalog),
+        Tool::from_item(
+            ContentRegistry::from_ron(
+                "[(id: \"survival:diamond_pickaxe\", name: \"x\", max_stack: 1, kind: Tool)]"
+            )
+            .unwrap()
+            .find("survival:diamond_pickaxe"),
+            &ContentRegistry::from_ron(
+                "[(id: \"survival:diamond_pickaxe\", name: \"x\", max_stack: 1, kind: Tool)]"
+            )
+            .unwrap()
+        )
+    );
 }

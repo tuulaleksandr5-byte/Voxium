@@ -60,6 +60,11 @@ pub enum InventoryAction {
     Pot {
         position: [i32; 3],
     },
+    /// Особый предмет в руке: огниво, костная мука, яйцо призыва.
+    UseItem {
+        target: [i32; 3],
+        previous: [i32; 3],
+    },
     /// ПКМ по повторителю: задержка 1…4 шага.
     Delay {
         position: [i32; 3],
@@ -157,6 +162,17 @@ pub(crate) fn dispense(game: &mut Game, position: [i32; 3], dir: [i32; 3], dropp
         block_center(position) + Vec3::new(dir[0] as f32, dir[1] as f32, dir[2] as f32) * 0.8;
     let velocity = Vec3::new(dir[0] as f32, dir[1] as f32 + 0.3, dir[2] as f32) * 3.0;
     spawn_drop(game, ItemStack::new(item, 1), center, velocity);
+}
+
+/// Предмет в руке, у которого есть особое действие по блоку.
+pub(crate) fn special_item(game: &Game) -> Option<String> {
+    let id = game
+        .content
+        .get(game.item_for_slot(game.selected)?.item)?
+        .id
+        .clone();
+    (id == "voxium:flint_and_steel" || id == "voxium:bone_meal" || id.ends_with("_spawn_egg"))
+        .then_some(id)
 }
 
 /// Заменить одно ведро в выбранном слоте другим; лишние пустые ведра остаются в стопке.
@@ -528,6 +544,57 @@ fn process_action(game: &mut Game, action: &InventoryAction) -> Effects {
                 position: block_center(*position),
             });
             game.revision += 1;
+        }
+        InventoryAction::UseItem { target, previous }
+            if game.mode == Mode::Playing && game.world_mouse.allowed() =>
+        {
+            if !visible_hit(game)
+                .is_some_and(|hit| hit.block == *target && hit.previous == *previous)
+            {
+                return effects;
+            }
+            let Some(id) = special_item(game) else {
+                return effects;
+            };
+            let used = match id.as_str() {
+                "voxium:flint_and_steel" => {
+                    let block = game.world.block(*target);
+                    if block == game_core::TNT {
+                        game.world.blasts.push(*target);
+                        true
+                    } else if loaded_block(&game.world, *previous) == Some(AIR) {
+                        game.world.set(*previous, game_core::FIRE)
+                    } else {
+                        false
+                    }
+                }
+                "voxium:bone_meal" => game_core::growth::grow_now(&mut game.world, *target),
+                other if other.ends_with("_spawn_egg") => {
+                    let name = other
+                        .trim_start_matches("voxium:")
+                        .trim_end_matches("_spawn_egg");
+                    let wanted = if name == "zombie" { "ghoul" } else { name };
+                    if let Some(kind) = game_core::mobs::MobKind::ALL
+                        .into_iter()
+                        .find(|kind| kind.spec().id == wanted)
+                    {
+                        let at = block_center(*previous);
+                        game.mobs.spawn(kind, at.to_array());
+                        true
+                    } else {
+                        false
+                    }
+                }
+                _ => false,
+            };
+            if used {
+                // Огниво не расходуется; костная мука и яйцо — по одной штуке.
+                if game.game_mode == GameMode::Survival && id != "voxium:flint_and_steel" {
+                    game.inventory.take_selected(game.selected, false);
+                }
+                game.revision += 1;
+                game.ui_dirty = true;
+            }
         }
         InventoryAction::Delay { position }
             if game.mode == Mode::Playing && game.world_mouse.allowed() =>
@@ -2614,6 +2681,36 @@ mod tests {
         dispense(&mut game, [8, 101, 8], [0, 0, 1], false);
         assert_eq!(game.drops.entities.len(), before + 1);
         assert!(game.containers[&[8, 101, 8]].slots[2].is_none());
+    }
+
+    #[test]
+    fn flint_and_steel_lights_tnt_and_fire_bone_meal_grows_trees_and_eggs_spawn_mobs() {
+        let use_item = InventoryAction::UseItem {
+            target: [8, 101, 5],
+            previous: [8, 101, 6],
+        };
+        let mut game = world();
+        game.world.set([8, 101, 5], game_core::TNT);
+        equip(&mut game, "voxium:flint_and_steel");
+        process_action(&mut game, &use_item);
+        assert_eq!(game.world.blasts, vec![[8, 101, 5]]);
+        // Огниво на камне: огонь в клетке перед блоком.
+        let mut game = world();
+        equip(&mut game, "voxium:flint_and_steel");
+        process_action(&mut game, &use_item);
+        assert_eq!(game.world.block([8, 101, 6]), game_core::FIRE);
+        // Яйцо коровы создаёт моба.
+        let mut game = world();
+        equip(&mut game, "voxium:cow_spawn_egg");
+        let before = format!("{:?}", game.mobs);
+        process_action(&mut game, &use_item);
+        assert_ne!(format!("{:?}", game.mobs), before);
+        // Яйцо блока без моба ничего не делает.
+        let mut game = world();
+        equip(&mut game, "voxium:vex_spawn_egg");
+        let before = format!("{:?}", game.mobs);
+        process_action(&mut game, &use_item);
+        assert_eq!(format!("{:?}", game.mobs), before);
     }
 
     #[test]

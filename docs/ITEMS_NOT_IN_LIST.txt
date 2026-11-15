@@ -1,0 +1,139 @@
+water — Вода
+lava — Лава
+tall_seagrass — Высокая морская трава
+fire — Огонь
+soul_fire — Огонь душ
+oak_wall_sign — Дубовая настенная табличка
+spruce_wall_sign — Еловая настенная табличка
+birch_wall_sign — Берёзовая настенная табличка
+jungle_wall_sign — Настенная табличка из тропического дерева
+acacia_wall_sign — Акациевая настенная табличка
+cherry_wall_sign — Вишнёвая настенная табличка
+dark_oak_wall_sign — Настенная табличка из тёмного дуба
+mangrove_wall_sign — Мангровая настенная табличка
+bamboo_wall_sign — Бамбуковая настенная табличка
+oak_wall_hanging_sign — Дубовая настенная подвесная табличка
+spruce_wall_hanging_sign — Еловая настенная подвесная табличка
+birch_wall_hanging_sign — Берёзовая настенная подвесная табличка
+acacia_wall_hanging_sign — Акациевая настенная подвесная табличка
+cherry_wall_hanging_sign — Вишнёвая настенная подвесная табличка
+jungle_wall_hanging_sign — Настенная подвесная табличка из тропического дерева
+dark_oak_wall_hanging_sign — Настенная подвесная табличка из тёмного дуба
+crimson_wall_hanging_sign — Багровая настенная подвесная табличка
+warped_wall_hanging_sign — Искажённая настенная подвесная табличка
+mangrove_wall_hanging_sign — Мангровая настенная подвесная табличка
+bamboo_wall_hanging_sign — Бамбуковая настенная подвесная табличка
+nether_portal — Портал в Незер
+attached_pumpkin_stem — Прикреплённый стебель тыквы
+attached_melon_stem — Прикреплённый стебель арбуза
+pumpkin_stem — Стебель тыквы
+melon_stem — Стебель арбуза
+water_cauldron — Котёл с водой
+lava_cauldron — Котёл с лавой
+powder_snow_cauldron — Котёл с рыхлым снегом
+end_portal — Портал в Энд
+cocoa — Какао
+tripwire — Растяжка
+potted_torchflower — Факельник в горшке
+potted_oak_sapling — Саженец дуба в горшке
+potted_spruce_sapling — Саженец ели в горшке
+potted_birch_sapling — Саженец берёзы в горшке
+potted_jungle_sapling — Саженец тропического дерева в горшке
+potted_acacia_sapling — Саженец акации в горшке
+potted_cherry_sapling — Саженец вишни в горшке
+potted_dark_oak_sapling — Саженец тёмного дуба в горшке
+potted_mangrove_propagule — Мангровый отросток в горшке
+potted_fern — Папоротник в горшке
+potted_dandelion — Одуванчик в горшке
+potted_poppy — Мак в горшке
+potted_blue_orchid — Синяя орхидея в горшке
+potted_allium — Лук-батун в горшке
+potted_azure_bluet — Хаустония серая в горшке
+potted_red_tulip — Красный тюльпан в горшке
+potted_orange_tulip — Оранжевый тюльпан в горшке
+potted_white_tulip — Белый тюльпан в горшке
+potted_pink_tulip — Розовый тюльпан в горшке
+potted_oxeye_daisy — Ромашка в горшке
+potted_cornflower — Синий василёк в горшке
+potted_lily_of_the_valley — Ландыш в горшке
+potted_wither_rose — Роза визера в горшке
+potted_red_mushroom — Красный гриб в горшке
+potted_brown_mushroom — Коричневый гриб в горшке
+potted_dead_bush — Мёртвый куст в горшке
+potted_cactus — Кактус в горшке
+carrots — Морковь
+potatoes — Картофель
+skeleton_wall_skull — Настенный череп
+wither_skeleton_wall_skull — Настенный череп визер-скелета
+zombie_wall_head — Настенная голова зомби
+player_wall_head — Настенная голова игрока
+creeper_wall_head — Настенная голова крипера
+dragon_wall_head — Настенная голова дракона
+piglin_wall_head — Настенная голова пиглина
+white_wall_banner — Белый флаг (настенный)
+orange_wall_banner — Оранжевый флаг (настенный)
+magenta_wall_banner — Пурпурный флаг (настенный)
+light_blue_wall_banner — Голубой флаг (настенный)
+yellow_wall_banner — Жёлтый флаг (настенный)
+lime_wall_banner — Лаймовый флаг (настенный)
+pink_wall_banner — Розовый флаг (настенный)
+gray_wall_banner — Серый флаг (настенный)
+light_gray_wall_banner — Светло-серый флаг (настенный)
+cyan_wall_banner — Бирюзовый флаг (настенный)
+purple_wall_banner — Фиолетовый флаг (настенный)
+blue_wall_banner — Синий флаг (настенный)
+brown_wall_banner — Коричневый флаг (настенный)
+green_wall_banner — Зелёный флаг (настенный)
+red_wall_banner — Красный флаг (настенный)
+black_wall_banner — Чёрный флаг (настенный)
+torchflower_crop — Росток факельника
+pitcher_crop — Росток кувшинницы
+beetroots — Свёкла
+end_gateway — Врата Энда
+frosted_ice — Талый лёд
+kelp_plant — Стебель ламинарии
+dead_tube_coral_wall_fan — Мёртвый горизонтальный веерный трубчатый коралл
+dead_brain_coral_wall_fan — Мёртвый горизонтальный веерный коралл-мозговик
+dead_bubble_coral_wall_fan — Мёртвый горизонтальный веерный пузырчатый коралл
+dead_fire_coral_wall_fan — Мёртвый горизонтальный веерный огненный коралл
+dead_horn_coral_wall_fan — Мёртвый горизонтальный веерный роговой коралл
+tube_coral_wall_fan — Горизонтальный веерный трубчатый коралл
+brain_coral_wall_fan — Горизонтальный веерный коралл-мозговик
+bubble_coral_wall_fan — Горизонтальный веерный пузырчатый коралл
+fire_coral_wall_fan — Горизонтальный веерный огненный коралл
+horn_coral_wall_fan — Горизонтальный веерный роговой коралл
+bamboo_sapling — Побег бамбука
+potted_bamboo — Бамбук в горшке
+bubble_column — Колонна пузырей
+sweet_berry_bush — Куст сладких ягод
+weeping_vines_plant — Стебель плакучей лозы
+twisting_vines_plant — Стебель вьющейся лозы
+crimson_wall_sign — Багровая настенная табличка
+warped_wall_sign — Искажённая настенная табличка
+potted_crimson_fungus — Багровый гриб в горшке
+potted_warped_fungus — Искажённый гриб в горшке
+potted_crimson_roots — Багровые корни в горшке
+potted_warped_roots — Искажённые корни в горшке
+candle_cake — Торт со свечой
+white_candle_cake — Торт с белой свечой
+orange_candle_cake — Торт с оранжевой свечой
+magenta_candle_cake — Торт с пурпурной свечой
+light_blue_candle_cake — Торт с голубой свечой
+yellow_candle_cake — Торт с жёлтой свечой
+lime_candle_cake — Торт с лаймовой свечой
+pink_candle_cake — Торт с розовой свечой
+gray_candle_cake — Торт с серой свечой
+light_gray_candle_cake — Торт со светло-серой свечой
+cyan_candle_cake — Торт с бирюзовой свечой
+purple_candle_cake — Торт с фиолетовой свечой
+blue_candle_cake — Торт с синей свечой
+brown_candle_cake — Торт с коричневой свечой
+green_candle_cake — Торт с зелёной свечой
+red_candle_cake — Торт с красной свечой
+black_candle_cake — Торт с чёрной свечой
+powder_snow — Рыхлый снег
+cave_vines — Пещерная лоза
+cave_vines_plant — Стебель пещерной лозы
+big_dripleaf_stem — Стебель большой бросянки
+potted_azalea_bush — Азалия в горшке
+potted_flowering_azalea_bush — Цветущая азалия в горшке

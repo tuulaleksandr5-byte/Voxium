@@ -159,6 +159,23 @@ fn grow(world: &mut World, p: [i32; 3], sapling: BlockId, tick: u64) -> bool {
     true
 }
 
+/// Мгновенный рост саженца в `p` (костная мука); `true`, если дерево выросло.
+pub fn grow_now(world: &mut World, p: [i32; 3]) -> bool {
+    let id = if loaded(world, p) {
+        world.block(p)
+    } else {
+        AIR
+    };
+    if !is_sapling(id) {
+        return false;
+    }
+    let grown = grow(world, p, id, 0);
+    if grown {
+        world.grow_active.remove(&p);
+    }
+    grown
+}
+
 /// Один шаг роста: не более `budget` саженцев. Возвращает число обработанных.
 pub fn tick(world: &mut World, tick: u64, budget: usize) -> usize {
     if world.grow_active.is_empty() {

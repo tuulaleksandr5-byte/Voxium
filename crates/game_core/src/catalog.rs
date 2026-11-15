@@ -468,6 +468,45 @@ mod tests {
     }
 
     #[test]
+    fn every_item_of_the_final_list_exists_in_the_game() {
+        let list: Vec<&str> = include_str!("../../../docs/MASTER_ITEMS_1.20.1.txt")
+            .lines()
+            .filter(|line| line.starts_with(|c: char| c.is_ascii_digit()))
+            .filter_map(|line| line.split(" | ").nth(2))
+            .map(str::trim)
+            .collect();
+        assert_eq!(list.len(), 1255);
+        let registry = ContentRegistry::default();
+        let mut game = std::collections::BTreeSet::new();
+        for (_, item) in registry.iter() {
+            let short = item.id.split_once(':').map_or(item.id.as_str(), |(_, s)| s);
+            for name in list_name(short) {
+                game.insert(name);
+            }
+            // Прежние имена еды, красителей и лазурита.
+            let renamed = match short {
+                "raw_beef" => "beef",
+                "raw_pork" => "porkchop",
+                "cooked_pork" => "cooked_porkchop",
+                "raw_mutton" => "mutton",
+                "raw_chicken" => "chicken",
+                "rotten_meat" => "rotten_flesh",
+                "lapis" => "lapis_lazuli",
+                other => match other.strip_prefix("dye_") {
+                    Some(color) => {
+                        game.insert(format!("{color}_dye"));
+                        continue;
+                    }
+                    None => continue,
+                },
+            };
+            game.insert(renamed.to_owned());
+        }
+        let missing: Vec<_> = list.iter().filter(|name| !game.contains(**name)).collect();
+        assert!(missing.is_empty(), "нет предметов из списка: {missing:?}");
+    }
+
+    #[test]
     fn committed_tables_match_the_registries() {
         // При расхождении выполните: cargo run -p game_core --example block_list
         assert_eq!(

@@ -4413,6 +4413,209 @@ def redstone_lamp_on():
 
 
 
+# ------------------------------------------------------------ item icons (all items list)
+import colorsys
+import json as _json
+
+_ICON_SPECS = _json.load(open(ROOT / "tools" / "item_icon_specs.json"))
+_NAMED = {
+    "redstone": "#c81818", "gunpowder": "#6a6a6a", "bone": "#e8e4d0", "bone_meal": "#f0f0e8", "sugar": "#f8f8f8",
+    "paper": "#f0ecd8", "book": "#7a4a2a", "slime_ball": "#7ac84a", "ender_pearl": "#1a6a5a", "blaze_rod": "#e8a020",
+    "ink_sac": "#1a2234", "glow_ink_sac": "#30c8c0", "cocoa_beans": "#6a3a1a", "netherite_ingot": "#4a3e42",
+    "netherite_scrap": "#6a4a3a", "quartz": "#f0eae0", "amethyst_shard": "#a878e0", "charcoal": "#2a2a2e",
+    "scute": "#4a9a4a", "flint": "#5a5a5e", "glowstone_dust": "#f8d060", "gold_nugget": "#f2c12e",
+    "iron_nugget": "#c8c8c8", "blaze_powder": "#f0a020", "magma_cream": "#c86020", "ghast_tear": "#e8f0f8",
+    "nether_star": "#f0f0ff", "prismarine_shard": "#4aa090", "prismarine_crystals": "#a8f0e0", "nether_brick": "#5a2428",
+    "echo_shard": "#10404a", "honeycomb": "#e8a030", "phantom_membrane": "#b0b8c8", "nautilus_shell": "#d8b890",
+    "heart_of_the_sea": "#2a6ad8", "shulker_shell": "#9a6a9a", "rabbit_foot": "#c8a070", "rabbit_hide": "#b08a58",
+    "spider_eye": "#8a2a3a", "fermented_spider_eye": "#6a2a2a", "ender_eye": "#2a8a6a", "arrow": "#c8c8c8",
+    "spectral_arrow": "#f8e060", "apple": "#d02828", "bread": "#c8903a", "cookie": "#b8803a", "melon_slice": "#d83a3a",
+    "carrot": "#e8821a", "potato": "#c8a060", "baked_potato": "#b8803a", "golden_apple": "#f2c12e", "golden_carrot": "#f2c12e",
+    "enchanted_golden_apple": "#f2c12e", "cod": "#c8a888", "salmon": "#e0705a", "tropical_fish": "#f08a2a", "pufferfish": "#e8c83a",
+    "cooked_cod": "#a8784a", "cooked_salmon": "#c8683a", "sweet_berries": "#c82a3a", "glow_berries": "#f0a030", "beetroot": "#8a1a3a",
+    "poisonous_potato": "#9ab84a", "pumpkin_pie": "#d8802a", "rabbit": "#d89a78", "cooked_rabbit": "#a8683a", "chorus_fruit": "#9a7aa8",
+    "dried_kelp": "#2e3a22", "honey_bottle": "#e8a82a",
+}
+
+
+def _hash_color(name, s=0.55, v=0.85):
+    h = (zlib.crc32(name.encode()) % 360) / 360.0
+    r, g, b = colorsys.hsv_to_rgb(h, s, v)
+    return "#%02x%02x%02x" % (int(r * 255), int(g * 255), int(b * 255))
+
+
+def _dark(hexv, f=0.6):
+    return "#%02x%02x%02x" % tuple(int(v) for v in np.clip(rgb(hexv) * f, 0, 255))
+
+
+def _light(hexv, f=1.3, a=30):
+    return "#%02x%02x%02x" % tuple(int(v) for v in np.clip(rgb(hexv) * f + a, 0, 255))
+
+
+def _disc(cx, cy, r, image, color):
+    for y in range(N):
+        for x in range(N):
+            if math.hypot(x - cx, y - cy) <= r:
+                put(image, x, y, color)
+
+
+def _ellipse(cx, cy, rx, ry, image, color):
+    for y in range(N):
+        for x in range(N):
+            if ((x - cx) / rx) ** 2 + ((y - cy) / ry) ** 2 <= 1.0:
+                put(image, x, y, color)
+
+
+def _outline(image):
+    out = image.copy()
+    for y in range(N):
+        for x in range(N):
+            if image[y, x, 3] == 0:
+                for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                    nx, ny = x + dx, y + dy
+                    if 0 <= nx < N and 0 <= ny < N and image[ny, nx, 3] > 0:
+                        out[y, x, :3] = (20, 16, 24)
+                        out[y, x, 3] = 255
+                        break
+    return out
+
+
+def _item_icon(ident, key, cat):
+    color = _NAMED.get(key, _hash_color(key))
+    image = transparent()
+    r = rng("item_" + key)
+    if cat == "egg":
+        base = _hash_color(key.replace("_spawn_egg", ""), 0.5, 0.75)
+        spots = _hash_color(key.replace("_spawn_egg", "") + "x", 0.7, 0.55)
+        _ellipse(16, 17, 9, 11, image, base)
+        for _ in range(9):
+            x, y = r.integers(9, 23), r.integers(9, 27)
+            if ((x - 16) / 9) ** 2 + ((y - 17) / 11) ** 2 < 0.8:
+                rect(image, x, y, 2, 2, spots)
+        rect(image, 12, 10, 3, 3, _light(base))
+    elif cat == "disc":
+        _disc(16, 16, 12, image, "#161618")
+        _disc(16, 16, 5, image, color)
+        _disc(16, 16, 1.5, image, "#303034")
+        rect(image, 8, 9, 3, 2, "#3a3a40")
+    elif cat == "boat":
+        wood = key.split("_")[0] if key.split("_")[0] != "bamboo" else "bamboo"
+        plank = {"oak": "#9a7a40", "spruce": "#6a4a2a", "birch": "#c8b878", "jungle": "#a8704a", "acacia": "#b0602a", "cherry": "#e0a8a8", "dark": "#4a3220", "mangrove": "#8a3a38", "bamboo": "#c8b04a"}.get(wood, "#9a7a40")
+        for y in range(14, 25):
+            inset = (y - 14) // 4
+            rect(image, 3 + inset, y, 26 - 2 * inset, 1, plank if y % 3 else _dark(plank, 0.8))
+        rect(image, 3, 12, 3, 4, plank)
+        rect(image, 26, 12, 3, 4, plank)
+        if "chest" in key:
+            rect(image, 11, 8, 10, 7, "#8a5a2a")
+            rect(image, 11, 11, 10, 1, "#3a2a1a")
+            rect(image, 15, 11, 2, 2, "#d8c070")
+    elif cat == "cart":
+        rect(image, 4, 12, 24, 10, "#8a8a90")
+        rect(image, 4, 12, 24, 2, "#b0b0b8")
+        rect(image, 7, 22, 4, 4, "#3a3a40")
+        rect(image, 21, 22, 4, 4, "#3a3a40")
+        acc = {"chest": "#8a5a2a", "furnace": "#6a6a6a", "tnt": "#c82a2a", "hopper": "#3a3a40", "command": "#a8663a"}
+        for name, c in acc.items():
+            if name in key:
+                rect(image, 9, 6, 14, 7, c)
+                if name == "tnt":
+                    rect(image, 9, 8, 14, 3, "#f0e0e0")
+    elif cat == "sherd":
+        for y in range(6, 27):
+            w = 7 + (y - 6) // 5 if y < 18 else 11 - (y - 18) // 2
+            rect(image, 16 - w // 2, y, w, 1, "#a8523a" if y % 4 else "#8a4230")
+        sym = r.integers(0, 3)
+        rect(image, 13, 13 + int(sym), 6, 2, _hash_color(key, 0.5, 0.9))
+        rect(image, 15, 11, 2, 8, _hash_color(key, 0.5, 0.9))
+    elif cat == "template":
+        rect(image, 6, 4, 20, 24, "#e8e0d0" if "netherite" not in key else "#5a4e52")
+        rect(image, 6, 4, 20, 2, "#c8c0b0" if "netherite" not in key else "#3a3034")
+        for k in range(8):
+            rect(image, 16 - k, 10 + k, 2 * k + 2, 1, color)
+            rect(image, 16 - k, 24 - k, 2 * k + 2, 1, color)
+    elif cat == "pattern":
+        rect(image, 7, 5, 18, 22, "#f2eee2")
+        rect(image, 7, 5, 18, 2, "#d8d2c2")
+        rect(image, 11, 12, 10, 4, color)
+        rect(image, 14, 9, 4, 12, color)
+    elif cat == "bucket":
+        rect(image, 8, 9, 16, 16, "#8a8a92")
+        rect(image, 9, 25, 14, 2, "#6a6a72")
+        rect(image, 7, 8, 18, 2, "#b0b0b8")
+        fill_c = {"milk_bucket": "#f4f4f4", "powder_snow_bucket": "#eaf2f8", "pufferfish_bucket": "#e8c83a", "salmon_bucket": "#e0705a", "cod_bucket": "#c8a888", "tropical_fish_bucket": "#f08a2a", "axolotl_bucket": "#f0a0c8", "tadpole_bucket": "#3a3a2a"}.get(key, "#6aa8f0")
+        rect(image, 10, 11, 12, 6, fill_c)
+    elif cat == "bottle":
+        liquid = {"potion": "#3a7ad8", "splash_potion": "#c878d8", "lingering_potion": "#78d8c8", "dragon_breath": "#b040e0", "glass_bottle": "#c8e8f0", "experience_bottle": "#7ae83a", "honey_bottle": "#e8a82a", "tipped_arrow": "#c8c8c8"}.get(key, color)
+        _ellipse(16, 20, 8, 7, image, "#d8f0f8")
+        rect(image, 14, 8, 4, 8, "#d8f0f8")
+        rect(image, 13, 6, 6, 3, "#9a6a3a")
+        if key != "glass_bottle":
+            _ellipse(16, 21, 6, 5, image, liquid)
+    elif cat == "armor":
+        mat = "chainmail" if key.startswith("chainmail") else "netherite" if key.startswith("netherite") else "turtle"
+        base = {"chainmail": "#9a9aa4", "netherite": "#4a3e42", "turtle": "#3a9a4a"}[mat]
+        part = key.split("_", 1)[1]
+        if part == "helmet":
+            rect(image, 8, 8, 16, 10, base); rect(image, 8, 18, 4, 6, base); rect(image, 20, 18, 4, 6, base)
+        elif part == "chestplate":
+            rect(image, 9, 8, 14, 18, base); rect(image, 4, 8, 6, 8, base); rect(image, 22, 8, 6, 8, base)
+        elif part == "leggings":
+            rect(image, 8, 7, 16, 8, base); rect(image, 8, 15, 6, 12, base); rect(image, 18, 15, 6, 12, base)
+        else:
+            rect(image, 7, 12, 8, 12, base); rect(image, 17, 12, 8, 12, base); rect(image, 5, 22, 10, 5, base); rect(image, 17, 22, 10, 5, base)
+        for _ in range(14):
+            x, y = r.integers(4, 28, 2)
+            if image[y, x, 3] > 0:
+                put(image, x, y, _light(base, 1.25, 12))
+    elif cat == "tool":
+        head = "#4a3e42" if key.startswith("netherite") else color
+        for k in range(18):
+            rect(image, 5 + k, 26 - k, 2, 2, "#7a5230")
+        kind = key.split("_")[-1]
+        if kind == "sword":
+            for k in range(14): rect(image, 14 + k, 17 - k, 3, 3, head)
+            rect(image, 10, 16, 8, 3, "#6a4a2a")
+        elif kind == "pickaxe":
+            rect(image, 10, 6, 16, 3, head); rect(image, 22, 6, 4, 10, head); rect(image, 8, 8, 4, 8, head)
+        elif kind == "axe":
+            rect(image, 15, 6, 10, 10, head); rect(image, 12, 9, 4, 4, head)
+        elif kind == "shovel":
+            _ellipse(24, 8, 5, 5, image, head)
+        elif kind == "hoe":
+            rect(image, 14, 6, 12, 3, head); rect(image, 14, 6, 3, 7, head)
+        else:
+            _ellipse(21, 11, 6, 6, image, head); rect(image, 20, 9, 2, 5, _dark(head))
+    elif cat == "food":
+        _ellipse(16, 17, 9, 9, image, color)
+        rect(image, 11, 11, 4, 3, _light(color, 1.35))
+        rect(image, 15, 6, 2, 4, "#3a7a2a")
+    else:
+        shape = "ingot" if key.endswith("_ingot") else "gem" if any(s in key for s in ("shard", "crystal", "pearl", "eye", "star", "tear")) else "rod" if key.endswith("_rod") else "dust" if any(s in key for s in ("dust", "powder", "meal")) else "lump"
+        if shape == "ingot":
+            for y in range(12, 22): rect(image, 6 + (22 - y) // 3, y, 20 - (22 - y) // 2, 1, color if y % 3 else _light(color))
+        elif shape == "gem":
+            for k in range(10): rect(image, 16 - k, 6 + k, 2 * k + 2, 1, color if k % 3 else _light(color))
+            for k in range(10): rect(image, 16 - 9 + k, 16 + k, 2 * (9 - k) + 2, 1, _dark(color, 0.8))
+        elif shape == "rod":
+            for k in range(20): rect(image, 6 + k, 24 - k, 3, 3, color)
+        elif shape == "dust":
+            for y in range(16, 26):
+                w = (y - 14) * 2
+                rect(image, 16 - w // 2, y, w, 1, color if y % 3 else _light(color))
+        else:
+            _ellipse(16, 17, 9, 8, image, color)
+            rect(image, 11, 12, 4, 3, _light(color))
+            speckle(image, r, [_dark(color, 0.7), _light(color)], 14)
+            image[image[..., 3] == 0] = 0
+    return _outline(image)
+
+
+for _ident, _key, _cat in _ICON_SPECS:
+    ICONS[f"item_{_key}"] = (lambda i=_ident, k=_key, c=_cat: _item_icon(i, k, c))
+
+
+
 def main():
     pixel = ROOT / "assets/textures/pixel"
     tiles = {}

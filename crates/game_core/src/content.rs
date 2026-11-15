@@ -2198,7 +2198,7 @@ mod tests {
                 assert_eq!(def.max_stack, 1);
             }
         }
-        assert_eq!(registry.len(), 1080);
+        assert_eq!(registry.len(), 1394);
     }
 
     fn material(id: &str, max_stack: u16) -> String {
@@ -2208,7 +2208,7 @@ mod tests {
     #[test]
     fn default_catalog_preserves_original_stage_three_blocks_and_fixtures() {
         let registry = ContentRegistry::default();
-        assert_eq!(registry.len(), 1080);
+        assert_eq!(registry.len(), 1394);
         assert!(!registry.is_empty());
         let names = [
             "foundation:air",
@@ -2262,13 +2262,12 @@ mod tests {
             (ArmorSlot::Feet, 3),
         ] {
             assert_eq!(slot.index(), index);
-            assert_eq!(
-                registry
-                    .iter()
-                    .filter(|(_, item)| item.kind == ItemKind::Armor { slot })
-                    .count(),
-                4
-            );
+            let count = registry
+                .iter()
+                .filter(|(_, item)| item.kind == ItemKind::Armor { slot })
+                .count();
+            // Кожа, железо, золото, алмаз + кольчуга и незерит (+ шлем черепахи).
+            assert!(count >= 6, "{slot:?}: {count}");
         }
     }
 
@@ -2367,7 +2366,7 @@ mod tests {
         ] {
             assert!(original.reload(&changed).is_err());
         }
-        assert_eq!(original.len(), 1080);
+        assert_eq!(original.len(), 1394);
         assert_eq!(
             original.max_stack(original.find("survival:egg").unwrap()),
             16

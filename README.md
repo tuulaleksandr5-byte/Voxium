@@ -159,3 +159,4 @@ cargo build --locked -p voxel-client
 - [Сверка со списком 1003 блоков](docs/MASTER_LIST_CHECK.md)
 - [Функции новых блоков](docs/FUNCTIONS_UPDATE.md)
 - [Редстоун](docs/REDSTONE.md)
+- [Все предметы списка](docs/ITEMS_UPDATE.md)

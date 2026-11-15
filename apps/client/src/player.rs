@@ -463,6 +463,11 @@ pub fn controls(
                     Some(InventoryAction::OpenContainer {
                         position: hit.block,
                     })
+                } else if crate::inventory_client::special_item(&game).is_some() {
+                    Some(InventoryAction::UseItem {
+                        target: hit.block,
+                        previous: hit.previous,
+                    })
                 } else if game_core::models::shape_of(game.world.block(hit.block))
                     == Some(game_core::models::Shape::Repeater)
                 {

@@ -33,6 +33,12 @@ impl Tool {
         let Some((material, kind)) = name.split_once('_') else {
             return Self::Hand;
         };
+        // Незеритовые инструменты копают как алмазные.
+        let material = if material == "netherite" {
+            "diamond"
+        } else {
+            material
+        };
         let Some(material) = ["wooden", "stone", "iron", "diamond", "golden"]
             .iter()
             .position(|value| *value == material)
