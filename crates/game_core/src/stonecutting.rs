@@ -3,14 +3,13 @@
 use crate::content::{ContentRegistry, ItemId};
 
 /// (сырьё, варианты результата). Обмен всегда один к одному.
-const CUTS: [(&str, &[&str]); 13] = [
+const CUTS: [(&str, &[&str]); 10] = [
     (
         "foundation:stone",
         &[
             "builder:stone_bricks",
             "builder:smooth_stone",
             "foundation:cobblestone",
-            "palette:stone_tiles",
         ],
     ),
     (
@@ -26,17 +25,10 @@ const CUTS: [(&str, &[&str]); 13] = [
         &["builder:stone_bricks", "foundation:stone"],
     ),
     ("palette:granite", &["palette:polished_granite"]),
-    ("palette:marble", &["palette:polished_marble"]),
     ("palette:basalt", &["palette:polished_basalt"]),
-    ("palette:slate", &["palette:polished_slate"]),
-    ("palette:limestone", &["palette:polished_limestone"]),
     (
         "foundation:sandstone",
-        &[
-            "foundation:sand",
-            "palette:sandstone_bricks",
-            "voxium:cut_sandstone",
-        ],
+        &["foundation:sand", "voxium:cut_sandstone"],
     ),
     ("foundation:gravel", &["foundation:sand"]),
     ("foundation:deepslate", &["foundation:cobblestone"]),

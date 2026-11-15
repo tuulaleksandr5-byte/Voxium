@@ -32,6 +32,7 @@ impl Section {
         self.blocks[Self::index(local)]
     }
     pub fn set(&mut self, local: [u8; 3], id: BlockId) {
+        let id = crate::canonical(id);
         if local.iter().all(|&n| n < 16) && usize::from(id) < BLOCKS.len() {
             self.blocks[Self::index(local)] = id;
         }
@@ -598,6 +599,7 @@ impl World {
     }
     /// Returns true only when a valid, loaded, breakable block actually changed.
     pub fn set(&mut self, position: [i32; 3], id: BlockId) -> bool {
+        let id = crate::canonical(id);
         if !valid_world_height(position[1]) || usize::from(id) >= BLOCKS.len() {
             return false;
         }

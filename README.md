@@ -156,3 +156,4 @@ cargo build --locked -p voxel-client
 - [Часть 5: блоки 421–525](docs/PART5_UPDATE.md)
 - [Часть 6: блоки 526–629](docs/PART6_UPDATE.md)
 - [Части 7 и 8: блоки 630–837](docs/PART7_8_UPDATE.md)
+- [Сверка со списком 1003 блоков](docs/MASTER_LIST_CHECK.md)

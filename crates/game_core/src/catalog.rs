@@ -236,6 +236,7 @@ fn rows() -> Vec<Row> {
     let mining = MiningConfig::default();
     BLOCKS
         .iter()
+        .filter(|def| !crate::is_retired(def.id))
         .map(|def| {
             let id = def.id;
             let tool = match mining.rule_info(id) {
@@ -347,10 +348,13 @@ mod tests {
     #[test]
     fn every_block_has_exactly_one_row_with_a_unique_identifier() {
         let rows = rows();
-        assert_eq!(rows.len(), BLOCKS.len());
+        assert_eq!(rows.len(), BLOCKS.len() - crate::RETIRED.len());
         let mut names = std::collections::HashSet::new();
-        for (index, row) in rows.iter().enumerate() {
-            assert_eq!(usize::from(row.id), index);
+        let mut previous = None;
+        for row in &rows {
+            assert!(previous.is_none_or(|p| row.id > p));
+            assert!(!crate::is_retired(row.id));
+            previous = Some(row.id);
             assert!(names.insert(row.name_id), "{}", row.name_id);
             assert!(!row.name.trim().is_empty());
         }
@@ -359,6 +363,107 @@ mod tests {
             .map(|kind| rows.iter().filter(|row| row.kind == *kind).count())
             .sum();
         assert_eq!(kinds, rows.len(), "у каждого блока есть вид");
+    }
+
+    /// Имя блока в игре → имя из итогового списка (старые имена палитры и цвета).
+    fn list_name(short: &str) -> Vec<String> {
+        const COLORS: [&str; 16] = [
+            "white",
+            "orange",
+            "magenta",
+            "light_blue",
+            "yellow",
+            "lime",
+            "pink",
+            "gray",
+            "light_gray",
+            "cyan",
+            "purple",
+            "blue",
+            "brown",
+            "green",
+            "red",
+            "black",
+        ];
+        let rest = |prefix: &str| short.strip_prefix(prefix).filter(|c| COLORS.contains(c));
+        if short == "wool" {
+            return vec!["white_wool".into()];
+        }
+        if let Some(c) = rest("wool_") {
+            return vec![format!("{c}_wool")];
+        }
+        if let Some(c) = rest("concrete_") {
+            return vec![format!("{c}_concrete")];
+        }
+        if let Some(c) = rest("glass_") {
+            return vec![format!("{c}_stained_glass")];
+        }
+        if let Some(c) = rest("terracotta_") {
+            return vec![format!("{c}_terracotta")];
+        }
+        match short {
+            "daisy" => vec!["oxeye_daisy".into()],
+            "hay_bale" => vec!["hay_block".into()],
+            "snow" => vec!["snow_block".into()],
+            "snow_layer" => vec!["snow".into()],
+            "grass" => vec!["grass".into(), "grass_block".into()],
+            other => vec![other.into()],
+        }
+    }
+
+    #[test]
+    fn the_game_has_exactly_the_blocks_of_the_final_list() {
+        let list: std::collections::BTreeSet<&str> =
+            include_str!("../../../docs/MASTER_BLOCKS_1.20.1.txt")
+                .lines()
+                .filter(|line| line.starts_with(|c: char| c.is_ascii_digit()))
+                .filter_map(|line| line.split(" | ").nth(2))
+                .map(str::trim)
+                .collect();
+        assert_eq!(list.len(), 1003);
+        let mut game = std::collections::BTreeSet::new();
+        for id in 0..BLOCKS.len() as crate::BlockId {
+            let flowing =
+                crate::fluids::fluid_of(id).is_some() && id != crate::WATER && id != crate::LAVA;
+            if crate::is_retired(id)
+                || crate::base_block(id) != id
+                || flowing
+                || crate::unlit(id) != id
+            {
+                continue;
+            }
+            let name = crate::content::BLOCK_NAMES[usize::from(id)];
+            for listed in list_name(name.split_once(':').map_or(name, |(_, short)| short)) {
+                game.insert(listed);
+            }
+        }
+        let extra: Vec<_> = game
+            .iter()
+            .filter(|name| !list.contains(name.as_str()))
+            .collect();
+        let missing: Vec<_> = list.iter().filter(|name| !game.contains(**name)).collect();
+        assert!(extra.is_empty(), "лишние блоки: {extra:?}");
+        assert!(missing.is_empty(), "нет блоков из списка: {missing:?}");
+    }
+
+    #[test]
+    fn retired_blocks_are_replaced_everywhere_and_never_listed() {
+        let mut world = crate::World::new(1);
+        world.chunks.insert(
+            [0, 0],
+            std::sync::Arc::new(crate::Chunk {
+                position: [0, 0],
+                sections: Default::default(),
+            }),
+        );
+        for (old, new) in crate::RETIRED {
+            assert!(!crate::is_retired(new), "{old} → {new}");
+            assert_eq!(crate::canonical(old), new);
+            assert!(world.set([1, 100, 1], old));
+            assert_eq!(world.block([1, 100, 1]), new);
+            world.set([1, 100, 1], crate::AIR);
+        }
+        assert!(rows().iter().all(|row| !crate::is_retired(row.id)));
     }
 
     #[test]

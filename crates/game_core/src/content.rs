@@ -2191,7 +2191,7 @@ mod tests {
                 assert_eq!(def.max_stack, 1);
             }
         }
-        assert_eq!(registry.len(), 1097);
+        assert_eq!(registry.len(), 1080);
     }
 
     fn material(id: &str, max_stack: u16) -> String {
@@ -2201,7 +2201,7 @@ mod tests {
     #[test]
     fn default_catalog_preserves_original_stage_three_blocks_and_fixtures() {
         let registry = ContentRegistry::default();
-        assert_eq!(registry.len(), 1097);
+        assert_eq!(registry.len(), 1080);
         assert!(!registry.is_empty());
         let names = [
             "foundation:air",
@@ -2360,7 +2360,7 @@ mod tests {
         ] {
             assert!(original.reload(&changed).is_err());
         }
-        assert_eq!(original.len(), 1097);
+        assert_eq!(original.len(), 1080);
         assert_eq!(
             original.max_stack(original.find("survival:egg").unwrap()),
             16

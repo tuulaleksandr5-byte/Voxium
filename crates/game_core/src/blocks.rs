@@ -14224,6 +14224,42 @@ pub fn family_of(id: BlockId) -> Option<(BlockId, u8, FamilyKind)> {
         .map(|(first, _, kind)| (*first, (id - *first) as u8, *kind))
 }
 
+/// Блоки, которых нет в итоговом списке игры. Их ID остаются занятыми, чтобы старые
+/// миры читались, но блок всегда заменяется на соответствующий из списка.
+pub const RETIRED: [(BlockId, BlockId); 17] = [
+    (LAMP, REDSTONE_LAMP),
+    (VAULT, BARREL),
+    (MARBLE, CALCITE),
+    (POLISHED_MARBLE, POLISHED_DIORITE),
+    (SLATE, COBBLED_DEEPSLATE),
+    (POLISHED_SLATE, POLISHED_DEEPSLATE),
+    (LIMESTONE, SANDSTONE),
+    (POLISHED_LIMESTONE, CUT_SANDSTONE),
+    (PINE_LOG, SPRUCE_LOG),
+    (PINE_LEAVES, SPRUCE_LEAVES),
+    (PINE_PLANKS, SPRUCE_PLANKS),
+    (SANDSTONE_BRICKS, SANDSTONE),
+    (DARK_BRICKS, DEEPSLATE_BRICKS),
+    (STONE_TILES, DEEPSLATE_TILES),
+    (PINE_SLAB, SPRUCE_SLAB),
+    (MARBLE_SLAB, DIORITE_SLAB),
+    (DARK_BRICK_SLAB, DEEPSLATE_BRICK_SLAB),
+];
+
+/// Заменяет снятый с игры блок на блок из итогового списка; остальные не меняются.
+#[must_use]
+pub fn canonical(id: BlockId) -> BlockId {
+    RETIRED
+        .iter()
+        .find(|(old, _)| *old == id)
+        .map_or(id, |(_, new)| *new)
+}
+
+#[must_use]
+pub fn is_retired(id: BlockId) -> bool {
+    RETIRED.iter().any(|(old, _)| *old == id)
+}
+
 /// Шалкеровый ящик любого цвета: переносной сундук на 27 ячеек.
 #[must_use]
 pub fn is_shulker(id: BlockId) -> bool {

@@ -151,8 +151,8 @@ fn generator_three_only_adds_birch_clay_and_obsidian_on_top_of_generator_two() {
 #[test]
 fn generator_four_adds_pines_rocks_and_plants_only_where_expected() {
     use game_core::{
-        BASALT, CORNFLOWER, DAISY, DANDELION, GRANITE, GRASS, LEAVES, LIMESTONE, MARBLE,
-        PINE_LEAVES, PINE_LOG, POPPY, SLATE, TALL_GRASS, WOOD, biome_at, world::Biome,
+        BASALT, CALCITE, COBBLED_DEEPSLATE, CORNFLOWER, DAISY, DANDELION, GRANITE, GRASS, LEAVES,
+        POPPY, SANDSTONE, SPRUCE_LEAVES, SPRUCE_LOG, TALL_GRASS, WOOD, biome_at, world::Biome,
     };
     let three = WorldGenerator::from_snapshot(3, Some(OreConfig::default())).unwrap();
     let four = WorldGenerator::from_snapshot(4, Some(OreConfig::default())).unwrap();
@@ -179,8 +179,8 @@ fn generator_four_adds_pines_rocks_and_plants_only_where_expected() {
                             continue;
                         }
                         let index = match (before, after) {
-                            (WOOD, PINE_LOG) | (LEAVES, PINE_LEAVES) => 0,
-                            (STONE, LIMESTONE | GRANITE | MARBLE | SLATE)
+                            (WOOD, SPRUCE_LOG) | (LEAVES, SPRUCE_LEAVES) => 0,
+                            (STONE, SANDSTONE | GRANITE | CALCITE | COBBLED_DEEPSLATE)
                             | (DEEP_STONE, BASALT) => 1,
                             (AIR, POPPY | DANDELION | CORNFLOWER | DAISY) => 2,
                             (AIR, TALL_GRASS) => 3,
