@@ -14,7 +14,7 @@ use crate::{
 };
 
 /// Виды блоков в порядке сводной таблицы.
-const KINDS: [&str; 11] = [
+const KINDS: [&str; 12] = [
     "куб",
     "прозрачный куб",
     "листва",
@@ -25,6 +25,7 @@ const KINDS: [&str; 11] = [
     "низкий блок",
     "плоский",
     "технический",
+    "особая форма",
     "пустота",
 ];
 
@@ -76,6 +77,8 @@ fn kind_of(id: crate::BlockId, def: &BlockDef) -> &'static str {
     ) || crate::smelting::FurnaceKind::of_block(id).is_some()
     {
         "функциональный"
+    } else if crate::models::shape_of(id).is_some() {
+        "особая форма"
     } else if !def.opacity {
         "прозрачный куб"
     } else {
@@ -84,6 +87,21 @@ fn kind_of(id: crate::BlockId, def: &BlockDef) -> &'static str {
 }
 
 fn function_note(id: crate::BlockId) -> &'static str {
+    use crate::models::Shape;
+    match crate::models::shape_of(id) {
+        Some(Shape::Door | Shape::Trapdoor) => return "ПКМ: открыть и закрыть",
+        Some(Shape::Lever) => return "ПКМ: переключить",
+        Some(Shape::Ladder) => return "лазание: пробел или движение вперёд",
+        Some(Shape::Stairs) => return "ступени смотрят на игрока при установке",
+        Some(Shape::Fence | Shape::Pane) => return "соединяется с соседями",
+        _ => {}
+    }
+    if id == crate::NETHER_PORTAL {
+        return "декоративный, светится";
+    }
+    if id >= crate::PART2_FIRST && BLOCKS[usize::from(id)].light_emission > 0 {
+        return "светится";
+    }
     #[allow(clippy::match_overlapping_arm)]
     match crate::base_block(id) {
         crate::CHEST | crate::BARREL => "хранилище на 27 ячеек",
@@ -108,6 +126,45 @@ fn function_note(id: crate::BlockId) -> &'static str {
     }
 }
 
+/// Подпись варианта блока внутри семейства: сторона, ось, состояние.
+fn variant_label(id: crate::BlockId) -> String {
+    use crate::FamilyKind;
+    let side = |index: u8| ["север", "юг", "запад", "восток"][usize::from(index & 3)];
+    if let Some(facing) = crate::facing_of(id) {
+        return facing.label().to_string();
+    }
+    match crate::family_of(id) {
+        Some((_, index, FamilyKind::H4)) => side(index).to_string(),
+        Some((_, index, FamilyKind::AX2)) => {
+            format!("вдоль {}", if index == 0 { "X" } else { "Z" })
+        }
+        Some((_, index, FamilyKind::Lever)) => {
+            format!(
+                "{}, {}",
+                if index >= 4 {
+                    "включён"
+                } else {
+                    "выключен"
+                },
+                side(index)
+            )
+        }
+        Some((_, index, FamilyKind::Door)) => format!(
+            "{}, {}, {}",
+            if index >= 8 { "верх" } else { "низ" },
+            if (index / 4) % 2 == 1 {
+                "открыта"
+            } else {
+                "закрыта"
+            },
+            side(index)
+        ),
+        Some((_, 0, FamilyKind::Trap)) => "закрыт".to_string(),
+        Some((_, index, FamilyKind::Trap)) => format!("открыт, {}", side(index - 1)),
+        Some((_, _, FamilyKind::Rail)) | None => "вдоль X".to_string(),
+    }
+}
+
 /// Русское название блока: по предмету или по описанию состояния.
 fn display_name(id: crate::BlockId, registry: &ContentRegistry) -> String {
     if id == crate::AIR {
@@ -119,10 +176,7 @@ fn display_name(id: crate::BlockId, registry: &ContentRegistry) -> String {
     let base_id = crate::base_block(id);
     if base_id != id {
         let name = display_name(base_id, registry);
-        return match crate::facing_of(id) {
-            Some(facing) => format!("{name} ({})", facing.label()),
-            None => format!("{name} (вдоль X)"),
-        };
+        return format!("{name} ({})", variant_label(id));
     }
     if let Some(item) = registry
         .item_for_block(id)

@@ -75,6 +75,7 @@ pub fn mesh_section_with_textures(
                         if id == AIR
                             || is_plant(id)
                             || is_half(id)
+                            || game_core::models::is_model(id)
                             || is_invisible(id)
                             || (is_fluid(id) && id != WATER)
                         {
@@ -150,6 +151,10 @@ pub fn mesh_section_with_textures(
                 if is_invisible(id) {
                     continue;
                 }
+                if game_core::models::is_model(id) {
+                    model_cell(&mut builders, textures, &blocks, local, id);
+                    continue;
+                }
                 if is_flat(id) {
                     let material = textures.layer(id, 1, true);
                     builders[usize::from(material)].flat(local, game_core::is_rail_x(id));
@@ -216,6 +221,54 @@ pub fn mesh_section_with_textures(
         .enumerate()
         .filter_map(|(id, builder)| builder.finish().map(|mesh| (id as u16, mesh)))
         .collect()
+}
+
+/// Блок-модель: набор коробок. Грань на границе клетки прячется за непрозрачным
+/// соседом; остальные рисуются всегда.
+fn model_cell(
+    builders: &mut [MeshBuilder],
+    textures: &BlockTextures,
+    blocks: &[BlockId],
+    local: [i32; 3],
+    id: BlockId,
+) {
+    use game_core::models::{self, Connect};
+    let boxes = match models::connect_kind(id) {
+        Some(kind) => {
+            let side = |dx: i32, dz: i32| {
+                let n = blocks[padded_index([local[0] + dx, local[1], local[2] + dz])];
+                models::connects_to(kind, n)
+            };
+            // Север (−Z), юг, запад (−X), восток.
+            let sides = [side(0, -1), side(0, 1), side(-1, 0), side(1, 0)];
+            let boxes = models::connected_boxes(kind, sides);
+            let _: Connect = kind;
+            boxes
+        }
+        None => models::model_boxes(id),
+    };
+    let faces = textures.0[usize::from(id)];
+    for b in boxes {
+        for axis in 0..3 {
+            for positive in [false, true] {
+                let edge = if positive { 16 } else { 0 };
+                let on_edge = (if positive { b.max[axis] } else { b.min[axis] }) == edge;
+                if on_edge {
+                    let mut neighbor = local;
+                    neighbor[axis] += if positive { 1 } else { -1 };
+                    if is_opaque(blocks[padded_index(neighbor)]) {
+                        continue;
+                    }
+                }
+                let layer = if b.aux {
+                    faces.aux.unwrap_or(faces.side)
+                } else {
+                    textures.layer(id, axis, positive)
+                };
+                builders[usize::from(layer)].aabb_face(local, b.min, b.max, axis, positive);
+            }
+        }
+    }
 }
 
 #[derive(Clone, Copy, Default, PartialEq, Eq)]
@@ -412,6 +465,83 @@ impl MeshBuilder {
             (1.0 - (max[1] - min[1].floor()), 1.0 - floor)
         };
         self.box_face(center, half, axis, positive, v);
+    }
+
+    /// Грань коробки `min`…`max` (в 1/16 клетки) внутри клетки `local`. Текстура
+    /// обрезается по размерам грани, поэтому тонкие детали берут середину тайла.
+    fn aabb_face(
+        &mut self,
+        local: [i32; 3],
+        min: [u8; 3],
+        max: [u8; 3],
+        axis: usize,
+        positive: bool,
+    ) {
+        let origin = [local[0] as f32, local[1] as f32, local[2] as f32];
+        let lo = min.map(|v| f32::from(v) / 16.0);
+        let hi = max.map(|v| f32::from(v) / 16.0);
+        let plane = if positive { hi[axis] } else { lo[axis] };
+        // Оси грани: u идёт вправо, если смотреть на неё снаружи, v — вверх.
+        let (u_axis, v_axis) = match axis {
+            0 => (2, 1),
+            1 => (0, 2),
+            _ => (0, 1),
+        };
+        let flip_u = (axis == 0) == positive;
+        let flip_u = if axis == 1 { false } else { flip_u };
+        let corner = |u: f32, v: f32| {
+            let mut position = origin;
+            position[axis] += plane;
+            position[u_axis] += u;
+            position[v_axis] += v;
+            position
+        };
+        let (u0, u1) = (lo[u_axis], hi[u_axis]);
+        let (v0, v1) = (lo[v_axis], hi[v_axis]);
+        let first = self.positions.len() as u32;
+        self.positions.extend([
+            corner(u0, v0),
+            corner(u1, v0),
+            corner(u1, v1),
+            corner(u0, v1),
+        ]);
+        let mut normal = [0.0_f32; 3];
+        normal[axis] = if positive { 1.0 } else { -1.0 };
+        self.normals.extend([normal; 4]);
+        let (tu0, tu1) = if flip_u {
+            (1.0 - u0, 1.0 - u1)
+        } else {
+            (u0, u1)
+        };
+        // В текстуре v растёт вниз; у верхней/нижней грани v идёт по z.
+        let (tv0, tv1) = if axis == 1 && positive {
+            (v0, v1)
+        } else {
+            (1.0 - v0, 1.0 - v1)
+        };
+        self.uvs
+            .extend([[tu0, tv0], [tu1, tv0], [tu1, tv1], [tu0, tv1]]);
+        self.colors.extend([[1.0, 1.0, 1.0, 1.0]; 4]);
+        // Нормаль определяется порядком обхода: для граней с левой тройкой осей
+        // (u × v против нормали) порядок меняется.
+        let counter_clockwise = {
+            let mut u = [0.0_f32; 3];
+            u[u_axis] = 1.0;
+            let mut v = [0.0_f32; 3];
+            v[v_axis] = 1.0;
+            let cross = [
+                u[1] * v[2] - u[2] * v[1],
+                u[2] * v[0] - u[0] * v[2],
+                u[0] * v[1] - u[1] * v[0],
+            ];
+            cross[axis] > 0.0
+        };
+        let order: [u32; 6] = if counter_clockwise == positive {
+            [0, 1, 2, 0, 2, 3]
+        } else {
+            [0, 2, 1, 0, 3, 2]
+        };
+        self.indices.extend(order.map(|index| first + index));
     }
 
     /// Грань коробки с центром `center` и полуразмерами `half`; `v` — значения

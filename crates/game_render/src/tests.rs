@@ -544,3 +544,98 @@ fn new_leaf_and_plant_layers_are_alpha_masked_and_plants_double_sided() {
         assert!(crate::is_double_sided_layer(layer), "{block}");
     }
 }
+
+fn all_quads(meshes: &[(u16, Mesh)]) -> usize {
+    meshes
+        .iter()
+        .map(|(_, mesh)| positions(mesh).len() / 4)
+        .sum()
+}
+
+#[test]
+fn every_model_block_meshes_with_outward_faces_inside_its_cell() {
+    use game_core::*;
+    let samples = [
+        OAK_STAIRS,
+        OAK_STAIRS + 1,
+        OAK_STAIRS + 2,
+        OAK_STAIRS + 3,
+        COBBLESTONE_STAIRS,
+        OAK_SIGN + 2,
+        OAK_WALL_SIGN + 3,
+        OAK_HANGING_SIGN + 1,
+        OAK_WALL_HANGING_SIGN,
+        OAK_DOOR,
+        OAK_DOOR + 6,
+        OAK_DOOR + 12,
+        IRON_DOOR + 9,
+        OAK_TRAPDOOR,
+        OAK_TRAPDOOR + 3,
+        LADDER + 1,
+        LEVER,
+        LEVER + 6,
+        STONE_BUTTON + 2,
+        STONE_PRESSURE_PLATE,
+        FARMLAND,
+        SNOW_LAYER,
+        CACTUS,
+        CAKE,
+        REPEATER + 3,
+        CHAIN,
+        NETHER_PORTAL + 1,
+        OAK_FENCE,
+        IRON_BARS,
+        GLASS_PANE,
+    ];
+    for block in samples {
+        let meshes = single(block);
+        let quads = all_quads(&meshes);
+        assert!(quads >= 6, "блок {block}: граней {quads}");
+        for (_, mesh) in &meshes {
+            assert_outward_winding(mesh);
+            for p in positions(mesh) {
+                assert!(
+                    (4.0..=5.0).contains(&p[0])
+                        && (4.0..=5.0).contains(&p[1])
+                        && (4.0..=5.0).contains(&p[2]),
+                    "блок {block}: вершина {p:?} вне клетки"
+                );
+            }
+        }
+    }
+}
+
+#[test]
+fn fences_grow_arms_toward_neighbours_and_solid_blocks() {
+    let alone = all_quads(&single(game_core::OAK_FENCE));
+    let pair = mesh_section([0; 3], |p| match p {
+        [4, 4, 4] | [5, 4, 4] => game_core::OAK_FENCE,
+        _ => 0,
+    });
+    // Два забора соединены: у каждого появились руки к соседу.
+    assert!(all_quads(&pair) > alone * 2 - 4);
+    let wall = mesh_section([0; 3], |p| match p {
+        [4, 4, 4] => game_core::OAK_FENCE,
+        [3, 4, 4] => game_core::STONE,
+        _ => 0,
+    });
+    let lone = all_quads(&single(game_core::OAK_FENCE));
+    assert!(all_quads(&wall) > lone, "рука к камню добавляет грани");
+}
+
+#[test]
+fn model_faces_hide_behind_opaque_neighbours_only_on_the_cell_boundary() {
+    // Плита-коврик у пола: нижняя грань на границе клетки пропадает над камнем.
+    let free = all_quads(&single(game_core::STONE_PRESSURE_PLATE));
+    let covered = all_quads(&mesh_section([0; 3], |p| match p {
+        [4, 4, 4] => game_core::SNOW_LAYER,
+        [4, 3, 4] => game_core::STONE,
+        _ => 0,
+    }));
+    assert!(covered > 0 && free > 0);
+    let snow_alone = all_quads(&single(game_core::SNOW_LAYER));
+    assert!(
+        covered < snow_alone + 6,
+        "под снегом камень: нижняя грань скрыта, камень добавляет не больше пяти граней"
+    );
+}

@@ -236,7 +236,7 @@ pub fn controls(
         let sprint = keys.pressed(KeyCode::ControlLeft)
             || keys.pressed(KeyCode::ControlRight)
             || auto_sprint;
-        let speed = if game.flying {
+        let speed: f32 = if game.flying {
             if sprint { 20. } else { 10. }
         } else if game.height < 1.8 {
             2.2
@@ -260,7 +260,16 @@ pub fn controls(
                 |p| collision_block(&game.world, p),
                 |id| id == game_core::COBWEB,
             );
+        // Лестница: тело цепляется за неё и ползёт вверх по пробелу.
+        let ladder = !game.flying
+            && game_core::interaction::body_touches(
+                game.feet.to_array(),
+                game.height,
+                |p| collision_block(&game.world, p),
+                game_core::models::is_climbable,
+            );
         // В воде и лаве ходьба замедляется, течение сносит тело.
+        let speed = if ladder { speed.min(2.4) } else { speed };
         let speed = if web {
             speed * 0.25
         } else if fluid.lava {
@@ -323,6 +332,14 @@ pub fn controls(
                     -1.6
                 };
                 game.velocity.y += (target - game.velocity.y) * (5.0 * dt).min(1.0);
+            } else if ladder {
+                game.velocity.y = if keys.pressed(KeyCode::Space) || movement.length() > 0.1 {
+                    3.5
+                } else if crouch {
+                    0.0
+                } else {
+                    -2.0
+                };
             } else if web {
                 game.velocity.y = (game.velocity.y - 6.0 * dt).clamp(-1.0, 1.0);
             } else {
@@ -426,6 +443,29 @@ pub fn controls(
                     && !(keys.pressed(KeyCode::ShiftLeft) || keys.pressed(KeyCode::ShiftRight))
                 {
                     Some(InventoryAction::OpenContainer {
+                        position: hit.block,
+                    })
+                } else if game_core::models::toggled(
+                    game.world.block(hit.block),
+                    game_core::Facing::North,
+                )
+                .is_some()
+                    && !(keys.pressed(KeyCode::ShiftLeft) || keys.pressed(KeyCode::ShiftRight))
+                {
+                    Some(InventoryAction::Toggle {
+                        position: hit.block,
+                    })
+                } else if matches!(
+                    game.world.block(hit.block),
+                    game_core::GRASS | game_core::DIRT
+                ) && matches!(
+                    crate::mining_client::chosen_tool(&game),
+                    game_core::mining::Tool::Equipped {
+                        kind: game_core::mining::ToolKind::Hoe,
+                        ..
+                    }
+                ) {
+                    Some(InventoryAction::Till {
                         position: hit.block,
                     })
                 } else if game_core::is_bed(game.world.block(hit.block))

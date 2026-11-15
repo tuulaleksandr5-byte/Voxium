@@ -2569,6 +2569,440 @@ def save(image, path, scale):
     return picture
 
 
+# ------------------------------------------------------------ part 2 tiles
+
+
+def load_tile(name):
+    path = ROOT / "assets/textures/pixel/32x32" / f"{name}.png"
+    return np.array(Image.open(path).convert("RGBA"), dtype=float)
+
+
+def border(image, color, width=1):
+    for i in range(width):
+        for k in range(N):
+            for x, y in ((k, i), (k, N - 1 - i), (i, k), (N - 1 - i, k)):
+                put(image, x, y, color)
+    return image
+
+
+def noise_tile(name, palette, scale=None, specks=None, count=40):
+    def build():
+        r = rng(name)
+        image = fill(canvas(), fbm(r, scale) if scale else fbm(r), palette)
+        if specks:
+            speckle(image, r, specks, count)
+        return image
+
+    TILES[name] = build
+
+
+noise_tile("netherrack", ["#6a2828", "#742e2e", "#7e3434", "#883a3a", "#5a2020"], specks=["#a04a4a", "#4a1818"], count=60)
+noise_tile("soul_sand", ["#4a3a30", "#54433a", "#5e4c42", "#68554a"], ((6, 1.0), (16, 0.6)), ["#2e2018", "#7a6658"], 50)
+noise_tile("soul_soil", ["#3e3028", "#483a30", "#524238", "#5c4a40"], specks=["#2a1e18", "#6a5848"], count=40)
+
+
+@tile("glowstone")
+def glowstone():
+    r = rng("glowstone")
+    image = fill(canvas(), fbm(r, ((4, 1.0), (8, 0.9), (16, 0.6))), ["#a8742a", "#c8902e", "#e0aa3c", "#f4c85a", "#fff0a0"])
+    speckle(image, r, ["#fff6c8", "#8a5a1e"], 70)
+    return image
+
+
+@tile("spawner")
+def spawner():
+    image = stone_base(rng("spawner"), DEEP, cracks=3, crack_color="#14141a")
+    for k in range(4, 28):
+        for a, b in ((4, k), (27, k), (k, 4), (k, 27)):
+            put(image, a, b, "#1c2433")
+    for k in range(5, 27, 4):
+        for a, b in ((k, k), (k, 31 - k)):
+            put(image, a, b, "#2b3a55")
+            put(image, a + 1, b, "#2b3a55")
+    rect(image, 11, 11, 10, 10, "#0b0b12")
+    rect(image, 13, 13, 6, 6, "#3a1a5a")
+    rect(image, 15, 15, 2, 2, "#b070ff")
+    return image
+
+
+def redstone_ore(name, host_tile, deep):
+    def build():
+        r = rng(name)
+        image = load_tile(host_tile)
+        o = rng(name + "_ore")
+        for cx, cy in ((7, 7), (22, 8), (13, 17), (5, 24), (24, 24)):
+            cx += int(o.integers(-2, 3))
+            cy += int(o.integers(-2, 3))
+            for y in range(cy - 3, cy + 4):
+                for x in range(cx - 3, cx + 4):
+                    d = math.hypot(x - cx, y - cy) + o.uniform(-0.5, 0.5)
+                    if d < 2.6:
+                        put(image, x, y, "#ff3a3a" if (x + y) % 3 else "#c81818")
+                    elif d < 3.4 and x + y > cx + cy:
+                        put(image, x, y, "#6a0c0c")
+        return image
+
+    TILES[name] = build
+
+
+redstone_ore("redstone_ore", "stone", False)
+redstone_ore("deepslate_redstone_ore", "deepslate", True)
+
+
+def _deep_diamond():
+    r = rng("deepslate")
+    image = stone_base(r, DEEP, crack_color="#25252c")
+    speckle(image, r, ["#5c5c6c"], 40)
+    o = rng("deepslate_diamond_ore")
+    for cx, cy in ((7, 7), (22, 6), (14, 16), (5, 23), (24, 24), (16, 27)):
+        cx += int(o.integers(-2, 3))
+        cy += int(o.integers(-2, 3))
+        radius = float(o.uniform(2.0, 3.4))
+        for y in range(cy - 4, cy + 5):
+            for x in range(cx - 4, cx + 5):
+                d = math.hypot(x - cx, (y - cy) * 1.2) + o.uniform(-0.6, 0.6)
+                if d < radius:
+                    put(image, x, y, "#e0fffa" if (x - cx) + (y - cy) < -1 else "#3ad8d0")
+                elif d < radius + 1.0 and (x - cx) + (y - cy) > 0:
+                    put(image, x, y, "#1a6a68")
+    return image
+
+
+TILES["deepslate_diamond_ore"] = _deep_diamond
+
+
+@tile("chiseled_stone_bricks")
+def chiseled_stone_bricks():
+    image = load_tile("stone_bricks")
+    border(image, "#4a4a4a", 2)
+    rect(image, 8, 8, 16, 16, "#6e6e6e")
+    rect(image, 10, 10, 12, 12, "#8a8a8a")
+    rect(image, 13, 13, 6, 6, "#5a5a5a")
+    return image
+
+
+@tile("farmland_top")
+def farmland_top():
+    r = rng("farmland_top")
+    image = fill(canvas(), fbm(r), ["#4a2e1a", "#563620", "#623f26"])
+    for y in range(2, N, 6):
+        rect(image, 0, y, N, 2, "#3a2314")
+    speckle(image, r, ["#6b4a2e"], 24)
+    return image
+
+
+@tile("cactus_side")
+def cactus_side():
+    r = rng("cactus_side")
+    image = fill(canvas(), fbm(r), ["#1f6a2a", "#267a30", "#2e8a38"])
+    for x in (3, 10, 17, 24):
+        rect(image, x, 0, 2, N, "#175a22")
+        rect(image, x + 1, 0, 1, N, "#3aa046")
+    for y in range(2, N, 7):
+        for x in (6, 13, 20, 27):
+            put(image, x, y, "#e8e0b8")
+    return image
+
+
+@tile("cactus_top")
+def cactus_top():
+    image = canvas("#267a30")
+    border(image, "#175a22", 2)
+    rect(image, 6, 6, 20, 20, "#2e8a38")
+    rect(image, 12, 12, 8, 8, "#3aa046")
+    return image
+
+
+@tile("jukebox_side")
+def jukebox_side():
+    image = planks("jukebox_side", ["#6a4a2a", "#74522e", "#7e5a34", "#88623a"], "#3e2a14", "#52381c")
+    rect(image, 10, 12, 12, 10, "#1a1a1a")
+    rect(image, 12, 14, 8, 6, "#2b2b2b")
+    return image
+
+
+@tile("jukebox_top")
+def jukebox_top():
+    image = planks("jukebox_top", ["#6a4a2a", "#74522e", "#7e5a34", "#88623a"], "#3e2a14", "#52381c")
+    rect(image, 8, 8, 16, 16, "#1a1a1a")
+    rect(image, 14, 14, 4, 4, "#8a8a8a")
+    return image
+
+
+def pumpkin_face(name, lit):
+    def build():
+        image = load_tile("pumpkin_side")
+        eye = "#ffd23a" if lit else "#2a1608"
+        mouth = "#ff9c1a" if lit else "#2a1608"
+        rect(image, 7, 9, 6, 6, eye)
+        rect(image, 19, 9, 6, 6, eye)
+        rect(image, 9, 20, 14, 4, mouth)
+        rect(image, 12, 24, 8, 2, mouth)
+        if lit:
+            rect(image, 9, 11, 2, 2, "#fff6b0")
+            rect(image, 21, 11, 2, 2, "#fff6b0")
+        return image
+
+    TILES[name] = build
+
+
+pumpkin_face("carved_pumpkin_front", False)
+pumpkin_face("jack_o_lantern_front", True)
+
+
+@tile("cake_top")
+def cake_top():
+    image = canvas("#f4ecd8")
+    border(image, "#d8c8a8", 2)
+    for x, y in ((8, 8), (22, 12), (14, 22), (24, 24)):
+        rect(image, x, y, 4, 4, "#d8242c")
+    return image
+
+
+@tile("cake_side")
+def cake_side():
+    image = canvas("#7a4a26")
+    rect(image, 0, 0, N, 8, "#f4ecd8")
+    rect(image, 0, 8, N, 4, "#c8242c")
+    rect(image, 0, 12, N, 6, "#fff4e0")
+    rect(image, 0, 18, N, 14, "#7a4a26")
+    return image
+
+
+@tile("repeater_top")
+def repeater_top():
+    image = canvas("#9a9a98")
+    border(image, "#6a6a68", 2)
+    rect(image, 6, 14, 20, 4, "#5a2a2a")
+    rect(image, 14, 6, 4, 6, "#c81818")
+    rect(image, 14, 20, 4, 6, "#7a1010")
+    return image
+
+
+def mushroom_block(name, cap, spot):
+    def build():
+        r = rng(name)
+        image = fill(canvas(), fbm(r), cap)
+        if spot:
+            for cx, cy in ((7, 7), (21, 9), (12, 21), (26, 24)):
+                for y in range(cy - 3, cy + 4):
+                    for x in range(cx - 3, cx + 4):
+                        if math.hypot(x - cx, y - cy) < 3.2:
+                            put(image, x, y, spot)
+        return image
+
+    TILES[name] = build
+
+
+mushroom_block("brown_mushroom_block", ["#8a6444", "#946c4a", "#9e7450"], "#c8a880")
+mushroom_block("red_mushroom_block", ["#b02a22", "#bc342a", "#c83e32"], "#f0ece0")
+mushroom_block("mushroom_stem", ["#d8d0c0", "#e2dac8", "#ece4d2"], None)
+
+
+@tile("crimson_planks")
+def crimson_planks():
+    return planks("crimson_planks", ["#6a2840", "#742e48", "#7e3450", "#883a58"], "#4a1a2c", "#5a2036")
+
+
+@tile("warped_planks")
+def warped_planks():
+    return planks("warped_planks", ["#1e6a6a", "#247474", "#2a7e7e", "#308888"], "#124646", "#165454")
+
+
+def door_tile(name, base, upper, iron):
+    def build():
+        if iron:
+            image = load_tile("iron_block")
+            border(image, "#6a6a6a", 1)
+            rect(image, 4, 4, 24, 10, "#a8a8a8") if not upper else None
+            for y in ((10, 20) if not upper else (24,)):
+                rect(image, 4, y, 24, 2, "#7a7a7a")
+            rect(image, 24, 15 if not upper else 6, 3, 3, "#303030")
+        else:
+            image = load_tile(base)
+            border(image, "#4a3418", 1)
+            if upper:
+                for k in range(3):
+                    rect(image, 5 + k * 8, 6, 6, 5, "#8ab8c8" if k != 3 else "#a8d0e0")
+                rect(image, 3, 4, 26, 1, "#4a3418")
+                rect(image, 3, 12, 26, 1, "#4a3418")
+            else:
+                rect(image, 4, 6, 24, 1, "#4a3418")
+                rect(image, 4, 25, 24, 1, "#4a3418")
+                rect(image, 24, 15, 3, 3, "#303030")
+        return image
+
+    TILES[name] = build
+
+
+door_tile("oak_door_top", "oak_planks", True, False)
+door_tile("oak_door_bottom", "oak_planks", False, False)
+door_tile("iron_door_top", "iron_block", True, True)
+door_tile("iron_door_bottom", "iron_block", False, True)
+
+for _wood in ("oak", "spruce", "birch", "jungle", "acacia", "cherry", "dark_oak", "mangrove", "bamboo"):
+    def _trapdoor(wood=_wood):
+        def build():
+            image = load_tile(f"{wood}_planks")
+            border(image, "#2e2210", 2)
+            for k in (8, 16, 24):
+                rect(image, 2, k, 28, 2, "#2e2210")
+            rect(image, 2, 2, 28, 4, "#2e2210")
+            rect(image, 13, 25, 6, 3, "#3a3a3a")
+            return image
+
+        return build
+
+    TILES[f"{_wood}_trapdoor"] = _trapdoor()
+
+
+@tile("lever")
+def lever():
+    image = load_tile("cobblestone")
+    rect(image, 14, 2, 4, 28, "#6a4a22")
+    rect(image, 15, 2, 2, 28, "#8a6a34")
+    return image
+
+
+# ---- cutout tiles (прозрачные текселы)
+
+
+@tile("wheat")
+def wheat():
+    image = transparent()
+    r = rng("wheat")
+    for x in range(2, 31, 4):
+        height = int(14 + r.integers(0, 8))
+        for y in range(N - height, N):
+            put(image, x, y, "#7a9a2a")
+            put(image, x + 1, y, "#8aaa34")
+        for y in range(N - height, N - height + 7):
+            put(image, x, y, "#d8b648")
+            put(image, x + 1, y, "#e8c85a")
+            put(image, x - 1, y + 2, "#c8a63a")
+    return image
+
+
+@tile("sugar_cane")
+def sugar_cane():
+    image = transparent()
+    for x in (4, 12, 21, 27):
+        for y in range(0, N):
+            put(image, x, y, "#8aca58")
+            put(image, x + 1, y, "#6ea840")
+            if y % 8 == 0:
+                put(image, x, y, "#4a7a2a")
+                put(image, x + 1, y, "#4a7a2a")
+        for k in range(1, 5):
+            put(image, x - k, 6 + k, "#7aba48")
+            put(image, x + 1 + k, 4 + k, "#7aba48")
+    return image
+
+
+@tile("redstone_wire")
+def redstone_wire():
+    image = transparent()
+    for k in range(N):
+        for w in (15, 16):
+            put(image, w, k, "#a01010")
+            put(image, k, w, "#a01010")
+    rect(image, 13, 13, 6, 6, "#d01818")
+    rect(image, 15, 15, 2, 2, "#ff5a4a")
+    return image
+
+
+def lit_torch(name, flame, glow):
+    def build():
+        image = transparent()
+        for y in range(11, N):
+            for x in (14, 15, 16, 17):
+                put(image, x, y, "#8a5a2a" if x < 16 else "#6a4420")
+        for y in range(6, 12):
+            for x in range(13, 19):
+                put(image, x, y, flame)
+        rect(image, 14, 7, 4, 3, glow)
+        return image
+
+    TILES[name] = build
+
+
+lit_torch("redstone_torch", "#c81818", "#ff6a5a")
+lit_torch("soul_torch", "#2aa8c8", "#a8f0ff")
+
+
+@tile("ladder")
+def ladder():
+    image = transparent()
+    rect(image, 5, 0, 3, N, "#8a6a34")
+    rect(image, 24, 0, 3, N, "#8a6a34")
+    for y in range(3, N, 8):
+        rect(image, 5, y, 22, 3, "#a07c40")
+        rect(image, 5, y + 2, 22, 1, "#6a4e22")
+    return image
+
+
+@tile("rail")
+def rail():
+    image = transparent()
+    for y in range(N):
+        rect(image, 7, y, 3, 1, "#a8a8a8")
+        rect(image, 22, y, 3, 1, "#a8a8a8")
+    for y in range(2, N, 8):
+        rect(image, 5, y, 22, 3, "#7a5a2a")
+        rect(image, 5, y, 22, 1, "#946e34")
+    return image
+
+
+@tile("nether_portal")
+def nether_portal():
+    image = transparent()
+    r = rng("nether_portal")
+    field = fbm(r, ((4, 1.0), (8, 0.7)))
+    for y in range(N):
+        for x in range(N):
+            v = field[y, x]
+            if (x + y) % 2 == 0 or v > 0.55:
+                image[y, x, :3] = ramp(np.array([[v]]), ["#4a0f8a", "#6a1ab8", "#9a3ae0", "#d08aff"])[0, 0]
+                image[y, x, 3] = 200
+    return image
+
+
+@tile("iron_bars")
+def iron_bars():
+    image = transparent()
+    for x in range(N):
+        if x % 16 in (7, 8):
+            rect(image, x, 0, 1, N, "#b0b0b4" if x % 16 == 7 else "#707076")
+    rect(image, 0, 14, N, 2, "#8a8a90")
+    return image
+
+
+@tile("chain")
+def chain():
+    image = transparent()
+    for y in range(0, N, 8):
+        rect(image, 12, y, 8, 2, "#7a7a82")
+        rect(image, 12, y, 2, 7, "#7a7a82")
+        rect(image, 18, y, 2, 7, "#7a7a82")
+        rect(image, 12, y + 6, 8, 2, "#5a5a62")
+        rect(image, 14, y + 2, 4, 4, "#9a9aa2")
+    return image
+
+
+@tile("glass_pane")
+def glass_pane():
+    image = transparent()
+    for x in range(N):
+        if x % 16 in (7, 8):
+            rect(image, x, 0, 1, N, "#cfeaf2")
+    rect(image, 0, 0, N, 1, "#cfeaf2")
+    rect(image, 0, N - 1, N, 1, "#cfeaf2")
+    for k in range(4):
+        put(image, 4 + k, 20 - k, "#ffffff", 200)
+    return image
+
+
+
 def main():
     pixel = ROOT / "assets/textures/pixel"
     tiles = {}

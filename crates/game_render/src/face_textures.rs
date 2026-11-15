@@ -2,7 +2,7 @@ use game_core::BLOCKS;
 use serde::Deserialize;
 
 /// Слои 0…35 — исходный атлас 6×6, слои 36…215 — дополнительные пиксельные тайлы.
-pub const MATERIAL_COUNT: usize = 354;
+pub const MATERIAL_COUNT: usize = 372;
 /// Строк в атласе: по шесть слоёв в строке.
 pub const ATLAS_ROWS: u32 = (MATERIAL_COUNT / 6) as u32;
 /// Слой листвы дуба в исходном атласе.
@@ -23,18 +23,23 @@ pub fn is_cutout_layer(layer: usize) -> bool {
     ) || PLANT_LAYERS.contains(&layer)
         || LEAF2_LAYERS.contains(&layer)
         || PLANT2_LAYERS.contains(&layer)
+        || CUTOUT3_LAYERS.contains(&layer)
         || matches!(layer, 125 | 129 | 133 | 137 | 141)
 }
 
 /// Листва и корни этой партии: кубы с вырезанной по альфе текстурой.
 pub const LEAF2_LAYERS: std::ops::RangeInclusive<usize> = 204..=208;
 /// Растения, факелы, огонь и рельсы этой партии.
+/// Растения, лестницы, рельсы, цепи и прутья части 2.
+pub const CUTOUT3_LAYERS: std::ops::RangeInclusive<usize> = 322..=332;
 pub const PLANT2_LAYERS: std::ops::RangeInclusive<usize> = 209..=239;
 
 /// Слои растений: рисуются плоскостями, видны с обеих сторон.
 #[must_use]
 pub fn is_double_sided_layer(layer: usize) -> bool {
-    PLANT_LAYERS.contains(&layer) || PLANT2_LAYERS.contains(&layer)
+    PLANT_LAYERS.contains(&layer)
+        || PLANT2_LAYERS.contains(&layer)
+        || CUTOUT3_LAYERS.contains(&layer)
 }
 
 /// Слои цветного стекла.
@@ -67,6 +72,9 @@ pub struct FaceTextures {
     /// Текстура противоположной грани (у поршня — основание).
     #[serde(default)]
     pub back: Option<u16>,
+    /// Дополнительный тайл формы: цепи подвесных табличек, ручка рычага, факел повторителя.
+    #[serde(default)]
+    pub aux: Option<u16>,
 }
 
 #[derive(Clone, Debug)]
@@ -97,10 +105,17 @@ impl BlockTextures {
             ));
         }
         if faces.iter().any(|f| {
-            [Some(f.top), Some(f.side), Some(f.bottom), f.front, f.back]
-                .into_iter()
-                .flatten()
-                .any(|i| i as usize >= MATERIAL_COUNT)
+            [
+                Some(f.top),
+                Some(f.side),
+                Some(f.bottom),
+                f.front,
+                f.back,
+                f.aux,
+            ]
+            .into_iter()
+            .flatten()
+            .any(|i| i as usize >= MATERIAL_COUNT)
                 || f.face.is_some_and(|(axis, _)| axis > 2)
         }) {
             return Err(format!("texture layer must be in 0..{MATERIAL_COUNT}"));

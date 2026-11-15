@@ -17,6 +17,7 @@ pub mod inventory;
 pub mod items;
 pub mod mining;
 pub mod mobs;
+pub mod models;
 pub mod ores;
 pub mod persistence;
 pub mod smelting;

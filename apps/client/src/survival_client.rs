@@ -31,6 +31,11 @@ pub enum PlayerAction {
     MinedBlock,
     /// Консоль: создать моба перед игроком.
     Summon(game_core::mobs::MobKind),
+    /// Консоль: поставить блок со сдвигом от клетки игрока.
+    SetBlock {
+        offset: [i32; 3],
+        block: game_core::BlockId,
+    },
     /// Консоль: перевести часы на полдень (`true`) или полночь.
     SetDay(bool),
 }
@@ -226,6 +231,21 @@ pub fn apply_actions(
                 let position = game.feet + forward * 3.0 + Vec3::Y * 0.5;
                 game.mobs.spawn(kind, position.to_array());
                 console.feedback = format!("Появился моб: {}", kind.spec().name);
+                game.status.clone_from(&console.feedback);
+                game.ui_dirty = true;
+            }
+            PlayerAction::SetBlock { offset, block } => {
+                let cell = [
+                    game.feet.x.floor() as i32 + offset[0],
+                    game.feet.y.floor() as i32 + offset[1],
+                    game.feet.z.floor() as i32 + offset[2],
+                ];
+                console.feedback = if game.world.set(cell, block) {
+                    game.revision += 1;
+                    format!("Блок поставлен: {cell:?}")
+                } else {
+                    "Нельзя поставить блок здесь".into()
+                };
                 game.status.clone_from(&console.feedback);
                 game.ui_dirty = true;
             }

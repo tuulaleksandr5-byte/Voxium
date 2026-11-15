@@ -132,6 +132,23 @@ pub fn parse_command(text: &str) -> Result<PlayerAction, String> {
                 .map(PlayerAction::Summon)
                 .ok_or_else(|| format!("Неизвестный моб: {name}"))
         }
+        Some("/setblock") => {
+            let numbers: Vec<_> = arguments.by_ref().take(3).collect();
+            let name = arguments.next();
+            let parsed: Option<Vec<i32>> = numbers.iter().map(|n| n.parse().ok()).collect();
+            let (Some(parsed), Some(name), None) = (parsed, name, arguments.next()) else {
+                return Err("Использование: /setblock dx dy dz имя_блока".into());
+            };
+            if parsed.len() != 3 {
+                return Err("Использование: /setblock dx dy dz имя_блока".into());
+            }
+            game_core::content::block_by_name(name)
+                .map(|block| PlayerAction::SetBlock {
+                    offset: [parsed[0], parsed[1], parsed[2]],
+                    block,
+                })
+                .ok_or_else(|| format!("Неизвестный блок: {name}"))
+        }
         Some("/time") => match (arguments.next(), arguments.next()) {
             (Some("day"), None) => Ok(PlayerAction::SetDay(true)),
             (Some("night"), None) => Ok(PlayerAction::SetDay(false)),

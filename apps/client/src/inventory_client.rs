@@ -44,6 +44,14 @@ pub enum InventoryAction {
     Sleep {
         position: [i32; 3],
     },
+    /// ПКМ по двери, люку или рычагу: открыть, закрыть, переключить.
+    Toggle {
+        position: [i32; 3],
+    },
+    /// ПКМ мотыгой по траве или земле: вспахать грядку.
+    Till {
+        position: [i32; 3],
+    },
     /// ПКМ топором по бревну или древесине: снять кору.
     Strip {
         position: [i32; 3],
@@ -329,6 +337,18 @@ fn process_action(game: &mut Game, action: &InventoryAction) -> Effects {
                 }
             }
             if game.world.set(*position, AIR) {
+                // Дверь ломается целиком.
+                if let Some(half) = game_core::models::door_other_half(block) {
+                    let up = game_core::models::is_door_upper(half);
+                    let cell = [
+                        position[0],
+                        position[1] + if up { 1 } else { -1 },
+                        position[2],
+                    ];
+                    if game.world.block(cell) == half {
+                        game.world.set(cell, AIR);
+                    }
+                }
                 let center = block_center(*position);
                 game.furnaces.remove(position);
                 if let Some(container) = game.containers.remove(position) {
@@ -366,17 +386,32 @@ fn process_action(game: &mut Game, action: &InventoryAction) -> Effects {
             let mut block = game.selected_block();
             let hit = visible_hit(game);
             // Факел, поставленный на боковую грань, становится настенным.
-            if block == game_core::TORCH
-                && let Some(hit) = hit
-                    .as_ref()
-                    .filter(|hit| hit.previous[1] == hit.block[1] && hit.previous != hit.block)
-                && let Some(facing) = game_core::Facing::from_offset(std::array::from_fn(|axis| {
-                    hit.previous[axis] - hit.block[axis]
-                }))
-            {
-                block = game_core::facing_variant(game_core::WALL_TORCH, facing);
+            let outward = hit.as_ref().and_then(|hit| {
+                (hit.previous[1] == hit.block[1] && hit.previous != hit.block)
+                    .then(|| {
+                        game_core::Facing::from_offset(std::array::from_fn(|axis| {
+                            hit.previous[axis] - hit.block[axis]
+                        }))
+                    })
+                    .flatten()
+            });
+            let wall_torch = match block {
+                game_core::TORCH => Some(game_core::WALL_TORCH),
+                game_core::REDSTONE_TORCH => Some(game_core::REDSTONE_WALL_TORCH),
+                game_core::SOUL_TORCH => Some(game_core::SOUL_WALL_TORCH),
+                _ => None,
+            };
+            if let (Some(wall), Some(facing)) = (wall_torch, outward) {
+                block = game_core::facing_variant(wall, facing);
             }
-            block = oriented_block(game, block, *position);
+            block = oriented_block(game, block, *position, outward);
+            let door_top = [position[0], position[1] + 1, position[2]];
+            if game_core::models::is_door(block)
+                && !loaded_block(&game.world, door_top)
+                    .is_some_and(|above| above == AIR || game_core::is_plant(above))
+            {
+                return effects;
+            }
             if block != AIR
                 && hit.as_ref().is_some_and(|hit| {
                     hit.previous == *position
@@ -389,6 +424,9 @@ fn process_action(game: &mut Game, action: &InventoryAction) -> Effects {
                 && !player_intersects_block(game.feet.to_array(), game.height, *position)
                 && game.world.set(*position, block)
             {
+                if let Some(upper) = game_core::models::door_other_half(block) {
+                    game.world.set(door_top, upper);
+                }
                 if game.game_mode == GameMode::Survival {
                     game.inventory.take_selected(game.selected, false);
                 }
@@ -423,6 +461,72 @@ fn process_action(game: &mut Game, action: &InventoryAction) -> Effects {
                 "Точка возрождения установлена. Спать можно только ночью".into()
             };
             game.ui_dirty = true;
+        }
+        InventoryAction::Till { position }
+            if game.mode == Mode::Playing && game.world_mouse.allowed() =>
+        {
+            let block = game.world.block(*position);
+            let above = [position[0], position[1] + 1, position[2]];
+            if matches!(block, game_core::GRASS | game_core::DIRT)
+                && matches!(
+                    crate::mining_client::chosen_tool(game),
+                    game_core::mining::Tool::Equipped {
+                        kind: game_core::mining::ToolKind::Hoe,
+                        ..
+                    }
+                )
+                && loaded_block(&game.world, above) == Some(AIR)
+                && visible_hit(game).is_some_and(|hit| hit.block == *position)
+                && game.world.set(*position, game_core::FARMLAND)
+            {
+                effects.sounds.push(BlockSound {
+                    block,
+                    kind: crate::block_audio::SoundKind::Break,
+                    position: block_center(*position),
+                });
+                game.revision += 1;
+            }
+        }
+        InventoryAction::Toggle { position }
+            if game.mode == Mode::Playing && game.world_mouse.allowed() =>
+        {
+            let block = game.world.block(*position);
+            let (sin, cos) = (game.yaw.sin(), game.yaw.cos());
+            let toward = if sin.abs() > cos.abs() {
+                if sin > 0.0 {
+                    game_core::Facing::East
+                } else {
+                    game_core::Facing::West
+                }
+            } else if cos > 0.0 {
+                game_core::Facing::South
+            } else {
+                game_core::Facing::North
+            };
+            let Some(next) = game_core::models::toggled(block, toward) else {
+                return effects;
+            };
+            // Дверь меняется обеими половинами сразу (если вторая на месте).
+            let other = game_core::models::door_other_half(block).and_then(|half| {
+                let up = game_core::models::is_door_upper(half);
+                let cell = [
+                    position[0],
+                    position[1] + if up { 1 } else { -1 },
+                    position[2],
+                ];
+                (game.world.block(cell) == half)
+                    .then(|| (cell, game_core::models::toggled(half, toward)))
+            });
+            game.world.set(*position, next);
+            if let Some((cell, Some(next))) = other {
+                game.world.set(cell, next);
+            }
+            effects.sounds.push(BlockSound {
+                block,
+                kind: crate::block_audio::SoundKind::Place,
+                position: block_center(*position),
+            });
+            game.revision += 1;
         }
         InventoryAction::Strip { position }
             if game.mode == Mode::Playing && game.world_mouse.allowed() =>
@@ -547,9 +651,62 @@ pub(crate) fn oriented_block(
     game: &Game,
     block: game_core::BlockId,
     position: [i32; 3],
+    outward: Option<game_core::Facing>,
 ) -> game_core::BlockId {
-    use game_core::Facing;
+    use game_core::{Facing, FamilyKind, models::Shape};
     let base = game_core::base_block(block);
+    let toward = {
+        let (sin, cos) = (game.yaw.sin(), game.yaw.cos());
+        if sin.abs() > cos.abs() {
+            if sin > 0.0 {
+                Facing::East
+            } else {
+                Facing::West
+            }
+        } else if cos > 0.0 {
+            Facing::South
+        } else {
+            Facing::North
+        }
+    };
+    if base >= game_core::PART2_FIRST {
+        let shape = game_core::models::shape_of(base);
+        // Табличка на боковой грани становится настенной.
+        if let Some(face) = outward.filter(|_| shape == Some(Shape::Sign)) {
+            let wood = (base - game_core::OAK_SIGN) / 4;
+            return game_core::facing_variant(game_core::OAK_WALL_SIGN + wood * 4, face);
+        }
+        if outward.is_some() && shape == Some(Shape::Hanging) {
+            let wood = (base - game_core::OAK_HANGING_SIGN) / 2;
+            let along_x = matches!(outward, Some(Facing::East | Facing::West));
+            return game_core::OAK_WALL_HANGING_SIGN
+                + wood * 2
+                + game_core::BlockId::from(!along_x);
+        }
+        match game_core::family_of(base) {
+            Some((first, _, FamilyKind::H4)) => {
+                let wall_attached =
+                    matches!(shape, Some(Shape::Ladder | Shape::WallSign | Shape::Button));
+                let face = if wall_attached {
+                    outward.unwrap_or(toward)
+                } else {
+                    toward
+                };
+                return game_core::facing_variant(first, face);
+            }
+            Some((first, _, FamilyKind::Lever)) => {
+                return game_core::facing_variant_index(first, outward.unwrap_or(toward));
+            }
+            Some((first, _, FamilyKind::AX2)) => {
+                let looking_along_x = matches!(toward, Facing::East | Facing::West);
+                return first + game_core::BlockId::from(looking_along_x);
+            }
+            Some((first, _, FamilyKind::Door)) => {
+                return game_core::facing_variant_index(first, toward);
+            }
+            _ => {}
+        }
+    }
     if game_core::is_rail(base) {
         let rail_at = |dx: i32, dz: i32| {
             loaded_block(
@@ -1940,17 +2097,27 @@ mod tests {
         let mut game = world();
         // Взгляд на -Z: «лицо» смотрит на игрока, то есть на юг.
         assert_eq!(
-            game_core::facing_of(oriented_block(&game, game_core::PISTON, [8, 101, 6])),
+            game_core::facing_of(oriented_block(&game, game_core::PISTON, [8, 101, 6], None)),
             Some(Facing::South)
         );
         game.yaw = std::f32::consts::FRAC_PI_2; // взгляд на -X → лицо на восток
         assert_eq!(
-            game_core::facing_of(oriented_block(&game, game_core::DISPENSER, [8, 101, 6])),
+            game_core::facing_of(oriented_block(
+                &game,
+                game_core::DISPENSER,
+                [8, 101, 6],
+                None
+            )),
             Some(Facing::East)
         );
         game.pitch = -1.4; // взгляд вниз → лицо вверх
         assert_eq!(
-            game_core::facing_of(oriented_block(&game, game_core::STICKY_PISTON, [8, 101, 6])),
+            game_core::facing_of(oriented_block(
+                &game,
+                game_core::STICKY_PISTON,
+                [8, 101, 6],
+                None
+            )),
             Some(Facing::Up)
         );
         // Рельсы: без соседей — по взгляду; рядом рельс вдоль Z — тоже вдоль Z.
@@ -1958,19 +2125,22 @@ mod tests {
         assert!(game_core::is_rail_x(oriented_block(
             &game,
             game_core::DETECTOR_RAIL,
-            [8, 101, 6]
+            [8, 101, 6],
+            None
         )));
         game.yaw = 0.0;
         assert!(!game_core::is_rail_x(oriented_block(
             &game,
             game_core::DETECTOR_RAIL,
-            [8, 101, 6]
+            [8, 101, 6],
+            None
         )));
         game.world.set([9, 101, 6], game_core::POWERED_RAIL);
         assert!(game_core::is_rail_x(oriented_block(
             &game,
             game_core::POWERED_RAIL,
-            [8, 101, 6]
+            [8, 101, 6],
+            None
         )));
         // Раздатчик любого поворота открывает свой экран на 9 ячеек.
         for facing in Facing::ALL {
@@ -1981,6 +2151,83 @@ mod tests {
             game.open_container = Some([8, 101, 7]);
             assert_eq!(open_block(&game), Some(game_core::DISPENSER));
         }
+    }
+
+    #[test]
+    fn doors_place_two_halves_toggle_together_and_stairs_face_the_player() {
+        let mut game = world();
+        equip(&mut game, "voxium:oak_door");
+        process_action(
+            &mut game,
+            &InventoryAction::Place {
+                position: [8, 101, 6],
+            },
+        );
+        let lower = game.world.block([8, 101, 6]);
+        assert_eq!(
+            lower,
+            game_core::OAK_DOOR + 1,
+            "дверь повёрнута к игроку (юг)"
+        );
+        assert_eq!(game.world.block([8, 102, 6]), game_core::OAK_DOOR + 9);
+        process_action(
+            &mut game,
+            &InventoryAction::Toggle {
+                position: [8, 102, 6],
+            },
+        );
+        assert_eq!(game.world.block([8, 101, 6]), game_core::OAK_DOOR + 5);
+        assert_eq!(game.world.block([8, 102, 6]), game_core::OAK_DOOR + 13);
+        // Дверь не ставится, если над ней нет места.
+        let mut cramped = world();
+        cramped.world.set([8, 102, 6], game_core::STONE);
+        equip(&mut cramped, "voxium:oak_door");
+        process_action(
+            &mut cramped,
+            &InventoryAction::Place {
+                position: [8, 101, 6],
+            },
+        );
+        assert_eq!(cramped.world.block([8, 101, 6]), AIR);
+        // Ступеньки смотрят на игрока.
+        let mut stairs = world();
+        equip(&mut stairs, "voxium:oak_stairs");
+        process_action(
+            &mut stairs,
+            &InventoryAction::Place {
+                position: [8, 101, 6],
+            },
+        );
+        assert_eq!(stairs.world.block([8, 101, 6]), game_core::OAK_STAIRS + 1);
+    }
+
+    #[test]
+    fn signs_become_wall_signs_on_walls_and_the_hoe_ploughs_grass() {
+        let mut game = world();
+        equip(&mut game, "voxium:oak_sign");
+        process_action(
+            &mut game,
+            &InventoryAction::Place {
+                position: [8, 101, 6],
+            },
+        );
+        assert_eq!(
+            game.world.block([8, 101, 6]),
+            game_core::OAK_WALL_SIGN + 1,
+            "на стене табличка настенная и смотрит от стены"
+        );
+        let mut field = world();
+        field.world.set([8, 100, 8], game_core::GRASS);
+        field.world.set([8, 101, 7], game_core::GRASS);
+        assert_eq!(field.world.block([8, 101, 7]), game_core::GRASS);
+        // Без мотыги вспашки нет.
+        process_action(
+            &mut field,
+            &InventoryAction::Till {
+                position: [8, 101, 7],
+            },
+        );
+        assert_eq!(field.world.block([8, 101, 7]), game_core::GRASS);
     }
 
     #[test]

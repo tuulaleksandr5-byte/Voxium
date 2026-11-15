@@ -344,6 +344,198 @@ pub const WALL_TORCH_WEST: BlockId = 317;
 pub const WALL_TORCH_EAST: BlockId = 318;
 pub const POWERED_RAIL_X: BlockId = 319;
 pub const DETECTOR_RAIL_X: BlockId = 320;
+pub const SPAWNER: BlockId = 321;
+pub const OAK_STAIRS: BlockId = 322;
+pub const REDSTONE_WIRE: BlockId = 326;
+pub const DEEPSLATE_DIAMOND_ORE: BlockId = 327;
+pub const WHEAT: BlockId = 328;
+pub const FARMLAND: BlockId = 329;
+pub const OAK_SIGN: BlockId = 330;
+pub const SPRUCE_SIGN: BlockId = 334;
+pub const BIRCH_SIGN: BlockId = 338;
+pub const JUNGLE_SIGN: BlockId = 342;
+pub const ACACIA_SIGN: BlockId = 346;
+pub const CHERRY_SIGN: BlockId = 350;
+pub const DARK_OAK_SIGN: BlockId = 354;
+pub const MANGROVE_SIGN: BlockId = 358;
+pub const BAMBOO_SIGN: BlockId = 362;
+pub const OAK_DOOR: BlockId = 366;
+pub const LADDER: BlockId = 382;
+pub const RAIL: BlockId = 386;
+pub const COBBLESTONE_STAIRS: BlockId = 388;
+pub const OAK_WALL_SIGN: BlockId = 392;
+pub const SPRUCE_WALL_SIGN: BlockId = 396;
+pub const BIRCH_WALL_SIGN: BlockId = 400;
+pub const JUNGLE_WALL_SIGN: BlockId = 404;
+pub const ACACIA_WALL_SIGN: BlockId = 408;
+pub const CHERRY_WALL_SIGN: BlockId = 412;
+pub const DARK_OAK_WALL_SIGN: BlockId = 416;
+pub const MANGROVE_WALL_SIGN: BlockId = 420;
+pub const BAMBOO_WALL_SIGN: BlockId = 424;
+pub const OAK_HANGING_SIGN: BlockId = 428;
+pub const SPRUCE_HANGING_SIGN: BlockId = 430;
+pub const BIRCH_HANGING_SIGN: BlockId = 432;
+pub const ACACIA_HANGING_SIGN: BlockId = 434;
+pub const CHERRY_HANGING_SIGN: BlockId = 436;
+pub const JUNGLE_HANGING_SIGN: BlockId = 438;
+pub const DARK_OAK_HANGING_SIGN: BlockId = 440;
+pub const CRIMSON_HANGING_SIGN: BlockId = 442;
+pub const WARPED_HANGING_SIGN: BlockId = 444;
+pub const MANGROVE_HANGING_SIGN: BlockId = 446;
+pub const BAMBOO_HANGING_SIGN: BlockId = 448;
+pub const OAK_WALL_HANGING_SIGN: BlockId = 450;
+pub const SPRUCE_WALL_HANGING_SIGN: BlockId = 452;
+pub const BIRCH_WALL_HANGING_SIGN: BlockId = 454;
+pub const ACACIA_WALL_HANGING_SIGN: BlockId = 456;
+pub const CHERRY_WALL_HANGING_SIGN: BlockId = 458;
+pub const JUNGLE_WALL_HANGING_SIGN: BlockId = 460;
+pub const DARK_OAK_WALL_HANGING_SIGN: BlockId = 462;
+pub const CRIMSON_WALL_HANGING_SIGN: BlockId = 464;
+pub const WARPED_WALL_HANGING_SIGN: BlockId = 466;
+pub const MANGROVE_WALL_HANGING_SIGN: BlockId = 468;
+pub const BAMBOO_WALL_HANGING_SIGN: BlockId = 470;
+pub const LEVER: BlockId = 472;
+pub const STONE_PRESSURE_PLATE: BlockId = 480;
+pub const IRON_DOOR: BlockId = 481;
+pub const OAK_PRESSURE_PLATE: BlockId = 497;
+pub const SPRUCE_PRESSURE_PLATE: BlockId = 498;
+pub const BIRCH_PRESSURE_PLATE: BlockId = 499;
+pub const JUNGLE_PRESSURE_PLATE: BlockId = 500;
+pub const ACACIA_PRESSURE_PLATE: BlockId = 501;
+pub const CHERRY_PRESSURE_PLATE: BlockId = 502;
+pub const DARK_OAK_PRESSURE_PLATE: BlockId = 503;
+pub const MANGROVE_PRESSURE_PLATE: BlockId = 504;
+pub const BAMBOO_PRESSURE_PLATE: BlockId = 505;
+pub const REDSTONE_ORE: BlockId = 506;
+pub const DEEPSLATE_REDSTONE_ORE: BlockId = 507;
+pub const REDSTONE_TORCH: BlockId = 508;
+pub const REDSTONE_WALL_TORCH: BlockId = 509;
+pub const STONE_BUTTON: BlockId = 513;
+pub const SNOW_LAYER: BlockId = 517;
+pub const CACTUS: BlockId = 518;
+pub const SUGAR_CANE: BlockId = 519;
+pub const JUKEBOX: BlockId = 520;
+pub const OAK_FENCE: BlockId = 521;
+pub const NETHERRACK: BlockId = 522;
+pub const SOUL_SAND: BlockId = 523;
+pub const SOUL_SOIL: BlockId = 524;
+pub const SOUL_TORCH: BlockId = 525;
+pub const SOUL_WALL_TORCH: BlockId = 526;
+pub const GLOWSTONE: BlockId = 530;
+pub const NETHER_PORTAL: BlockId = 531;
+pub const CARVED_PUMPKIN: BlockId = 533;
+pub const JACK_O_LANTERN: BlockId = 537;
+pub const CAKE: BlockId = 541;
+pub const REPEATER: BlockId = 542;
+pub const OAK_TRAPDOOR: BlockId = 546;
+pub const SPRUCE_TRAPDOOR: BlockId = 551;
+pub const BIRCH_TRAPDOOR: BlockId = 556;
+pub const JUNGLE_TRAPDOOR: BlockId = 561;
+pub const ACACIA_TRAPDOOR: BlockId = 566;
+pub const CHERRY_TRAPDOOR: BlockId = 571;
+pub const DARK_OAK_TRAPDOOR: BlockId = 576;
+pub const MANGROVE_TRAPDOOR: BlockId = 581;
+pub const BAMBOO_TRAPDOOR: BlockId = 586;
+pub const CHISELED_STONE_BRICKS: BlockId = 591;
+pub const INFESTED_STONE: BlockId = 592;
+pub const INFESTED_COBBLESTONE: BlockId = 593;
+pub const INFESTED_STONE_BRICKS: BlockId = 594;
+pub const INFESTED_MOSSY_STONE_BRICKS: BlockId = 595;
+pub const INFESTED_CRACKED_STONE_BRICKS: BlockId = 596;
+pub const INFESTED_CHISELED_STONE_BRICKS: BlockId = 597;
+pub const BROWN_MUSHROOM_BLOCK: BlockId = 598;
+pub const RED_MUSHROOM_BLOCK: BlockId = 599;
+pub const MUSHROOM_STEM: BlockId = 600;
+pub const IRON_BARS: BlockId = 601;
+pub const CHAIN: BlockId = 602;
+pub const GLASS_PANE: BlockId = 603;
+/// Блоки части 2: первый и последний ID.
+/// Что означает номер варианта внутри семейства.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum FamilyKind {
+    /// Четыре стороны света: север, юг, запад, восток.
+    H4,
+    /// Ось: 0 вдоль X, 1 вдоль Z.
+    AX2,
+    /// Рычаг: выключен/включён × четыре стороны.
+    Lever,
+    /// Дверь: нижняя/верхняя половина × закрыта/открыта × четыре стороны.
+    Door,
+    /// Люк: закрыт, затем открыт на четыре стороны.
+    Trap,
+    /// Рельсы: вдоль Z, вдоль X.
+    Rail,
+}
+
+/// Семейства блоков с состоянием: (первый ID, число вариантов, вид).
+pub const FAMILIES: [(BlockId, u8, FamilyKind); 63] = [
+    (322, 4, FamilyKind::H4),
+    (330, 4, FamilyKind::H4),
+    (334, 4, FamilyKind::H4),
+    (338, 4, FamilyKind::H4),
+    (342, 4, FamilyKind::H4),
+    (346, 4, FamilyKind::H4),
+    (350, 4, FamilyKind::H4),
+    (354, 4, FamilyKind::H4),
+    (358, 4, FamilyKind::H4),
+    (362, 4, FamilyKind::H4),
+    (366, 16, FamilyKind::Door),
+    (382, 4, FamilyKind::H4),
+    (386, 2, FamilyKind::Rail),
+    (388, 4, FamilyKind::H4),
+    (392, 4, FamilyKind::H4),
+    (396, 4, FamilyKind::H4),
+    (400, 4, FamilyKind::H4),
+    (404, 4, FamilyKind::H4),
+    (408, 4, FamilyKind::H4),
+    (412, 4, FamilyKind::H4),
+    (416, 4, FamilyKind::H4),
+    (420, 4, FamilyKind::H4),
+    (424, 4, FamilyKind::H4),
+    (428, 2, FamilyKind::AX2),
+    (430, 2, FamilyKind::AX2),
+    (432, 2, FamilyKind::AX2),
+    (434, 2, FamilyKind::AX2),
+    (436, 2, FamilyKind::AX2),
+    (438, 2, FamilyKind::AX2),
+    (440, 2, FamilyKind::AX2),
+    (442, 2, FamilyKind::AX2),
+    (444, 2, FamilyKind::AX2),
+    (446, 2, FamilyKind::AX2),
+    (448, 2, FamilyKind::AX2),
+    (450, 2, FamilyKind::AX2),
+    (452, 2, FamilyKind::AX2),
+    (454, 2, FamilyKind::AX2),
+    (456, 2, FamilyKind::AX2),
+    (458, 2, FamilyKind::AX2),
+    (460, 2, FamilyKind::AX2),
+    (462, 2, FamilyKind::AX2),
+    (464, 2, FamilyKind::AX2),
+    (466, 2, FamilyKind::AX2),
+    (468, 2, FamilyKind::AX2),
+    (470, 2, FamilyKind::AX2),
+    (472, 8, FamilyKind::Lever),
+    (481, 16, FamilyKind::Door),
+    (509, 4, FamilyKind::H4),
+    (513, 4, FamilyKind::H4),
+    (526, 4, FamilyKind::H4),
+    (531, 2, FamilyKind::AX2),
+    (533, 4, FamilyKind::H4),
+    (537, 4, FamilyKind::H4),
+    (542, 4, FamilyKind::H4),
+    (546, 5, FamilyKind::Trap),
+    (551, 5, FamilyKind::Trap),
+    (556, 5, FamilyKind::Trap),
+    (561, 5, FamilyKind::Trap),
+    (566, 5, FamilyKind::Trap),
+    (571, 5, FamilyKind::Trap),
+    (576, 5, FamilyKind::Trap),
+    (581, 5, FamilyKind::Trap),
+    (586, 5, FamilyKind::Trap),
+];
+
+pub const PART2_FIRST: BlockId = 321;
+pub const PART2_LAST: BlockId = 603;
 pub const PLANT2_FIRST: BlockId = 251;
 pub const PLANT2_LAST: BlockId = 280;
 
@@ -366,7 +558,8 @@ const fn block(
     }
 }
 
-pub const BLOCKS: [BlockDef; 321] = [
+#[allow(clippy::large_const_arrays)]
+pub const BLOCKS: [BlockDef; 604] = [
     block(AIR, "Air", "air", 0.0, false, false),
     block(GRASS, "Grass", "grass", 0.6, true, true),
     block(DIRT, "Dirt", "dirt", 0.5, true, true),
@@ -1913,6 +2106,2027 @@ pub const BLOCKS: [BlockDef; 321] = [
         false,
         false,
     ),
+    block(SPAWNER, "Spawner", "spawner", 5.0, true, false),
+    block(OAK_STAIRS, "Oak Stairs", "oak_stairs", 2.0, true, false),
+    block(
+        OAK_STAIRS + 1,
+        "Oak Stairs (south)",
+        "oak_stairs",
+        2.0,
+        true,
+        false,
+    ),
+    block(
+        OAK_STAIRS + 2,
+        "Oak Stairs (west)",
+        "oak_stairs",
+        2.0,
+        true,
+        false,
+    ),
+    block(
+        OAK_STAIRS + 3,
+        "Oak Stairs (east)",
+        "oak_stairs",
+        2.0,
+        true,
+        false,
+    ),
+    block(
+        REDSTONE_WIRE,
+        "Redstone Wire",
+        "redstone_wire",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        DEEPSLATE_DIAMOND_ORE,
+        "Deepslate Diamond Ore",
+        "deepslate_diamond_ore",
+        4.5,
+        true,
+        true,
+    ),
+    block(WHEAT, "Wheat", "wheat", 0.05, false, false),
+    block(FARMLAND, "Farmland", "farmland", 0.6, true, false),
+    block(OAK_SIGN, "Oak Sign", "oak_sign", 1.0, false, false),
+    block(
+        OAK_SIGN + 1,
+        "Oak Sign (south)",
+        "oak_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        OAK_SIGN + 2,
+        "Oak Sign (west)",
+        "oak_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        OAK_SIGN + 3,
+        "Oak Sign (east)",
+        "oak_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(SPRUCE_SIGN, "Spruce Sign", "spruce_sign", 1.0, false, false),
+    block(
+        SPRUCE_SIGN + 1,
+        "Spruce Sign (south)",
+        "spruce_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        SPRUCE_SIGN + 2,
+        "Spruce Sign (west)",
+        "spruce_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        SPRUCE_SIGN + 3,
+        "Spruce Sign (east)",
+        "spruce_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(BIRCH_SIGN, "Birch Sign", "birch_sign", 1.0, false, false),
+    block(
+        BIRCH_SIGN + 1,
+        "Birch Sign (south)",
+        "birch_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        BIRCH_SIGN + 2,
+        "Birch Sign (west)",
+        "birch_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        BIRCH_SIGN + 3,
+        "Birch Sign (east)",
+        "birch_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(JUNGLE_SIGN, "Jungle Sign", "jungle_sign", 1.0, false, false),
+    block(
+        JUNGLE_SIGN + 1,
+        "Jungle Sign (south)",
+        "jungle_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        JUNGLE_SIGN + 2,
+        "Jungle Sign (west)",
+        "jungle_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        JUNGLE_SIGN + 3,
+        "Jungle Sign (east)",
+        "jungle_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(ACACIA_SIGN, "Acacia Sign", "acacia_sign", 1.0, false, false),
+    block(
+        ACACIA_SIGN + 1,
+        "Acacia Sign (south)",
+        "acacia_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        ACACIA_SIGN + 2,
+        "Acacia Sign (west)",
+        "acacia_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        ACACIA_SIGN + 3,
+        "Acacia Sign (east)",
+        "acacia_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(CHERRY_SIGN, "Cherry Sign", "cherry_sign", 1.0, false, false),
+    block(
+        CHERRY_SIGN + 1,
+        "Cherry Sign (south)",
+        "cherry_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        CHERRY_SIGN + 2,
+        "Cherry Sign (west)",
+        "cherry_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        CHERRY_SIGN + 3,
+        "Cherry Sign (east)",
+        "cherry_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        DARK_OAK_SIGN,
+        "Dark Oak Sign",
+        "dark_oak_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        DARK_OAK_SIGN + 1,
+        "Dark Oak Sign (south)",
+        "dark_oak_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        DARK_OAK_SIGN + 2,
+        "Dark Oak Sign (west)",
+        "dark_oak_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        DARK_OAK_SIGN + 3,
+        "Dark Oak Sign (east)",
+        "dark_oak_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        MANGROVE_SIGN,
+        "Mangrove Sign",
+        "mangrove_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        MANGROVE_SIGN + 1,
+        "Mangrove Sign (south)",
+        "mangrove_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        MANGROVE_SIGN + 2,
+        "Mangrove Sign (west)",
+        "mangrove_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        MANGROVE_SIGN + 3,
+        "Mangrove Sign (east)",
+        "mangrove_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(BAMBOO_SIGN, "Bamboo Sign", "bamboo_sign", 1.0, false, false),
+    block(
+        BAMBOO_SIGN + 1,
+        "Bamboo Sign (south)",
+        "bamboo_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        BAMBOO_SIGN + 2,
+        "Bamboo Sign (west)",
+        "bamboo_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        BAMBOO_SIGN + 3,
+        "Bamboo Sign (east)",
+        "bamboo_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(OAK_DOOR, "Oak Door", "oak_door", 3.0, true, false),
+    block(
+        OAK_DOOR + 1,
+        "Oak Door (lower closed south)",
+        "oak_door",
+        3.0,
+        true,
+        false,
+    ),
+    block(
+        OAK_DOOR + 2,
+        "Oak Door (lower closed west)",
+        "oak_door",
+        3.0,
+        true,
+        false,
+    ),
+    block(
+        OAK_DOOR + 3,
+        "Oak Door (lower closed east)",
+        "oak_door",
+        3.0,
+        true,
+        false,
+    ),
+    block(
+        OAK_DOOR + 4,
+        "Oak Door (lower open north)",
+        "oak_door",
+        3.0,
+        false,
+        false,
+    ),
+    block(
+        OAK_DOOR + 5,
+        "Oak Door (lower open south)",
+        "oak_door",
+        3.0,
+        false,
+        false,
+    ),
+    block(
+        OAK_DOOR + 6,
+        "Oak Door (lower open west)",
+        "oak_door",
+        3.0,
+        false,
+        false,
+    ),
+    block(
+        OAK_DOOR + 7,
+        "Oak Door (lower open east)",
+        "oak_door",
+        3.0,
+        false,
+        false,
+    ),
+    block(
+        OAK_DOOR + 8,
+        "Oak Door (upper closed north)",
+        "oak_door",
+        3.0,
+        true,
+        false,
+    ),
+    block(
+        OAK_DOOR + 9,
+        "Oak Door (upper closed south)",
+        "oak_door",
+        3.0,
+        true,
+        false,
+    ),
+    block(
+        OAK_DOOR + 10,
+        "Oak Door (upper closed west)",
+        "oak_door",
+        3.0,
+        true,
+        false,
+    ),
+    block(
+        OAK_DOOR + 11,
+        "Oak Door (upper closed east)",
+        "oak_door",
+        3.0,
+        true,
+        false,
+    ),
+    block(
+        OAK_DOOR + 12,
+        "Oak Door (upper open north)",
+        "oak_door",
+        3.0,
+        false,
+        false,
+    ),
+    block(
+        OAK_DOOR + 13,
+        "Oak Door (upper open south)",
+        "oak_door",
+        3.0,
+        false,
+        false,
+    ),
+    block(
+        OAK_DOOR + 14,
+        "Oak Door (upper open west)",
+        "oak_door",
+        3.0,
+        false,
+        false,
+    ),
+    block(
+        OAK_DOOR + 15,
+        "Oak Door (upper open east)",
+        "oak_door",
+        3.0,
+        false,
+        false,
+    ),
+    block(LADDER, "Ladder", "ladder", 0.4, false, false),
+    block(LADDER + 1, "Ladder (south)", "ladder", 0.4, false, false),
+    block(LADDER + 2, "Ladder (west)", "ladder", 0.4, false, false),
+    block(LADDER + 3, "Ladder (east)", "ladder", 0.4, false, false),
+    block(RAIL, "Rail", "rail", 0.7, false, false),
+    block(RAIL + 1, "Rail (x)", "rail", 0.7, false, false),
+    block(
+        COBBLESTONE_STAIRS,
+        "Cobblestone Stairs",
+        "cobblestone_stairs",
+        2.0,
+        true,
+        false,
+    ),
+    block(
+        COBBLESTONE_STAIRS + 1,
+        "Cobblestone Stairs (south)",
+        "cobblestone_stairs",
+        2.0,
+        true,
+        false,
+    ),
+    block(
+        COBBLESTONE_STAIRS + 2,
+        "Cobblestone Stairs (west)",
+        "cobblestone_stairs",
+        2.0,
+        true,
+        false,
+    ),
+    block(
+        COBBLESTONE_STAIRS + 3,
+        "Cobblestone Stairs (east)",
+        "cobblestone_stairs",
+        2.0,
+        true,
+        false,
+    ),
+    block(
+        OAK_WALL_SIGN,
+        "Oak Wall Sign",
+        "oak_wall_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        OAK_WALL_SIGN + 1,
+        "Oak Wall Sign (south)",
+        "oak_wall_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        OAK_WALL_SIGN + 2,
+        "Oak Wall Sign (west)",
+        "oak_wall_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        OAK_WALL_SIGN + 3,
+        "Oak Wall Sign (east)",
+        "oak_wall_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        SPRUCE_WALL_SIGN,
+        "Spruce Wall Sign",
+        "spruce_wall_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        SPRUCE_WALL_SIGN + 1,
+        "Spruce Wall Sign (south)",
+        "spruce_wall_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        SPRUCE_WALL_SIGN + 2,
+        "Spruce Wall Sign (west)",
+        "spruce_wall_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        SPRUCE_WALL_SIGN + 3,
+        "Spruce Wall Sign (east)",
+        "spruce_wall_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        BIRCH_WALL_SIGN,
+        "Birch Wall Sign",
+        "birch_wall_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        BIRCH_WALL_SIGN + 1,
+        "Birch Wall Sign (south)",
+        "birch_wall_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        BIRCH_WALL_SIGN + 2,
+        "Birch Wall Sign (west)",
+        "birch_wall_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        BIRCH_WALL_SIGN + 3,
+        "Birch Wall Sign (east)",
+        "birch_wall_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        JUNGLE_WALL_SIGN,
+        "Jungle Wall Sign",
+        "jungle_wall_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        JUNGLE_WALL_SIGN + 1,
+        "Jungle Wall Sign (south)",
+        "jungle_wall_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        JUNGLE_WALL_SIGN + 2,
+        "Jungle Wall Sign (west)",
+        "jungle_wall_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        JUNGLE_WALL_SIGN + 3,
+        "Jungle Wall Sign (east)",
+        "jungle_wall_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        ACACIA_WALL_SIGN,
+        "Acacia Wall Sign",
+        "acacia_wall_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        ACACIA_WALL_SIGN + 1,
+        "Acacia Wall Sign (south)",
+        "acacia_wall_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        ACACIA_WALL_SIGN + 2,
+        "Acacia Wall Sign (west)",
+        "acacia_wall_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        ACACIA_WALL_SIGN + 3,
+        "Acacia Wall Sign (east)",
+        "acacia_wall_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        CHERRY_WALL_SIGN,
+        "Cherry Wall Sign",
+        "cherry_wall_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        CHERRY_WALL_SIGN + 1,
+        "Cherry Wall Sign (south)",
+        "cherry_wall_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        CHERRY_WALL_SIGN + 2,
+        "Cherry Wall Sign (west)",
+        "cherry_wall_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        CHERRY_WALL_SIGN + 3,
+        "Cherry Wall Sign (east)",
+        "cherry_wall_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        DARK_OAK_WALL_SIGN,
+        "Dark Oak Wall Sign",
+        "dark_oak_wall_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        DARK_OAK_WALL_SIGN + 1,
+        "Dark Oak Wall Sign (south)",
+        "dark_oak_wall_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        DARK_OAK_WALL_SIGN + 2,
+        "Dark Oak Wall Sign (west)",
+        "dark_oak_wall_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        DARK_OAK_WALL_SIGN + 3,
+        "Dark Oak Wall Sign (east)",
+        "dark_oak_wall_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        MANGROVE_WALL_SIGN,
+        "Mangrove Wall Sign",
+        "mangrove_wall_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        MANGROVE_WALL_SIGN + 1,
+        "Mangrove Wall Sign (south)",
+        "mangrove_wall_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        MANGROVE_WALL_SIGN + 2,
+        "Mangrove Wall Sign (west)",
+        "mangrove_wall_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        MANGROVE_WALL_SIGN + 3,
+        "Mangrove Wall Sign (east)",
+        "mangrove_wall_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        BAMBOO_WALL_SIGN,
+        "Bamboo Wall Sign",
+        "bamboo_wall_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        BAMBOO_WALL_SIGN + 1,
+        "Bamboo Wall Sign (south)",
+        "bamboo_wall_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        BAMBOO_WALL_SIGN + 2,
+        "Bamboo Wall Sign (west)",
+        "bamboo_wall_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        BAMBOO_WALL_SIGN + 3,
+        "Bamboo Wall Sign (east)",
+        "bamboo_wall_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        OAK_HANGING_SIGN,
+        "Oak Hanging Sign",
+        "oak_hanging_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        OAK_HANGING_SIGN + 1,
+        "Oak Hanging Sign (z)",
+        "oak_hanging_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        SPRUCE_HANGING_SIGN,
+        "Spruce Hanging Sign",
+        "spruce_hanging_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        SPRUCE_HANGING_SIGN + 1,
+        "Spruce Hanging Sign (z)",
+        "spruce_hanging_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        BIRCH_HANGING_SIGN,
+        "Birch Hanging Sign",
+        "birch_hanging_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        BIRCH_HANGING_SIGN + 1,
+        "Birch Hanging Sign (z)",
+        "birch_hanging_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        ACACIA_HANGING_SIGN,
+        "Acacia Hanging Sign",
+        "acacia_hanging_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        ACACIA_HANGING_SIGN + 1,
+        "Acacia Hanging Sign (z)",
+        "acacia_hanging_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        CHERRY_HANGING_SIGN,
+        "Cherry Hanging Sign",
+        "cherry_hanging_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        CHERRY_HANGING_SIGN + 1,
+        "Cherry Hanging Sign (z)",
+        "cherry_hanging_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        JUNGLE_HANGING_SIGN,
+        "Jungle Hanging Sign",
+        "jungle_hanging_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        JUNGLE_HANGING_SIGN + 1,
+        "Jungle Hanging Sign (z)",
+        "jungle_hanging_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        DARK_OAK_HANGING_SIGN,
+        "Dark Oak Hanging Sign",
+        "dark_oak_hanging_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        DARK_OAK_HANGING_SIGN + 1,
+        "Dark Oak Hanging Sign (z)",
+        "dark_oak_hanging_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        CRIMSON_HANGING_SIGN,
+        "Crimson Hanging Sign",
+        "crimson_hanging_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        CRIMSON_HANGING_SIGN + 1,
+        "Crimson Hanging Sign (z)",
+        "crimson_hanging_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        WARPED_HANGING_SIGN,
+        "Warped Hanging Sign",
+        "warped_hanging_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        WARPED_HANGING_SIGN + 1,
+        "Warped Hanging Sign (z)",
+        "warped_hanging_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        MANGROVE_HANGING_SIGN,
+        "Mangrove Hanging Sign",
+        "mangrove_hanging_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        MANGROVE_HANGING_SIGN + 1,
+        "Mangrove Hanging Sign (z)",
+        "mangrove_hanging_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        BAMBOO_HANGING_SIGN,
+        "Bamboo Hanging Sign",
+        "bamboo_hanging_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        BAMBOO_HANGING_SIGN + 1,
+        "Bamboo Hanging Sign (z)",
+        "bamboo_hanging_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        OAK_WALL_HANGING_SIGN,
+        "Oak Wall Hanging Sign",
+        "oak_wall_hanging_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        OAK_WALL_HANGING_SIGN + 1,
+        "Oak Wall Hanging Sign (z)",
+        "oak_wall_hanging_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        SPRUCE_WALL_HANGING_SIGN,
+        "Spruce Wall Hanging Sign",
+        "spruce_wall_hanging_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        SPRUCE_WALL_HANGING_SIGN + 1,
+        "Spruce Wall Hanging Sign (z)",
+        "spruce_wall_hanging_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        BIRCH_WALL_HANGING_SIGN,
+        "Birch Wall Hanging Sign",
+        "birch_wall_hanging_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        BIRCH_WALL_HANGING_SIGN + 1,
+        "Birch Wall Hanging Sign (z)",
+        "birch_wall_hanging_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        ACACIA_WALL_HANGING_SIGN,
+        "Acacia Wall Hanging Sign",
+        "acacia_wall_hanging_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        ACACIA_WALL_HANGING_SIGN + 1,
+        "Acacia Wall Hanging Sign (z)",
+        "acacia_wall_hanging_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        CHERRY_WALL_HANGING_SIGN,
+        "Cherry Wall Hanging Sign",
+        "cherry_wall_hanging_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        CHERRY_WALL_HANGING_SIGN + 1,
+        "Cherry Wall Hanging Sign (z)",
+        "cherry_wall_hanging_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        JUNGLE_WALL_HANGING_SIGN,
+        "Jungle Wall Hanging Sign",
+        "jungle_wall_hanging_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        JUNGLE_WALL_HANGING_SIGN + 1,
+        "Jungle Wall Hanging Sign (z)",
+        "jungle_wall_hanging_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        DARK_OAK_WALL_HANGING_SIGN,
+        "Dark Oak Wall Hanging Sign",
+        "dark_oak_wall_hanging_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        DARK_OAK_WALL_HANGING_SIGN + 1,
+        "Dark Oak Wall Hanging Sign (z)",
+        "dark_oak_wall_hanging_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        CRIMSON_WALL_HANGING_SIGN,
+        "Crimson Wall Hanging Sign",
+        "crimson_wall_hanging_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        CRIMSON_WALL_HANGING_SIGN + 1,
+        "Crimson Wall Hanging Sign (z)",
+        "crimson_wall_hanging_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        WARPED_WALL_HANGING_SIGN,
+        "Warped Wall Hanging Sign",
+        "warped_wall_hanging_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        WARPED_WALL_HANGING_SIGN + 1,
+        "Warped Wall Hanging Sign (z)",
+        "warped_wall_hanging_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        MANGROVE_WALL_HANGING_SIGN,
+        "Mangrove Wall Hanging Sign",
+        "mangrove_wall_hanging_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        MANGROVE_WALL_HANGING_SIGN + 1,
+        "Mangrove Wall Hanging Sign (z)",
+        "mangrove_wall_hanging_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        BAMBOO_WALL_HANGING_SIGN,
+        "Bamboo Wall Hanging Sign",
+        "bamboo_wall_hanging_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        BAMBOO_WALL_HANGING_SIGN + 1,
+        "Bamboo Wall Hanging Sign (z)",
+        "bamboo_wall_hanging_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(LEVER, "Lever", "lever", 0.5, false, false),
+    block(LEVER + 1, "Lever (off south)", "lever", 0.5, false, false),
+    block(LEVER + 2, "Lever (off west)", "lever", 0.5, false, false),
+    block(LEVER + 3, "Lever (off east)", "lever", 0.5, false, false),
+    block(LEVER + 4, "Lever (on north)", "lever", 0.5, false, false),
+    block(LEVER + 5, "Lever (on south)", "lever", 0.5, false, false),
+    block(LEVER + 6, "Lever (on west)", "lever", 0.5, false, false),
+    block(LEVER + 7, "Lever (on east)", "lever", 0.5, false, false),
+    block(
+        STONE_PRESSURE_PLATE,
+        "Stone Pressure Plate",
+        "stone_pressure_plate",
+        0.5,
+        false,
+        false,
+    ),
+    block(IRON_DOOR, "Iron Door", "iron_door", 5.0, true, false),
+    block(
+        IRON_DOOR + 1,
+        "Iron Door (lower closed south)",
+        "iron_door",
+        5.0,
+        true,
+        false,
+    ),
+    block(
+        IRON_DOOR + 2,
+        "Iron Door (lower closed west)",
+        "iron_door",
+        5.0,
+        true,
+        false,
+    ),
+    block(
+        IRON_DOOR + 3,
+        "Iron Door (lower closed east)",
+        "iron_door",
+        5.0,
+        true,
+        false,
+    ),
+    block(
+        IRON_DOOR + 4,
+        "Iron Door (lower open north)",
+        "iron_door",
+        5.0,
+        false,
+        false,
+    ),
+    block(
+        IRON_DOOR + 5,
+        "Iron Door (lower open south)",
+        "iron_door",
+        5.0,
+        false,
+        false,
+    ),
+    block(
+        IRON_DOOR + 6,
+        "Iron Door (lower open west)",
+        "iron_door",
+        5.0,
+        false,
+        false,
+    ),
+    block(
+        IRON_DOOR + 7,
+        "Iron Door (lower open east)",
+        "iron_door",
+        5.0,
+        false,
+        false,
+    ),
+    block(
+        IRON_DOOR + 8,
+        "Iron Door (upper closed north)",
+        "iron_door",
+        5.0,
+        true,
+        false,
+    ),
+    block(
+        IRON_DOOR + 9,
+        "Iron Door (upper closed south)",
+        "iron_door",
+        5.0,
+        true,
+        false,
+    ),
+    block(
+        IRON_DOOR + 10,
+        "Iron Door (upper closed west)",
+        "iron_door",
+        5.0,
+        true,
+        false,
+    ),
+    block(
+        IRON_DOOR + 11,
+        "Iron Door (upper closed east)",
+        "iron_door",
+        5.0,
+        true,
+        false,
+    ),
+    block(
+        IRON_DOOR + 12,
+        "Iron Door (upper open north)",
+        "iron_door",
+        5.0,
+        false,
+        false,
+    ),
+    block(
+        IRON_DOOR + 13,
+        "Iron Door (upper open south)",
+        "iron_door",
+        5.0,
+        false,
+        false,
+    ),
+    block(
+        IRON_DOOR + 14,
+        "Iron Door (upper open west)",
+        "iron_door",
+        5.0,
+        false,
+        false,
+    ),
+    block(
+        IRON_DOOR + 15,
+        "Iron Door (upper open east)",
+        "iron_door",
+        5.0,
+        false,
+        false,
+    ),
+    block(
+        OAK_PRESSURE_PLATE,
+        "Oak Pressure Plate",
+        "oak_pressure_plate",
+        0.5,
+        false,
+        false,
+    ),
+    block(
+        SPRUCE_PRESSURE_PLATE,
+        "Spruce Pressure Plate",
+        "spruce_pressure_plate",
+        0.5,
+        false,
+        false,
+    ),
+    block(
+        BIRCH_PRESSURE_PLATE,
+        "Birch Pressure Plate",
+        "birch_pressure_plate",
+        0.5,
+        false,
+        false,
+    ),
+    block(
+        JUNGLE_PRESSURE_PLATE,
+        "Jungle Pressure Plate",
+        "jungle_pressure_plate",
+        0.5,
+        false,
+        false,
+    ),
+    block(
+        ACACIA_PRESSURE_PLATE,
+        "Acacia Pressure Plate",
+        "acacia_pressure_plate",
+        0.5,
+        false,
+        false,
+    ),
+    block(
+        CHERRY_PRESSURE_PLATE,
+        "Cherry Pressure Plate",
+        "cherry_pressure_plate",
+        0.5,
+        false,
+        false,
+    ),
+    block(
+        DARK_OAK_PRESSURE_PLATE,
+        "Dark Oak Pressure Plate",
+        "dark_oak_pressure_plate",
+        0.5,
+        false,
+        false,
+    ),
+    block(
+        MANGROVE_PRESSURE_PLATE,
+        "Mangrove Pressure Plate",
+        "mangrove_pressure_plate",
+        0.5,
+        false,
+        false,
+    ),
+    block(
+        BAMBOO_PRESSURE_PLATE,
+        "Bamboo Pressure Plate",
+        "bamboo_pressure_plate",
+        0.5,
+        false,
+        false,
+    ),
+    block(
+        REDSTONE_ORE,
+        "Redstone Ore",
+        "redstone_ore",
+        3.0,
+        true,
+        true,
+    ),
+    block(
+        DEEPSLATE_REDSTONE_ORE,
+        "Deepslate Redstone Ore",
+        "deepslate_redstone_ore",
+        4.5,
+        true,
+        true,
+    ),
+    BlockDef {
+        light_emission: 7,
+        ..block(
+            REDSTONE_TORCH,
+            "Redstone Torch",
+            "redstone_torch",
+            0.05,
+            false,
+            false,
+        )
+    },
+    BlockDef {
+        light_emission: 7,
+        ..block(
+            REDSTONE_WALL_TORCH,
+            "Redstone Wall Torch",
+            "redstone_wall_torch",
+            0.05,
+            false,
+            false,
+        )
+    },
+    BlockDef {
+        light_emission: 7,
+        ..block(
+            REDSTONE_WALL_TORCH + 1,
+            "Redstone Wall Torch (south)",
+            "redstone_wall_torch",
+            0.05,
+            false,
+            false,
+        )
+    },
+    BlockDef {
+        light_emission: 7,
+        ..block(
+            REDSTONE_WALL_TORCH + 2,
+            "Redstone Wall Torch (west)",
+            "redstone_wall_torch",
+            0.05,
+            false,
+            false,
+        )
+    },
+    BlockDef {
+        light_emission: 7,
+        ..block(
+            REDSTONE_WALL_TORCH + 3,
+            "Redstone Wall Torch (east)",
+            "redstone_wall_torch",
+            0.05,
+            false,
+            false,
+        )
+    },
+    block(
+        STONE_BUTTON,
+        "Stone Button",
+        "stone_button",
+        0.5,
+        false,
+        false,
+    ),
+    block(
+        STONE_BUTTON + 1,
+        "Stone Button (south)",
+        "stone_button",
+        0.5,
+        false,
+        false,
+    ),
+    block(
+        STONE_BUTTON + 2,
+        "Stone Button (west)",
+        "stone_button",
+        0.5,
+        false,
+        false,
+    ),
+    block(
+        STONE_BUTTON + 3,
+        "Stone Button (east)",
+        "stone_button",
+        0.5,
+        false,
+        false,
+    ),
+    block(SNOW_LAYER, "Snow Layer", "snow_layer", 0.1, false, false),
+    block(CACTUS, "Cactus", "cactus", 0.4, true, false),
+    block(SUGAR_CANE, "Sugar Cane", "sugar_cane", 0.05, false, false),
+    block(JUKEBOX, "Jukebox", "jukebox", 2.0, true, true),
+    block(OAK_FENCE, "Oak Fence", "oak_fence", 2.0, true, false),
+    block(NETHERRACK, "Netherrack", "netherrack", 0.4, true, true),
+    block(SOUL_SAND, "Soul Sand", "soul_sand", 0.5, true, true),
+    block(SOUL_SOIL, "Soul Soil", "soul_soil", 0.5, true, true),
+    BlockDef {
+        light_emission: 10,
+        ..block(SOUL_TORCH, "Soul Torch", "soul_torch", 0.05, false, false)
+    },
+    BlockDef {
+        light_emission: 10,
+        ..block(
+            SOUL_WALL_TORCH,
+            "Soul Wall Torch",
+            "soul_wall_torch",
+            0.05,
+            false,
+            false,
+        )
+    },
+    BlockDef {
+        light_emission: 10,
+        ..block(
+            SOUL_WALL_TORCH + 1,
+            "Soul Wall Torch (south)",
+            "soul_wall_torch",
+            0.05,
+            false,
+            false,
+        )
+    },
+    BlockDef {
+        light_emission: 10,
+        ..block(
+            SOUL_WALL_TORCH + 2,
+            "Soul Wall Torch (west)",
+            "soul_wall_torch",
+            0.05,
+            false,
+            false,
+        )
+    },
+    BlockDef {
+        light_emission: 10,
+        ..block(
+            SOUL_WALL_TORCH + 3,
+            "Soul Wall Torch (east)",
+            "soul_wall_torch",
+            0.05,
+            false,
+            false,
+        )
+    },
+    BlockDef {
+        light_emission: 15,
+        ..block(GLOWSTONE, "Glowstone", "glowstone", 0.3, true, true)
+    },
+    BlockDef {
+        light_emission: 11,
+        ..block(
+            NETHER_PORTAL,
+            "Nether Portal",
+            "nether_portal",
+            0.5,
+            false,
+            false,
+        )
+    },
+    BlockDef {
+        light_emission: 11,
+        ..block(
+            NETHER_PORTAL + 1,
+            "Nether Portal (z)",
+            "nether_portal",
+            0.5,
+            false,
+            false,
+        )
+    },
+    block(
+        CARVED_PUMPKIN,
+        "Carved Pumpkin",
+        "carved_pumpkin",
+        1.0,
+        true,
+        true,
+    ),
+    block(
+        CARVED_PUMPKIN + 1,
+        "Carved Pumpkin (south)",
+        "carved_pumpkin",
+        1.0,
+        true,
+        true,
+    ),
+    block(
+        CARVED_PUMPKIN + 2,
+        "Carved Pumpkin (west)",
+        "carved_pumpkin",
+        1.0,
+        true,
+        true,
+    ),
+    block(
+        CARVED_PUMPKIN + 3,
+        "Carved Pumpkin (east)",
+        "carved_pumpkin",
+        1.0,
+        true,
+        true,
+    ),
+    BlockDef {
+        light_emission: 15,
+        ..block(
+            JACK_O_LANTERN,
+            "Jack o'Lantern",
+            "jack_o_lantern",
+            1.0,
+            true,
+            true,
+        )
+    },
+    BlockDef {
+        light_emission: 15,
+        ..block(
+            JACK_O_LANTERN + 1,
+            "Jack o'Lantern (south)",
+            "jack_o_lantern",
+            1.0,
+            true,
+            true,
+        )
+    },
+    BlockDef {
+        light_emission: 15,
+        ..block(
+            JACK_O_LANTERN + 2,
+            "Jack o'Lantern (west)",
+            "jack_o_lantern",
+            1.0,
+            true,
+            true,
+        )
+    },
+    BlockDef {
+        light_emission: 15,
+        ..block(
+            JACK_O_LANTERN + 3,
+            "Jack o'Lantern (east)",
+            "jack_o_lantern",
+            1.0,
+            true,
+            true,
+        )
+    },
+    block(CAKE, "Cake", "cake", 0.5, true, false),
+    block(REPEATER, "Repeater", "repeater", 0.05, false, false),
+    block(
+        REPEATER + 1,
+        "Repeater (south)",
+        "repeater",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        REPEATER + 2,
+        "Repeater (west)",
+        "repeater",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        REPEATER + 3,
+        "Repeater (east)",
+        "repeater",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        OAK_TRAPDOOR,
+        "Oak Trapdoor",
+        "oak_trapdoor",
+        3.0,
+        true,
+        false,
+    ),
+    block(
+        OAK_TRAPDOOR + 1,
+        "Oak Trapdoor (open north)",
+        "oak_trapdoor",
+        3.0,
+        false,
+        false,
+    ),
+    block(
+        OAK_TRAPDOOR + 2,
+        "Oak Trapdoor (open south)",
+        "oak_trapdoor",
+        3.0,
+        false,
+        false,
+    ),
+    block(
+        OAK_TRAPDOOR + 3,
+        "Oak Trapdoor (open west)",
+        "oak_trapdoor",
+        3.0,
+        false,
+        false,
+    ),
+    block(
+        OAK_TRAPDOOR + 4,
+        "Oak Trapdoor (open east)",
+        "oak_trapdoor",
+        3.0,
+        false,
+        false,
+    ),
+    block(
+        SPRUCE_TRAPDOOR,
+        "Spruce Trapdoor",
+        "spruce_trapdoor",
+        3.0,
+        true,
+        false,
+    ),
+    block(
+        SPRUCE_TRAPDOOR + 1,
+        "Spruce Trapdoor (open north)",
+        "spruce_trapdoor",
+        3.0,
+        false,
+        false,
+    ),
+    block(
+        SPRUCE_TRAPDOOR + 2,
+        "Spruce Trapdoor (open south)",
+        "spruce_trapdoor",
+        3.0,
+        false,
+        false,
+    ),
+    block(
+        SPRUCE_TRAPDOOR + 3,
+        "Spruce Trapdoor (open west)",
+        "spruce_trapdoor",
+        3.0,
+        false,
+        false,
+    ),
+    block(
+        SPRUCE_TRAPDOOR + 4,
+        "Spruce Trapdoor (open east)",
+        "spruce_trapdoor",
+        3.0,
+        false,
+        false,
+    ),
+    block(
+        BIRCH_TRAPDOOR,
+        "Birch Trapdoor",
+        "birch_trapdoor",
+        3.0,
+        true,
+        false,
+    ),
+    block(
+        BIRCH_TRAPDOOR + 1,
+        "Birch Trapdoor (open north)",
+        "birch_trapdoor",
+        3.0,
+        false,
+        false,
+    ),
+    block(
+        BIRCH_TRAPDOOR + 2,
+        "Birch Trapdoor (open south)",
+        "birch_trapdoor",
+        3.0,
+        false,
+        false,
+    ),
+    block(
+        BIRCH_TRAPDOOR + 3,
+        "Birch Trapdoor (open west)",
+        "birch_trapdoor",
+        3.0,
+        false,
+        false,
+    ),
+    block(
+        BIRCH_TRAPDOOR + 4,
+        "Birch Trapdoor (open east)",
+        "birch_trapdoor",
+        3.0,
+        false,
+        false,
+    ),
+    block(
+        JUNGLE_TRAPDOOR,
+        "Jungle Trapdoor",
+        "jungle_trapdoor",
+        3.0,
+        true,
+        false,
+    ),
+    block(
+        JUNGLE_TRAPDOOR + 1,
+        "Jungle Trapdoor (open north)",
+        "jungle_trapdoor",
+        3.0,
+        false,
+        false,
+    ),
+    block(
+        JUNGLE_TRAPDOOR + 2,
+        "Jungle Trapdoor (open south)",
+        "jungle_trapdoor",
+        3.0,
+        false,
+        false,
+    ),
+    block(
+        JUNGLE_TRAPDOOR + 3,
+        "Jungle Trapdoor (open west)",
+        "jungle_trapdoor",
+        3.0,
+        false,
+        false,
+    ),
+    block(
+        JUNGLE_TRAPDOOR + 4,
+        "Jungle Trapdoor (open east)",
+        "jungle_trapdoor",
+        3.0,
+        false,
+        false,
+    ),
+    block(
+        ACACIA_TRAPDOOR,
+        "Acacia Trapdoor",
+        "acacia_trapdoor",
+        3.0,
+        true,
+        false,
+    ),
+    block(
+        ACACIA_TRAPDOOR + 1,
+        "Acacia Trapdoor (open north)",
+        "acacia_trapdoor",
+        3.0,
+        false,
+        false,
+    ),
+    block(
+        ACACIA_TRAPDOOR + 2,
+        "Acacia Trapdoor (open south)",
+        "acacia_trapdoor",
+        3.0,
+        false,
+        false,
+    ),
+    block(
+        ACACIA_TRAPDOOR + 3,
+        "Acacia Trapdoor (open west)",
+        "acacia_trapdoor",
+        3.0,
+        false,
+        false,
+    ),
+    block(
+        ACACIA_TRAPDOOR + 4,
+        "Acacia Trapdoor (open east)",
+        "acacia_trapdoor",
+        3.0,
+        false,
+        false,
+    ),
+    block(
+        CHERRY_TRAPDOOR,
+        "Cherry Trapdoor",
+        "cherry_trapdoor",
+        3.0,
+        true,
+        false,
+    ),
+    block(
+        CHERRY_TRAPDOOR + 1,
+        "Cherry Trapdoor (open north)",
+        "cherry_trapdoor",
+        3.0,
+        false,
+        false,
+    ),
+    block(
+        CHERRY_TRAPDOOR + 2,
+        "Cherry Trapdoor (open south)",
+        "cherry_trapdoor",
+        3.0,
+        false,
+        false,
+    ),
+    block(
+        CHERRY_TRAPDOOR + 3,
+        "Cherry Trapdoor (open west)",
+        "cherry_trapdoor",
+        3.0,
+        false,
+        false,
+    ),
+    block(
+        CHERRY_TRAPDOOR + 4,
+        "Cherry Trapdoor (open east)",
+        "cherry_trapdoor",
+        3.0,
+        false,
+        false,
+    ),
+    block(
+        DARK_OAK_TRAPDOOR,
+        "Dark Oak Trapdoor",
+        "dark_oak_trapdoor",
+        3.0,
+        true,
+        false,
+    ),
+    block(
+        DARK_OAK_TRAPDOOR + 1,
+        "Dark Oak Trapdoor (open north)",
+        "dark_oak_trapdoor",
+        3.0,
+        false,
+        false,
+    ),
+    block(
+        DARK_OAK_TRAPDOOR + 2,
+        "Dark Oak Trapdoor (open south)",
+        "dark_oak_trapdoor",
+        3.0,
+        false,
+        false,
+    ),
+    block(
+        DARK_OAK_TRAPDOOR + 3,
+        "Dark Oak Trapdoor (open west)",
+        "dark_oak_trapdoor",
+        3.0,
+        false,
+        false,
+    ),
+    block(
+        DARK_OAK_TRAPDOOR + 4,
+        "Dark Oak Trapdoor (open east)",
+        "dark_oak_trapdoor",
+        3.0,
+        false,
+        false,
+    ),
+    block(
+        MANGROVE_TRAPDOOR,
+        "Mangrove Trapdoor",
+        "mangrove_trapdoor",
+        3.0,
+        true,
+        false,
+    ),
+    block(
+        MANGROVE_TRAPDOOR + 1,
+        "Mangrove Trapdoor (open north)",
+        "mangrove_trapdoor",
+        3.0,
+        false,
+        false,
+    ),
+    block(
+        MANGROVE_TRAPDOOR + 2,
+        "Mangrove Trapdoor (open south)",
+        "mangrove_trapdoor",
+        3.0,
+        false,
+        false,
+    ),
+    block(
+        MANGROVE_TRAPDOOR + 3,
+        "Mangrove Trapdoor (open west)",
+        "mangrove_trapdoor",
+        3.0,
+        false,
+        false,
+    ),
+    block(
+        MANGROVE_TRAPDOOR + 4,
+        "Mangrove Trapdoor (open east)",
+        "mangrove_trapdoor",
+        3.0,
+        false,
+        false,
+    ),
+    block(
+        BAMBOO_TRAPDOOR,
+        "Bamboo Trapdoor",
+        "bamboo_trapdoor",
+        3.0,
+        true,
+        false,
+    ),
+    block(
+        BAMBOO_TRAPDOOR + 1,
+        "Bamboo Trapdoor (open north)",
+        "bamboo_trapdoor",
+        3.0,
+        false,
+        false,
+    ),
+    block(
+        BAMBOO_TRAPDOOR + 2,
+        "Bamboo Trapdoor (open south)",
+        "bamboo_trapdoor",
+        3.0,
+        false,
+        false,
+    ),
+    block(
+        BAMBOO_TRAPDOOR + 3,
+        "Bamboo Trapdoor (open west)",
+        "bamboo_trapdoor",
+        3.0,
+        false,
+        false,
+    ),
+    block(
+        BAMBOO_TRAPDOOR + 4,
+        "Bamboo Trapdoor (open east)",
+        "bamboo_trapdoor",
+        3.0,
+        false,
+        false,
+    ),
+    block(
+        CHISELED_STONE_BRICKS,
+        "Chiseled Stone Bricks",
+        "chiseled_stone_bricks",
+        1.5,
+        true,
+        true,
+    ),
+    block(
+        INFESTED_STONE,
+        "Infested Stone",
+        "infested_stone",
+        0.75,
+        true,
+        true,
+    ),
+    block(
+        INFESTED_COBBLESTONE,
+        "Infested Cobblestone",
+        "infested_cobblestone",
+        0.75,
+        true,
+        true,
+    ),
+    block(
+        INFESTED_STONE_BRICKS,
+        "Infested Stone Bricks",
+        "infested_stone_bricks",
+        0.75,
+        true,
+        true,
+    ),
+    block(
+        INFESTED_MOSSY_STONE_BRICKS,
+        "Infested Mossy Stone Bricks",
+        "infested_mossy_stone_bricks",
+        0.75,
+        true,
+        true,
+    ),
+    block(
+        INFESTED_CRACKED_STONE_BRICKS,
+        "Infested Cracked Stone Bricks",
+        "infested_cracked_stone_bricks",
+        0.75,
+        true,
+        true,
+    ),
+    block(
+        INFESTED_CHISELED_STONE_BRICKS,
+        "Infested Chiseled Stone Bricks",
+        "infested_chiseled_stone_bricks",
+        0.75,
+        true,
+        true,
+    ),
+    block(
+        BROWN_MUSHROOM_BLOCK,
+        "Brown Mushroom Block",
+        "brown_mushroom_block",
+        0.2,
+        true,
+        true,
+    ),
+    block(
+        RED_MUSHROOM_BLOCK,
+        "Red Mushroom Block",
+        "red_mushroom_block",
+        0.2,
+        true,
+        true,
+    ),
+    block(
+        MUSHROOM_STEM,
+        "Mushroom Stem",
+        "mushroom_stem",
+        0.2,
+        true,
+        true,
+    ),
+    block(IRON_BARS, "Iron Bars", "iron_bars", 5.0, true, false),
+    block(CHAIN, "Chain", "chain", 5.0, false, false),
+    block(GLASS_PANE, "Glass Pane", "glass_pane", 0.3, true, false),
 ];
 
 /// Растения рисуются двумя скрещёнными плоскостями и не мешают ходьбе.
@@ -2042,10 +4256,20 @@ const WALL_TORCHES: [BlockId; 4] = [
     WALL_TORCH_EAST,
 ];
 /// Прямые рельсы: вдоль Z (основной блок) и вдоль X.
-const RAILS: [[BlockId; 2]; 2] = [
+const RAILS: [[BlockId; 2]; 3] = [
     [POWERED_RAIL, POWERED_RAIL_X],
     [DETECTOR_RAIL, DETECTOR_RAIL_X],
+    [RAIL, RAIL + 1],
 ];
+
+/// Семейство состояний блока: (первый ID, номер варианта, вид).
+#[must_use]
+pub fn family_of(id: BlockId) -> Option<(BlockId, u8, FamilyKind)> {
+    FAMILIES
+        .iter()
+        .find(|(first, len, _)| id >= *first && id < *first + BlockId::from(*len))
+        .map(|(first, _, kind)| (*first, (id - *first) as u8, *kind))
+}
 
 /// Основной блок семейства направлений: тот самый, что лежит в инвентаре.
 #[must_use]
@@ -2063,7 +4287,7 @@ pub fn base_block(id: BlockId) -> BlockId {
             return rails[0];
         }
     }
-    id
+    family_of(id).map_or(id, |(first, _, _)| first)
 }
 
 /// Направление блока семейства; у остальных блоков `None`.
@@ -2074,10 +4298,13 @@ pub fn facing_of(id: BlockId) -> Option<Facing> {
             return Some(Facing::ALL[index]);
         }
     }
-    WALL_TORCHES
-        .iter()
-        .position(|member| *member == id)
-        .map(|index| Facing::ALL[index])
+    if let Some(index) = WALL_TORCHES.iter().position(|member| *member == id) {
+        return Some(Facing::ALL[index]);
+    }
+    match family_of(id) {
+        Some((_, index, FamilyKind::H4)) => Some(Facing::ALL[usize::from(index)]),
+        _ => None,
+    }
 }
 
 /// Вариант блока для направления. У настенного факела вертикальные направления
@@ -2098,7 +4325,27 @@ pub fn facing_variant(id: BlockId, facing: Facing) -> BlockId {
             .unwrap_or(0);
         return WALL_TORCHES[index];
     }
+    if let Some((first, _, FamilyKind::H4)) = family_of(base) {
+        let index = Facing::ALL
+            .iter()
+            .position(|f| *f == facing)
+            .filter(|index| *index < 4)
+            .unwrap_or(0);
+        return first + index as BlockId;
+    }
     id
+}
+
+/// Номер варианта H4-семейства для стороны света (север, юг, запад, восток);
+/// вертикальные направления заменяются на север.
+#[must_use]
+pub fn facing_variant_index(first: BlockId, facing: Facing) -> BlockId {
+    let index = Facing::ALL
+        .iter()
+        .position(|f| *f == facing)
+        .filter(|index| *index < 4)
+        .unwrap_or(0);
+    first + index as BlockId
 }
 
 /// Рельсы: вариант вдоль оси X или Z.
@@ -2125,7 +4372,7 @@ pub fn is_rail_x(id: BlockId) -> bool {
 
 #[must_use]
 pub fn is_wall_torch(id: BlockId) -> bool {
-    WALL_TORCHES.contains(&id)
+    WALL_TORCHES.contains(&id) || matches!(base_block(id), REDSTONE_WALL_TORCH | SOUL_WALL_TORCH)
 }
 
 /// Блок, из которого получается выпадающий предмет: без направления и состояния,
@@ -2134,6 +4381,8 @@ pub fn is_wall_torch(id: BlockId) -> bool {
 pub fn drop_base(id: BlockId) -> BlockId {
     match base_block(unlit(id)) {
         WALL_TORCH => TORCH,
+        REDSTONE_WALL_TORCH => REDSTONE_TORCH,
+        SOUL_WALL_TORCH => SOUL_TORCH,
         PISTON_HEAD => PISTON,
         other => other,
     }
@@ -2144,13 +4393,14 @@ pub fn drop_base(id: BlockId) -> BlockId {
 pub fn is_cross(id: BlockId) -> bool {
     (POPPY..=TALL_GRASS).contains(&id)
         || (PLANT2_FIRST..=PLANT2_LAST).contains(&id)
+        || matches!(id, WHEAT | SUGAR_CANE | REDSTONE_TORCH | SOUL_TORCH)
         || is_wall_torch(id)
 }
 
 /// Плоский рисунок на полу (рельсы).
 #[must_use]
 pub fn is_flat(id: BlockId) -> bool {
-    is_rail(id)
+    is_rail(id) || id == REDSTONE_WIRE
 }
 
 /// Блок, который рисуется спрайтом и не мешает ходьбе.
@@ -2380,7 +4630,7 @@ mod tests {
             "Crafting Table",
             "Furnace",
         ];
-        assert_eq!(BLOCKS.len(), 321);
+        assert_eq!(BLOCKS.len(), 604);
         for (offset, name) in expected.iter().enumerate() {
             let id = 17 + offset;
             assert_eq!(BLOCKS[id].id as usize, id);
@@ -2391,7 +4641,7 @@ mod tests {
 
     #[test]
     fn chest_extends_registry_without_changing_foundation_ids() {
-        assert_eq!(BLOCKS.len(), 321);
+        assert_eq!(BLOCKS.len(), 604);
         let chest = BLOCKS.get(16).expect("сундук зарегистрирован");
         assert_eq!(chest.name, "Chest");
         assert!(is_solid(16));
