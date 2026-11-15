@@ -1,8 +1,11 @@
 //! Stable block IDs. Saved worlds store these IDs, never display names.
 
+/// Номер блока. Два байта вместо одного: типов блоков больше 256.
+pub type BlockId = u16;
+
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct BlockDef {
-    pub id: u8,
+    pub id: BlockId,
     pub name: &'static str,
     pub texture: &'static str,
     pub hardness: f32,
@@ -11,211 +14,211 @@ pub struct BlockDef {
     pub light_emission: u8,
 }
 
-pub const AIR: u8 = 0;
-pub const GRASS: u8 = 1;
-pub const DIRT: u8 = 2;
-pub const STONE: u8 = 3;
-pub const DEEP_STONE: u8 = 4;
-pub const SAND: u8 = 5;
-pub const GRAVEL: u8 = 6;
-pub const WOOD: u8 = 7;
-pub const LEAVES: u8 = 8;
-pub const PLANKS: u8 = 9;
-pub const COBBLE: u8 = 10;
-pub const GLASS: u8 = 11;
-pub const WATER: u8 = 12;
-pub const BEDROCK: u8 = 13;
-pub const SNOW: u8 = 14;
-pub const SANDSTONE: u8 = 15;
-pub const CHEST: u8 = 16;
-pub const COAL_ORE: u8 = 17;
-pub const IRON_ORE: u8 = 18;
-pub const GOLD_ORE: u8 = 19;
-pub const DIAMOND_ORE: u8 = 20;
-pub const IRON_BLOCK: u8 = 21;
-pub const GOLD_BLOCK: u8 = 22;
-pub const DIAMOND_BLOCK: u8 = 23;
-pub const CRAFTING_TABLE: u8 = 24;
-pub const FURNACE: u8 = 25;
-pub const BRICKS: u8 = 26;
-pub const STONE_BRICKS: u8 = 27;
-pub const MOSSY_COBBLE: u8 = 28;
-pub const BIRCH_LOG: u8 = 29;
-pub const BIRCH_LEAVES: u8 = 30;
-pub const BIRCH_PLANKS: u8 = 31;
-pub const CLAY: u8 = 32;
-pub const BOOKSHELF: u8 = 33;
-pub const LAMP: u8 = 34;
-pub const ICE: u8 = 35;
-pub const OBSIDIAN: u8 = 36;
-pub const WOOL: u8 = 37;
-pub const TERRACOTTA: u8 = 38;
-pub const SMOOTH_STONE: u8 = 39;
-pub const COAL_BLOCK: u8 = 40;
+pub const AIR: BlockId = 0;
+pub const GRASS: BlockId = 1;
+pub const DIRT: BlockId = 2;
+pub const STONE: BlockId = 3;
+pub const DEEP_STONE: BlockId = 4;
+pub const SAND: BlockId = 5;
+pub const GRAVEL: BlockId = 6;
+pub const WOOD: BlockId = 7;
+pub const LEAVES: BlockId = 8;
+pub const PLANKS: BlockId = 9;
+pub const COBBLE: BlockId = 10;
+pub const GLASS: BlockId = 11;
+pub const WATER: BlockId = 12;
+pub const BEDROCK: BlockId = 13;
+pub const SNOW: BlockId = 14;
+pub const SANDSTONE: BlockId = 15;
+pub const CHEST: BlockId = 16;
+pub const COAL_ORE: BlockId = 17;
+pub const IRON_ORE: BlockId = 18;
+pub const GOLD_ORE: BlockId = 19;
+pub const DIAMOND_ORE: BlockId = 20;
+pub const IRON_BLOCK: BlockId = 21;
+pub const GOLD_BLOCK: BlockId = 22;
+pub const DIAMOND_BLOCK: BlockId = 23;
+pub const CRAFTING_TABLE: BlockId = 24;
+pub const FURNACE: BlockId = 25;
+pub const BRICKS: BlockId = 26;
+pub const STONE_BRICKS: BlockId = 27;
+pub const MOSSY_COBBLE: BlockId = 28;
+pub const BIRCH_LOG: BlockId = 29;
+pub const BIRCH_LEAVES: BlockId = 30;
+pub const BIRCH_PLANKS: BlockId = 31;
+pub const CLAY: BlockId = 32;
+pub const BOOKSHELF: BlockId = 33;
+pub const LAMP: BlockId = 34;
+pub const ICE: BlockId = 35;
+pub const OBSIDIAN: BlockId = 36;
+pub const WOOL: BlockId = 37;
+pub const TERRACOTTA: BlockId = 38;
+pub const SMOOTH_STONE: BlockId = 39;
+pub const COAL_BLOCK: BlockId = 40;
 /// Работающая печь: состояние блока, а не отдельный предмет.
-pub const FURNACE_LIT: u8 = 41;
-pub const BARREL: u8 = 42;
-pub const SMOKER: u8 = 43;
-pub const SMOKER_LIT: u8 = 44;
-pub const BLAST_FURNACE: u8 = 45;
-pub const BLAST_FURNACE_LIT: u8 = 46;
-pub const STONECUTTER: u8 = 47;
+pub const FURNACE_LIT: BlockId = 41;
+pub const BARREL: BlockId = 42;
+pub const SMOKER: BlockId = 43;
+pub const SMOKER_LIT: BlockId = 44;
+pub const BLAST_FURNACE: BlockId = 45;
+pub const BLAST_FURNACE_LIT: BlockId = 46;
+pub const STONECUTTER: BlockId = 47;
 /// Общий сундук: все такие блоки открывают одно хранилище игрока.
-pub const VAULT: u8 = 48;
+pub const VAULT: BlockId = 48;
 // Декоративные блоки обновления «Палитра».
-pub const WOOL_ORANGE: u8 = 49;
-pub const WOOL_MAGENTA: u8 = 50;
-pub const WOOL_LIGHT_BLUE: u8 = 51;
-pub const WOOL_YELLOW: u8 = 52;
-pub const WOOL_LIME: u8 = 53;
-pub const WOOL_PINK: u8 = 54;
-pub const WOOL_GRAY: u8 = 55;
-pub const WOOL_LIGHT_GRAY: u8 = 56;
-pub const WOOL_CYAN: u8 = 57;
-pub const WOOL_PURPLE: u8 = 58;
-pub const WOOL_BLUE: u8 = 59;
-pub const WOOL_BROWN: u8 = 60;
-pub const WOOL_GREEN: u8 = 61;
-pub const WOOL_RED: u8 = 62;
-pub const WOOL_BLACK: u8 = 63;
-pub const CONCRETE_WHITE: u8 = 64;
-pub const CONCRETE_ORANGE: u8 = 65;
-pub const CONCRETE_MAGENTA: u8 = 66;
-pub const CONCRETE_LIGHT_BLUE: u8 = 67;
-pub const CONCRETE_YELLOW: u8 = 68;
-pub const CONCRETE_LIME: u8 = 69;
-pub const CONCRETE_PINK: u8 = 70;
-pub const CONCRETE_GRAY: u8 = 71;
-pub const CONCRETE_LIGHT_GRAY: u8 = 72;
-pub const CONCRETE_CYAN: u8 = 73;
-pub const CONCRETE_PURPLE: u8 = 74;
-pub const CONCRETE_BLUE: u8 = 75;
-pub const CONCRETE_BROWN: u8 = 76;
-pub const CONCRETE_GREEN: u8 = 77;
-pub const CONCRETE_RED: u8 = 78;
-pub const CONCRETE_BLACK: u8 = 79;
-pub const GRANITE: u8 = 80;
-pub const POLISHED_GRANITE: u8 = 81;
-pub const MARBLE: u8 = 82;
-pub const POLISHED_MARBLE: u8 = 83;
-pub const BASALT: u8 = 84;
-pub const POLISHED_BASALT: u8 = 85;
-pub const SLATE: u8 = 86;
-pub const POLISHED_SLATE: u8 = 87;
-pub const LIMESTONE: u8 = 88;
-pub const POLISHED_LIMESTONE: u8 = 89;
-pub const PINE_LOG: u8 = 90;
-pub const PINE_LEAVES: u8 = 91;
-pub const PINE_PLANKS: u8 = 92;
-pub const SANDSTONE_BRICKS: u8 = 93;
-pub const MOSSY_STONE_BRICKS: u8 = 94;
-pub const CRACKED_STONE_BRICKS: u8 = 95;
-pub const DARK_BRICKS: u8 = 96;
-pub const STONE_TILES: u8 = 97;
+pub const WOOL_ORANGE: BlockId = 49;
+pub const WOOL_MAGENTA: BlockId = 50;
+pub const WOOL_LIGHT_BLUE: BlockId = 51;
+pub const WOOL_YELLOW: BlockId = 52;
+pub const WOOL_LIME: BlockId = 53;
+pub const WOOL_PINK: BlockId = 54;
+pub const WOOL_GRAY: BlockId = 55;
+pub const WOOL_LIGHT_GRAY: BlockId = 56;
+pub const WOOL_CYAN: BlockId = 57;
+pub const WOOL_PURPLE: BlockId = 58;
+pub const WOOL_BLUE: BlockId = 59;
+pub const WOOL_BROWN: BlockId = 60;
+pub const WOOL_GREEN: BlockId = 61;
+pub const WOOL_RED: BlockId = 62;
+pub const WOOL_BLACK: BlockId = 63;
+pub const CONCRETE_WHITE: BlockId = 64;
+pub const CONCRETE_ORANGE: BlockId = 65;
+pub const CONCRETE_MAGENTA: BlockId = 66;
+pub const CONCRETE_LIGHT_BLUE: BlockId = 67;
+pub const CONCRETE_YELLOW: BlockId = 68;
+pub const CONCRETE_LIME: BlockId = 69;
+pub const CONCRETE_PINK: BlockId = 70;
+pub const CONCRETE_GRAY: BlockId = 71;
+pub const CONCRETE_LIGHT_GRAY: BlockId = 72;
+pub const CONCRETE_CYAN: BlockId = 73;
+pub const CONCRETE_PURPLE: BlockId = 74;
+pub const CONCRETE_BLUE: BlockId = 75;
+pub const CONCRETE_BROWN: BlockId = 76;
+pub const CONCRETE_GREEN: BlockId = 77;
+pub const CONCRETE_RED: BlockId = 78;
+pub const CONCRETE_BLACK: BlockId = 79;
+pub const GRANITE: BlockId = 80;
+pub const POLISHED_GRANITE: BlockId = 81;
+pub const MARBLE: BlockId = 82;
+pub const POLISHED_MARBLE: BlockId = 83;
+pub const BASALT: BlockId = 84;
+pub const POLISHED_BASALT: BlockId = 85;
+pub const SLATE: BlockId = 86;
+pub const POLISHED_SLATE: BlockId = 87;
+pub const LIMESTONE: BlockId = 88;
+pub const POLISHED_LIMESTONE: BlockId = 89;
+pub const PINE_LOG: BlockId = 90;
+pub const PINE_LEAVES: BlockId = 91;
+pub const PINE_PLANKS: BlockId = 92;
+pub const SANDSTONE_BRICKS: BlockId = 93;
+pub const MOSSY_STONE_BRICKS: BlockId = 94;
+pub const CRACKED_STONE_BRICKS: BlockId = 95;
+pub const DARK_BRICKS: BlockId = 96;
+pub const STONE_TILES: BlockId = 97;
 // Растения: крестовая модель без столкновений.
-pub const POPPY: u8 = 98;
-pub const DANDELION: u8 = 99;
-pub const CORNFLOWER: u8 = 100;
-pub const DAISY: u8 = 101;
-pub const TALL_GRASS: u8 = 102;
+pub const POPPY: BlockId = 98;
+pub const DANDELION: BlockId = 99;
+pub const CORNFLOWER: BlockId = 100;
+pub const DAISY: BlockId = 101;
+pub const TALL_GRASS: BlockId = 102;
 // Большая партия: породы дерева, руды, стекло, терракота, природа, плиты.
-pub const ACACIA_LOG: u8 = 103;
-pub const ACACIA_LEAVES: u8 = 104;
-pub const ACACIA_PLANKS: u8 = 105;
-pub const JUNGLE_LOG: u8 = 106;
-pub const JUNGLE_LEAVES: u8 = 107;
-pub const JUNGLE_PLANKS: u8 = 108;
-pub const DARK_OAK_LOG: u8 = 109;
-pub const DARK_OAK_LEAVES: u8 = 110;
-pub const DARK_OAK_PLANKS: u8 = 111;
-pub const MANGROVE_LOG: u8 = 112;
-pub const MANGROVE_LEAVES: u8 = 113;
-pub const MANGROVE_PLANKS: u8 = 114;
-pub const CHERRY_LOG: u8 = 115;
-pub const CHERRY_LEAVES: u8 = 116;
-pub const CHERRY_PLANKS: u8 = 117;
-pub const COPPER_ORE: u8 = 118;
-pub const EMERALD_ORE: u8 = 119;
-pub const LAPIS_ORE: u8 = 120;
-pub const COPPER_BLOCK: u8 = 121;
-pub const EMERALD_BLOCK: u8 = 122;
-pub const LAPIS_BLOCK: u8 = 123;
-pub const GLASS_WHITE: u8 = 124;
-pub const GLASS_ORANGE: u8 = 125;
-pub const GLASS_MAGENTA: u8 = 126;
-pub const GLASS_LIGHT_BLUE: u8 = 127;
-pub const GLASS_YELLOW: u8 = 128;
-pub const GLASS_LIME: u8 = 129;
-pub const GLASS_PINK: u8 = 130;
-pub const GLASS_GRAY: u8 = 131;
-pub const GLASS_LIGHT_GRAY: u8 = 132;
-pub const GLASS_CYAN: u8 = 133;
-pub const GLASS_PURPLE: u8 = 134;
-pub const GLASS_BLUE: u8 = 135;
-pub const GLASS_BROWN: u8 = 136;
-pub const GLASS_GREEN: u8 = 137;
-pub const GLASS_RED: u8 = 138;
-pub const GLASS_BLACK: u8 = 139;
-pub const TERRACOTTA_WHITE: u8 = 140;
-pub const TERRACOTTA_ORANGE: u8 = 141;
-pub const TERRACOTTA_MAGENTA: u8 = 142;
-pub const TERRACOTTA_LIGHT_BLUE: u8 = 143;
-pub const TERRACOTTA_YELLOW: u8 = 144;
-pub const TERRACOTTA_LIME: u8 = 145;
-pub const TERRACOTTA_PINK: u8 = 146;
-pub const TERRACOTTA_GRAY: u8 = 147;
-pub const TERRACOTTA_LIGHT_GRAY: u8 = 148;
-pub const TERRACOTTA_CYAN: u8 = 149;
-pub const TERRACOTTA_PURPLE: u8 = 150;
-pub const TERRACOTTA_BLUE: u8 = 151;
-pub const TERRACOTTA_BROWN: u8 = 152;
-pub const TERRACOTTA_GREEN: u8 = 153;
-pub const TERRACOTTA_RED: u8 = 154;
-pub const TERRACOTTA_BLACK: u8 = 155;
-pub const SPONGE: u8 = 156;
-pub const MELON: u8 = 157;
-pub const PUMPKIN: u8 = 158;
-pub const HAY_BALE: u8 = 159;
-pub const BONE_BLOCK: u8 = 160;
-pub const MUD: u8 = 161;
-pub const PACKED_MUD: u8 = 162;
-pub const MUD_BRICKS: u8 = 163;
-pub const MOSS_BLOCK: u8 = 164;
-pub const PODZOL: u8 = 165;
-pub const COARSE_DIRT: u8 = 166;
-pub const RED_SAND: u8 = 167;
-pub const RED_SANDSTONE: u8 = 168;
-pub const CALCITE: u8 = 169;
-pub const TUFF: u8 = 170;
-pub const AMETHYST_BLOCK: u8 = 171;
-pub const QUARTZ_BLOCK: u8 = 172;
-pub const OAK_SLAB: u8 = 173;
-pub const BIRCH_SLAB: u8 = 174;
-pub const PINE_SLAB: u8 = 175;
-pub const STONE_SLAB: u8 = 176;
-pub const COBBLESTONE_SLAB: u8 = 177;
-pub const STONE_BRICK_SLAB: u8 = 178;
-pub const SMOOTH_STONE_SLAB: u8 = 179;
-pub const SANDSTONE_SLAB: u8 = 180;
-pub const BRICK_SLAB: u8 = 181;
-pub const GRANITE_SLAB: u8 = 182;
-pub const MARBLE_SLAB: u8 = 183;
-pub const DARK_BRICK_SLAB: u8 = 184;
+pub const ACACIA_LOG: BlockId = 103;
+pub const ACACIA_LEAVES: BlockId = 104;
+pub const ACACIA_PLANKS: BlockId = 105;
+pub const JUNGLE_LOG: BlockId = 106;
+pub const JUNGLE_LEAVES: BlockId = 107;
+pub const JUNGLE_PLANKS: BlockId = 108;
+pub const DARK_OAK_LOG: BlockId = 109;
+pub const DARK_OAK_LEAVES: BlockId = 110;
+pub const DARK_OAK_PLANKS: BlockId = 111;
+pub const MANGROVE_LOG: BlockId = 112;
+pub const MANGROVE_LEAVES: BlockId = 113;
+pub const MANGROVE_PLANKS: BlockId = 114;
+pub const CHERRY_LOG: BlockId = 115;
+pub const CHERRY_LEAVES: BlockId = 116;
+pub const CHERRY_PLANKS: BlockId = 117;
+pub const COPPER_ORE: BlockId = 118;
+pub const EMERALD_ORE: BlockId = 119;
+pub const LAPIS_ORE: BlockId = 120;
+pub const COPPER_BLOCK: BlockId = 121;
+pub const EMERALD_BLOCK: BlockId = 122;
+pub const LAPIS_BLOCK: BlockId = 123;
+pub const GLASS_WHITE: BlockId = 124;
+pub const GLASS_ORANGE: BlockId = 125;
+pub const GLASS_MAGENTA: BlockId = 126;
+pub const GLASS_LIGHT_BLUE: BlockId = 127;
+pub const GLASS_YELLOW: BlockId = 128;
+pub const GLASS_LIME: BlockId = 129;
+pub const GLASS_PINK: BlockId = 130;
+pub const GLASS_GRAY: BlockId = 131;
+pub const GLASS_LIGHT_GRAY: BlockId = 132;
+pub const GLASS_CYAN: BlockId = 133;
+pub const GLASS_PURPLE: BlockId = 134;
+pub const GLASS_BLUE: BlockId = 135;
+pub const GLASS_BROWN: BlockId = 136;
+pub const GLASS_GREEN: BlockId = 137;
+pub const GLASS_RED: BlockId = 138;
+pub const GLASS_BLACK: BlockId = 139;
+pub const TERRACOTTA_WHITE: BlockId = 140;
+pub const TERRACOTTA_ORANGE: BlockId = 141;
+pub const TERRACOTTA_MAGENTA: BlockId = 142;
+pub const TERRACOTTA_LIGHT_BLUE: BlockId = 143;
+pub const TERRACOTTA_YELLOW: BlockId = 144;
+pub const TERRACOTTA_LIME: BlockId = 145;
+pub const TERRACOTTA_PINK: BlockId = 146;
+pub const TERRACOTTA_GRAY: BlockId = 147;
+pub const TERRACOTTA_LIGHT_GRAY: BlockId = 148;
+pub const TERRACOTTA_CYAN: BlockId = 149;
+pub const TERRACOTTA_PURPLE: BlockId = 150;
+pub const TERRACOTTA_BLUE: BlockId = 151;
+pub const TERRACOTTA_BROWN: BlockId = 152;
+pub const TERRACOTTA_GREEN: BlockId = 153;
+pub const TERRACOTTA_RED: BlockId = 154;
+pub const TERRACOTTA_BLACK: BlockId = 155;
+pub const SPONGE: BlockId = 156;
+pub const MELON: BlockId = 157;
+pub const PUMPKIN: BlockId = 158;
+pub const HAY_BALE: BlockId = 159;
+pub const BONE_BLOCK: BlockId = 160;
+pub const MUD: BlockId = 161;
+pub const PACKED_MUD: BlockId = 162;
+pub const MUD_BRICKS: BlockId = 163;
+pub const MOSS_BLOCK: BlockId = 164;
+pub const PODZOL: BlockId = 165;
+pub const COARSE_DIRT: BlockId = 166;
+pub const RED_SAND: BlockId = 167;
+pub const RED_SANDSTONE: BlockId = 168;
+pub const CALCITE: BlockId = 169;
+pub const TUFF: BlockId = 170;
+pub const AMETHYST_BLOCK: BlockId = 171;
+pub const QUARTZ_BLOCK: BlockId = 172;
+pub const OAK_SLAB: BlockId = 173;
+pub const BIRCH_SLAB: BlockId = 174;
+pub const PINE_SLAB: BlockId = 175;
+pub const STONE_SLAB: BlockId = 176;
+pub const COBBLESTONE_SLAB: BlockId = 177;
+pub const STONE_BRICK_SLAB: BlockId = 178;
+pub const SMOOTH_STONE_SLAB: BlockId = 179;
+pub const SANDSTONE_SLAB: BlockId = 180;
+pub const BRICK_SLAB: BlockId = 181;
+pub const GRANITE_SLAB: BlockId = 182;
+pub const MARBLE_SLAB: BlockId = 183;
+pub const DARK_BRICK_SLAB: BlockId = 184;
 // Жидкости: уровни течения. Источники — WATER (12) и LAVA.
-pub const FLOW_WATER_1: u8 = 185;
-pub const FLOW_WATER_2: u8 = 186;
-pub const FLOW_WATER_3: u8 = 187;
-pub const FLOW_WATER_4: u8 = 188;
-pub const FLOW_WATER_5: u8 = 189;
-pub const FLOW_WATER_6: u8 = 190;
-pub const FLOW_WATER_7: u8 = 191;
-pub const LAVA: u8 = 192;
-pub const FLOW_LAVA_1: u8 = 193;
-pub const FLOW_LAVA_2: u8 = 194;
-pub const FLOW_LAVA_3: u8 = 195;
+pub const FLOW_WATER_1: BlockId = 185;
+pub const FLOW_WATER_2: BlockId = 186;
+pub const FLOW_WATER_3: BlockId = 187;
+pub const FLOW_WATER_4: BlockId = 188;
+pub const FLOW_WATER_5: BlockId = 189;
+pub const FLOW_WATER_6: BlockId = 190;
+pub const FLOW_WATER_7: BlockId = 191;
+pub const LAVA: BlockId = 192;
+pub const FLOW_LAVA_1: BlockId = 193;
+pub const FLOW_LAVA_2: BlockId = 194;
+pub const FLOW_LAVA_3: BlockId = 195;
 
 const fn block(
-    id: u8,
+    id: BlockId,
     name: &'static str,
     texture: &'static str,
     hardness: f32,
@@ -1075,37 +1078,37 @@ pub const BLOCKS: [BlockDef; 196] = [
 
 /// Растения рисуются двумя скрещёнными плоскостями и не мешают ходьбе.
 #[must_use]
-pub fn is_plant(id: u8) -> bool {
+pub fn is_plant(id: BlockId) -> bool {
     (POPPY..=TALL_GRASS).contains(&id)
 }
 
 /// Любая вода: источник или течение.
 #[must_use]
-pub fn is_water(id: u8) -> bool {
+pub fn is_water(id: BlockId) -> bool {
     id == WATER || (FLOW_WATER_1..=FLOW_WATER_7).contains(&id)
 }
 
 /// Любая лава: источник или течение.
 #[must_use]
-pub fn is_lava(id: u8) -> bool {
+pub fn is_lava(id: BlockId) -> bool {
     (LAVA..=FLOW_LAVA_3).contains(&id)
 }
 
 /// Жидкий блок: вода или лава.
 #[must_use]
-pub fn is_fluid(id: u8) -> bool {
+pub fn is_fluid(id: BlockId) -> bool {
     is_water(id) || is_lava(id)
 }
 
 /// Плита занимает нижнюю половину клетки.
 #[must_use]
-pub fn is_slab(id: u8) -> bool {
+pub fn is_slab(id: BlockId) -> bool {
     (OAK_SLAB..=DARK_BRICK_SLAB).contains(&id)
 }
 
 /// Блок без состояния «горит»: в таком виде он выпадает и сохраняется.
 #[must_use]
-pub fn unlit(id: u8) -> u8 {
+pub fn unlit(id: BlockId) -> BlockId {
     match id {
         FURNACE_LIT => FURNACE,
         SMOKER_LIT => SMOKER,
@@ -1116,7 +1119,7 @@ pub fn unlit(id: u8) -> u8 {
 
 /// Листва: куб с вырезанной по альфе текстурой, поэтому не непрозрачна.
 #[must_use]
-pub fn is_leaves(id: u8) -> bool {
+pub fn is_leaves(id: BlockId) -> bool {
     matches!(
         id,
         LEAVES
@@ -1131,13 +1134,13 @@ pub fn is_leaves(id: u8) -> bool {
 }
 
 #[must_use]
-pub fn is_solid(id: u8) -> bool {
+pub fn is_solid(id: BlockId) -> bool {
     BLOCKS
         .get(usize::from(id))
         .is_some_and(|block| block.collision)
 }
 #[must_use]
-pub fn is_opaque(id: u8) -> bool {
+pub fn is_opaque(id: BlockId) -> bool {
     BLOCKS
         .get(usize::from(id))
         .is_some_and(|block| block.opacity)
@@ -1165,7 +1168,7 @@ mod tests {
             let id = 17 + offset;
             assert_eq!(BLOCKS[id].id as usize, id);
             assert_eq!(BLOCKS[id].name, *name);
-            assert!(is_solid(id as u8) && is_opaque(id as u8));
+            assert!(is_solid(id as BlockId) && is_opaque(id as BlockId));
         }
     }
 
@@ -1212,7 +1215,7 @@ mod tests {
         assert!(!is_opaque(GLASS));
         assert!(!is_opaque(WATER));
         assert!(is_opaque(STONE));
-        assert!(!is_solid(u8::MAX));
-        assert!(!is_opaque(u8::MAX));
+        assert!(!is_solid(BlockId::MAX));
+        assert!(!is_opaque(BlockId::MAX));
     }
 }

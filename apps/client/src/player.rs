@@ -496,7 +496,7 @@ pub fn sky(
 }
 
 // Unknown terrain is solid for movement and standing, including adjacent chunks.
-fn collision_block(world: &World, p: [i32; 3]) -> u8 {
+fn collision_block(world: &World, p: [i32; 3]) -> game_core::BlockId {
     if valid_world_height(p[1])
         && !world
             .chunks

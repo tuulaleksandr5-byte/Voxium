@@ -27,7 +27,7 @@ pub struct SaveData {
     pub yaw: f32,
     pub pitch: f32,
     pub time: f64,
-    pub edits: Vec<([i32; 3], u8)>,
+    pub edits: Vec<([i32; 3], crate::BlockId)>,
 }
 
 impl Default for SaveData {
@@ -331,7 +331,7 @@ struct LegacySaveData {
     yaw: f32,
     pitch: f32,
     time: f64,
-    edits: Vec<([i32; 3], u8)>,
+    edits: Vec<([i32; 3], crate::BlockId)>,
 }
 fn migrate_legacy(payload: &str) -> Result<SaveData, String> {
     let old: LegacySaveData = serde_json::from_str(payload).map_err(|error| error.to_string())?;

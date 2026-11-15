@@ -340,7 +340,7 @@ impl MobStore {
         player: [f32; 3],
         player_targetable: bool,
         daylight: f32,
-        sample: impl Fn([i32; 3]) -> Option<u8>,
+        sample: impl Fn([i32; 3]) -> Option<crate::BlockId>,
     ) -> MobEvents {
         let mut events = MobEvents {
             drops: std::mem::take(&mut self.pending_drops),
@@ -569,7 +569,7 @@ impl MobStore {
         &mut self,
         player: [f32; 3],
         daylight: f32,
-        sample: &impl Fn([i32; 3]) -> Option<u8>,
+        sample: &impl Fn([i32; 3]) -> Option<crate::BlockId>,
     ) {
         let hostile = self
             .mobs
@@ -651,7 +651,7 @@ mod tests {
     use crate::{AIR, STONE};
 
     /// Плоский мир: трава на y = 63, выше воздух.
-    fn flat(p: [i32; 3]) -> Option<u8> {
+    fn flat(p: [i32; 3]) -> Option<crate::BlockId> {
         Some(match p[1] {
             ..=62 => STONE,
             63 => GRASS,

@@ -11,7 +11,7 @@ pub struct BlockIcons {
     pub pixel: Option<bool>,
 }
 impl BlockIcons {
-    pub fn get(&self, block: u8) -> Handle<Image> {
+    pub fn get(&self, block: game_core::BlockId) -> Handle<Image> {
         self.handles
             .get(block as usize)
             .cloned()
@@ -323,7 +323,10 @@ mod tests {
         &bytes[index * (bytes.len() / 216)..][..128 * 128 * 4]
     }
 
-    fn assert_composition(atlas: &game_render::BlockAtlas, changed: &[(usize, u8, [u8; 4])]) {
+    fn assert_composition(
+        atlas: &game_render::BlockAtlas,
+        changed: &[(usize, game_core::BlockId, [u8; 4])],
+    ) {
         let (gpu, icons) = outputs(atlas);
         let (defaults, default_icons) = outputs(&embedded().unwrap());
         for index in 0..216 {

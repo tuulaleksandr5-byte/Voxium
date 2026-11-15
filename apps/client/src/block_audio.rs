@@ -39,7 +39,7 @@ impl SoundKind {
 /// Emit after a successful interaction. `position` is the world-space block center.
 #[derive(Message, Clone, Copy, Debug)]
 pub struct BlockSound {
-    pub block: u8,
+    pub block: game_core::BlockId,
     pub kind: SoundKind,
     pub position: Vec3,
 }
@@ -354,7 +354,7 @@ fn expire_emitters(
 }
 
 // Original families occupy IDs 1…15; appended blocks reuse their material Foley.
-fn sound_family(block: u8) -> Option<usize> {
+fn sound_family(block: game_core::BlockId) -> Option<usize> {
     use game_core::*;
     let material = match block {
         CHEST | CRAFTING_TABLE => PLANKS,
@@ -445,7 +445,7 @@ mod tests {
         }
         assert_eq!(sound_family(AIR), None);
         assert_eq!(sound_family(26), None);
-        assert_eq!(sound_family(u8::MAX), None);
+        assert_eq!(sound_family(game_core::BlockId::MAX), None);
     }
 
     #[test]

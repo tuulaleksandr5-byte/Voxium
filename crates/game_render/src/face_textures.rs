@@ -40,18 +40,18 @@ pub fn is_blend_layer(layer: usize) -> bool {
 pub const LAVA_LAYER: usize = 203;
 pub const LAMP_LAYER: usize = 45;
 pub const ICE_LAYER: usize = 46;
-pub const GRASS_TOP: u8 = 0;
-pub const GRASS_BOTTOM: u8 = 2;
-pub const WOOD_END: u8 = 8;
+pub const GRASS_TOP: u16 = 0;
+pub const GRASS_BOTTOM: u16 = 2;
+pub const WOOD_END: u16 = 8;
 
 #[derive(Clone, Copy, Debug, Deserialize, PartialEq, Eq)]
 pub struct FaceTextures {
-    pub top: u8,
-    pub side: u8,
-    pub bottom: u8,
+    pub top: u16,
+    pub side: u16,
+    pub bottom: u16,
     /// Optional fixed front on the negative-Z world face.
     #[serde(default)]
-    pub front: Option<u8>,
+    pub front: Option<u16>,
 }
 
 #[derive(Clone, Debug)]
@@ -92,7 +92,7 @@ impl BlockTextures {
         Ok(Self(faces.try_into().expect("length checked")))
     }
 
-    pub fn layer(&self, block: u8, axis: usize, positive: bool) -> u8 {
+    pub fn layer(&self, block: game_core::BlockId, axis: usize, positive: bool) -> u16 {
         let faces = self.0[block as usize];
         if axis == 2 && !positive {
             faces.front.unwrap_or(faces.side)

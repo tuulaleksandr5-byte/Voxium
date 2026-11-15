@@ -395,7 +395,7 @@ fn assert_outward_winding(mesh: &Mesh) {
     }
 }
 
-fn single(block: u8) -> Vec<(u8, Mesh)> {
+fn single(block: game_core::BlockId) -> Vec<(u16, Mesh)> {
     mesh_section([0; 3], move |p| if p == [4, 4, 4] { block } else { 0 })
 }
 

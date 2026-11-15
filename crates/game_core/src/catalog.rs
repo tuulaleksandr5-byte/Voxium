@@ -33,7 +33,7 @@ fn tool_name(tool: ToolKind) -> &'static str {
     }
 }
 
-fn kind_of(id: u8, def: &BlockDef) -> &'static str {
+fn kind_of(id: crate::BlockId, def: &BlockDef) -> &'static str {
     if id == crate::AIR {
         "пустота"
     } else if is_fluid(id) {
@@ -57,7 +57,7 @@ fn kind_of(id: u8, def: &BlockDef) -> &'static str {
     }
 }
 
-fn function_note(id: u8) -> &'static str {
+fn function_note(id: crate::BlockId) -> &'static str {
     match id {
         crate::CHEST | crate::BARREL => "хранилище на 27 ячеек",
         crate::VAULT => "общее хранилище: все такие блоки открывают одно",
@@ -74,7 +74,7 @@ fn function_note(id: u8) -> &'static str {
 }
 
 /// Русское название блока: по предмету или по описанию состояния.
-fn display_name(id: u8, registry: &ContentRegistry) -> String {
+fn display_name(id: crate::BlockId, registry: &ContentRegistry) -> String {
     if id == crate::AIR {
         return "Воздух".into();
     }
@@ -106,7 +106,7 @@ fn display_name(id: u8, registry: &ContentRegistry) -> String {
 }
 
 struct Row {
-    id: u8,
+    id: crate::BlockId,
     name_id: &'static str,
     name: String,
     kind: &'static str,

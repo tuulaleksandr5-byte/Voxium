@@ -24,7 +24,7 @@ pub fn raycast(
     origin: [f32; 3],
     direction: [f32; 3],
     max_distance: f32,
-    sample: impl Fn([i32; 3]) -> u8,
+    sample: impl Fn([i32; 3]) -> crate::BlockId,
 ) -> Option<RayHit> {
     if !origin.into_iter().all(f32::is_finite)
         || !direction.into_iter().all(f32::is_finite)
@@ -113,7 +113,7 @@ pub fn player_intersects_block(feet: [f32; 3], height: f32, block: [i32; 3]) -> 
 /// Uses registry collision for every overlapping voxel, including the body's
 /// outer edges and top. Invalid or out-of-grid coordinates cannot stand.
 #[must_use]
-pub fn can_stand(feet: [f32; 3], sample: impl Fn([i32; 3]) -> u8) -> bool {
+pub fn can_stand(feet: [f32; 3], sample: impl Fn([i32; 3]) -> crate::BlockId) -> bool {
     body_cells(feet.map(f64::from), f64::from(1.8_f32))
         .is_some_and(|cells| !cells_have_solid(cells, &sample))
 }
@@ -135,7 +135,7 @@ pub fn move_player(
     velocity: [f32; 3],
     dt: f32,
     height: f32,
-    sample: impl Fn([i32; 3]) -> u8,
+    sample: impl Fn([i32; 3]) -> crate::BlockId,
 ) -> Movement {
     let scaled = [feet[1] * 2.0, velocity[1] * 2.0, height * 2.0];
     if !scaled.into_iter().all(f32::is_finite) {
@@ -176,7 +176,7 @@ fn move_cells(
     velocity: [f32; 3],
     dt: f32,
     height: f32,
-    sample: impl Fn([i32; 3]) -> u8,
+    sample: impl Fn([i32; 3]) -> crate::BlockId,
 ) -> Movement {
     if !valid_body(feet, height)
         || !velocity.into_iter().all(f32::is_finite)
@@ -273,7 +273,7 @@ fn body_cells(position: [f64; 3], height: f64) -> Option<[[i32; 2]; 3]> {
     Some(cells)
 }
 
-fn cells_have_solid(cells: [[i32; 2]; 3], sample: &impl Fn([i32; 3]) -> u8) -> bool {
+fn cells_have_solid(cells: [[i32; 2]; 3], sample: &impl Fn([i32; 3]) -> crate::BlockId) -> bool {
     for y in cells[1][0]..=cells[1][1] {
         for z in cells[2][0]..=cells[2][1] {
             for x in cells[0][0]..=cells[0][1] {
@@ -286,7 +286,11 @@ fn cells_have_solid(cells: [[i32; 2]; 3], sample: &impl Fn([i32; 3]) -> u8) -> b
     false
 }
 
-fn body_collides(position: [f64; 3], height: f64, sample: &impl Fn([i32; 3]) -> u8) -> bool {
+fn body_collides(
+    position: [f64; 3],
+    height: f64,
+    sample: &impl Fn([i32; 3]) -> crate::BlockId,
+) -> bool {
     body_cells(position, height).is_some_and(|cells| cells_have_solid(cells, sample))
 }
 
@@ -295,7 +299,7 @@ fn sweep_axis(
     height: f64,
     axis: usize,
     delta: f64,
-    sample: &impl Fn([i32; 3]) -> u8,
+    sample: &impl Fn([i32; 3]) -> crate::BlockId,
 ) -> (f64, bool) {
     let (min, max) = body_bounds(position, height);
     let positive = delta > 0.0;
@@ -350,7 +354,7 @@ mod tests {
     #[test]
     fn ray_normalizes_direction_and_returns_the_placement_face() {
         let hit = raycast([0.5, 1.5, 0.5], [7.0, 0.0, 0.0], 3.0, |p| {
-            u8::from(p == [3, 1, 0])
+            crate::BlockId::from(p == [3, 1, 0])
         })
         .unwrap();
         assert_eq!(hit.block, [3, 1, 0]);
@@ -361,7 +365,7 @@ mod tests {
     #[test]
     fn ray_crosses_negative_coordinates_and_exact_negative_boundaries() {
         let hit = raycast([-0.1, 2.5, -0.5], [-4.0, 0.0, 0.0], 3.0, |p| {
-            u8::from(p == [-3, 2, -1])
+            crate::BlockId::from(p == [-3, 2, -1])
         })
         .unwrap();
         assert_eq!(hit.block, [-3, 2, -1]);
@@ -369,7 +373,7 @@ mod tests {
         close(hit.distance, 1.9);
 
         let boundary = raycast([0.0, 2.5, 0.5], [-1.0, 0.0, 0.0], 1.0, |p| {
-            u8::from(p == [-1, 2, 0])
+            crate::BlockId::from(p == [-1, 2, 0])
         })
         .unwrap();
         assert_eq!(boundary.block, [-1, 2, 0]);
@@ -394,7 +398,7 @@ mod tests {
     #[test]
     fn ray_handles_vertical_axes_and_an_occupied_origin() {
         let hit = raycast([0.5, 2.5, 0.5], [0.0, -2.0, 0.0], 2.0, |p| {
-            u8::from(p == [0, 0, 0])
+            crate::BlockId::from(p == [0, 0, 0])
         })
         .unwrap();
         assert_eq!(hit.previous, [0, 1, 0]);
@@ -431,7 +435,7 @@ mod tests {
 
     #[test]
     fn standing_checks_the_top_of_the_full_body() {
-        let ceiling = |p: [i32; 3]| u8::from(p == [0, 3, 0]);
+        let ceiling = |p: [i32; 3]| crate::BlockId::from(p == [0, 3, 0]);
         assert!(!can_stand([0.5, 1.22, 0.5], ceiling));
         assert!(can_stand([0.5, 1.2, 0.5], ceiling));
     }
@@ -444,7 +448,7 @@ mod tests {
                 feet[axis] = center;
                 let mut block = [0, 3, 0];
                 block[axis] = side;
-                assert!(!can_stand(feet, |p| u8::from(p == block)));
+                assert!(!can_stand(feet, |p| crate::BlockId::from(p == block)));
             }
         }
     }
@@ -462,7 +466,7 @@ mod tests {
     #[test]
     fn swept_movement_cannot_tunnel_through_a_wall() {
         let movement = move_player([0.5, 1.0, 0.5], [100.0, 0.0, 0.0], 1.0, 1.8, |p| {
-            u8::from(p[0] == 5 && (1..=2).contains(&p[1]))
+            crate::BlockId::from(p[0] == 5 && (1..=2).contains(&p[1]))
         });
         close(movement.position[0], 4.7);
         assert_eq!(movement.velocity[0], 0.0);
@@ -472,7 +476,7 @@ mod tests {
     #[test]
     fn swept_movement_handles_negative_walls_and_slides_along_them() {
         let movement = move_player([0.5, 1.0, 0.5], [-100.0, 0.0, 2.0], 0.5, 1.8, |p| {
-            u8::from(p[0] == -2 && (1..=2).contains(&p[1]))
+            crate::BlockId::from(p[0] == -2 && (1..=2).contains(&p[1]))
         });
         close(movement.position[0], -0.7);
         close(movement.position[2], 1.5);
@@ -485,7 +489,7 @@ mod tests {
             for sign in [-1.0_f32, 1.0] {
                 for axis in [0, 2] {
                     let wall_cell = start as i32 + if sign > 0.0 { 1 } else { -2 };
-                    let wall = |p: [i32; 3]| u8::from(p[axis] == wall_cell);
+                    let wall = |p: [i32; 3]| crate::BlockId::from(p[axis] == wall_cell);
                     let mut feet = [0.5, 70.0, 0.5];
                     feet[axis] = start;
                     let mut velocity = [0.0; 3];
@@ -517,7 +521,7 @@ mod tests {
 
     #[test]
     fn rounding_an_unblocked_target_cannot_push_the_body_into_a_wall() {
-        let wall = |p: [i32; 3]| u8::from(p[0] == 257);
+        let wall = |p: [i32; 3]| crate::BlockId::from(p[0] == 257);
         // In f64 this movement ends just before contact; nearest-f32 rounding
         // crosses the wall unless the representable target is also swept.
         let hit = move_player([256.0, 70.0, 0.5], [4.0, 0.0, 0.0], 0.175, 1.8, wall);
@@ -529,7 +533,7 @@ mod tests {
 
     #[test]
     fn ceiling_contact_stays_outside_the_block_after_f32_rounding() {
-        let ceiling = |p: [i32; 3]| u8::from(p[1] == 259);
+        let ceiling = |p: [i32; 3]| crate::BlockId::from(p[1] == 259);
         let hit = move_player([0.5, 256.0, 0.5], [0.0, 4.0, 0.0], 0.5, 1.8, ceiling);
         assert!(f64::from(hit.position[1]) + f64::from(1.8_f32) <= 259.0);
         let next = move_player(hit.position, [4.0, -4.0, 0.0], 0.3, 1.8, ceiling);
@@ -540,13 +544,13 @@ mod tests {
     #[test]
     fn falling_lands_on_the_floor_without_tunneling() {
         let movement = move_player([0.5, 20.0, 0.5], [0.0, -100.0, 0.0], 0.5, 1.8, |p| {
-            u8::from(p[1] == 0)
+            crate::BlockId::from(p[1] == 0)
         });
         close(movement.position[1], 1.0);
         assert_eq!(movement.velocity[1], 0.0);
         assert!(movement.grounded);
         let resting = move_player(movement.position, [0.0; 3], 0.1, 1.8, |p| {
-            u8::from(p[1] == 0)
+            crate::BlockId::from(p[1] == 0)
         });
         assert!(resting.grounded);
     }
@@ -554,7 +558,7 @@ mod tests {
     #[test]
     fn jumping_stops_at_the_ceiling_without_grounding() {
         let movement = move_player([0.5, 1.0, 0.5], [0.0, 100.0, 0.0], 0.5, 1.8, |p| {
-            u8::from(p[1] == 3)
+            crate::BlockId::from(p[1] == 3)
         });
         close(movement.position[1], 1.2);
         assert_eq!(movement.velocity[1], 0.0);

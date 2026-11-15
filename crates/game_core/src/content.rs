@@ -60,7 +60,7 @@ pub struct ItemDef {
 pub struct ContentRegistry {
     definitions: Vec<ItemDef>,
     by_name: HashMap<String, ItemId>,
-    by_block: HashMap<u8, ItemId>,
+    by_block: HashMap<crate::BlockId, ItemId>,
 }
 
 // Имена соответствуют стабильным сохранённым ID; новые блоки только дописываются.
@@ -305,7 +305,7 @@ impl ContentRegistry {
                     .iter()
                     .position(|name| name == block)
                     .ok_or_else(|| format!("Неизвестный блок {block} у предмета {}", item.id))?
-                    as u8;
+                    as crate::BlockId;
                 if matches!(block_id, 0 | 13)
                     || crate::unlit(block_id) != block_id
                     || (crate::is_fluid(block_id)
@@ -388,23 +388,23 @@ impl ContentRegistry {
     }
 
     #[must_use]
-    pub fn item_for_block(&self, block: u8) -> Option<ItemId> {
+    pub fn item_for_block(&self, block: crate::BlockId) -> Option<ItemId> {
         self.by_block.get(&block).copied()
     }
 
     #[must_use]
-    pub fn block_for_item(&self, id: ItemId) -> Option<u8> {
+    pub fn block_for_item(&self, id: ItemId) -> Option<crate::BlockId> {
         let ItemKind::Block { block } = &self.get(id)?.kind else {
             return None;
         };
         BLOCK_NAMES
             .iter()
             .position(|name| name == block)
-            .map(|index| index as u8)
+            .map(|index| index as crate::BlockId)
     }
 
     #[must_use]
-    pub fn drop_for_block(&self, block: u8) -> Option<ItemId> {
+    pub fn drop_for_block(&self, block: crate::BlockId) -> Option<ItemId> {
         // Горящая печь выпадает обычной печью.
         let block = crate::unlit(block);
         let item = self.item_for_block(block)?;
@@ -460,8 +460,14 @@ mod tests {
             let id = registry
                 .find(&format!("survival:{name}"))
                 .expect("new block item");
-            assert_eq!(registry.block_for_item(id), Some(17 + offset as u8));
-            assert_eq!(registry.item_for_block(17 + offset as u8), Some(id));
+            assert_eq!(
+                registry.block_for_item(id),
+                Some(17 + offset as crate::BlockId)
+            );
+            assert_eq!(
+                registry.item_for_block(17 + offset as crate::BlockId),
+                Some(id)
+            );
         }
         for (block, drop) in [
             (17, "coal"),
@@ -557,11 +563,11 @@ mod tests {
         ];
         for (block, name) in names.iter().enumerate() {
             if block == 0 || block == 13 {
-                assert_eq!(registry.item_for_block(block as u8), None);
+                assert_eq!(registry.item_for_block(block as crate::BlockId), None);
             } else {
-                let item = registry.item_for_block(block as u8).unwrap();
+                let item = registry.item_for_block(block as crate::BlockId).unwrap();
                 assert_eq!(&registry.get(item).unwrap().id, name);
-                assert_eq!(registry.block_for_item(item), Some(block as u8));
+                assert_eq!(registry.block_for_item(item), Some(block as crate::BlockId));
             }
         }
         assert!(registry.item_for_block(17).is_some());

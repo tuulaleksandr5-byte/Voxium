@@ -5,7 +5,7 @@ use bevy::{
     prelude::Mesh,
 };
 use game_core::{
-    AIR, BLOCKS, SECTION_SIZE, WATER,
+    AIR, BLOCKS, BlockId, SECTION_SIZE, WATER,
     fluids::{fluid_of, surface_height},
     is_fluid, is_opaque, is_plant, is_slab, is_water,
 };
@@ -20,15 +20,15 @@ const PADDED_SIZE: usize = SIZE + 2;
 /// Air and unknown block IDs produce no geometry. Opaque neighbors hide faces;
 /// matching transparent neighbors also hide their shared internal faces.
 #[must_use]
-pub fn mesh_section(section: [i32; 3], sample: impl Fn([i32; 3]) -> u8) -> Vec<(u8, Mesh)> {
+pub fn mesh_section(section: [i32; 3], sample: impl Fn([i32; 3]) -> BlockId) -> Vec<(u16, Mesh)> {
     mesh_section_with_textures(section, sample, &BlockTextures::default())
 }
 
 pub fn mesh_section_with_textures(
     section: [i32; 3],
-    sample: impl Fn([i32; 3]) -> u8,
+    sample: impl Fn([i32; 3]) -> BlockId,
     textures: &BlockTextures,
-) -> Vec<(u8, Mesh)> {
+) -> Vec<(u16, Mesh)> {
     // Cache the border once: the six sweeps reuse every block many times, while
     // a world sample can involve a hash lookup and an edited-block lookup.
     let mut blocks = [AIR; PADDED_SIZE * PADDED_SIZE * PADDED_SIZE];
@@ -181,13 +181,13 @@ pub fn mesh_section_with_textures(
     builders
         .into_iter()
         .enumerate()
-        .filter_map(|(id, builder)| builder.finish().map(|mesh| (id as u8, mesh)))
+        .filter_map(|(id, builder)| builder.finish().map(|mesh| (id as u16, mesh)))
         .collect()
 }
 
 #[derive(Clone, Copy, Default, PartialEq, Eq)]
 struct FaceCell {
-    id: u8,
+    id: BlockId,
     ao: [u8; 4],
 }
 impl FaceCell {
@@ -196,7 +196,7 @@ impl FaceCell {
     }
 }
 
-fn corner_ao(blocks: &[u8], outside: [i32; 3], u: usize, v: usize) -> [u8; 4] {
+fn corner_ao(blocks: &[BlockId], outside: [i32; 3], u: usize, v: usize) -> [u8; 4] {
     [(-1, -1), (1, -1), (1, 1), (-1, 1)].map(|(du, dv)| {
         let mut side_u = outside;
         side_u[u] += du;
@@ -217,14 +217,14 @@ fn corner_ao(blocks: &[u8], outside: [i32; 3], u: usize, v: usize) -> [u8; 4] {
 fn fluid_cell(
     builders: &mut [MeshBuilder],
     textures: &BlockTextures,
-    blocks: &[u8],
+    blocks: &[BlockId],
     local: [i32; 3],
-    id: u8,
+    id: BlockId,
 ) {
     let Some((kind, _)) = fluid_of(id) else {
         return;
     };
-    let same = |other: u8| fluid_of(other).is_some_and(|(k, _)| k == kind);
+    let same = |other: BlockId| fluid_of(other).is_some_and(|(k, _)| k == kind);
     let at = |dx: i32, dy: i32, dz: i32| {
         blocks[padded_index([local[0] + dx, local[1] + dy, local[2] + dz])]
     };

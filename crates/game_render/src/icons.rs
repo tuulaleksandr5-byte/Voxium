@@ -73,7 +73,7 @@ pub fn bake_atlas_icons(
         .map(|block| {
             let pixels = if block == AIR as usize {
                 vec![0; (ICON_SIZE * ICON_SIZE * 4) as usize]
-            } else if game_core::is_plant(block as u8) {
+            } else if game_core::is_plant(block as game_core::BlockId) {
                 // Растения показываются плоским значком, а не кубом.
                 let layer = u32::from(textures.0[block].side);
                 image::imageops::crop_imm(
@@ -86,7 +86,7 @@ pub fn bake_atlas_icons(
                 .to_image()
                 .into_raw()
             } else {
-                bake_cube(&atlas.rgba, textures, block as u8)
+                bake_cube(&atlas.rgba, textures, block as game_core::BlockId)
             };
             let mut image = Image::new(
                 Extent3d {
@@ -105,7 +105,7 @@ pub fn bake_atlas_icons(
         .collect())
 }
 
-fn bake_cube(atlas: &RgbaImage, textures: &BlockTextures, block: u8) -> Vec<u8> {
+fn bake_cube(atlas: &RgbaImage, textures: &BlockTextures, block: game_core::BlockId) -> Vec<u8> {
     let mut output = vec![0; (ICON_SIZE * ICON_SIZE * 4) as usize];
     for y in 0..ICON_SIZE {
         for x in 0..ICON_SIZE {
@@ -181,7 +181,7 @@ fn segment_distance_squared(point: Point, start: Point, end: Point) -> f32 {
 
 /// Return straight RGBA, filtering premultiplied alpha to avoid color bleeding
 /// from transparent source texels. Taps never enter neighboring atlas tiles.
-fn sample_tile(atlas: &RgbaImage, layer: u8, uv: Point) -> [f32; 4] {
+fn sample_tile(atlas: &RgbaImage, layer: u16, uv: Point) -> [f32; 4] {
     let x = (uv[0] * TILE_SIZE as f32 - 0.5).clamp(0., (TILE_SIZE - 1) as f32);
     let y = (uv[1] * TILE_SIZE as f32 - 0.5).clamp(0., (TILE_SIZE - 1) as f32);
     let x0 = x.floor() as u32;

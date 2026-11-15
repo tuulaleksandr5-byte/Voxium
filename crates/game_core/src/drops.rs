@@ -114,7 +114,7 @@ impl DropStore {
         inventory: &mut Inventory,
         catalog: &ContentRegistry,
         config: &DropConfig,
-        sample: impl Fn([i32; 3]) -> Option<u8>,
+        sample: impl Fn([i32; 3]) -> Option<crate::BlockId>,
     ) -> bool {
         if !dt.is_finite() || dt <= 0.0 {
             return false;
@@ -192,7 +192,7 @@ impl DropStore {
         &mut self,
         catalog: &ContentRegistry,
         config: &DropConfig,
-        sample: &impl Fn([i32; 3]) -> Option<u8>,
+        sample: &impl Fn([i32; 3]) -> Option<crate::BlockId>,
     ) {
         let ids: Vec<_> = self.entities.keys().copied().collect();
         for (index, &left_id) in ids.iter().enumerate() {
@@ -235,12 +235,16 @@ fn distance(from: [f32; 3], to: [f32; 3]) -> f32 {
     ((from[0] - to[0]).powi(2) + (from[1] - to[1]).powi(2) + (from[2] - to[2]).powi(2)).sqrt()
 }
 
-fn passable(point: [f32; 3], sample: &impl Fn([i32; 3]) -> Option<u8>) -> bool {
+fn passable(point: [f32; 3], sample: &impl Fn([i32; 3]) -> Option<crate::BlockId>) -> bool {
     sample(point.map(|value| value.floor() as i32))
         .is_some_and(|block| !crate::blocks::is_solid(block))
 }
 
-fn path_clear(from: [f32; 3], to: [f32; 3], sample: &impl Fn([i32; 3]) -> Option<u8>) -> bool {
+fn path_clear(
+    from: [f32; 3],
+    to: [f32; 3],
+    sample: &impl Fn([i32; 3]) -> Option<crate::BlockId>,
+) -> bool {
     // Короткая трасса не даёт подбирать или объединять предметы через стену.
     let steps = (distance(from, to) / 0.1).ceil().max(1.0) as usize;
     (0..=steps).all(|step| {
@@ -252,7 +256,7 @@ fn path_clear(from: [f32; 3], to: [f32; 3], sample: &impl Fn([i32; 3]) -> Option
     })
 }
 
-fn move_drop(drop: &mut Drop, dt: f32, sample: &impl Fn([i32; 3]) -> Option<u8>) {
+fn move_drop(drop: &mut Drop, dt: f32, sample: &impl Fn([i32; 3]) -> Option<crate::BlockId>) {
     for axis in 0..3 {
         // Ограничение скорости и короткий шаг исключают туннелирование и долгий цикл.
         drop.velocity[axis] = drop.velocity[axis].clamp(-32.0, 32.0);

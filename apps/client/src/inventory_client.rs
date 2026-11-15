@@ -77,7 +77,7 @@ pub(crate) fn bucket_kind(game: &Game) -> Option<Bucket> {
 }
 
 /// Блок, который видит прицел: жидкости прозрачны, пока в руке нет ведра.
-pub(crate) fn target_block(game: &Game, position: [i32; 3]) -> u8 {
+pub(crate) fn target_block(game: &Game, position: [i32; 3]) -> game_core::BlockId {
     let block = loaded_block(&game.world, position).unwrap_or(BEDROCK);
     if game_core::is_fluid(block) && bucket_kind(game).is_none() {
         AIR
@@ -466,7 +466,7 @@ fn process_action(game: &mut Game, action: &InventoryAction) -> Effects {
 }
 
 /// Число ячеек блока-контейнера: сундук 27, верстак 3×3, печь 3.
-pub(crate) fn container_size(block: u8) -> Option<usize> {
+pub(crate) fn container_size(block: game_core::BlockId) -> Option<usize> {
     match block {
         CHEST | game_core::BARREL | game_core::VAULT => Some(27),
         CRAFTING_TABLE => Some(9),
@@ -480,7 +480,7 @@ pub(crate) fn container_size(block: u8) -> Option<usize> {
 pub(crate) const SHARED_VAULT: [i32; 3] = [0, i32::MIN, 0];
 
 /// Где лежит контейнер блока: у общего сундука — в общем хранилище.
-fn container_key(block: u8, position: [i32; 3]) -> [i32; 3] {
+fn container_key(block: game_core::BlockId, position: [i32; 3]) -> [i32; 3] {
     if block == game_core::VAULT {
         SHARED_VAULT
     } else {
@@ -525,7 +525,7 @@ pub(crate) fn stonecut(game: &mut Game, output: ItemId) -> bool {
 }
 
 /// Блок открытого сейчас контейнера.
-pub(crate) fn open_block(game: &Game) -> Option<u8> {
+pub(crate) fn open_block(game: &Game) -> Option<game_core::BlockId> {
     let position = game.open_container?;
     if position == SHARED_VAULT {
         return Some(game_core::VAULT);
@@ -552,7 +552,7 @@ fn block_center(position: [i32; 3]) -> Vec3 {
     Vec3::from_array(position.map(|value| value as f32)) + Vec3::splat(0.5)
 }
 
-pub(crate) fn loaded_block(world: &World, position: [i32; 3]) -> Option<u8> {
+pub(crate) fn loaded_block(world: &World, position: [i32; 3]) -> Option<game_core::BlockId> {
     (game_core::valid_world_height(position[1])
         && world
             .chunks
@@ -863,7 +863,7 @@ mod tests {
             Some(block)
         );
     }
-    fn stack(game: &Game, block: u8, count: u16) -> ItemStack {
+    fn stack(game: &Game, block: game_core::BlockId, count: u16) -> ItemStack {
         ItemStack::new(game.content.item_for_block(block).unwrap(), count)
     }
     fn total_drops(game: &Game) -> u16 {

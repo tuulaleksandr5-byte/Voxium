@@ -75,7 +75,7 @@ pub struct Game {
     pub chunk_grid: bool,
     pub fps: f32,
     pub height: f32,
-    pub hotbar: [u8; 9],
+    pub hotbar: [game_core::BlockId; 9],
     pub selected: usize,
     pub clock: f64,
     pub autosave: f32,
@@ -142,7 +142,7 @@ impl Game {
     pub fn item_for_slot(&self, index: usize) -> Option<&ItemStack> {
         self.inventory.hotbar.get(index).and_then(Option::as_ref)
     }
-    pub fn selected_block(&self) -> u8 {
+    pub fn selected_block(&self) -> game_core::BlockId {
         self.item_for_slot(self.selected)
             .and_then(|s| self.content.block_for_item(s.item))
             .unwrap_or(game_core::AIR)

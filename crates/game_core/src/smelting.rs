@@ -21,7 +21,7 @@ pub enum FurnaceKind {
 impl FurnaceKind {
     /// Вид печи и признак горения по ID блока.
     #[must_use]
-    pub fn of_block(block: u8) -> Option<(Self, bool)> {
+    pub fn of_block(block: crate::BlockId) -> Option<(Self, bool)> {
         Some(match block {
             crate::FURNACE => (Self::Furnace, false),
             crate::FURNACE_LIT => (Self::Furnace, true),
@@ -34,7 +34,7 @@ impl FurnaceKind {
     }
     /// ID блока этого вида в выбранном состоянии.
     #[must_use]
-    pub fn block(self, lit: bool) -> u8 {
+    pub fn block(self, lit: bool) -> crate::BlockId {
         match (self, lit) {
             (Self::Furnace, false) => crate::FURNACE,
             (Self::Furnace, true) => crate::FURNACE_LIT,

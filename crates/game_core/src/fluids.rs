@@ -7,8 +7,8 @@
 //! в них не течёт.
 
 use crate::{
-    AIR, COBBLE, FLOW_LAVA_1, FLOW_WATER_1, LAVA, OBSIDIAN, STONE, WATER, World, is_lava, is_plant,
-    is_solid, valid_world_height,
+    AIR, BlockId, COBBLE, FLOW_LAVA_1, FLOW_WATER_1, LAVA, OBSIDIAN, STONE, WATER, World, is_lava,
+    is_plant, is_solid, valid_world_height,
 };
 
 /// Лава течёт в шесть раз реже воды.
@@ -38,25 +38,25 @@ impl FluidKind {
     }
     /// ID блока для уровня `1..=source_level`.
     #[must_use]
-    pub const fn block(self, level: u8) -> u8 {
+    pub const fn block(self, level: u8) -> BlockId {
         match (self, level) {
             (Self::Water, 8..) => WATER,
-            (Self::Water, _) => FLOW_WATER_1 + level.saturating_sub(1),
+            (Self::Water, _) => FLOW_WATER_1 + level.saturating_sub(1) as BlockId,
             (Self::Lava, 4..) => LAVA,
-            (Self::Lava, _) => FLOW_LAVA_1 + level.saturating_sub(1),
+            (Self::Lava, _) => FLOW_LAVA_1 + level.saturating_sub(1) as BlockId,
         }
     }
 }
 
 /// Вид и уровень жидкого блока.
 #[must_use]
-pub fn fluid_of(id: u8) -> Option<(FluidKind, u8)> {
+pub fn fluid_of(id: BlockId) -> Option<(FluidKind, u8)> {
     match id {
         WATER => Some((FluidKind::Water, 8)),
-        FLOW_WATER_1..=190 => Some((FluidKind::Water, id - FLOW_WATER_1 + 1)),
+        FLOW_WATER_1..=190 => Some((FluidKind::Water, (id - FLOW_WATER_1 + 1) as u8)),
         191 => Some((FluidKind::Water, 7)),
         LAVA => Some((FluidKind::Lava, 4)),
-        FLOW_LAVA_1..=195 => Some((FluidKind::Lava, id - FLOW_LAVA_1 + 1)),
+        FLOW_LAVA_1..=195 => Some((FluidKind::Lava, (id - FLOW_LAVA_1 + 1) as u8)),
         _ => None,
     }
 }
@@ -64,7 +64,7 @@ pub fn fluid_of(id: u8) -> Option<(FluidKind, u8)> {
 /// Высота поверхности блока жидкости, 0…1. Источник воды и столб под
 /// такой же жидкостью — полный блок.
 #[must_use]
-pub fn surface_height(id: u8, above: u8) -> f32 {
+pub fn surface_height(id: BlockId, above: BlockId) -> f32 {
     let Some((kind, level)) = fluid_of(id) else {
         return 0.0;
     };
@@ -74,11 +74,11 @@ pub fn surface_height(id: u8, above: u8) -> f32 {
     f32::from(level) / f32::from(kind.source_level())
 }
 
-fn is_source(id: u8) -> bool {
+fn is_source(id: BlockId) -> bool {
     fluid_of(id).is_some_and(|(kind, level)| level == kind.source_level())
 }
 
-fn replaceable(id: u8) -> bool {
+fn replaceable(id: BlockId) -> bool {
     id == AIR || is_plant(id)
 }
 
@@ -147,7 +147,7 @@ fn infinite_source(world: &World, p: [i32; 3]) -> bool {
 
 /// Встреча воды с лавой: источник лавы превращается в обсидиан, течение — в булыжник;
 /// лава, дотекшая до воды, застывает камнем. Возвращает `true`, если реакция была.
-fn react(world: &mut World, pusher: FluidKind, target: [i32; 3], target_id: u8) -> bool {
+fn react(world: &mut World, pusher: FluidKind, target: [i32; 3], target_id: BlockId) -> bool {
     match (pusher, fluid_of(target_id)) {
         (FluidKind::Water, Some((FluidKind::Lava, level))) => {
             let result = if level == FluidKind::Lava.source_level() {
@@ -209,7 +209,7 @@ fn push(world: &mut World, p: [i32; 3], kind: FluidKind, level: u8) {
     }
 }
 
-fn update(world: &mut World, p: [i32; 3], id: u8) {
+fn update(world: &mut World, p: [i32; 3], id: BlockId) {
     let Some((kind, level)) = fluid_of(id) else {
         return;
     };
@@ -278,7 +278,7 @@ impl BodyFluid {
 
 /// Проверяет клетки у ног, посередине тела и на уровне глаз.
 #[must_use]
-pub fn body_fluid(feet: [f32; 3], height: f32, sample: impl Fn([i32; 3]) -> u8) -> BodyFluid {
+pub fn body_fluid(feet: [f32; 3], height: f32, sample: impl Fn([i32; 3]) -> BlockId) -> BodyFluid {
     let cell = |dy: f32| {
         sample([
             feet[0].floor() as i32,
@@ -297,7 +297,7 @@ pub fn body_fluid(feet: [f32; 3], height: f32, sample: impl Fn([i32; 3]) -> u8) 
 /// Куда течение сносит тело в клетке `p`: единичный вектор (x, z) или нули.
 /// Вода стекает в соседние клетки с меньшим уровнем и в свободное место.
 #[must_use]
-pub fn flow_direction(p: [i32; 3], sample: impl Fn([i32; 3]) -> u8) -> [f32; 2] {
+pub fn flow_direction(p: [i32; 3], sample: impl Fn([i32; 3]) -> BlockId) -> [f32; 2] {
     let Some((kind, level)) = fluid_of(sample(p)) else {
         return [0.0; 2];
     };
@@ -359,7 +359,7 @@ mod tests {
         }
     }
 
-    fn count(world: &World, f: impl Fn(u8) -> bool) -> usize {
+    fn count(world: &World, f: impl Fn(BlockId) -> bool) -> usize {
         let mut total = 0;
         for x in -24..24 {
             for z in -24..24 {
@@ -378,7 +378,7 @@ mod tests {
                 assert_eq!(fluid_of(kind.block(level)), Some((kind, level)));
             }
         }
-        let fluids = (0..BLOCKS.len() as u8)
+        let fluids = (0..BLOCKS.len() as BlockId)
             .filter(|id| fluid_of(*id).is_some())
             .count();
         assert_eq!(fluids, 12);

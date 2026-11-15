@@ -13,7 +13,7 @@ pub const SECTION_VOLUME: usize = 16 * 16 * 16;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Section {
-    pub blocks: Box<[u8; SECTION_VOLUME]>,
+    pub blocks: Box<[BlockId; SECTION_VOLUME]>,
 }
 impl Default for Section {
     fn default() -> Self {
@@ -25,13 +25,13 @@ impl Default for Section {
 impl Section {
     /// Section-local x/y/z, each in 0..16. Invalid coordinates read as air.
     #[must_use]
-    pub fn block(&self, local: [u8; 3]) -> u8 {
+    pub fn block(&self, local: [u8; 3]) -> BlockId {
         if local.iter().any(|&n| n >= 16) {
             return AIR;
         }
         self.blocks[Self::index(local)]
     }
-    pub fn set(&mut self, local: [u8; 3], id: u8) {
+    pub fn set(&mut self, local: [u8; 3], id: BlockId) {
         if local.iter().all(|&n| n < 16) && usize::from(id) < BLOCKS.len() {
             self.blocks[Self::index(local)] = id;
         }
@@ -107,7 +107,7 @@ impl Chunk {
     }
     /// Read using world block coordinates. Other columns and heights are air.
     #[must_use]
-    pub fn block(&self, position: [i32; 3]) -> u8 {
+    pub fn block(&self, position: [i32; 3]) -> BlockId {
         if !valid_world_height(position[1])
             || [
                 section_coordinate(position[0]),
@@ -120,7 +120,7 @@ impl Chunk {
             .get(&section_coordinate(position[1]))
             .map_or(AIR, |section| section.block(position.map(local_coordinate)))
     }
-    pub(crate) fn write(&mut self, position: [i32; 3], id: u8) {
+    pub(crate) fn write(&mut self, position: [i32; 3], id: BlockId) {
         let sy = section_coordinate(position[1]);
         if id == AIR {
             if let Some(section) = self.sections.get_mut(&sy) {
@@ -443,7 +443,7 @@ pub struct World {
     pub seed: u64,
     pub chunks: HashMap<[i32; 2], Arc<Chunk>>,
     /// Edits outlive loaded chunk data and are replayed when a chunk is inserted.
-    pub edits: HashMap<[i32; 3], u8>,
+    pub edits: HashMap<[i32; 3], BlockId>,
     pub dirty: HashSet<[i32; 3]>,
     /// Клетки, рядом с которыми менялась жидкость; их обрабатывает `fluids::tick`.
     pub fluid_active: HashSet<[i32; 3]>,
@@ -460,7 +460,7 @@ impl World {
         }
     }
     #[must_use]
-    pub fn block(&self, position: [i32; 3]) -> u8 {
+    pub fn block(&self, position: [i32; 3]) -> BlockId {
         self.chunks
             .get(&[
                 section_coordinate(position[0]),
@@ -469,7 +469,7 @@ impl World {
             .map_or(AIR, |chunk| chunk.block(position))
     }
     /// Returns true only when a valid, loaded, breakable block actually changed.
-    pub fn set(&mut self, position: [i32; 3], id: u8) -> bool {
+    pub fn set(&mut self, position: [i32; 3], id: BlockId) -> bool {
         if !valid_world_height(position[1]) || usize::from(id) >= BLOCKS.len() {
             return false;
         }
@@ -582,7 +582,7 @@ struct TerrainColumn {
     biome: Biome,
 }
 impl TerrainColumn {
-    fn surface_block(&self, y: i32) -> u8 {
+    fn surface_block(&self, y: i32) -> BlockId {
         match self.biome {
             Biome::Ocean => {
                 if y == self.height {
@@ -813,7 +813,12 @@ mod tests {
         assert!(!a.sections.is_empty());
         for section in a.sections.values() {
             assert!(section.blocks.iter().any(|&id| id != AIR));
-            assert!(section.blocks.iter().all(|&id| id < BLOCKS.len() as u8));
+            assert!(
+                section
+                    .blocks
+                    .iter()
+                    .all(|&id| id < BLOCKS.len() as BlockId)
+            );
         }
         for x in -16..0 {
             for z in -16..0 {
@@ -876,7 +881,7 @@ mod tests {
         world.insert(Chunk::generate(1, [0, 0]));
         assert!(!world.set([0, -65, 0], STONE));
         assert!(!world.set([0, 321, 0], STONE));
-        assert!(!world.set([0, 70, 0], BLOCKS.len() as u8));
+        assert!(!world.set([0, 70, 0], BLOCKS.len() as BlockId));
         assert!(!world.set([0, -64, 0], AIR));
         assert!(!world.set([0, -64, 0], STONE));
         assert_eq!(world.block([0, -64, 0]), BEDROCK);

@@ -9,7 +9,7 @@ use std::collections::HashSet;
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct OreRule {
-    block: u8,
+    block: crate::BlockId,
     min_y: i32,
     max_y: i32,
     veins: u32,

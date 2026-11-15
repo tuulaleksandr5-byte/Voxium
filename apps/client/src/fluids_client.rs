@@ -56,7 +56,7 @@ fn spawn_overlay(mut commands: Commands) {
 }
 
 /// Цвет пелены для блока на уровне глаз.
-fn overlay_color(block: u8) -> Color {
+fn overlay_color(block: game_core::BlockId) -> Color {
     if game_core::is_lava(block) {
         Color::srgba(1.0, 0.35, 0.05, 0.78)
     } else if game_core::is_water(block) {

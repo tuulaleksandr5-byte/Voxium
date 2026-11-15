@@ -11,7 +11,7 @@ struct DropVisual(u64);
 
 #[derive(Default)]
 struct Cache {
-    blocks: HashMap<u8, Vec<(u8, Handle<Mesh>)>>,
+    blocks: HashMap<game_core::BlockId, Vec<(u16, Handle<Mesh>)>>,
     sprites: HashMap<ItemId, Handle<StandardMaterial>>,
     quad: Option<Handle<Mesh>>,
 }

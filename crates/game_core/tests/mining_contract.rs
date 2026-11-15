@@ -20,7 +20,7 @@ fn supplied_txt_pins_all_72_applicable_duration_cells() {
         if parts.len() < 2 || !parts[1].contains(',') {
             continue;
         }
-        let blocks: &[u8] = match section {
+        let blocks: &[game_core::BlockId] = match section {
             1 => &[game_core::SAND, game_core::GRAVEL, game_core::SNOW],
             2 => &[
                 game_core::SANDSTONE,
@@ -81,7 +81,7 @@ fn speed_and_harvest_are_independent_and_unknown_tools_use_hand() {
         game_core::AIR,
         game_core::WATER,
         game_core::BEDROCK,
-        u8::MAX,
+        game_core::BlockId::MAX,
     ] {
         assert!(cfg.duration(id, Tool::Hand).is_none());
         assert!(!cfg.can_harvest(id, Tool::Hand));
