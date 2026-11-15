@@ -701,6 +701,7 @@ pub(crate) fn oriented_block(
                             | Shape::Hook
                             | Shape::WallHead
                             | Shape::WallBanner
+                            | Shape::WallFan
                     )
                 );
                 let face = if wall_attached {
@@ -2327,6 +2328,34 @@ mod tests {
             },
         );
         assert_eq!(observer.world.block([8, 101, 6]), game_core::OBSERVER + 1);
+    }
+
+    #[test]
+    fn wall_fans_stick_to_walls_and_stairs_of_new_stones_face_the_player() {
+        let mut game = world();
+        equip(&mut game, "voxium:brain_coral_wall_fan");
+        process_action(
+            &mut game,
+            &InventoryAction::Place {
+                position: [8, 101, 6],
+            },
+        );
+        assert_eq!(
+            game.world.block([8, 101, 6]),
+            game_core::BRAIN_CORAL_WALL_FAN + 1
+        );
+        let mut stairs = world();
+        equip(&mut stairs, "voxium:granite_stairs");
+        process_action(
+            &mut stairs,
+            &InventoryAction::Place {
+                position: [8, 101, 6],
+            },
+        );
+        assert_eq!(
+            stairs.world.block([8, 101, 6]),
+            game_core::GRANITE_STAIRS + 1
+        );
     }
 
     #[test]

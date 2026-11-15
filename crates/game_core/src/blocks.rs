@@ -472,7 +472,7 @@ pub enum FamilyKind {
 }
 
 /// Семейства блоков с состоянием: (первый ID, число вариантов, вид).
-pub const FAMILIES: [(BlockId, u8, FamilyKind); 157] = [
+pub const FAMILIES: [(BlockId, u8, FamilyKind); 181] = [
     (322, 4, FamilyKind::H4),
     (330, 4, FamilyKind::H4),
     (334, 4, FamilyKind::H4),
@@ -630,6 +630,30 @@ pub const FAMILIES: [(BlockId, u8, FamilyKind); 157] = [
     (1236, 16, FamilyKind::Door),
     (1257, 4, FamilyKind::H4),
     (1275, 6, FamilyKind::H6),
+    (1365, 4, FamilyKind::H4),
+    (1369, 4, FamilyKind::H4),
+    (1373, 4, FamilyKind::H4),
+    (1377, 4, FamilyKind::H4),
+    (1381, 4, FamilyKind::H4),
+    (1385, 4, FamilyKind::H4),
+    (1389, 4, FamilyKind::H4),
+    (1393, 4, FamilyKind::H4),
+    (1397, 4, FamilyKind::H4),
+    (1401, 4, FamilyKind::H4),
+    (1414, 4, FamilyKind::H4),
+    (1418, 4, FamilyKind::H4),
+    (1422, 4, FamilyKind::H4),
+    (1426, 4, FamilyKind::H4),
+    (1430, 4, FamilyKind::H4),
+    (1434, 4, FamilyKind::H4),
+    (1438, 4, FamilyKind::H4),
+    (1442, 4, FamilyKind::H4),
+    (1446, 4, FamilyKind::H4),
+    (1450, 4, FamilyKind::H4),
+    (1454, 4, FamilyKind::H4),
+    (1458, 4, FamilyKind::H4),
+    (1462, 4, FamilyKind::H4),
+    (1466, 4, FamilyKind::H4),
 ];
 
 pub const PART2_FIRST: BlockId = 321;
@@ -955,6 +979,112 @@ pub const RED_CONCRETE_POWDER: BlockId = 1328;
 pub const BLACK_CONCRETE_POWDER: BlockId = 1329;
 pub const PART5_FIRST: BlockId = 1041;
 pub const PART5_LAST: BlockId = 1329;
+pub const KELP: BlockId = 1330;
+pub const KELP_PLANT: BlockId = 1331;
+pub const DRIED_KELP_BLOCK: BlockId = 1332;
+pub const TURTLE_EGG: BlockId = 1333;
+pub const SNIFFER_EGG: BlockId = 1334;
+pub const DEAD_TUBE_CORAL_BLOCK: BlockId = 1335;
+pub const DEAD_BRAIN_CORAL_BLOCK: BlockId = 1336;
+pub const DEAD_BUBBLE_CORAL_BLOCK: BlockId = 1337;
+pub const DEAD_FIRE_CORAL_BLOCK: BlockId = 1338;
+pub const DEAD_HORN_CORAL_BLOCK: BlockId = 1339;
+pub const TUBE_CORAL_BLOCK: BlockId = 1340;
+pub const BRAIN_CORAL_BLOCK: BlockId = 1341;
+pub const BUBBLE_CORAL_BLOCK: BlockId = 1342;
+pub const FIRE_CORAL_BLOCK: BlockId = 1343;
+pub const HORN_CORAL_BLOCK: BlockId = 1344;
+pub const DEAD_TUBE_CORAL: BlockId = 1345;
+pub const DEAD_BRAIN_CORAL: BlockId = 1346;
+pub const DEAD_BUBBLE_CORAL: BlockId = 1347;
+pub const DEAD_FIRE_CORAL: BlockId = 1348;
+pub const DEAD_HORN_CORAL: BlockId = 1349;
+pub const TUBE_CORAL: BlockId = 1350;
+pub const BRAIN_CORAL: BlockId = 1351;
+pub const BUBBLE_CORAL: BlockId = 1352;
+pub const FIRE_CORAL: BlockId = 1353;
+pub const HORN_CORAL: BlockId = 1354;
+pub const DEAD_TUBE_CORAL_FAN: BlockId = 1355;
+pub const DEAD_BRAIN_CORAL_FAN: BlockId = 1356;
+pub const DEAD_BUBBLE_CORAL_FAN: BlockId = 1357;
+pub const DEAD_FIRE_CORAL_FAN: BlockId = 1358;
+pub const DEAD_HORN_CORAL_FAN: BlockId = 1359;
+pub const TUBE_CORAL_FAN: BlockId = 1360;
+pub const BRAIN_CORAL_FAN: BlockId = 1361;
+pub const BUBBLE_CORAL_FAN: BlockId = 1362;
+pub const FIRE_CORAL_FAN: BlockId = 1363;
+pub const HORN_CORAL_FAN: BlockId = 1364;
+pub const DEAD_TUBE_CORAL_WALL_FAN: BlockId = 1365;
+pub const DEAD_BRAIN_CORAL_WALL_FAN: BlockId = 1369;
+pub const DEAD_BUBBLE_CORAL_WALL_FAN: BlockId = 1373;
+pub const DEAD_FIRE_CORAL_WALL_FAN: BlockId = 1377;
+pub const DEAD_HORN_CORAL_WALL_FAN: BlockId = 1381;
+pub const TUBE_CORAL_WALL_FAN: BlockId = 1385;
+pub const BRAIN_CORAL_WALL_FAN: BlockId = 1389;
+pub const BUBBLE_CORAL_WALL_FAN: BlockId = 1393;
+pub const FIRE_CORAL_WALL_FAN: BlockId = 1397;
+pub const HORN_CORAL_WALL_FAN: BlockId = 1401;
+pub const SEA_PICKLE: BlockId = 1405;
+pub const BLUE_ICE: BlockId = 1406;
+pub const CONDUIT: BlockId = 1407;
+pub const BAMBOO_SAPLING: BlockId = 1408;
+pub const BAMBOO: BlockId = 1409;
+pub const POTTED_BAMBOO: BlockId = 1410;
+pub const VOID_AIR: BlockId = 1411;
+pub const CAVE_AIR: BlockId = 1412;
+pub const BUBBLE_COLUMN: BlockId = 1413;
+pub const POLISHED_GRANITE_STAIRS: BlockId = 1414;
+pub const SMOOTH_RED_SANDSTONE_STAIRS: BlockId = 1418;
+pub const MOSSY_STONE_BRICK_STAIRS: BlockId = 1422;
+pub const POLISHED_DIORITE_STAIRS: BlockId = 1426;
+pub const MOSSY_COBBLESTONE_STAIRS: BlockId = 1430;
+pub const END_STONE_BRICK_STAIRS: BlockId = 1434;
+pub const STONE_STAIRS: BlockId = 1438;
+pub const SMOOTH_SANDSTONE_STAIRS: BlockId = 1442;
+pub const SMOOTH_QUARTZ_STAIRS: BlockId = 1446;
+pub const GRANITE_STAIRS: BlockId = 1450;
+pub const ANDESITE_STAIRS: BlockId = 1454;
+pub const RED_NETHER_BRICK_STAIRS: BlockId = 1458;
+pub const POLISHED_ANDESITE_STAIRS: BlockId = 1462;
+pub const DIORITE_STAIRS: BlockId = 1466;
+pub const POLISHED_GRANITE_SLAB: BlockId = 1470;
+pub const SMOOTH_RED_SANDSTONE_SLAB: BlockId = 1471;
+pub const MOSSY_STONE_BRICK_SLAB: BlockId = 1472;
+pub const POLISHED_DIORITE_SLAB: BlockId = 1473;
+pub const MOSSY_COBBLESTONE_SLAB: BlockId = 1474;
+pub const END_STONE_BRICK_SLAB: BlockId = 1475;
+pub const SMOOTH_SANDSTONE_SLAB: BlockId = 1476;
+pub const SMOOTH_QUARTZ_SLAB: BlockId = 1477;
+pub const ANDESITE_SLAB: BlockId = 1478;
+pub const RED_NETHER_BRICK_SLAB: BlockId = 1479;
+pub const POLISHED_ANDESITE_SLAB: BlockId = 1480;
+pub const DIORITE_SLAB: BlockId = 1481;
+pub const BRICK_WALL: BlockId = 1482;
+pub const PRISMARINE_WALL: BlockId = 1483;
+pub const RED_SANDSTONE_WALL: BlockId = 1484;
+pub const MOSSY_STONE_BRICK_WALL: BlockId = 1485;
+pub const GRANITE_WALL: BlockId = 1486;
+pub const STONE_BRICK_WALL: BlockId = 1487;
+pub const MUD_BRICK_WALL: BlockId = 1488;
+pub const NETHER_BRICK_WALL: BlockId = 1489;
+pub const ANDESITE_WALL: BlockId = 1490;
+pub const RED_NETHER_BRICK_WALL: BlockId = 1491;
+pub const SANDSTONE_WALL: BlockId = 1492;
+pub const END_STONE_BRICK_WALL: BlockId = 1493;
+pub const DIORITE_WALL: BlockId = 1494;
+pub const SCAFFOLDING: BlockId = 1495;
+pub const LOOM: BlockId = 1496;
+pub const CARTOGRAPHY_TABLE: BlockId = 1497;
+pub const FLETCHING_TABLE: BlockId = 1498;
+pub const GRINDSTONE: BlockId = 1499;
+pub const LECTERN: BlockId = 1500;
+pub const SMITHING_TABLE: BlockId = 1501;
+pub const BELL: BlockId = 1502;
+pub const LANTERN: BlockId = 1503;
+pub const SOUL_LANTERN: BlockId = 1504;
+pub const CAMPFIRE: BlockId = 1505;
+pub const PART6_FIRST: BlockId = 1330;
+pub const PART6_LAST: BlockId = 1505;
 pub const PLANT2_FIRST: BlockId = 251;
 pub const PLANT2_LAST: BlockId = 280;
 
@@ -978,7 +1108,7 @@ const fn block(
 }
 
 #[allow(clippy::large_const_arrays)]
-pub const BLOCKS: [BlockDef; 1330] = [
+pub const BLOCKS: [BlockDef; 1506] = [
     block(AIR, "Air", "air", 0.0, false, false),
     block(GRASS, "Grass", "grass", 0.6, true, true),
     block(DIRT, "Dirt", "dirt", 0.5, true, true),
@@ -9836,6 +9966,1279 @@ pub const BLOCKS: [BlockDef; 1330] = [
         true,
         true,
     ),
+    block(KELP, "Kelp", "kelp", 0.05, false, false),
+    block(KELP_PLANT, "Kelp Plant", "kelp_plant", 0.05, false, false),
+    block(
+        DRIED_KELP_BLOCK,
+        "Dried Kelp Block",
+        "dried_kelp_block",
+        0.5,
+        true,
+        true,
+    ),
+    block(TURTLE_EGG, "Turtle Egg", "turtle_egg", 0.5, true, false),
+    block(SNIFFER_EGG, "Sniffer Egg", "sniffer_egg", 0.5, true, false),
+    block(
+        DEAD_TUBE_CORAL_BLOCK,
+        "Dead Tube Coral Block",
+        "dead_tube_coral_block",
+        1.5,
+        true,
+        true,
+    ),
+    block(
+        DEAD_BRAIN_CORAL_BLOCK,
+        "Dead Brain Coral Block",
+        "dead_brain_coral_block",
+        1.5,
+        true,
+        true,
+    ),
+    block(
+        DEAD_BUBBLE_CORAL_BLOCK,
+        "Dead Bubble Coral Block",
+        "dead_bubble_coral_block",
+        1.5,
+        true,
+        true,
+    ),
+    block(
+        DEAD_FIRE_CORAL_BLOCK,
+        "Dead Fire Coral Block",
+        "dead_fire_coral_block",
+        1.5,
+        true,
+        true,
+    ),
+    block(
+        DEAD_HORN_CORAL_BLOCK,
+        "Dead Horn Coral Block",
+        "dead_horn_coral_block",
+        1.5,
+        true,
+        true,
+    ),
+    block(
+        TUBE_CORAL_BLOCK,
+        "Tube Coral Block",
+        "tube_coral_block",
+        1.5,
+        true,
+        true,
+    ),
+    block(
+        BRAIN_CORAL_BLOCK,
+        "Brain Coral Block",
+        "brain_coral_block",
+        1.5,
+        true,
+        true,
+    ),
+    block(
+        BUBBLE_CORAL_BLOCK,
+        "Bubble Coral Block",
+        "bubble_coral_block",
+        1.5,
+        true,
+        true,
+    ),
+    block(
+        FIRE_CORAL_BLOCK,
+        "Fire Coral Block",
+        "fire_coral_block",
+        1.5,
+        true,
+        true,
+    ),
+    block(
+        HORN_CORAL_BLOCK,
+        "Horn Coral Block",
+        "horn_coral_block",
+        1.5,
+        true,
+        true,
+    ),
+    block(
+        DEAD_TUBE_CORAL,
+        "Dead Tube Coral",
+        "dead_tube_coral",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        DEAD_BRAIN_CORAL,
+        "Dead Brain Coral",
+        "dead_brain_coral",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        DEAD_BUBBLE_CORAL,
+        "Dead Bubble Coral",
+        "dead_bubble_coral",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        DEAD_FIRE_CORAL,
+        "Dead Fire Coral",
+        "dead_fire_coral",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        DEAD_HORN_CORAL,
+        "Dead Horn Coral",
+        "dead_horn_coral",
+        0.05,
+        false,
+        false,
+    ),
+    block(TUBE_CORAL, "Tube Coral", "tube_coral", 0.05, false, false),
+    block(
+        BRAIN_CORAL,
+        "Brain Coral",
+        "brain_coral",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        BUBBLE_CORAL,
+        "Bubble Coral",
+        "bubble_coral",
+        0.05,
+        false,
+        false,
+    ),
+    block(FIRE_CORAL, "Fire Coral", "fire_coral", 0.05, false, false),
+    block(HORN_CORAL, "Horn Coral", "horn_coral", 0.05, false, false),
+    block(
+        DEAD_TUBE_CORAL_FAN,
+        "Dead Tube Coral Fan",
+        "dead_tube_coral_fan",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        DEAD_BRAIN_CORAL_FAN,
+        "Dead Brain Coral Fan",
+        "dead_brain_coral_fan",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        DEAD_BUBBLE_CORAL_FAN,
+        "Dead Bubble Coral Fan",
+        "dead_bubble_coral_fan",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        DEAD_FIRE_CORAL_FAN,
+        "Dead Fire Coral Fan",
+        "dead_fire_coral_fan",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        DEAD_HORN_CORAL_FAN,
+        "Dead Horn Coral Fan",
+        "dead_horn_coral_fan",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        TUBE_CORAL_FAN,
+        "Tube Coral Fan",
+        "tube_coral_fan",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        BRAIN_CORAL_FAN,
+        "Brain Coral Fan",
+        "brain_coral_fan",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        BUBBLE_CORAL_FAN,
+        "Bubble Coral Fan",
+        "bubble_coral_fan",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        FIRE_CORAL_FAN,
+        "Fire Coral Fan",
+        "fire_coral_fan",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        HORN_CORAL_FAN,
+        "Horn Coral Fan",
+        "horn_coral_fan",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        DEAD_TUBE_CORAL_WALL_FAN,
+        "Dead Tube Coral Wall Fan",
+        "dead_tube_coral_wall_fan",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        DEAD_TUBE_CORAL_WALL_FAN + 1,
+        "Dead Tube Coral Wall Fan (south)",
+        "dead_tube_coral_wall_fan",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        DEAD_TUBE_CORAL_WALL_FAN + 2,
+        "Dead Tube Coral Wall Fan (west)",
+        "dead_tube_coral_wall_fan",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        DEAD_TUBE_CORAL_WALL_FAN + 3,
+        "Dead Tube Coral Wall Fan (east)",
+        "dead_tube_coral_wall_fan",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        DEAD_BRAIN_CORAL_WALL_FAN,
+        "Dead Brain Coral Wall Fan",
+        "dead_brain_coral_wall_fan",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        DEAD_BRAIN_CORAL_WALL_FAN + 1,
+        "Dead Brain Coral Wall Fan (south)",
+        "dead_brain_coral_wall_fan",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        DEAD_BRAIN_CORAL_WALL_FAN + 2,
+        "Dead Brain Coral Wall Fan (west)",
+        "dead_brain_coral_wall_fan",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        DEAD_BRAIN_CORAL_WALL_FAN + 3,
+        "Dead Brain Coral Wall Fan (east)",
+        "dead_brain_coral_wall_fan",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        DEAD_BUBBLE_CORAL_WALL_FAN,
+        "Dead Bubble Coral Wall Fan",
+        "dead_bubble_coral_wall_fan",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        DEAD_BUBBLE_CORAL_WALL_FAN + 1,
+        "Dead Bubble Coral Wall Fan (south)",
+        "dead_bubble_coral_wall_fan",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        DEAD_BUBBLE_CORAL_WALL_FAN + 2,
+        "Dead Bubble Coral Wall Fan (west)",
+        "dead_bubble_coral_wall_fan",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        DEAD_BUBBLE_CORAL_WALL_FAN + 3,
+        "Dead Bubble Coral Wall Fan (east)",
+        "dead_bubble_coral_wall_fan",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        DEAD_FIRE_CORAL_WALL_FAN,
+        "Dead Fire Coral Wall Fan",
+        "dead_fire_coral_wall_fan",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        DEAD_FIRE_CORAL_WALL_FAN + 1,
+        "Dead Fire Coral Wall Fan (south)",
+        "dead_fire_coral_wall_fan",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        DEAD_FIRE_CORAL_WALL_FAN + 2,
+        "Dead Fire Coral Wall Fan (west)",
+        "dead_fire_coral_wall_fan",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        DEAD_FIRE_CORAL_WALL_FAN + 3,
+        "Dead Fire Coral Wall Fan (east)",
+        "dead_fire_coral_wall_fan",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        DEAD_HORN_CORAL_WALL_FAN,
+        "Dead Horn Coral Wall Fan",
+        "dead_horn_coral_wall_fan",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        DEAD_HORN_CORAL_WALL_FAN + 1,
+        "Dead Horn Coral Wall Fan (south)",
+        "dead_horn_coral_wall_fan",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        DEAD_HORN_CORAL_WALL_FAN + 2,
+        "Dead Horn Coral Wall Fan (west)",
+        "dead_horn_coral_wall_fan",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        DEAD_HORN_CORAL_WALL_FAN + 3,
+        "Dead Horn Coral Wall Fan (east)",
+        "dead_horn_coral_wall_fan",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        TUBE_CORAL_WALL_FAN,
+        "Tube Coral Wall Fan",
+        "tube_coral_wall_fan",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        TUBE_CORAL_WALL_FAN + 1,
+        "Tube Coral Wall Fan (south)",
+        "tube_coral_wall_fan",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        TUBE_CORAL_WALL_FAN + 2,
+        "Tube Coral Wall Fan (west)",
+        "tube_coral_wall_fan",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        TUBE_CORAL_WALL_FAN + 3,
+        "Tube Coral Wall Fan (east)",
+        "tube_coral_wall_fan",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        BRAIN_CORAL_WALL_FAN,
+        "Brain Coral Wall Fan",
+        "brain_coral_wall_fan",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        BRAIN_CORAL_WALL_FAN + 1,
+        "Brain Coral Wall Fan (south)",
+        "brain_coral_wall_fan",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        BRAIN_CORAL_WALL_FAN + 2,
+        "Brain Coral Wall Fan (west)",
+        "brain_coral_wall_fan",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        BRAIN_CORAL_WALL_FAN + 3,
+        "Brain Coral Wall Fan (east)",
+        "brain_coral_wall_fan",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        BUBBLE_CORAL_WALL_FAN,
+        "Bubble Coral Wall Fan",
+        "bubble_coral_wall_fan",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        BUBBLE_CORAL_WALL_FAN + 1,
+        "Bubble Coral Wall Fan (south)",
+        "bubble_coral_wall_fan",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        BUBBLE_CORAL_WALL_FAN + 2,
+        "Bubble Coral Wall Fan (west)",
+        "bubble_coral_wall_fan",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        BUBBLE_CORAL_WALL_FAN + 3,
+        "Bubble Coral Wall Fan (east)",
+        "bubble_coral_wall_fan",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        FIRE_CORAL_WALL_FAN,
+        "Fire Coral Wall Fan",
+        "fire_coral_wall_fan",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        FIRE_CORAL_WALL_FAN + 1,
+        "Fire Coral Wall Fan (south)",
+        "fire_coral_wall_fan",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        FIRE_CORAL_WALL_FAN + 2,
+        "Fire Coral Wall Fan (west)",
+        "fire_coral_wall_fan",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        FIRE_CORAL_WALL_FAN + 3,
+        "Fire Coral Wall Fan (east)",
+        "fire_coral_wall_fan",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        HORN_CORAL_WALL_FAN,
+        "Horn Coral Wall Fan",
+        "horn_coral_wall_fan",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        HORN_CORAL_WALL_FAN + 1,
+        "Horn Coral Wall Fan (south)",
+        "horn_coral_wall_fan",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        HORN_CORAL_WALL_FAN + 2,
+        "Horn Coral Wall Fan (west)",
+        "horn_coral_wall_fan",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        HORN_CORAL_WALL_FAN + 3,
+        "Horn Coral Wall Fan (east)",
+        "horn_coral_wall_fan",
+        0.05,
+        false,
+        false,
+    ),
+    block(SEA_PICKLE, "Sea Pickle", "sea_pickle", 0.05, false, false),
+    block(BLUE_ICE, "Blue Ice", "blue_ice", 2.8, true, true),
+    BlockDef {
+        light_emission: 15,
+        ..block(CONDUIT, "Conduit", "conduit", 3.0, true, false)
+    },
+    block(
+        BAMBOO_SAPLING,
+        "Bamboo Sapling",
+        "bamboo_sapling",
+        0.05,
+        false,
+        false,
+    ),
+    block(BAMBOO, "Bamboo", "bamboo", 1.0, false, false),
+    block(
+        POTTED_BAMBOO,
+        "Potted Bamboo",
+        "potted_bamboo",
+        0.05,
+        true,
+        false,
+    ),
+    block(VOID_AIR, "Void Air", "void_air", 0.05, false, false),
+    block(CAVE_AIR, "Cave Air", "cave_air", 0.05, false, false),
+    block(
+        BUBBLE_COLUMN,
+        "Bubble Column",
+        "bubble_column",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        POLISHED_GRANITE_STAIRS,
+        "Polished Granite Stairs",
+        "polished_granite_stairs",
+        1.5,
+        true,
+        false,
+    ),
+    block(
+        POLISHED_GRANITE_STAIRS + 1,
+        "Polished Granite Stairs (south)",
+        "polished_granite_stairs",
+        1.5,
+        true,
+        false,
+    ),
+    block(
+        POLISHED_GRANITE_STAIRS + 2,
+        "Polished Granite Stairs (west)",
+        "polished_granite_stairs",
+        1.5,
+        true,
+        false,
+    ),
+    block(
+        POLISHED_GRANITE_STAIRS + 3,
+        "Polished Granite Stairs (east)",
+        "polished_granite_stairs",
+        1.5,
+        true,
+        false,
+    ),
+    block(
+        SMOOTH_RED_SANDSTONE_STAIRS,
+        "Smooth Red Sandstone Stairs",
+        "smooth_red_sandstone_stairs",
+        1.5,
+        true,
+        false,
+    ),
+    block(
+        SMOOTH_RED_SANDSTONE_STAIRS + 1,
+        "Smooth Red Sandstone Stairs (south)",
+        "smooth_red_sandstone_stairs",
+        1.5,
+        true,
+        false,
+    ),
+    block(
+        SMOOTH_RED_SANDSTONE_STAIRS + 2,
+        "Smooth Red Sandstone Stairs (west)",
+        "smooth_red_sandstone_stairs",
+        1.5,
+        true,
+        false,
+    ),
+    block(
+        SMOOTH_RED_SANDSTONE_STAIRS + 3,
+        "Smooth Red Sandstone Stairs (east)",
+        "smooth_red_sandstone_stairs",
+        1.5,
+        true,
+        false,
+    ),
+    block(
+        MOSSY_STONE_BRICK_STAIRS,
+        "Mossy Stone Brick Stairs",
+        "mossy_stone_brick_stairs",
+        1.5,
+        true,
+        false,
+    ),
+    block(
+        MOSSY_STONE_BRICK_STAIRS + 1,
+        "Mossy Stone Brick Stairs (south)",
+        "mossy_stone_brick_stairs",
+        1.5,
+        true,
+        false,
+    ),
+    block(
+        MOSSY_STONE_BRICK_STAIRS + 2,
+        "Mossy Stone Brick Stairs (west)",
+        "mossy_stone_brick_stairs",
+        1.5,
+        true,
+        false,
+    ),
+    block(
+        MOSSY_STONE_BRICK_STAIRS + 3,
+        "Mossy Stone Brick Stairs (east)",
+        "mossy_stone_brick_stairs",
+        1.5,
+        true,
+        false,
+    ),
+    block(
+        POLISHED_DIORITE_STAIRS,
+        "Polished Diorite Stairs",
+        "polished_diorite_stairs",
+        1.5,
+        true,
+        false,
+    ),
+    block(
+        POLISHED_DIORITE_STAIRS + 1,
+        "Polished Diorite Stairs (south)",
+        "polished_diorite_stairs",
+        1.5,
+        true,
+        false,
+    ),
+    block(
+        POLISHED_DIORITE_STAIRS + 2,
+        "Polished Diorite Stairs (west)",
+        "polished_diorite_stairs",
+        1.5,
+        true,
+        false,
+    ),
+    block(
+        POLISHED_DIORITE_STAIRS + 3,
+        "Polished Diorite Stairs (east)",
+        "polished_diorite_stairs",
+        1.5,
+        true,
+        false,
+    ),
+    block(
+        MOSSY_COBBLESTONE_STAIRS,
+        "Mossy Cobblestone Stairs",
+        "mossy_cobblestone_stairs",
+        1.5,
+        true,
+        false,
+    ),
+    block(
+        MOSSY_COBBLESTONE_STAIRS + 1,
+        "Mossy Cobblestone Stairs (south)",
+        "mossy_cobblestone_stairs",
+        1.5,
+        true,
+        false,
+    ),
+    block(
+        MOSSY_COBBLESTONE_STAIRS + 2,
+        "Mossy Cobblestone Stairs (west)",
+        "mossy_cobblestone_stairs",
+        1.5,
+        true,
+        false,
+    ),
+    block(
+        MOSSY_COBBLESTONE_STAIRS + 3,
+        "Mossy Cobblestone Stairs (east)",
+        "mossy_cobblestone_stairs",
+        1.5,
+        true,
+        false,
+    ),
+    block(
+        END_STONE_BRICK_STAIRS,
+        "End Stone Brick Stairs",
+        "end_stone_brick_stairs",
+        1.5,
+        true,
+        false,
+    ),
+    block(
+        END_STONE_BRICK_STAIRS + 1,
+        "End Stone Brick Stairs (south)",
+        "end_stone_brick_stairs",
+        1.5,
+        true,
+        false,
+    ),
+    block(
+        END_STONE_BRICK_STAIRS + 2,
+        "End Stone Brick Stairs (west)",
+        "end_stone_brick_stairs",
+        1.5,
+        true,
+        false,
+    ),
+    block(
+        END_STONE_BRICK_STAIRS + 3,
+        "End Stone Brick Stairs (east)",
+        "end_stone_brick_stairs",
+        1.5,
+        true,
+        false,
+    ),
+    block(
+        STONE_STAIRS,
+        "Stone Stairs",
+        "stone_stairs",
+        1.5,
+        true,
+        false,
+    ),
+    block(
+        STONE_STAIRS + 1,
+        "Stone Stairs (south)",
+        "stone_stairs",
+        1.5,
+        true,
+        false,
+    ),
+    block(
+        STONE_STAIRS + 2,
+        "Stone Stairs (west)",
+        "stone_stairs",
+        1.5,
+        true,
+        false,
+    ),
+    block(
+        STONE_STAIRS + 3,
+        "Stone Stairs (east)",
+        "stone_stairs",
+        1.5,
+        true,
+        false,
+    ),
+    block(
+        SMOOTH_SANDSTONE_STAIRS,
+        "Smooth Sandstone Stairs",
+        "smooth_sandstone_stairs",
+        1.5,
+        true,
+        false,
+    ),
+    block(
+        SMOOTH_SANDSTONE_STAIRS + 1,
+        "Smooth Sandstone Stairs (south)",
+        "smooth_sandstone_stairs",
+        1.5,
+        true,
+        false,
+    ),
+    block(
+        SMOOTH_SANDSTONE_STAIRS + 2,
+        "Smooth Sandstone Stairs (west)",
+        "smooth_sandstone_stairs",
+        1.5,
+        true,
+        false,
+    ),
+    block(
+        SMOOTH_SANDSTONE_STAIRS + 3,
+        "Smooth Sandstone Stairs (east)",
+        "smooth_sandstone_stairs",
+        1.5,
+        true,
+        false,
+    ),
+    block(
+        SMOOTH_QUARTZ_STAIRS,
+        "Smooth Quartz Stairs",
+        "smooth_quartz_stairs",
+        1.5,
+        true,
+        false,
+    ),
+    block(
+        SMOOTH_QUARTZ_STAIRS + 1,
+        "Smooth Quartz Stairs (south)",
+        "smooth_quartz_stairs",
+        1.5,
+        true,
+        false,
+    ),
+    block(
+        SMOOTH_QUARTZ_STAIRS + 2,
+        "Smooth Quartz Stairs (west)",
+        "smooth_quartz_stairs",
+        1.5,
+        true,
+        false,
+    ),
+    block(
+        SMOOTH_QUARTZ_STAIRS + 3,
+        "Smooth Quartz Stairs (east)",
+        "smooth_quartz_stairs",
+        1.5,
+        true,
+        false,
+    ),
+    block(
+        GRANITE_STAIRS,
+        "Granite Stairs",
+        "granite_stairs",
+        1.5,
+        true,
+        false,
+    ),
+    block(
+        GRANITE_STAIRS + 1,
+        "Granite Stairs (south)",
+        "granite_stairs",
+        1.5,
+        true,
+        false,
+    ),
+    block(
+        GRANITE_STAIRS + 2,
+        "Granite Stairs (west)",
+        "granite_stairs",
+        1.5,
+        true,
+        false,
+    ),
+    block(
+        GRANITE_STAIRS + 3,
+        "Granite Stairs (east)",
+        "granite_stairs",
+        1.5,
+        true,
+        false,
+    ),
+    block(
+        ANDESITE_STAIRS,
+        "Andesite Stairs",
+        "andesite_stairs",
+        1.5,
+        true,
+        false,
+    ),
+    block(
+        ANDESITE_STAIRS + 1,
+        "Andesite Stairs (south)",
+        "andesite_stairs",
+        1.5,
+        true,
+        false,
+    ),
+    block(
+        ANDESITE_STAIRS + 2,
+        "Andesite Stairs (west)",
+        "andesite_stairs",
+        1.5,
+        true,
+        false,
+    ),
+    block(
+        ANDESITE_STAIRS + 3,
+        "Andesite Stairs (east)",
+        "andesite_stairs",
+        1.5,
+        true,
+        false,
+    ),
+    block(
+        RED_NETHER_BRICK_STAIRS,
+        "Red Nether Brick Stairs",
+        "red_nether_brick_stairs",
+        1.5,
+        true,
+        false,
+    ),
+    block(
+        RED_NETHER_BRICK_STAIRS + 1,
+        "Red Nether Brick Stairs (south)",
+        "red_nether_brick_stairs",
+        1.5,
+        true,
+        false,
+    ),
+    block(
+        RED_NETHER_BRICK_STAIRS + 2,
+        "Red Nether Brick Stairs (west)",
+        "red_nether_brick_stairs",
+        1.5,
+        true,
+        false,
+    ),
+    block(
+        RED_NETHER_BRICK_STAIRS + 3,
+        "Red Nether Brick Stairs (east)",
+        "red_nether_brick_stairs",
+        1.5,
+        true,
+        false,
+    ),
+    block(
+        POLISHED_ANDESITE_STAIRS,
+        "Polished Andesite Stairs",
+        "polished_andesite_stairs",
+        1.5,
+        true,
+        false,
+    ),
+    block(
+        POLISHED_ANDESITE_STAIRS + 1,
+        "Polished Andesite Stairs (south)",
+        "polished_andesite_stairs",
+        1.5,
+        true,
+        false,
+    ),
+    block(
+        POLISHED_ANDESITE_STAIRS + 2,
+        "Polished Andesite Stairs (west)",
+        "polished_andesite_stairs",
+        1.5,
+        true,
+        false,
+    ),
+    block(
+        POLISHED_ANDESITE_STAIRS + 3,
+        "Polished Andesite Stairs (east)",
+        "polished_andesite_stairs",
+        1.5,
+        true,
+        false,
+    ),
+    block(
+        DIORITE_STAIRS,
+        "Diorite Stairs",
+        "diorite_stairs",
+        1.5,
+        true,
+        false,
+    ),
+    block(
+        DIORITE_STAIRS + 1,
+        "Diorite Stairs (south)",
+        "diorite_stairs",
+        1.5,
+        true,
+        false,
+    ),
+    block(
+        DIORITE_STAIRS + 2,
+        "Diorite Stairs (west)",
+        "diorite_stairs",
+        1.5,
+        true,
+        false,
+    ),
+    block(
+        DIORITE_STAIRS + 3,
+        "Diorite Stairs (east)",
+        "diorite_stairs",
+        1.5,
+        true,
+        false,
+    ),
+    block(
+        POLISHED_GRANITE_SLAB,
+        "Polished Granite Slab",
+        "polished_granite_slab",
+        1.5,
+        true,
+        false,
+    ),
+    block(
+        SMOOTH_RED_SANDSTONE_SLAB,
+        "Smooth Red Sandstone Slab",
+        "smooth_red_sandstone_slab",
+        1.5,
+        true,
+        false,
+    ),
+    block(
+        MOSSY_STONE_BRICK_SLAB,
+        "Mossy Stone Brick Slab",
+        "mossy_stone_brick_slab",
+        1.5,
+        true,
+        false,
+    ),
+    block(
+        POLISHED_DIORITE_SLAB,
+        "Polished Diorite Slab",
+        "polished_diorite_slab",
+        1.5,
+        true,
+        false,
+    ),
+    block(
+        MOSSY_COBBLESTONE_SLAB,
+        "Mossy Cobblestone Slab",
+        "mossy_cobblestone_slab",
+        1.5,
+        true,
+        false,
+    ),
+    block(
+        END_STONE_BRICK_SLAB,
+        "End Stone Brick Slab",
+        "end_stone_brick_slab",
+        1.5,
+        true,
+        false,
+    ),
+    block(
+        SMOOTH_SANDSTONE_SLAB,
+        "Smooth Sandstone Slab",
+        "smooth_sandstone_slab",
+        1.5,
+        true,
+        false,
+    ),
+    block(
+        SMOOTH_QUARTZ_SLAB,
+        "Smooth Quartz Slab",
+        "smooth_quartz_slab",
+        1.5,
+        true,
+        false,
+    ),
+    block(
+        ANDESITE_SLAB,
+        "Andesite Slab",
+        "andesite_slab",
+        1.5,
+        true,
+        false,
+    ),
+    block(
+        RED_NETHER_BRICK_SLAB,
+        "Red Nether Brick Slab",
+        "red_nether_brick_slab",
+        1.5,
+        true,
+        false,
+    ),
+    block(
+        POLISHED_ANDESITE_SLAB,
+        "Polished Andesite Slab",
+        "polished_andesite_slab",
+        1.5,
+        true,
+        false,
+    ),
+    block(
+        DIORITE_SLAB,
+        "Diorite Slab",
+        "diorite_slab",
+        1.5,
+        true,
+        false,
+    ),
+    block(BRICK_WALL, "Brick Wall", "brick_wall", 2.0, true, false),
+    block(
+        PRISMARINE_WALL,
+        "Prismarine Wall",
+        "prismarine_wall",
+        2.0,
+        true,
+        false,
+    ),
+    block(
+        RED_SANDSTONE_WALL,
+        "Red Sandstone Wall",
+        "red_sandstone_wall",
+        2.0,
+        true,
+        false,
+    ),
+    block(
+        MOSSY_STONE_BRICK_WALL,
+        "Mossy Stone Brick Wall",
+        "mossy_stone_brick_wall",
+        2.0,
+        true,
+        false,
+    ),
+    block(
+        GRANITE_WALL,
+        "Granite Wall",
+        "granite_wall",
+        2.0,
+        true,
+        false,
+    ),
+    block(
+        STONE_BRICK_WALL,
+        "Stone Brick Wall",
+        "stone_brick_wall",
+        2.0,
+        true,
+        false,
+    ),
+    block(
+        MUD_BRICK_WALL,
+        "Mud Brick Wall",
+        "mud_brick_wall",
+        2.0,
+        true,
+        false,
+    ),
+    block(
+        NETHER_BRICK_WALL,
+        "Nether Brick Wall",
+        "nether_brick_wall",
+        2.0,
+        true,
+        false,
+    ),
+    block(
+        ANDESITE_WALL,
+        "Andesite Wall",
+        "andesite_wall",
+        2.0,
+        true,
+        false,
+    ),
+    block(
+        RED_NETHER_BRICK_WALL,
+        "Red Nether Brick Wall",
+        "red_nether_brick_wall",
+        2.0,
+        true,
+        false,
+    ),
+    block(
+        SANDSTONE_WALL,
+        "Sandstone Wall",
+        "sandstone_wall",
+        2.0,
+        true,
+        false,
+    ),
+    block(
+        END_STONE_BRICK_WALL,
+        "End Stone Brick Wall",
+        "end_stone_brick_wall",
+        2.0,
+        true,
+        false,
+    ),
+    block(
+        DIORITE_WALL,
+        "Diorite Wall",
+        "diorite_wall",
+        2.0,
+        true,
+        false,
+    ),
+    block(SCAFFOLDING, "Scaffolding", "scaffolding", 0.05, true, false),
+    block(LOOM, "Loom", "loom", 2.5, true, true),
+    block(
+        CARTOGRAPHY_TABLE,
+        "Cartography Table",
+        "cartography_table",
+        2.5,
+        true,
+        true,
+    ),
+    block(
+        FLETCHING_TABLE,
+        "Fletching Table",
+        "fletching_table",
+        2.5,
+        true,
+        true,
+    ),
+    block(GRINDSTONE, "Grindstone", "grindstone", 2.0, true, false),
+    block(LECTERN, "Lectern", "lectern", 2.5, true, false),
+    block(
+        SMITHING_TABLE,
+        "Smithing Table",
+        "smithing_table",
+        2.5,
+        true,
+        true,
+    ),
+    block(BELL, "Bell", "bell", 5.0, true, false),
+    BlockDef {
+        light_emission: 15,
+        ..block(LANTERN, "Lantern", "lantern", 3.5, true, false)
+    },
+    BlockDef {
+        light_emission: 10,
+        ..block(
+            SOUL_LANTERN,
+            "Soul Lantern",
+            "soul_lantern",
+            3.5,
+            true,
+            false,
+        )
+    },
+    BlockDef {
+        light_emission: 15,
+        ..block(CAMPFIRE, "Campfire", "campfire", 2.0, true, false)
+    },
 ];
 
 /// Растения рисуются двумя скрещёнными плоскостями и не мешают ходьбе.
@@ -10122,6 +11525,11 @@ pub fn is_cross(id: BlockId) -> bool {
         || id == STRUCTURE_VOID
         || matches!(
             id,
+            KELP | KELP_PLANT | SEA_PICKLE | BAMBOO_SAPLING | BUBBLE_COLUMN
+        )
+        || (DEAD_TUBE_CORAL..=HORN_CORAL_FAN).contains(&id)
+        || matches!(
+            id,
             VINE | GLOW_LICHEN | NETHER_WART | COCOA | CARROTS | POTATOES
         )
         || (ATTACHED_PUMPKIN_STEM..=MELON_STEM).contains(&id)
@@ -10155,7 +11563,7 @@ pub fn is_fire(id: BlockId) -> bool {
 /// Невидимый технический блок.
 #[must_use]
 pub fn is_invisible(id: BlockId) -> bool {
-    id == MOVING_PISTON
+    matches!(id, MOVING_PISTON | VOID_AIR | CAVE_AIR)
 }
 
 /// Нижняя половина клетки: плиты, кровати, головка поршня.
@@ -10301,6 +11709,7 @@ pub fn is_slab(id: BlockId) -> bool {
     (OAK_SLAB..=DARK_BRICK_SLAB).contains(&id)
         || (PRISMARINE_SLAB..=DARK_PRISMARINE_SLAB).contains(&id)
         || (CUT_SANDSTONE_SLAB..=PURPUR_SLAB).contains(&id)
+        || (POLISHED_GRANITE_SLAB..=DIORITE_SLAB).contains(&id)
         || (SPRUCE_SLAB..=BAMBOO_MOSAIC_SLAB).contains(&id)
 }
 
@@ -10364,7 +11773,7 @@ mod tests {
             "Crafting Table",
             "Furnace",
         ];
-        assert_eq!(BLOCKS.len(), 1330);
+        assert_eq!(BLOCKS.len(), 1506);
         for (offset, name) in expected.iter().enumerate() {
             let id = 17 + offset;
             assert_eq!(BLOCKS[id].id as usize, id);
@@ -10375,7 +11784,7 @@ mod tests {
 
     #[test]
     fn chest_extends_registry_without_changing_foundation_ids() {
-        assert_eq!(BLOCKS.len(), 1330);
+        assert_eq!(BLOCKS.len(), 1506);
         let chest = BLOCKS.get(16).expect("сундук зарегистрирован");
         assert_eq!(chest.name, "Chest");
         assert!(is_solid(16));

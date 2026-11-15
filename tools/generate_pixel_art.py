@@ -3744,6 +3744,238 @@ def structure_void():
 
 
 
+# ------------------------------------------------------------ part 6 tiles
+
+CORAL = {"tube": "#2a58d0", "brain": "#d86aaa", "bubble": "#a42ed8", "fire": "#d02c2c", "horn": "#e6c52c"}
+DEAD = "#9c9a92"
+
+
+def coral_block(name, hexv, dead):
+    def build():
+        r = rng(name)
+        image = fill(canvas(), fbm(r, ((4, 1.0), (8, 0.8), (16, 0.5))), shades(hexv, 0.14 if not dead else 0.08))
+        for _ in range(26):
+            x, y = r.integers(0, N, 2)
+            put(image, x, y, "#%02x%02x%02x" % tuple(int(v) for v in np.clip(rgb(hexv) * 0.6, 0, 255)))
+        return image
+
+    TILES[name] = build
+
+
+def coral_plant(name, hexv, kind):
+    def build():
+        r = rng(name)
+        image = transparent()
+        dark = "#%02x%02x%02x" % tuple(int(v) for v in np.clip(rgb(hexv) * 0.65, 0, 255))
+        if kind == "coral":
+            for x in range(3, 30, 5):
+                h = int(12 + r.integers(0, 14))
+                for y in range(N - h, N):
+                    rect(image, x, y, 3, 1, hexv if y % 3 else dark)
+                rect(image, x - 1, N - h - 1, 5, 2, hexv)
+        else:
+            for y in range(N - 3, 4, -1):
+                spread = (N - y) * 0.55
+                for x in range(int(15.5 - spread), int(16.5 + spread)):
+                    if 0 <= x < N and (x + y) % 5 != 0:
+                        put(image, x, y, hexv if (x - 15) % 4 else dark)
+            rect(image, 14, N - 4, 4, 4, dark)
+        return image
+
+    TILES[name] = build
+
+
+for _t, _hex in CORAL.items():
+    coral_block(f"{_t}_coral_block", _hex, False)
+    coral_block(f"dead_{_t}_coral_block", DEAD, True)
+    coral_plant(f"{_t}_coral", _hex, "coral")
+    coral_plant(f"dead_{_t}_coral", DEAD, "coral")
+    coral_plant(f"{_t}_coral_fan", _hex, "fan")
+    coral_plant(f"dead_{_t}_coral_fan", DEAD, "fan")
+
+
+@tile("kelp")
+def kelp():
+    image = transparent()
+    for x in (6, 15, 24):
+        for y in range(N):
+            put(image, x + int(2 * math.sin(y * 0.35 + x)), y, "#3a8a3a" if y % 4 else "#2a6a2c")
+            put(image, x + 1 + int(2 * math.sin(y * 0.35 + x)), y, "#4aa048")
+    return image
+
+
+@tile("kelp_plant")
+def kelp_plant():
+    image = transparent()
+    for x in (8, 17, 24):
+        for y in range(N):
+            put(image, x + int(1.5 * math.sin(y * 0.3 + x)), y, "#2e7a30")
+            put(image, x + 1 + int(1.5 * math.sin(y * 0.3 + x)), y, "#3a8a3a")
+    return image
+
+
+@tile("sea_pickle")
+def sea_pickle():
+    image = transparent()
+    for cx, h in ((11, 14), (19, 18), (15, 22)):
+        for y in range(N - h, N):
+            rect(image, cx - 2, y, 4, 1, "#5a8a2a" if y % 4 else "#7aaa3a")
+    rect(image, 14, 6, 4, 4, "#7affb0")
+    return image
+
+
+@tile("bamboo_sapling")
+def bamboo_sapling():
+    image = transparent()
+    rect(image, 15, 14, 2, 18, "#5a8a2a")
+    rect(image, 12, 12, 4, 2, "#7aaa3a")
+    rect(image, 17, 10, 4, 2, "#7aaa3a")
+    return image
+
+
+@tile("bubble_column")
+def bubble_column():
+    image = transparent()
+    r = rng("bubble_column")
+    for _ in range(14):
+        x, y = r.integers(2, 28, 2)
+        rect(image, x, y, 3, 3, "#d8f0ff", 180)
+        put(image, x, y, "#ffffff", 220)
+    return image
+
+
+@tile("scaffolding")
+def scaffolding():
+    image = transparent()
+    for k in (0, 1, 30, 31):
+        rect(image, k, 0, 1, N, "#c8a860")
+        rect(image, 0, k, N, 1, "#c8a860")
+    for y in (7, 15, 23):
+        rect(image, 0, y, N, 2, "#a88840")
+    for x in (7, 15, 23):
+        rect(image, x, 0, 2, N, "#b89850")
+    return image
+
+
+@tile("dried_kelp_block")
+def dried_kelp_block():
+    r = rng("dried_kelp_block")
+    image = fill(canvas(), fbm(r), ["#2e3a22", "#384628", "#42522e", "#262e1a"])
+    for y in range(0, N, 4):
+        rect(image, 0, y, N, 1, "#1e2616")
+    return image
+
+
+@tile("turtle_egg")
+def turtle_egg():
+    r = rng("turtle_egg")
+    image = fill(canvas(), fbm(r), ["#e8e4cc", "#f0ecd6", "#f6f2e2"])
+    speckle(image, r, ["#b8b498", "#7a8a5a"], 40)
+    return image
+
+
+@tile("sniffer_egg")
+def sniffer_egg():
+    r = rng("sniffer_egg")
+    image = fill(canvas(), fbm(r), ["#b8483a", "#c4543f", "#d06046"])
+    speckle(image, r, ["#6a2a22", "#e8c8a0"], 50)
+    return image
+
+
+noise_tile("blue_ice", ["#5a96e8", "#68a4f0", "#78b2f6", "#4e88d8"], specks=["#c8e4ff", "#3a70c0"], count=50)
+
+
+@tile("conduit")
+def conduit():
+    image = canvas("#a89878")
+    border(image, "#6a5a3a", 2)
+    rect(image, 8, 8, 16, 16, "#5ad8d0")
+    rect(image, 12, 12, 8, 8, "#e8fffc")
+    return image
+
+
+@tile("bamboo")
+def bamboo():
+    image = canvas("#6a9a2a")
+    for y in range(0, N, 10):
+        rect(image, 0, y, N, 2, "#4a7a1a")
+    for x in range(0, N, 8):
+        rect(image, x, 0, 1, N, "#86b438")
+    return image
+
+
+def station(name_top, name_side, base, accent):
+    def top():
+        image = planks(name_top, base, "#3a2a14", "#4a3820")
+        rect(image, 6, 6, 20, 20, accent)
+        return image
+
+    def side():
+        image = planks(name_side, base, "#3a2a14", "#4a3820")
+        rect(image, 0, 0, N, 5, accent)
+        return image
+
+    TILES[name_top] = top
+    TILES[name_side] = side
+
+
+WOOD = ["#9a6a3a", "#a67442", "#b27e4a", "#be8852"]
+station("loom_top", "loom_side", WOOD, "#d8d0c0")
+station("cartography_table_top", "cartography_table_side", WOOD, "#6a8ab8")
+station("fletching_table_top", "fletching_table_side", WOOD, "#c8c0a0")
+station("smithing_table_top", "smithing_table_side", ["#3a3a42", "#44444c", "#4e4e56", "#58585f"], "#8a8a94")
+
+
+@tile("grindstone")
+def grindstone():
+    r = rng("grindstone")
+    image = fill(canvas(), fbm(r), ["#8a8a8a", "#969696", "#a2a2a2"])
+    rect(image, 0, 12, N, 8, "#6a4a2a")
+    return image
+
+
+@tile("lectern")
+def lectern():
+    image = planks("lectern", WOOD, "#3a2a14", "#4a3820")
+    rect(image, 4, 4, 24, 4, "#e8e0c8")
+    return image
+
+
+@tile("bell")
+def bell():
+    image = canvas("#e8b830")
+    border(image, "#a87c10", 2)
+    rect(image, 10, 20, 12, 4, "#f8d860")
+    return image
+
+
+def lantern(name, flame, frame):
+    def build():
+        image = canvas(frame)
+        border(image, "#2a2a30", 2)
+        rect(image, 7, 7, 18, 18, flame)
+        rect(image, 11, 11, 10, 10, "#fffbe0")
+        return image
+
+    TILES[name] = build
+
+
+lantern("lantern", "#f8b838", "#4a4a52")
+lantern("soul_lantern", "#38c8e8", "#3a4a58")
+
+
+@tile("campfire")
+def campfire():
+    image = canvas("#4a3a22")
+    for y in range(0, N, 8):
+        rect(image, 0, y, N, 6, "#6a4a28")
+        rect(image, 0, y + 6, N, 2, "#2a1c0e")
+    rect(image, 8, 6, 16, 20, "#ff9a2a")
+    rect(image, 12, 10, 8, 12, "#ffe060")
+    return image
+
+
+
 def main():
     pixel = ROOT / "assets/textures/pixel"
     tiles = {}

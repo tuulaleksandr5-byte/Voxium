@@ -624,6 +624,18 @@ fn every_model_block_meshes_with_outward_faces_inside_its_cell() {
         CHORUS_PLANT,
         CHORUS_FLOWER,
         DIRT_PATH,
+        DEAD_TUBE_CORAL_WALL_FAN + 1,
+        BRICK_WALL,
+        TURTLE_EGG,
+        SNIFFER_EGG,
+        CONDUIT,
+        BAMBOO,
+        LANTERN,
+        CAMPFIRE,
+        BELL,
+        GRINDSTONE,
+        LECTERN,
+        POLISHED_GRANITE_STAIRS + 3,
     ];
     for block in samples {
         let meshes = single(block);
@@ -688,4 +700,12 @@ fn potted_plants_draw_a_pot_and_a_centred_plant_in_two_layers() {
         _ => 0,
     });
     assert!(all_quads(&walls) > all_quads(&single(game_core::COBBLESTONE_WALL)) * 2 - 4);
+}
+
+#[test]
+fn invisible_air_blocks_and_plants_mesh_as_expected() {
+    assert!(single(game_core::VOID_AIR).is_empty());
+    assert!(single(game_core::CAVE_AIR).is_empty());
+    assert!(!single(game_core::TUBE_CORAL_FAN).is_empty());
+    assert!(!single(game_core::KELP).is_empty());
 }
