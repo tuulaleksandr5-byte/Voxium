@@ -71,6 +71,9 @@ fn update(world: &mut World, p: [i32; 3], tick: u64) {
         if !loaded(world, n) {
             continue;
         }
+        if world.block(n) == crate::TNT {
+            world.blasts.push(n);
+        }
         let flammable = u32::from(flammability(world.block(n)));
         if flammable > 0 && roll(seed, tick, p, 1 + index as u64) < flammable / 6 {
             world.set(n, crate::FIRE);
@@ -261,6 +264,15 @@ mod tests {
             tick(&mut wet, step, 4096);
         }
         assert_eq!(count(&wet, is_fire), 0);
+    }
+
+    #[test]
+    fn fire_next_to_tnt_primes_it() {
+        let mut world = flat_world();
+        world.set([0, FLOOR + 1, 0], crate::TNT);
+        world.set([1, FLOOR + 1, 0], FIRE);
+        tick(&mut world, 1, 16);
+        assert_eq!(world.blasts, vec![[0, FLOOR + 1, 0]]);
     }
 
     #[test]

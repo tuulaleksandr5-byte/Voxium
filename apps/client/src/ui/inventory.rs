@@ -841,7 +841,8 @@ pub(super) fn menu(
         Some(game_core::BARREL) => "Бочка",
         Some(game_core::DISPENSER) => "Раздатчик",
         Some(game_core::DROPPER) => "Выбрасыватель",
-        Some(game_core::VAULT) => "Общий сундук",
+        Some(game_core::ENDER_CHEST) => "Эндер-сундук",
+        Some(game_core::TRAPPED_CHEST) => "Сундук-ловушка",
         Some(game_core::STONECUTTER) => "Камнерез",
         Some(block) if game_core::is_shulker(block) => "Шалкеровый ящик",
         _ => "Инвентарь",
@@ -890,7 +891,8 @@ pub(super) fn menu(
             Some(
                 game_core::CHEST
                     | game_core::BARREL
-                    | game_core::VAULT
+                    | game_core::ENDER_CHEST
+                    | game_core::TRAPPED_CHEST
                     | game_core::DISPENSER
                     | game_core::DROPPER
             )
@@ -904,7 +906,8 @@ pub(super) fn menu(
                 Some(block) if game_core::is_shulker(block) => "ШАЛКЕРОВЫЙ ЯЩИК · 27 ЯЧЕЕК",
                 Some(game_core::DISPENSER) => "РАЗДАТЧИК · 9 ЯЧЕЕК",
                 Some(game_core::DROPPER) => "ВЫБРАСЫВАТЕЛЬ · 9 ЯЧЕЕК",
-                Some(game_core::VAULT) => "ОБЩИЙ СУНДУК · одно хранилище на все такие блоки",
+                Some(game_core::ENDER_CHEST) => "ЭНДЕР-СУНДУК · одно хранилище на все такие блоки",
+                Some(game_core::TRAPPED_CHEST) => "СУНДУК-ЛОВУШКА · 27 ЯЧЕЕК",
                 _ => "СУНДУК · 27 ЯЧЕЕК",
             },
             12.,

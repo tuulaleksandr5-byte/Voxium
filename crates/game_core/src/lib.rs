@@ -15,6 +15,7 @@ pub mod growth;
 pub mod interaction;
 pub mod inventory;
 pub mod items;
+pub mod mechanics;
 pub mod mining;
 pub mod mobs;
 pub mod models;

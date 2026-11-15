@@ -24,7 +24,12 @@ pub fn plugin(app: &mut App) {
         .add_systems(Startup, spawn_overlay)
         .add_systems(
             Update,
-            (tick_fluids, tick_fire_and_growth, update_overlay)
+            (
+                tick_fluids,
+                tick_fire_and_growth,
+                tick_mechanics,
+                update_overlay,
+            )
                 .chain()
                 .after(crate::survival_client::simulate)
                 .before(crate::player::sky),
@@ -67,6 +72,97 @@ fn tick_fire_and_growth(
         clock.growth_tick += 1;
         let tick = clock.growth_tick;
         game_core::growth::tick(&mut game.world, tick, 64);
+    }
+}
+
+/// Кнопки, нажимные плиты, взрывы динамита и опасные блоки.
+fn tick_mechanics(
+    time: Res<Time<Real>>,
+    mut game: ResMut<Game>,
+    mut actions: MessageWriter<crate::survival_client::PlayerActionMessage>,
+    mut contact: Local<f32>,
+) {
+    use crate::survival_client::{PlayerAction, PlayerActionMessage};
+    if game.world_id.is_none() || !matches!(game.mode, Mode::Playing | Mode::Inventory) {
+        return;
+    }
+    let delta = time.delta_secs();
+    // Кнопки отпускаются через секунду.
+    let mut released = Vec::new();
+    game.power_timers.retain_mut(|(position, left)| {
+        *left -= delta;
+        if *left <= 0.0 {
+            released.push(*position);
+            false
+        } else {
+            true
+        }
+    });
+    for position in released {
+        game_core::mechanics::power_area(&mut game.world, position, false);
+        game.revision += 1;
+    }
+    // Нажимная плита работает, пока игрок стоит на ней.
+    let cell = [
+        game.feet.x.floor() as i32,
+        game.feet.y.floor() as i32,
+        game.feet.z.floor() as i32,
+    ];
+    let on_plate = (game_core::models::shape_of(game.world.block(cell))
+        == Some(game_core::models::Shape::Plate))
+    .then_some(cell);
+    if on_plate != game.pressed_plate {
+        if let Some(old) = game.pressed_plate {
+            game_core::mechanics::power_area(&mut game.world, old, false);
+        }
+        if let Some(new) = on_plate {
+            game_core::mechanics::power_area(&mut game.world, new, true);
+        }
+        game.pressed_plate = on_plate;
+        game.revision += 1;
+    }
+    // Взрывы.
+    let centers = game_core::mechanics::run_blasts(&mut game.world, 8);
+    if !centers.is_empty() {
+        game.revision += 1;
+    }
+    for center in centers {
+        let eye = game.feet + Vec3::Y * 0.9;
+        let distance = eye.distance(Vec3::new(
+            center[0] as f32 + 0.5,
+            center[1] as f32 + 0.5,
+            center[2] as f32 + 0.5,
+        ));
+        let amount = game_core::mechanics::blast_damage(distance);
+        if amount > 0.0 {
+            actions.write(PlayerActionMessage(PlayerAction::Damage {
+                amount,
+                source: game_core::survival::DamageSource::Fire,
+            }));
+        }
+    }
+    // Кактус, магма и колючий куст ранят каждые полсекунды.
+    *contact += delta;
+    if *contact >= 0.5 {
+        *contact = 0.0;
+        let worst = std::cell::Cell::new(0.0_f32);
+        let _ = game_core::interaction::body_touches(
+            game.feet.to_array(),
+            game.height,
+            |p| game.world.block(p),
+            |id| {
+                if let Some(damage) = game_core::mechanics::contact_damage(id) {
+                    worst.set(worst.get().max(damage));
+                }
+                false
+            },
+        );
+        if worst.get() > 0.0 {
+            actions.write(PlayerActionMessage(PlayerAction::Damage {
+                amount: worst.get(),
+                source: game_core::survival::DamageSource::Contact,
+            }));
+        }
     }
 }
 

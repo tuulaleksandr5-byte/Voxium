@@ -188,6 +188,8 @@ pub enum DamageSource {
     Drowning,
     Lava,
     Fire,
+    /// Кактус, магма, колючий куст.
+    Contact,
     Starvation,
     Void,
     Mob,

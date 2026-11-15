@@ -574,6 +574,8 @@ pub struct World {
     pub fire_active: HashSet<[i32; 3]>,
     /// Саженцы, которые могут вырасти; их обрабатывает `growth::tick`.
     pub grow_active: HashSet<[i32; 3]>,
+    /// Динамит, который сейчас взорвётся; его обрабатывает `mechanics::run_blasts`.
+    pub blasts: Vec<[i32; 3]>,
 }
 impl World {
     #[must_use]
@@ -586,6 +588,7 @@ impl World {
             fluid_active: HashSet::new(),
             fire_active: HashSet::new(),
             grow_active: HashSet::new(),
+            blasts: Vec::new(),
         }
     }
     #[must_use]

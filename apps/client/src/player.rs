@@ -245,6 +245,24 @@ pub fn controls(
         } else {
             4.8
         };
+        // Песок душ, мёд, колючий куст и рыхлый снег замедляют.
+        let speed = if game.flying {
+            speed
+        } else {
+            let cell = [
+                game.feet.x.floor() as i32,
+                (game.feet.y + 0.05).floor() as i32,
+                game.feet.z.floor() as i32,
+            ];
+            let slow = game_core::mechanics::movement_factor(game.world.block(cell)).min(
+                game_core::mechanics::movement_factor(game.world.block([
+                    cell[0],
+                    cell[1] - 1,
+                    cell[2],
+                ])),
+            );
+            speed * slow
+        };
         let fluid = if game.flying {
             BodyFluid::default()
         } else {
@@ -266,7 +284,7 @@ pub fn controls(
                 game.feet.to_array(),
                 game.height,
                 |p| collision_block(&game.world, p),
-                game_core::models::is_climbable,
+                game_core::mechanics::climbable,
             );
         // В воде и лаве ходьба замедляется, течение сносит тело.
         let speed = if ladder { speed.min(2.4) } else { speed };
@@ -443,6 +461,26 @@ pub fn controls(
                     && !(keys.pressed(KeyCode::ShiftLeft) || keys.pressed(KeyCode::ShiftRight))
                 {
                     Some(InventoryAction::OpenContainer {
+                        position: hit.block,
+                    })
+                } else if game_core::models::shape_of(game.world.block(hit.block))
+                    == Some(game_core::models::Shape::Button)
+                {
+                    Some(InventoryAction::Press {
+                        position: hit.block,
+                    })
+                } else if game.world.block(hit.block) == game_core::FLOWER_POT
+                    && game_core::mechanics::potted_for(game.selected_block()).is_some()
+                {
+                    Some(InventoryAction::Pot {
+                        position: hit.block,
+                    })
+                } else if matches!(
+                    game.world.block(hit.block),
+                    game_core::CAULDRON | game_core::WATER_CAULDRON | game_core::LAVA_CAULDRON
+                ) && crate::inventory_client::bucket_kind(&game).is_some()
+                {
+                    Some(InventoryAction::Cauldron {
                         position: hit.block,
                     })
                 } else if game_core::models::toggled(

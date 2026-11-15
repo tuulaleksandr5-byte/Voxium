@@ -122,6 +122,7 @@ fn publish(
                     DamageSource::Void => "граница мира",
                     DamageSource::Lava => "лава",
                     DamageSource::Fire => "огонь",
+                    DamageSource::Contact => "колючки и ожоги",
                     DamageSource::Mob => "атака",
                 }
             );
@@ -312,7 +313,7 @@ pub fn simulate(
             game.feet.to_array(),
             game.height,
             |p| game.world.block(p),
-            game_core::is_fire,
+            |id| game_core::is_fire(id) || game_core::mechanics::is_campfire_flame(id),
         ),
         out_of_world: game.feet.y < (WORLD_MIN_Y - 16) as f32
             || game.feet.y > (WORLD_MAX_Y + 16) as f32,

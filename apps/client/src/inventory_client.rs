@@ -52,6 +52,18 @@ pub enum InventoryAction {
     Till {
         position: [i32; 3],
     },
+    /// ПКМ по кнопке: сигнал на секунду.
+    Press {
+        position: [i32; 3],
+    },
+    /// ПКМ растением по пустому цветочному горшку.
+    Pot {
+        position: [i32; 3],
+    },
+    /// ПКМ ведром по котлу: наполнить или опустошить.
+    Cauldron {
+        position: [i32; 3],
+    },
     /// ПКМ топором по бревну или древесине: снять кору.
     Strip {
         position: [i32; 3],
@@ -462,6 +474,76 @@ fn process_action(game: &mut Game, action: &InventoryAction) -> Effects {
             };
             game.ui_dirty = true;
         }
+        InventoryAction::Press { position }
+            if game.mode == Mode::Playing && game.world_mouse.allowed() =>
+        {
+            let block = game.world.block(*position);
+            if game_core::models::shape_of(block) != Some(game_core::models::Shape::Button) {
+                return effects;
+            }
+            game_core::mechanics::power_area(&mut game.world, *position, true);
+            game.power_timers.retain(|(p, _)| p != position);
+            game.power_timers.push((*position, 1.0));
+            effects.sounds.push(BlockSound {
+                block,
+                kind: crate::block_audio::SoundKind::Place,
+                position: block_center(*position),
+            });
+            game.revision += 1;
+        }
+        InventoryAction::Pot { position }
+            if game.mode == Mode::Playing && game.world_mouse.allowed() =>
+        {
+            let plant = game.selected_block();
+            if game.world.block(*position) != game_core::FLOWER_POT {
+                return effects;
+            }
+            let Some(potted) = game_core::mechanics::potted_for(plant) else {
+                return effects;
+            };
+            if game.world.set(*position, potted) {
+                if game.game_mode == GameMode::Survival {
+                    game.inventory.take_selected(game.selected, false);
+                }
+                game.revision += 1;
+                game.ui_dirty = true;
+            }
+        }
+        InventoryAction::Cauldron { position }
+            if game.mode == Mode::Playing && game.world_mouse.allowed() =>
+        {
+            let block = game.world.block(*position);
+            let Some(bucket) = bucket_kind(game) else {
+                return effects;
+            };
+            let next = match (bucket, block) {
+                (Bucket::Water, game_core::CAULDRON) => {
+                    Some((game_core::WATER_CAULDRON, Bucket::Empty))
+                }
+                (Bucket::Lava, game_core::CAULDRON) => {
+                    Some((game_core::LAVA_CAULDRON, Bucket::Empty))
+                }
+                (Bucket::Empty, game_core::WATER_CAULDRON) => {
+                    Some((game_core::CAULDRON, Bucket::Water))
+                }
+                (Bucket::Empty, game_core::LAVA_CAULDRON) => {
+                    Some((game_core::CAULDRON, Bucket::Lava))
+                }
+                _ => None,
+            };
+            if let Some((cauldron, to)) = next
+                && game.world.set(*position, cauldron)
+            {
+                swap_bucket(game, to);
+                effects.sounds.push(BlockSound {
+                    block: game_core::WATER,
+                    kind: crate::block_audio::SoundKind::Place,
+                    position: block_center(*position),
+                });
+                game.revision += 1;
+                game.ui_dirty = true;
+            }
+        }
         InventoryAction::Till { position }
             if game.mode == Mode::Playing && game.world_mouse.allowed() =>
         {
@@ -518,6 +600,9 @@ fn process_action(game: &mut Game, action: &InventoryAction) -> Effects {
                     .then(|| (cell, game_core::models::toggled(half, toward)))
             });
             game.world.set(*position, next);
+            if let Some(on) = game_core::mechanics::lever_on(next) {
+                game_core::mechanics::power_area(&mut game.world, *position, on);
+            }
             if let Some((cell, Some(next))) = other {
                 game.world.set(cell, next);
             }
@@ -774,6 +859,7 @@ pub(crate) fn container_size(block: game_core::BlockId) -> Option<usize> {
     match block {
         CHEST | game_core::BARREL | game_core::VAULT => Some(27),
         CRAFTING_TABLE => Some(9),
+        game_core::ENDER_CHEST | game_core::TRAPPED_CHEST => Some(27),
         block
             if matches!(
                 game_core::base_block(block),
@@ -794,7 +880,7 @@ pub(crate) const SHARED_VAULT: [i32; 3] = [0, i32::MIN, 0];
 
 /// Где лежит контейнер блока: у общего сундука — в общем хранилище.
 fn container_key(block: game_core::BlockId, position: [i32; 3]) -> [i32; 3] {
-    if block == game_core::VAULT {
+    if block == game_core::ENDER_CHEST {
         SHARED_VAULT
     } else {
         position
@@ -841,7 +927,7 @@ pub(crate) fn stonecut(game: &mut Game, output: ItemId) -> bool {
 pub(crate) fn open_block(game: &Game) -> Option<game_core::BlockId> {
     let position = game.open_container?;
     if position == SHARED_VAULT {
-        return Some(game_core::VAULT);
+        return Some(game_core::ENDER_CHEST);
     }
     loaded_block(&game.world, position)
         .filter(|block| container_size(*block).is_some())
@@ -2064,14 +2150,20 @@ mod tests {
             assert_eq!(container_size(block), Some(size), "{block}");
         }
         assert_eq!(container_size(game_core::STONE), None);
-        assert_eq!(container_key(game_core::VAULT, [5, 6, 7]), SHARED_VAULT);
-        assert_eq!(container_key(game_core::VAULT, [-9, 1, 2]), SHARED_VAULT);
+        assert_eq!(
+            container_key(game_core::ENDER_CHEST, [5, 6, 7]),
+            SHARED_VAULT
+        );
+        assert_eq!(
+            container_key(game_core::ENDER_CHEST, [-9, 1, 2]),
+            SHARED_VAULT
+        );
         assert_eq!(container_key(game_core::BARREL, [5, 6, 7]), [5, 6, 7]);
         let game = Game {
             open_container: Some(SHARED_VAULT),
             ..Default::default()
         };
-        assert_eq!(open_block(&game), Some(game_core::VAULT));
+        assert_eq!(open_block(&game), Some(game_core::ENDER_CHEST));
     }
 
     #[test]
@@ -2386,6 +2478,56 @@ mod tests {
         );
         assert_eq!(door.world.block([8, 101, 6]), game_core::CRIMSON_DOOR + 1);
         assert_eq!(door.world.block([8, 102, 6]), game_core::CRIMSON_DOOR + 9);
+    }
+
+    #[test]
+    fn lever_button_pots_cauldrons_and_ender_chests_work() {
+        // Рычаг открывает дверь рядом, второй щелчок закрывает.
+        let mut game = world();
+        game.world.set([8, 101, 6], game_core::OAK_DOOR + 1);
+        game.world.set([8, 102, 6], game_core::OAK_DOOR + 9);
+        game.world.set([8, 101, 7], game_core::LEVER + 1);
+        let toggle = InventoryAction::Toggle {
+            position: [8, 101, 7],
+        };
+        process_action(&mut game, &toggle);
+        assert_eq!(game.world.block([8, 101, 7]), game_core::LEVER + 5);
+        assert_eq!(game.world.block([8, 101, 6]), game_core::OAK_DOOR + 5);
+        process_action(&mut game, &toggle);
+        assert_eq!(game.world.block([8, 101, 6]), game_core::OAK_DOOR + 1);
+        // Кнопка открывает на секунду.
+        game.world.set([8, 101, 8], game_core::STONE_BUTTON);
+        game.world.set([8, 101, 6], game_core::OAK_DOOR + 1);
+        process_action(
+            &mut game,
+            &InventoryAction::Press {
+                position: [8, 101, 8],
+            },
+        );
+        assert_eq!(game.world.block([8, 101, 6]), game_core::OAK_DOOR + 5);
+        assert_eq!(game.power_timers.len(), 1);
+        // Горшок принимает цветок.
+        let mut pot = world();
+        pot.world.set([8, 101, 6], game_core::FLOWER_POT);
+        equip(&mut pot, "flora:poppy");
+        process_action(
+            &mut pot,
+            &InventoryAction::Pot {
+                position: [8, 101, 6],
+            },
+        );
+        assert_eq!(pot.world.block([8, 101, 6]), game_core::POTTED_POPPY);
+        // Эндер-сундуки делят одно хранилище, трёхрядный контейнер.
+        assert_eq!(container_size(game_core::ENDER_CHEST), Some(27));
+        assert_eq!(container_size(game_core::TRAPPED_CHEST), Some(27));
+        assert_eq!(
+            container_key(game_core::ENDER_CHEST, [1, 2, 3]),
+            SHARED_VAULT
+        );
+        assert_eq!(
+            container_key(game_core::TRAPPED_CHEST, [1, 2, 3]),
+            [1, 2, 3]
+        );
     }
 
     #[test]
