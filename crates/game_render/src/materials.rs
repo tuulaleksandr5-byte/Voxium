@@ -211,11 +211,12 @@ pub fn create_materials_from_atlas(
                         0.92
                     },
                     reflectance: 0.12,
+                    // Свечение не зависит от экспозиции камеры, поэтому значения порядка единицы.
                     // Лампа светится сама: её видно ночью и в пещерах.
                     emissive: if layer == LAMP_LAYER {
-                        LinearRgba::rgb(900., 640., 260.)
+                        LinearRgba::rgb(0.45, 0.32, 0.12)
                     } else if layer == LAVA_LAYER {
-                        LinearRgba::rgb(1500., 520., 110.)
+                        LinearRgba::rgb(0.55, 0.22, 0.04)
                     } else {
                         LinearRgba::BLACK
                     },
