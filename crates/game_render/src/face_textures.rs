@@ -2,7 +2,7 @@ use game_core::BLOCKS;
 use serde::Deserialize;
 
 /// Слои 0…35 — исходный атлас 6×6, слои 36…215 — дополнительные пиксельные тайлы.
-pub const MATERIAL_COUNT: usize = 582;
+pub const MATERIAL_COUNT: usize = 720;
 /// Строк в атласе: по шесть слоёв в строке.
 pub const ATLAS_ROWS: u32 = (MATERIAL_COUNT / 6) as u32;
 /// Слой листвы дуба в исходном атласе.
@@ -28,6 +28,7 @@ pub fn is_cutout_layer(layer: usize) -> bool {
         || CUTOUT5_LAYERS.contains(&layer)
         || CUTOUT6_LAYERS.contains(&layer)
         || CUTOUT7_LAYERS.contains(&layer)
+        || CUTOUT8_LAYERS.contains(&layer)
         || matches!(layer, 125 | 129 | 133 | 137 | 141)
 }
 
@@ -44,6 +45,8 @@ pub const CUTOUT5_LAYERS: std::ops::RangeInclusive<usize> = 419..=426;
 pub const CUTOUT6_LAYERS: std::ops::RangeInclusive<usize> = 439..=443;
 /// Кораллы, ламинария, пузыри и подмостки части 6.
 pub const CUTOUT7_LAYERS: std::ops::RangeInclusive<usize> = 523..=548;
+/// Растения нижнего мира, аметисты, лозы, свечи частей 7–8.
+pub const CUTOUT8_LAYERS: std::ops::RangeInclusive<usize> = 579..=621;
 pub const PLANT2_LAYERS: std::ops::RangeInclusive<usize> = 209..=239;
 
 /// Слои растений: рисуются плоскостями, видны с обеих сторон.
@@ -56,6 +59,7 @@ pub fn is_double_sided_layer(layer: usize) -> bool {
         || CUTOUT5_LAYERS.contains(&layer)
         || CUTOUT6_LAYERS.contains(&layer)
         || CUTOUT7_LAYERS.contains(&layer)
+        || CUTOUT8_LAYERS.contains(&layer)
 }
 
 /// Слои цветного стекла.

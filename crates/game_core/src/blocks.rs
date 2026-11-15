@@ -472,7 +472,7 @@ pub enum FamilyKind {
 }
 
 /// Семейства блоков с состоянием: (первый ID, число вариантов, вид).
-pub const FAMILIES: [(BlockId, u8, FamilyKind); 181] = [
+pub const FAMILIES: [(BlockId, u8, FamilyKind); 211] = [
     (322, 4, FamilyKind::H4),
     (330, 4, FamilyKind::H4),
     (334, 4, FamilyKind::H4),
@@ -654,6 +654,36 @@ pub const FAMILIES: [(BlockId, u8, FamilyKind); 181] = [
     (1458, 4, FamilyKind::H4),
     (1462, 4, FamilyKind::H4),
     (1466, 4, FamilyKind::H4),
+    (1537, 5, FamilyKind::Trap),
+    (1542, 5, FamilyKind::Trap),
+    (1547, 8, FamilyKind::Gate),
+    (1555, 8, FamilyKind::Gate),
+    (1563, 4, FamilyKind::H4),
+    (1567, 4, FamilyKind::H4),
+    (1571, 4, FamilyKind::H4),
+    (1575, 4, FamilyKind::H4),
+    (1579, 16, FamilyKind::Door),
+    (1595, 16, FamilyKind::Door),
+    (1611, 4, FamilyKind::H4),
+    (1615, 4, FamilyKind::H4),
+    (1619, 4, FamilyKind::H4),
+    (1623, 4, FamilyKind::H4),
+    (1645, 4, FamilyKind::H4),
+    (1656, 4, FamilyKind::H4),
+    (1662, 4, FamilyKind::H4),
+    (1668, 4, FamilyKind::H4),
+    (1731, 4, FamilyKind::H4),
+    (1735, 4, FamilyKind::H4),
+    (1739, 4, FamilyKind::H4),
+    (1743, 4, FamilyKind::H4),
+    (1759, 4, FamilyKind::H4),
+    (1763, 4, FamilyKind::H4),
+    (1767, 4, FamilyKind::H4),
+    (1771, 4, FamilyKind::H4),
+    (1795, 4, FamilyKind::H4),
+    (1802, 4, FamilyKind::H4),
+    (1809, 4, FamilyKind::H4),
+    (1816, 4, FamilyKind::H4),
 ];
 
 pub const PART2_FIRST: BlockId = 321;
@@ -1085,6 +1115,216 @@ pub const SOUL_LANTERN: BlockId = 1504;
 pub const CAMPFIRE: BlockId = 1505;
 pub const PART6_FIRST: BlockId = 1330;
 pub const PART6_LAST: BlockId = 1505;
+pub const SOUL_CAMPFIRE: BlockId = 1506;
+pub const SWEET_BERRY_BUSH: BlockId = 1507;
+pub const WARPED_STEM: BlockId = 1508;
+pub const STRIPPED_WARPED_STEM: BlockId = 1509;
+pub const WARPED_HYPHAE: BlockId = 1510;
+pub const STRIPPED_WARPED_HYPHAE: BlockId = 1511;
+pub const WARPED_NYLIUM: BlockId = 1512;
+pub const WARPED_FUNGUS: BlockId = 1513;
+pub const WARPED_WART_BLOCK: BlockId = 1514;
+pub const WARPED_ROOTS: BlockId = 1515;
+pub const NETHER_SPROUTS: BlockId = 1516;
+pub const CRIMSON_STEM: BlockId = 1517;
+pub const STRIPPED_CRIMSON_STEM: BlockId = 1518;
+pub const CRIMSON_HYPHAE: BlockId = 1519;
+pub const STRIPPED_CRIMSON_HYPHAE: BlockId = 1520;
+pub const CRIMSON_NYLIUM: BlockId = 1521;
+pub const CRIMSON_FUNGUS: BlockId = 1522;
+pub const SHROOMLIGHT: BlockId = 1523;
+pub const WEEPING_VINES: BlockId = 1524;
+pub const WEEPING_VINES_PLANT: BlockId = 1525;
+pub const TWISTING_VINES: BlockId = 1526;
+pub const TWISTING_VINES_PLANT: BlockId = 1527;
+pub const CRIMSON_ROOTS: BlockId = 1528;
+pub const CRIMSON_PLANKS: BlockId = 1529;
+pub const WARPED_PLANKS: BlockId = 1530;
+pub const CRIMSON_SLAB: BlockId = 1531;
+pub const WARPED_SLAB: BlockId = 1532;
+pub const CRIMSON_PRESSURE_PLATE: BlockId = 1533;
+pub const WARPED_PRESSURE_PLATE: BlockId = 1534;
+pub const CRIMSON_FENCE: BlockId = 1535;
+pub const WARPED_FENCE: BlockId = 1536;
+pub const CRIMSON_TRAPDOOR: BlockId = 1537;
+pub const WARPED_TRAPDOOR: BlockId = 1542;
+pub const CRIMSON_FENCE_GATE: BlockId = 1547;
+pub const WARPED_FENCE_GATE: BlockId = 1555;
+pub const CRIMSON_STAIRS: BlockId = 1563;
+pub const WARPED_STAIRS: BlockId = 1567;
+pub const CRIMSON_BUTTON: BlockId = 1571;
+pub const WARPED_BUTTON: BlockId = 1575;
+pub const CRIMSON_DOOR: BlockId = 1579;
+pub const WARPED_DOOR: BlockId = 1595;
+pub const CRIMSON_SIGN: BlockId = 1611;
+pub const WARPED_SIGN: BlockId = 1615;
+pub const CRIMSON_WALL_SIGN: BlockId = 1619;
+pub const WARPED_WALL_SIGN: BlockId = 1623;
+pub const STRUCTURE_BLOCK: BlockId = 1627;
+pub const JIGSAW: BlockId = 1628;
+pub const COMPOSTER: BlockId = 1629;
+pub const TARGET: BlockId = 1630;
+pub const BEE_NEST: BlockId = 1631;
+pub const BEEHIVE: BlockId = 1632;
+pub const HONEY_BLOCK: BlockId = 1633;
+pub const HONEYCOMB_BLOCK: BlockId = 1634;
+pub const NETHERITE_BLOCK: BlockId = 1635;
+pub const ANCIENT_DEBRIS: BlockId = 1636;
+pub const CRYING_OBSIDIAN: BlockId = 1637;
+pub const RESPAWN_ANCHOR: BlockId = 1638;
+pub const POTTED_CRIMSON_FUNGUS: BlockId = 1639;
+pub const POTTED_WARPED_FUNGUS: BlockId = 1640;
+pub const POTTED_CRIMSON_ROOTS: BlockId = 1641;
+pub const POTTED_WARPED_ROOTS: BlockId = 1642;
+pub const LODESTONE: BlockId = 1643;
+pub const BLACKSTONE: BlockId = 1644;
+pub const BLACKSTONE_STAIRS: BlockId = 1645;
+pub const BLACKSTONE_WALL: BlockId = 1649;
+pub const BLACKSTONE_SLAB: BlockId = 1650;
+pub const POLISHED_BLACKSTONE: BlockId = 1651;
+pub const POLISHED_BLACKSTONE_BRICKS: BlockId = 1652;
+pub const CRACKED_POLISHED_BLACKSTONE_BRICKS: BlockId = 1653;
+pub const CHISELED_POLISHED_BLACKSTONE: BlockId = 1654;
+pub const POLISHED_BLACKSTONE_BRICK_SLAB: BlockId = 1655;
+pub const POLISHED_BLACKSTONE_BRICK_STAIRS: BlockId = 1656;
+pub const POLISHED_BLACKSTONE_BRICK_WALL: BlockId = 1660;
+pub const GILDED_BLACKSTONE: BlockId = 1661;
+pub const POLISHED_BLACKSTONE_STAIRS: BlockId = 1662;
+pub const POLISHED_BLACKSTONE_SLAB: BlockId = 1666;
+pub const POLISHED_BLACKSTONE_PRESSURE_PLATE: BlockId = 1667;
+pub const POLISHED_BLACKSTONE_BUTTON: BlockId = 1668;
+pub const POLISHED_BLACKSTONE_WALL: BlockId = 1672;
+pub const CHISELED_NETHER_BRICKS: BlockId = 1673;
+pub const CRACKED_NETHER_BRICKS: BlockId = 1674;
+pub const QUARTZ_BRICKS: BlockId = 1675;
+pub const CANDLE: BlockId = 1676;
+pub const WHITE_CANDLE: BlockId = 1677;
+pub const ORANGE_CANDLE: BlockId = 1678;
+pub const MAGENTA_CANDLE: BlockId = 1679;
+pub const LIGHT_BLUE_CANDLE: BlockId = 1680;
+pub const YELLOW_CANDLE: BlockId = 1681;
+pub const LIME_CANDLE: BlockId = 1682;
+pub const PINK_CANDLE: BlockId = 1683;
+pub const GRAY_CANDLE: BlockId = 1684;
+pub const LIGHT_GRAY_CANDLE: BlockId = 1685;
+pub const CYAN_CANDLE: BlockId = 1686;
+pub const PURPLE_CANDLE: BlockId = 1687;
+pub const BLUE_CANDLE: BlockId = 1688;
+pub const BROWN_CANDLE: BlockId = 1689;
+pub const GREEN_CANDLE: BlockId = 1690;
+pub const RED_CANDLE: BlockId = 1691;
+pub const BLACK_CANDLE: BlockId = 1692;
+pub const CANDLE_CAKE: BlockId = 1693;
+pub const WHITE_CANDLE_CAKE: BlockId = 1694;
+pub const ORANGE_CANDLE_CAKE: BlockId = 1695;
+pub const MAGENTA_CANDLE_CAKE: BlockId = 1696;
+pub const LIGHT_BLUE_CANDLE_CAKE: BlockId = 1697;
+pub const YELLOW_CANDLE_CAKE: BlockId = 1698;
+pub const LIME_CANDLE_CAKE: BlockId = 1699;
+pub const PINK_CANDLE_CAKE: BlockId = 1700;
+pub const GRAY_CANDLE_CAKE: BlockId = 1701;
+pub const LIGHT_GRAY_CANDLE_CAKE: BlockId = 1702;
+pub const CYAN_CANDLE_CAKE: BlockId = 1703;
+pub const PURPLE_CANDLE_CAKE: BlockId = 1704;
+pub const BLUE_CANDLE_CAKE: BlockId = 1705;
+pub const BROWN_CANDLE_CAKE: BlockId = 1706;
+pub const GREEN_CANDLE_CAKE: BlockId = 1707;
+pub const RED_CANDLE_CAKE: BlockId = 1708;
+pub const BLACK_CANDLE_CAKE: BlockId = 1709;
+pub const BUDDING_AMETHYST: BlockId = 1710;
+pub const AMETHYST_CLUSTER: BlockId = 1711;
+pub const LARGE_AMETHYST_BUD: BlockId = 1712;
+pub const MEDIUM_AMETHYST_BUD: BlockId = 1713;
+pub const SMALL_AMETHYST_BUD: BlockId = 1714;
+pub const TINTED_GLASS: BlockId = 1715;
+pub const POWDER_SNOW: BlockId = 1716;
+pub const SCULK_SENSOR: BlockId = 1717;
+pub const CALIBRATED_SCULK_SENSOR: BlockId = 1718;
+pub const SCULK: BlockId = 1719;
+pub const SCULK_VEIN: BlockId = 1720;
+pub const SCULK_CATALYST: BlockId = 1721;
+pub const SCULK_SHRIEKER: BlockId = 1722;
+pub const OXIDIZED_COPPER: BlockId = 1723;
+pub const WEATHERED_COPPER: BlockId = 1724;
+pub const EXPOSED_COPPER: BlockId = 1725;
+pub const DEEPSLATE_COPPER_ORE: BlockId = 1726;
+pub const OXIDIZED_CUT_COPPER: BlockId = 1727;
+pub const WEATHERED_CUT_COPPER: BlockId = 1728;
+pub const EXPOSED_CUT_COPPER: BlockId = 1729;
+pub const CUT_COPPER: BlockId = 1730;
+pub const OXIDIZED_CUT_COPPER_STAIRS: BlockId = 1731;
+pub const WEATHERED_CUT_COPPER_STAIRS: BlockId = 1735;
+pub const EXPOSED_CUT_COPPER_STAIRS: BlockId = 1739;
+pub const CUT_COPPER_STAIRS: BlockId = 1743;
+pub const OXIDIZED_CUT_COPPER_SLAB: BlockId = 1747;
+pub const WEATHERED_CUT_COPPER_SLAB: BlockId = 1748;
+pub const EXPOSED_CUT_COPPER_SLAB: BlockId = 1749;
+pub const CUT_COPPER_SLAB: BlockId = 1750;
+pub const WAXED_COPPER_BLOCK: BlockId = 1751;
+pub const WAXED_WEATHERED_COPPER: BlockId = 1752;
+pub const WAXED_EXPOSED_COPPER: BlockId = 1753;
+pub const WAXED_OXIDIZED_COPPER: BlockId = 1754;
+pub const WAXED_OXIDIZED_CUT_COPPER: BlockId = 1755;
+pub const WAXED_WEATHERED_CUT_COPPER: BlockId = 1756;
+pub const WAXED_EXPOSED_CUT_COPPER: BlockId = 1757;
+pub const WAXED_CUT_COPPER: BlockId = 1758;
+pub const WAXED_OXIDIZED_CUT_COPPER_STAIRS: BlockId = 1759;
+pub const WAXED_WEATHERED_CUT_COPPER_STAIRS: BlockId = 1763;
+pub const WAXED_EXPOSED_CUT_COPPER_STAIRS: BlockId = 1767;
+pub const WAXED_CUT_COPPER_STAIRS: BlockId = 1771;
+pub const WAXED_OXIDIZED_CUT_COPPER_SLAB: BlockId = 1775;
+pub const WAXED_WEATHERED_CUT_COPPER_SLAB: BlockId = 1776;
+pub const WAXED_EXPOSED_CUT_COPPER_SLAB: BlockId = 1777;
+pub const WAXED_CUT_COPPER_SLAB: BlockId = 1778;
+pub const LIGHTNING_ROD: BlockId = 1779;
+pub const POINTED_DRIPSTONE: BlockId = 1780;
+pub const DRIPSTONE_BLOCK: BlockId = 1781;
+pub const CAVE_VINES: BlockId = 1782;
+pub const CAVE_VINES_PLANT: BlockId = 1783;
+pub const SPORE_BLOSSOM: BlockId = 1784;
+pub const AZALEA: BlockId = 1785;
+pub const FLOWERING_AZALEA: BlockId = 1786;
+pub const MOSS_CARPET: BlockId = 1787;
+pub const PINK_PETALS: BlockId = 1788;
+pub const BIG_DRIPLEAF: BlockId = 1789;
+pub const BIG_DRIPLEAF_STEM: BlockId = 1790;
+pub const SMALL_DRIPLEAF: BlockId = 1791;
+pub const HANGING_ROOTS: BlockId = 1792;
+pub const ROOTED_DIRT: BlockId = 1793;
+pub const COBBLED_DEEPSLATE: BlockId = 1794;
+pub const COBBLED_DEEPSLATE_STAIRS: BlockId = 1795;
+pub const COBBLED_DEEPSLATE_SLAB: BlockId = 1799;
+pub const COBBLED_DEEPSLATE_WALL: BlockId = 1800;
+pub const POLISHED_DEEPSLATE: BlockId = 1801;
+pub const POLISHED_DEEPSLATE_STAIRS: BlockId = 1802;
+pub const POLISHED_DEEPSLATE_SLAB: BlockId = 1806;
+pub const POLISHED_DEEPSLATE_WALL: BlockId = 1807;
+pub const DEEPSLATE_TILES: BlockId = 1808;
+pub const DEEPSLATE_TILE_STAIRS: BlockId = 1809;
+pub const DEEPSLATE_TILE_SLAB: BlockId = 1813;
+pub const DEEPSLATE_TILE_WALL: BlockId = 1814;
+pub const DEEPSLATE_BRICKS: BlockId = 1815;
+pub const DEEPSLATE_BRICK_STAIRS: BlockId = 1816;
+pub const DEEPSLATE_BRICK_SLAB: BlockId = 1820;
+pub const DEEPSLATE_BRICK_WALL: BlockId = 1821;
+pub const CHISELED_DEEPSLATE: BlockId = 1822;
+pub const CRACKED_DEEPSLATE_BRICKS: BlockId = 1823;
+pub const CRACKED_DEEPSLATE_TILES: BlockId = 1824;
+pub const INFESTED_DEEPSLATE: BlockId = 1825;
+pub const SMOOTH_BASALT: BlockId = 1826;
+pub const RAW_IRON_BLOCK: BlockId = 1827;
+pub const RAW_COPPER_BLOCK: BlockId = 1828;
+pub const RAW_GOLD_BLOCK: BlockId = 1829;
+pub const POTTED_AZALEA_BUSH: BlockId = 1830;
+pub const POTTED_FLOWERING_AZALEA_BUSH: BlockId = 1831;
+pub const OCHRE_FROGLIGHT: BlockId = 1832;
+pub const VERDANT_FROGLIGHT: BlockId = 1833;
+pub const PEARLESCENT_FROGLIGHT: BlockId = 1834;
+pub const FROGSPAWN: BlockId = 1835;
+pub const REINFORCED_DEEPSLATE: BlockId = 1836;
+pub const DECORATED_POT: BlockId = 1837;
+pub const PART78_FIRST: BlockId = 1506;
+pub const PART78_LAST: BlockId = 1837;
 pub const PLANT2_FIRST: BlockId = 251;
 pub const PLANT2_LAST: BlockId = 280;
 
@@ -1108,7 +1348,7 @@ const fn block(
 }
 
 #[allow(clippy::large_const_arrays)]
-pub const BLOCKS: [BlockDef; 1506] = [
+pub const BLOCKS: [BlockDef; 1838] = [
     block(AIR, "Air", "air", 0.0, false, false),
     block(GRASS, "Grass", "grass", 0.6, true, true),
     block(DIRT, "Dirt", "dirt", 0.5, true, true),
@@ -11239,6 +11479,2606 @@ pub const BLOCKS: [BlockDef; 1506] = [
         light_emission: 15,
         ..block(CAMPFIRE, "Campfire", "campfire", 2.0, true, false)
     },
+    BlockDef {
+        light_emission: 10,
+        ..block(
+            SOUL_CAMPFIRE,
+            "Soul Campfire",
+            "soul_campfire",
+            2.0,
+            true,
+            false,
+        )
+    },
+    block(
+        SWEET_BERRY_BUSH,
+        "Sweet Berry Bush",
+        "sweet_berry_bush",
+        0.05,
+        false,
+        false,
+    ),
+    block(WARPED_STEM, "Warped Stem", "warped_stem", 2.0, true, true),
+    block(
+        STRIPPED_WARPED_STEM,
+        "Stripped Warped Stem",
+        "stripped_warped_stem",
+        2.0,
+        true,
+        true,
+    ),
+    block(
+        WARPED_HYPHAE,
+        "Warped Hyphae",
+        "warped_hyphae",
+        2.0,
+        true,
+        true,
+    ),
+    block(
+        STRIPPED_WARPED_HYPHAE,
+        "Stripped Warped Hyphae",
+        "stripped_warped_hyphae",
+        2.0,
+        true,
+        true,
+    ),
+    block(
+        WARPED_NYLIUM,
+        "Warped Nylium",
+        "warped_nylium",
+        0.4,
+        true,
+        true,
+    ),
+    block(
+        WARPED_FUNGUS,
+        "Warped Fungus",
+        "warped_fungus",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        WARPED_WART_BLOCK,
+        "Warped Wart Block",
+        "warped_wart_block",
+        1.0,
+        true,
+        true,
+    ),
+    block(
+        WARPED_ROOTS,
+        "Warped Roots",
+        "warped_roots",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        NETHER_SPROUTS,
+        "Nether Sprouts",
+        "nether_sprouts",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        CRIMSON_STEM,
+        "Crimson Stem",
+        "crimson_stem",
+        2.0,
+        true,
+        true,
+    ),
+    block(
+        STRIPPED_CRIMSON_STEM,
+        "Stripped Crimson Stem",
+        "stripped_crimson_stem",
+        2.0,
+        true,
+        true,
+    ),
+    block(
+        CRIMSON_HYPHAE,
+        "Crimson Hyphae",
+        "crimson_hyphae",
+        2.0,
+        true,
+        true,
+    ),
+    block(
+        STRIPPED_CRIMSON_HYPHAE,
+        "Stripped Crimson Hyphae",
+        "stripped_crimson_hyphae",
+        2.0,
+        true,
+        true,
+    ),
+    block(
+        CRIMSON_NYLIUM,
+        "Crimson Nylium",
+        "crimson_nylium",
+        0.4,
+        true,
+        true,
+    ),
+    block(
+        CRIMSON_FUNGUS,
+        "Crimson Fungus",
+        "crimson_fungus",
+        0.05,
+        false,
+        false,
+    ),
+    BlockDef {
+        light_emission: 15,
+        ..block(SHROOMLIGHT, "Shroomlight", "shroomlight", 1.0, true, true)
+    },
+    block(
+        WEEPING_VINES,
+        "Weeping Vines",
+        "weeping_vines",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        WEEPING_VINES_PLANT,
+        "Weeping Vines Plant",
+        "weeping_vines_plant",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        TWISTING_VINES,
+        "Twisting Vines",
+        "twisting_vines",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        TWISTING_VINES_PLANT,
+        "Twisting Vines Plant",
+        "twisting_vines_plant",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        CRIMSON_ROOTS,
+        "Crimson Roots",
+        "crimson_roots",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        CRIMSON_PLANKS,
+        "Crimson Planks",
+        "crimson_planks",
+        2.0,
+        true,
+        true,
+    ),
+    block(
+        WARPED_PLANKS,
+        "Warped Planks",
+        "warped_planks",
+        2.0,
+        true,
+        true,
+    ),
+    block(
+        CRIMSON_SLAB,
+        "Crimson Slab",
+        "crimson_slab",
+        2.0,
+        true,
+        false,
+    ),
+    block(WARPED_SLAB, "Warped Slab", "warped_slab", 2.0, true, false),
+    block(
+        CRIMSON_PRESSURE_PLATE,
+        "Crimson Pressure Plate",
+        "crimson_pressure_plate",
+        0.5,
+        false,
+        false,
+    ),
+    block(
+        WARPED_PRESSURE_PLATE,
+        "Warped Pressure Plate",
+        "warped_pressure_plate",
+        0.5,
+        false,
+        false,
+    ),
+    block(
+        CRIMSON_FENCE,
+        "Crimson Fence",
+        "crimson_fence",
+        2.0,
+        true,
+        false,
+    ),
+    block(
+        WARPED_FENCE,
+        "Warped Fence",
+        "warped_fence",
+        2.0,
+        true,
+        false,
+    ),
+    block(
+        CRIMSON_TRAPDOOR,
+        "Crimson Trapdoor",
+        "crimson_trapdoor",
+        3.0,
+        true,
+        false,
+    ),
+    block(
+        CRIMSON_TRAPDOOR + 1,
+        "Crimson Trapdoor (open north)",
+        "crimson_trapdoor",
+        3.0,
+        false,
+        false,
+    ),
+    block(
+        CRIMSON_TRAPDOOR + 2,
+        "Crimson Trapdoor (open south)",
+        "crimson_trapdoor",
+        3.0,
+        false,
+        false,
+    ),
+    block(
+        CRIMSON_TRAPDOOR + 3,
+        "Crimson Trapdoor (open west)",
+        "crimson_trapdoor",
+        3.0,
+        false,
+        false,
+    ),
+    block(
+        CRIMSON_TRAPDOOR + 4,
+        "Crimson Trapdoor (open east)",
+        "crimson_trapdoor",
+        3.0,
+        false,
+        false,
+    ),
+    block(
+        WARPED_TRAPDOOR,
+        "Warped Trapdoor",
+        "warped_trapdoor",
+        3.0,
+        true,
+        false,
+    ),
+    block(
+        WARPED_TRAPDOOR + 1,
+        "Warped Trapdoor (open north)",
+        "warped_trapdoor",
+        3.0,
+        false,
+        false,
+    ),
+    block(
+        WARPED_TRAPDOOR + 2,
+        "Warped Trapdoor (open south)",
+        "warped_trapdoor",
+        3.0,
+        false,
+        false,
+    ),
+    block(
+        WARPED_TRAPDOOR + 3,
+        "Warped Trapdoor (open west)",
+        "warped_trapdoor",
+        3.0,
+        false,
+        false,
+    ),
+    block(
+        WARPED_TRAPDOOR + 4,
+        "Warped Trapdoor (open east)",
+        "warped_trapdoor",
+        3.0,
+        false,
+        false,
+    ),
+    block(
+        CRIMSON_FENCE_GATE,
+        "Crimson Fence Gate",
+        "crimson_fence_gate",
+        2.0,
+        true,
+        false,
+    ),
+    block(
+        CRIMSON_FENCE_GATE + 1,
+        "Crimson Fence Gate (closed south)",
+        "crimson_fence_gate",
+        2.0,
+        true,
+        false,
+    ),
+    block(
+        CRIMSON_FENCE_GATE + 2,
+        "Crimson Fence Gate (closed west)",
+        "crimson_fence_gate",
+        2.0,
+        true,
+        false,
+    ),
+    block(
+        CRIMSON_FENCE_GATE + 3,
+        "Crimson Fence Gate (closed east)",
+        "crimson_fence_gate",
+        2.0,
+        true,
+        false,
+    ),
+    block(
+        CRIMSON_FENCE_GATE + 4,
+        "Crimson Fence Gate (open north)",
+        "crimson_fence_gate",
+        2.0,
+        false,
+        false,
+    ),
+    block(
+        CRIMSON_FENCE_GATE + 5,
+        "Crimson Fence Gate (open south)",
+        "crimson_fence_gate",
+        2.0,
+        false,
+        false,
+    ),
+    block(
+        CRIMSON_FENCE_GATE + 6,
+        "Crimson Fence Gate (open west)",
+        "crimson_fence_gate",
+        2.0,
+        false,
+        false,
+    ),
+    block(
+        CRIMSON_FENCE_GATE + 7,
+        "Crimson Fence Gate (open east)",
+        "crimson_fence_gate",
+        2.0,
+        false,
+        false,
+    ),
+    block(
+        WARPED_FENCE_GATE,
+        "Warped Fence Gate",
+        "warped_fence_gate",
+        2.0,
+        true,
+        false,
+    ),
+    block(
+        WARPED_FENCE_GATE + 1,
+        "Warped Fence Gate (closed south)",
+        "warped_fence_gate",
+        2.0,
+        true,
+        false,
+    ),
+    block(
+        WARPED_FENCE_GATE + 2,
+        "Warped Fence Gate (closed west)",
+        "warped_fence_gate",
+        2.0,
+        true,
+        false,
+    ),
+    block(
+        WARPED_FENCE_GATE + 3,
+        "Warped Fence Gate (closed east)",
+        "warped_fence_gate",
+        2.0,
+        true,
+        false,
+    ),
+    block(
+        WARPED_FENCE_GATE + 4,
+        "Warped Fence Gate (open north)",
+        "warped_fence_gate",
+        2.0,
+        false,
+        false,
+    ),
+    block(
+        WARPED_FENCE_GATE + 5,
+        "Warped Fence Gate (open south)",
+        "warped_fence_gate",
+        2.0,
+        false,
+        false,
+    ),
+    block(
+        WARPED_FENCE_GATE + 6,
+        "Warped Fence Gate (open west)",
+        "warped_fence_gate",
+        2.0,
+        false,
+        false,
+    ),
+    block(
+        WARPED_FENCE_GATE + 7,
+        "Warped Fence Gate (open east)",
+        "warped_fence_gate",
+        2.0,
+        false,
+        false,
+    ),
+    block(
+        CRIMSON_STAIRS,
+        "Crimson Stairs",
+        "crimson_stairs",
+        2.0,
+        true,
+        false,
+    ),
+    block(
+        CRIMSON_STAIRS + 1,
+        "Crimson Stairs (south)",
+        "crimson_stairs",
+        2.0,
+        true,
+        false,
+    ),
+    block(
+        CRIMSON_STAIRS + 2,
+        "Crimson Stairs (west)",
+        "crimson_stairs",
+        2.0,
+        true,
+        false,
+    ),
+    block(
+        CRIMSON_STAIRS + 3,
+        "Crimson Stairs (east)",
+        "crimson_stairs",
+        2.0,
+        true,
+        false,
+    ),
+    block(
+        WARPED_STAIRS,
+        "Warped Stairs",
+        "warped_stairs",
+        2.0,
+        true,
+        false,
+    ),
+    block(
+        WARPED_STAIRS + 1,
+        "Warped Stairs (south)",
+        "warped_stairs",
+        2.0,
+        true,
+        false,
+    ),
+    block(
+        WARPED_STAIRS + 2,
+        "Warped Stairs (west)",
+        "warped_stairs",
+        2.0,
+        true,
+        false,
+    ),
+    block(
+        WARPED_STAIRS + 3,
+        "Warped Stairs (east)",
+        "warped_stairs",
+        2.0,
+        true,
+        false,
+    ),
+    block(
+        CRIMSON_BUTTON,
+        "Crimson Button",
+        "crimson_button",
+        0.5,
+        false,
+        false,
+    ),
+    block(
+        CRIMSON_BUTTON + 1,
+        "Crimson Button (south)",
+        "crimson_button",
+        0.5,
+        false,
+        false,
+    ),
+    block(
+        CRIMSON_BUTTON + 2,
+        "Crimson Button (west)",
+        "crimson_button",
+        0.5,
+        false,
+        false,
+    ),
+    block(
+        CRIMSON_BUTTON + 3,
+        "Crimson Button (east)",
+        "crimson_button",
+        0.5,
+        false,
+        false,
+    ),
+    block(
+        WARPED_BUTTON,
+        "Warped Button",
+        "warped_button",
+        0.5,
+        false,
+        false,
+    ),
+    block(
+        WARPED_BUTTON + 1,
+        "Warped Button (south)",
+        "warped_button",
+        0.5,
+        false,
+        false,
+    ),
+    block(
+        WARPED_BUTTON + 2,
+        "Warped Button (west)",
+        "warped_button",
+        0.5,
+        false,
+        false,
+    ),
+    block(
+        WARPED_BUTTON + 3,
+        "Warped Button (east)",
+        "warped_button",
+        0.5,
+        false,
+        false,
+    ),
+    block(
+        CRIMSON_DOOR,
+        "Crimson Door",
+        "crimson_door",
+        3.0,
+        true,
+        false,
+    ),
+    block(
+        CRIMSON_DOOR + 1,
+        "Crimson Door (lower closed south)",
+        "crimson_door",
+        3.0,
+        true,
+        false,
+    ),
+    block(
+        CRIMSON_DOOR + 2,
+        "Crimson Door (lower closed west)",
+        "crimson_door",
+        3.0,
+        true,
+        false,
+    ),
+    block(
+        CRIMSON_DOOR + 3,
+        "Crimson Door (lower closed east)",
+        "crimson_door",
+        3.0,
+        true,
+        false,
+    ),
+    block(
+        CRIMSON_DOOR + 4,
+        "Crimson Door (lower open north)",
+        "crimson_door",
+        3.0,
+        false,
+        false,
+    ),
+    block(
+        CRIMSON_DOOR + 5,
+        "Crimson Door (lower open south)",
+        "crimson_door",
+        3.0,
+        false,
+        false,
+    ),
+    block(
+        CRIMSON_DOOR + 6,
+        "Crimson Door (lower open west)",
+        "crimson_door",
+        3.0,
+        false,
+        false,
+    ),
+    block(
+        CRIMSON_DOOR + 7,
+        "Crimson Door (lower open east)",
+        "crimson_door",
+        3.0,
+        false,
+        false,
+    ),
+    block(
+        CRIMSON_DOOR + 8,
+        "Crimson Door (upper closed north)",
+        "crimson_door",
+        3.0,
+        true,
+        false,
+    ),
+    block(
+        CRIMSON_DOOR + 9,
+        "Crimson Door (upper closed south)",
+        "crimson_door",
+        3.0,
+        true,
+        false,
+    ),
+    block(
+        CRIMSON_DOOR + 10,
+        "Crimson Door (upper closed west)",
+        "crimson_door",
+        3.0,
+        true,
+        false,
+    ),
+    block(
+        CRIMSON_DOOR + 11,
+        "Crimson Door (upper closed east)",
+        "crimson_door",
+        3.0,
+        true,
+        false,
+    ),
+    block(
+        CRIMSON_DOOR + 12,
+        "Crimson Door (upper open north)",
+        "crimson_door",
+        3.0,
+        false,
+        false,
+    ),
+    block(
+        CRIMSON_DOOR + 13,
+        "Crimson Door (upper open south)",
+        "crimson_door",
+        3.0,
+        false,
+        false,
+    ),
+    block(
+        CRIMSON_DOOR + 14,
+        "Crimson Door (upper open west)",
+        "crimson_door",
+        3.0,
+        false,
+        false,
+    ),
+    block(
+        CRIMSON_DOOR + 15,
+        "Crimson Door (upper open east)",
+        "crimson_door",
+        3.0,
+        false,
+        false,
+    ),
+    block(WARPED_DOOR, "Warped Door", "warped_door", 3.0, true, false),
+    block(
+        WARPED_DOOR + 1,
+        "Warped Door (lower closed south)",
+        "warped_door",
+        3.0,
+        true,
+        false,
+    ),
+    block(
+        WARPED_DOOR + 2,
+        "Warped Door (lower closed west)",
+        "warped_door",
+        3.0,
+        true,
+        false,
+    ),
+    block(
+        WARPED_DOOR + 3,
+        "Warped Door (lower closed east)",
+        "warped_door",
+        3.0,
+        true,
+        false,
+    ),
+    block(
+        WARPED_DOOR + 4,
+        "Warped Door (lower open north)",
+        "warped_door",
+        3.0,
+        false,
+        false,
+    ),
+    block(
+        WARPED_DOOR + 5,
+        "Warped Door (lower open south)",
+        "warped_door",
+        3.0,
+        false,
+        false,
+    ),
+    block(
+        WARPED_DOOR + 6,
+        "Warped Door (lower open west)",
+        "warped_door",
+        3.0,
+        false,
+        false,
+    ),
+    block(
+        WARPED_DOOR + 7,
+        "Warped Door (lower open east)",
+        "warped_door",
+        3.0,
+        false,
+        false,
+    ),
+    block(
+        WARPED_DOOR + 8,
+        "Warped Door (upper closed north)",
+        "warped_door",
+        3.0,
+        true,
+        false,
+    ),
+    block(
+        WARPED_DOOR + 9,
+        "Warped Door (upper closed south)",
+        "warped_door",
+        3.0,
+        true,
+        false,
+    ),
+    block(
+        WARPED_DOOR + 10,
+        "Warped Door (upper closed west)",
+        "warped_door",
+        3.0,
+        true,
+        false,
+    ),
+    block(
+        WARPED_DOOR + 11,
+        "Warped Door (upper closed east)",
+        "warped_door",
+        3.0,
+        true,
+        false,
+    ),
+    block(
+        WARPED_DOOR + 12,
+        "Warped Door (upper open north)",
+        "warped_door",
+        3.0,
+        false,
+        false,
+    ),
+    block(
+        WARPED_DOOR + 13,
+        "Warped Door (upper open south)",
+        "warped_door",
+        3.0,
+        false,
+        false,
+    ),
+    block(
+        WARPED_DOOR + 14,
+        "Warped Door (upper open west)",
+        "warped_door",
+        3.0,
+        false,
+        false,
+    ),
+    block(
+        WARPED_DOOR + 15,
+        "Warped Door (upper open east)",
+        "warped_door",
+        3.0,
+        false,
+        false,
+    ),
+    block(
+        CRIMSON_SIGN,
+        "Crimson Sign",
+        "crimson_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        CRIMSON_SIGN + 1,
+        "Crimson Sign (south)",
+        "crimson_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        CRIMSON_SIGN + 2,
+        "Crimson Sign (west)",
+        "crimson_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        CRIMSON_SIGN + 3,
+        "Crimson Sign (east)",
+        "crimson_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(WARPED_SIGN, "Warped Sign", "warped_sign", 1.0, false, false),
+    block(
+        WARPED_SIGN + 1,
+        "Warped Sign (south)",
+        "warped_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        WARPED_SIGN + 2,
+        "Warped Sign (west)",
+        "warped_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        WARPED_SIGN + 3,
+        "Warped Sign (east)",
+        "warped_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        CRIMSON_WALL_SIGN,
+        "Crimson Wall Sign",
+        "crimson_wall_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        CRIMSON_WALL_SIGN + 1,
+        "Crimson Wall Sign (south)",
+        "crimson_wall_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        CRIMSON_WALL_SIGN + 2,
+        "Crimson Wall Sign (west)",
+        "crimson_wall_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        CRIMSON_WALL_SIGN + 3,
+        "Crimson Wall Sign (east)",
+        "crimson_wall_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        WARPED_WALL_SIGN,
+        "Warped Wall Sign",
+        "warped_wall_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        WARPED_WALL_SIGN + 1,
+        "Warped Wall Sign (south)",
+        "warped_wall_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        WARPED_WALL_SIGN + 2,
+        "Warped Wall Sign (west)",
+        "warped_wall_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        WARPED_WALL_SIGN + 3,
+        "Warped Wall Sign (east)",
+        "warped_wall_sign",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        STRUCTURE_BLOCK,
+        "Structure Block",
+        "structure_block",
+        5.0,
+        true,
+        true,
+    ),
+    block(JIGSAW, "Jigsaw", "jigsaw", 5.0, true, true),
+    block(COMPOSTER, "Composter", "composter", 0.6, true, false),
+    block(TARGET, "Target", "target", 0.5, true, true),
+    block(BEE_NEST, "Bee Nest", "bee_nest", 0.3, true, true),
+    block(BEEHIVE, "Beehive", "beehive", 0.6, true, true),
+    block(HONEY_BLOCK, "Honey Block", "honey_block", 0.5, true, false),
+    block(
+        HONEYCOMB_BLOCK,
+        "Honeycomb Block",
+        "honeycomb_block",
+        0.6,
+        true,
+        true,
+    ),
+    block(
+        NETHERITE_BLOCK,
+        "Netherite Block",
+        "netherite_block",
+        50.0,
+        true,
+        true,
+    ),
+    block(
+        ANCIENT_DEBRIS,
+        "Ancient Debris",
+        "ancient_debris",
+        30.0,
+        true,
+        true,
+    ),
+    BlockDef {
+        light_emission: 10,
+        ..block(
+            CRYING_OBSIDIAN,
+            "Crying Obsidian",
+            "crying_obsidian",
+            50.0,
+            true,
+            true,
+        )
+    },
+    block(
+        RESPAWN_ANCHOR,
+        "Respawn Anchor",
+        "respawn_anchor",
+        50.0,
+        true,
+        true,
+    ),
+    block(
+        POTTED_CRIMSON_FUNGUS,
+        "Potted Crimson Fungus",
+        "potted_crimson_fungus",
+        0.05,
+        true,
+        false,
+    ),
+    block(
+        POTTED_WARPED_FUNGUS,
+        "Potted Warped Fungus",
+        "potted_warped_fungus",
+        0.05,
+        true,
+        false,
+    ),
+    block(
+        POTTED_CRIMSON_ROOTS,
+        "Potted Crimson Roots",
+        "potted_crimson_roots",
+        0.05,
+        true,
+        false,
+    ),
+    block(
+        POTTED_WARPED_ROOTS,
+        "Potted Warped Roots",
+        "potted_warped_roots",
+        0.05,
+        true,
+        false,
+    ),
+    block(LODESTONE, "Lodestone", "lodestone", 3.5, true, true),
+    block(BLACKSTONE, "Blackstone", "blackstone", 1.5, true, true),
+    block(
+        BLACKSTONE_STAIRS,
+        "Blackstone Stairs",
+        "blackstone_stairs",
+        1.5,
+        true,
+        false,
+    ),
+    block(
+        BLACKSTONE_STAIRS + 1,
+        "Blackstone Stairs (south)",
+        "blackstone_stairs",
+        1.5,
+        true,
+        false,
+    ),
+    block(
+        BLACKSTONE_STAIRS + 2,
+        "Blackstone Stairs (west)",
+        "blackstone_stairs",
+        1.5,
+        true,
+        false,
+    ),
+    block(
+        BLACKSTONE_STAIRS + 3,
+        "Blackstone Stairs (east)",
+        "blackstone_stairs",
+        1.5,
+        true,
+        false,
+    ),
+    block(
+        BLACKSTONE_WALL,
+        "Blackstone Wall",
+        "blackstone_wall",
+        2.0,
+        true,
+        false,
+    ),
+    block(
+        BLACKSTONE_SLAB,
+        "Blackstone Slab",
+        "blackstone_slab",
+        1.5,
+        true,
+        false,
+    ),
+    block(
+        POLISHED_BLACKSTONE,
+        "Polished Blackstone",
+        "polished_blackstone",
+        2.0,
+        true,
+        true,
+    ),
+    block(
+        POLISHED_BLACKSTONE_BRICKS,
+        "Polished Blackstone Bricks",
+        "polished_blackstone_bricks",
+        1.5,
+        true,
+        true,
+    ),
+    block(
+        CRACKED_POLISHED_BLACKSTONE_BRICKS,
+        "Cracked Polished Blackstone Bricks",
+        "cracked_polished_blackstone_bricks",
+        1.5,
+        true,
+        true,
+    ),
+    block(
+        CHISELED_POLISHED_BLACKSTONE,
+        "Chiseled Polished Blackstone",
+        "chiseled_polished_blackstone",
+        1.5,
+        true,
+        true,
+    ),
+    block(
+        POLISHED_BLACKSTONE_BRICK_SLAB,
+        "Polished Blackstone Brick Slab",
+        "polished_blackstone_brick_slab",
+        1.5,
+        true,
+        false,
+    ),
+    block(
+        POLISHED_BLACKSTONE_BRICK_STAIRS,
+        "Polished Blackstone Brick Stairs",
+        "polished_blackstone_brick_stairs",
+        1.5,
+        true,
+        false,
+    ),
+    block(
+        POLISHED_BLACKSTONE_BRICK_STAIRS + 1,
+        "Polished Blackstone Brick Stairs (south)",
+        "polished_blackstone_brick_stairs",
+        1.5,
+        true,
+        false,
+    ),
+    block(
+        POLISHED_BLACKSTONE_BRICK_STAIRS + 2,
+        "Polished Blackstone Brick Stairs (west)",
+        "polished_blackstone_brick_stairs",
+        1.5,
+        true,
+        false,
+    ),
+    block(
+        POLISHED_BLACKSTONE_BRICK_STAIRS + 3,
+        "Polished Blackstone Brick Stairs (east)",
+        "polished_blackstone_brick_stairs",
+        1.5,
+        true,
+        false,
+    ),
+    block(
+        POLISHED_BLACKSTONE_BRICK_WALL,
+        "Polished Blackstone Brick Wall",
+        "polished_blackstone_brick_wall",
+        2.0,
+        true,
+        false,
+    ),
+    block(
+        GILDED_BLACKSTONE,
+        "Gilded Blackstone",
+        "gilded_blackstone",
+        1.5,
+        true,
+        true,
+    ),
+    block(
+        POLISHED_BLACKSTONE_STAIRS,
+        "Polished Blackstone Stairs",
+        "polished_blackstone_stairs",
+        1.5,
+        true,
+        false,
+    ),
+    block(
+        POLISHED_BLACKSTONE_STAIRS + 1,
+        "Polished Blackstone Stairs (south)",
+        "polished_blackstone_stairs",
+        1.5,
+        true,
+        false,
+    ),
+    block(
+        POLISHED_BLACKSTONE_STAIRS + 2,
+        "Polished Blackstone Stairs (west)",
+        "polished_blackstone_stairs",
+        1.5,
+        true,
+        false,
+    ),
+    block(
+        POLISHED_BLACKSTONE_STAIRS + 3,
+        "Polished Blackstone Stairs (east)",
+        "polished_blackstone_stairs",
+        1.5,
+        true,
+        false,
+    ),
+    block(
+        POLISHED_BLACKSTONE_SLAB,
+        "Polished Blackstone Slab",
+        "polished_blackstone_slab",
+        1.5,
+        true,
+        false,
+    ),
+    block(
+        POLISHED_BLACKSTONE_PRESSURE_PLATE,
+        "Polished Blackstone Pressure Plate",
+        "polished_blackstone_pressure_plate",
+        0.5,
+        false,
+        false,
+    ),
+    block(
+        POLISHED_BLACKSTONE_BUTTON,
+        "Polished Blackstone Button",
+        "polished_blackstone_button",
+        0.5,
+        false,
+        false,
+    ),
+    block(
+        POLISHED_BLACKSTONE_BUTTON + 1,
+        "Polished Blackstone Button (south)",
+        "polished_blackstone_button",
+        0.5,
+        false,
+        false,
+    ),
+    block(
+        POLISHED_BLACKSTONE_BUTTON + 2,
+        "Polished Blackstone Button (west)",
+        "polished_blackstone_button",
+        0.5,
+        false,
+        false,
+    ),
+    block(
+        POLISHED_BLACKSTONE_BUTTON + 3,
+        "Polished Blackstone Button (east)",
+        "polished_blackstone_button",
+        0.5,
+        false,
+        false,
+    ),
+    block(
+        POLISHED_BLACKSTONE_WALL,
+        "Polished Blackstone Wall",
+        "polished_blackstone_wall",
+        2.0,
+        true,
+        false,
+    ),
+    block(
+        CHISELED_NETHER_BRICKS,
+        "Chiseled Nether Bricks",
+        "chiseled_nether_bricks",
+        2.0,
+        true,
+        true,
+    ),
+    block(
+        CRACKED_NETHER_BRICKS,
+        "Cracked Nether Bricks",
+        "cracked_nether_bricks",
+        2.0,
+        true,
+        true,
+    ),
+    block(
+        QUARTZ_BRICKS,
+        "Quartz Bricks",
+        "quartz_bricks",
+        0.8,
+        true,
+        true,
+    ),
+    BlockDef {
+        light_emission: 3,
+        ..block(CANDLE, "Candle", "candle", 0.1, false, false)
+    },
+    BlockDef {
+        light_emission: 3,
+        ..block(
+            WHITE_CANDLE,
+            "White Candle",
+            "white_candle",
+            0.1,
+            false,
+            false,
+        )
+    },
+    BlockDef {
+        light_emission: 3,
+        ..block(
+            ORANGE_CANDLE,
+            "Orange Candle",
+            "orange_candle",
+            0.1,
+            false,
+            false,
+        )
+    },
+    BlockDef {
+        light_emission: 3,
+        ..block(
+            MAGENTA_CANDLE,
+            "Magenta Candle",
+            "magenta_candle",
+            0.1,
+            false,
+            false,
+        )
+    },
+    BlockDef {
+        light_emission: 3,
+        ..block(
+            LIGHT_BLUE_CANDLE,
+            "Light Blue Candle",
+            "light_blue_candle",
+            0.1,
+            false,
+            false,
+        )
+    },
+    BlockDef {
+        light_emission: 3,
+        ..block(
+            YELLOW_CANDLE,
+            "Yellow Candle",
+            "yellow_candle",
+            0.1,
+            false,
+            false,
+        )
+    },
+    BlockDef {
+        light_emission: 3,
+        ..block(LIME_CANDLE, "Lime Candle", "lime_candle", 0.1, false, false)
+    },
+    BlockDef {
+        light_emission: 3,
+        ..block(PINK_CANDLE, "Pink Candle", "pink_candle", 0.1, false, false)
+    },
+    BlockDef {
+        light_emission: 3,
+        ..block(GRAY_CANDLE, "Gray Candle", "gray_candle", 0.1, false, false)
+    },
+    BlockDef {
+        light_emission: 3,
+        ..block(
+            LIGHT_GRAY_CANDLE,
+            "Light Gray Candle",
+            "light_gray_candle",
+            0.1,
+            false,
+            false,
+        )
+    },
+    BlockDef {
+        light_emission: 3,
+        ..block(CYAN_CANDLE, "Cyan Candle", "cyan_candle", 0.1, false, false)
+    },
+    BlockDef {
+        light_emission: 3,
+        ..block(
+            PURPLE_CANDLE,
+            "Purple Candle",
+            "purple_candle",
+            0.1,
+            false,
+            false,
+        )
+    },
+    BlockDef {
+        light_emission: 3,
+        ..block(BLUE_CANDLE, "Blue Candle", "blue_candle", 0.1, false, false)
+    },
+    BlockDef {
+        light_emission: 3,
+        ..block(
+            BROWN_CANDLE,
+            "Brown Candle",
+            "brown_candle",
+            0.1,
+            false,
+            false,
+        )
+    },
+    BlockDef {
+        light_emission: 3,
+        ..block(
+            GREEN_CANDLE,
+            "Green Candle",
+            "green_candle",
+            0.1,
+            false,
+            false,
+        )
+    },
+    BlockDef {
+        light_emission: 3,
+        ..block(RED_CANDLE, "Red Candle", "red_candle", 0.1, false, false)
+    },
+    BlockDef {
+        light_emission: 3,
+        ..block(
+            BLACK_CANDLE,
+            "Black Candle",
+            "black_candle",
+            0.1,
+            false,
+            false,
+        )
+    },
+    BlockDef {
+        light_emission: 3,
+        ..block(CANDLE_CAKE, "Candle Cake", "candle_cake", 0.5, true, false)
+    },
+    BlockDef {
+        light_emission: 3,
+        ..block(
+            WHITE_CANDLE_CAKE,
+            "White Candle Cake",
+            "white_candle_cake",
+            0.5,
+            true,
+            false,
+        )
+    },
+    BlockDef {
+        light_emission: 3,
+        ..block(
+            ORANGE_CANDLE_CAKE,
+            "Orange Candle Cake",
+            "orange_candle_cake",
+            0.5,
+            true,
+            false,
+        )
+    },
+    BlockDef {
+        light_emission: 3,
+        ..block(
+            MAGENTA_CANDLE_CAKE,
+            "Magenta Candle Cake",
+            "magenta_candle_cake",
+            0.5,
+            true,
+            false,
+        )
+    },
+    BlockDef {
+        light_emission: 3,
+        ..block(
+            LIGHT_BLUE_CANDLE_CAKE,
+            "Light Blue Candle Cake",
+            "light_blue_candle_cake",
+            0.5,
+            true,
+            false,
+        )
+    },
+    BlockDef {
+        light_emission: 3,
+        ..block(
+            YELLOW_CANDLE_CAKE,
+            "Yellow Candle Cake",
+            "yellow_candle_cake",
+            0.5,
+            true,
+            false,
+        )
+    },
+    BlockDef {
+        light_emission: 3,
+        ..block(
+            LIME_CANDLE_CAKE,
+            "Lime Candle Cake",
+            "lime_candle_cake",
+            0.5,
+            true,
+            false,
+        )
+    },
+    BlockDef {
+        light_emission: 3,
+        ..block(
+            PINK_CANDLE_CAKE,
+            "Pink Candle Cake",
+            "pink_candle_cake",
+            0.5,
+            true,
+            false,
+        )
+    },
+    BlockDef {
+        light_emission: 3,
+        ..block(
+            GRAY_CANDLE_CAKE,
+            "Gray Candle Cake",
+            "gray_candle_cake",
+            0.5,
+            true,
+            false,
+        )
+    },
+    BlockDef {
+        light_emission: 3,
+        ..block(
+            LIGHT_GRAY_CANDLE_CAKE,
+            "Light Gray Candle Cake",
+            "light_gray_candle_cake",
+            0.5,
+            true,
+            false,
+        )
+    },
+    BlockDef {
+        light_emission: 3,
+        ..block(
+            CYAN_CANDLE_CAKE,
+            "Cyan Candle Cake",
+            "cyan_candle_cake",
+            0.5,
+            true,
+            false,
+        )
+    },
+    BlockDef {
+        light_emission: 3,
+        ..block(
+            PURPLE_CANDLE_CAKE,
+            "Purple Candle Cake",
+            "purple_candle_cake",
+            0.5,
+            true,
+            false,
+        )
+    },
+    BlockDef {
+        light_emission: 3,
+        ..block(
+            BLUE_CANDLE_CAKE,
+            "Blue Candle Cake",
+            "blue_candle_cake",
+            0.5,
+            true,
+            false,
+        )
+    },
+    BlockDef {
+        light_emission: 3,
+        ..block(
+            BROWN_CANDLE_CAKE,
+            "Brown Candle Cake",
+            "brown_candle_cake",
+            0.5,
+            true,
+            false,
+        )
+    },
+    BlockDef {
+        light_emission: 3,
+        ..block(
+            GREEN_CANDLE_CAKE,
+            "Green Candle Cake",
+            "green_candle_cake",
+            0.5,
+            true,
+            false,
+        )
+    },
+    BlockDef {
+        light_emission: 3,
+        ..block(
+            RED_CANDLE_CAKE,
+            "Red Candle Cake",
+            "red_candle_cake",
+            0.5,
+            true,
+            false,
+        )
+    },
+    BlockDef {
+        light_emission: 3,
+        ..block(
+            BLACK_CANDLE_CAKE,
+            "Black Candle Cake",
+            "black_candle_cake",
+            0.5,
+            true,
+            false,
+        )
+    },
+    block(
+        BUDDING_AMETHYST,
+        "Budding Amethyst",
+        "budding_amethyst",
+        1.5,
+        true,
+        true,
+    ),
+    BlockDef {
+        light_emission: 5,
+        ..block(
+            AMETHYST_CLUSTER,
+            "Amethyst Cluster",
+            "amethyst_cluster",
+            1.5,
+            false,
+            false,
+        )
+    },
+    BlockDef {
+        light_emission: 4,
+        ..block(
+            LARGE_AMETHYST_BUD,
+            "Large Amethyst Bud",
+            "large_amethyst_bud",
+            1.5,
+            false,
+            false,
+        )
+    },
+    BlockDef {
+        light_emission: 2,
+        ..block(
+            MEDIUM_AMETHYST_BUD,
+            "Medium Amethyst Bud",
+            "medium_amethyst_bud",
+            1.5,
+            false,
+            false,
+        )
+    },
+    BlockDef {
+        light_emission: 1,
+        ..block(
+            SMALL_AMETHYST_BUD,
+            "Small Amethyst Bud",
+            "small_amethyst_bud",
+            1.5,
+            false,
+            false,
+        )
+    },
+    block(
+        TINTED_GLASS,
+        "Tinted Glass",
+        "tinted_glass",
+        0.3,
+        true,
+        false,
+    ),
+    block(
+        POWDER_SNOW,
+        "Powder Snow",
+        "powder_snow",
+        0.25,
+        false,
+        false,
+    ),
+    BlockDef {
+        light_emission: 1,
+        ..block(
+            SCULK_SENSOR,
+            "Sculk Sensor",
+            "sculk_sensor",
+            1.5,
+            true,
+            false,
+        )
+    },
+    BlockDef {
+        light_emission: 1,
+        ..block(
+            CALIBRATED_SCULK_SENSOR,
+            "Calibrated Sculk Sensor",
+            "calibrated_sculk_sensor",
+            1.5,
+            true,
+            false,
+        )
+    },
+    block(SCULK, "Sculk", "sculk", 0.6, true, true),
+    block(SCULK_VEIN, "Sculk Vein", "sculk_vein", 0.2, false, false),
+    BlockDef {
+        light_emission: 6,
+        ..block(
+            SCULK_CATALYST,
+            "Sculk Catalyst",
+            "sculk_catalyst",
+            3.0,
+            true,
+            true,
+        )
+    },
+    block(
+        SCULK_SHRIEKER,
+        "Sculk Shrieker",
+        "sculk_shrieker",
+        3.0,
+        true,
+        true,
+    ),
+    block(
+        OXIDIZED_COPPER,
+        "Oxidized Copper",
+        "oxidized_copper",
+        3.0,
+        true,
+        true,
+    ),
+    block(
+        WEATHERED_COPPER,
+        "Weathered Copper",
+        "weathered_copper",
+        3.0,
+        true,
+        true,
+    ),
+    block(
+        EXPOSED_COPPER,
+        "Exposed Copper",
+        "exposed_copper",
+        3.0,
+        true,
+        true,
+    ),
+    block(
+        DEEPSLATE_COPPER_ORE,
+        "Deepslate Copper Ore",
+        "deepslate_copper_ore",
+        4.5,
+        true,
+        true,
+    ),
+    block(
+        OXIDIZED_CUT_COPPER,
+        "Oxidized Cut Copper",
+        "oxidized_cut_copper",
+        3.0,
+        true,
+        true,
+    ),
+    block(
+        WEATHERED_CUT_COPPER,
+        "Weathered Cut Copper",
+        "weathered_cut_copper",
+        3.0,
+        true,
+        true,
+    ),
+    block(
+        EXPOSED_CUT_COPPER,
+        "Exposed Cut Copper",
+        "exposed_cut_copper",
+        3.0,
+        true,
+        true,
+    ),
+    block(CUT_COPPER, "Cut Copper", "cut_copper", 3.0, true, true),
+    block(
+        OXIDIZED_CUT_COPPER_STAIRS,
+        "Oxidized Cut Copper Stairs",
+        "oxidized_cut_copper_stairs",
+        3.0,
+        true,
+        false,
+    ),
+    block(
+        OXIDIZED_CUT_COPPER_STAIRS + 1,
+        "Oxidized Cut Copper Stairs (south)",
+        "oxidized_cut_copper_stairs",
+        3.0,
+        true,
+        false,
+    ),
+    block(
+        OXIDIZED_CUT_COPPER_STAIRS + 2,
+        "Oxidized Cut Copper Stairs (west)",
+        "oxidized_cut_copper_stairs",
+        3.0,
+        true,
+        false,
+    ),
+    block(
+        OXIDIZED_CUT_COPPER_STAIRS + 3,
+        "Oxidized Cut Copper Stairs (east)",
+        "oxidized_cut_copper_stairs",
+        3.0,
+        true,
+        false,
+    ),
+    block(
+        WEATHERED_CUT_COPPER_STAIRS,
+        "Weathered Cut Copper Stairs",
+        "weathered_cut_copper_stairs",
+        3.0,
+        true,
+        false,
+    ),
+    block(
+        WEATHERED_CUT_COPPER_STAIRS + 1,
+        "Weathered Cut Copper Stairs (south)",
+        "weathered_cut_copper_stairs",
+        3.0,
+        true,
+        false,
+    ),
+    block(
+        WEATHERED_CUT_COPPER_STAIRS + 2,
+        "Weathered Cut Copper Stairs (west)",
+        "weathered_cut_copper_stairs",
+        3.0,
+        true,
+        false,
+    ),
+    block(
+        WEATHERED_CUT_COPPER_STAIRS + 3,
+        "Weathered Cut Copper Stairs (east)",
+        "weathered_cut_copper_stairs",
+        3.0,
+        true,
+        false,
+    ),
+    block(
+        EXPOSED_CUT_COPPER_STAIRS,
+        "Exposed Cut Copper Stairs",
+        "exposed_cut_copper_stairs",
+        3.0,
+        true,
+        false,
+    ),
+    block(
+        EXPOSED_CUT_COPPER_STAIRS + 1,
+        "Exposed Cut Copper Stairs (south)",
+        "exposed_cut_copper_stairs",
+        3.0,
+        true,
+        false,
+    ),
+    block(
+        EXPOSED_CUT_COPPER_STAIRS + 2,
+        "Exposed Cut Copper Stairs (west)",
+        "exposed_cut_copper_stairs",
+        3.0,
+        true,
+        false,
+    ),
+    block(
+        EXPOSED_CUT_COPPER_STAIRS + 3,
+        "Exposed Cut Copper Stairs (east)",
+        "exposed_cut_copper_stairs",
+        3.0,
+        true,
+        false,
+    ),
+    block(
+        CUT_COPPER_STAIRS,
+        "Cut Copper Stairs",
+        "cut_copper_stairs",
+        3.0,
+        true,
+        false,
+    ),
+    block(
+        CUT_COPPER_STAIRS + 1,
+        "Cut Copper Stairs (south)",
+        "cut_copper_stairs",
+        3.0,
+        true,
+        false,
+    ),
+    block(
+        CUT_COPPER_STAIRS + 2,
+        "Cut Copper Stairs (west)",
+        "cut_copper_stairs",
+        3.0,
+        true,
+        false,
+    ),
+    block(
+        CUT_COPPER_STAIRS + 3,
+        "Cut Copper Stairs (east)",
+        "cut_copper_stairs",
+        3.0,
+        true,
+        false,
+    ),
+    block(
+        OXIDIZED_CUT_COPPER_SLAB,
+        "Oxidized Cut Copper Slab",
+        "oxidized_cut_copper_slab",
+        3.0,
+        true,
+        false,
+    ),
+    block(
+        WEATHERED_CUT_COPPER_SLAB,
+        "Weathered Cut Copper Slab",
+        "weathered_cut_copper_slab",
+        3.0,
+        true,
+        false,
+    ),
+    block(
+        EXPOSED_CUT_COPPER_SLAB,
+        "Exposed Cut Copper Slab",
+        "exposed_cut_copper_slab",
+        3.0,
+        true,
+        false,
+    ),
+    block(
+        CUT_COPPER_SLAB,
+        "Cut Copper Slab",
+        "cut_copper_slab",
+        3.0,
+        true,
+        false,
+    ),
+    block(
+        WAXED_COPPER_BLOCK,
+        "Waxed Copper Block",
+        "waxed_copper_block",
+        3.0,
+        true,
+        true,
+    ),
+    block(
+        WAXED_WEATHERED_COPPER,
+        "Waxed Weathered Copper",
+        "waxed_weathered_copper",
+        3.0,
+        true,
+        true,
+    ),
+    block(
+        WAXED_EXPOSED_COPPER,
+        "Waxed Exposed Copper",
+        "waxed_exposed_copper",
+        3.0,
+        true,
+        true,
+    ),
+    block(
+        WAXED_OXIDIZED_COPPER,
+        "Waxed Oxidized Copper",
+        "waxed_oxidized_copper",
+        3.0,
+        true,
+        true,
+    ),
+    block(
+        WAXED_OXIDIZED_CUT_COPPER,
+        "Waxed Oxidized Cut Copper",
+        "waxed_oxidized_cut_copper",
+        3.0,
+        true,
+        true,
+    ),
+    block(
+        WAXED_WEATHERED_CUT_COPPER,
+        "Waxed Weathered Cut Copper",
+        "waxed_weathered_cut_copper",
+        3.0,
+        true,
+        true,
+    ),
+    block(
+        WAXED_EXPOSED_CUT_COPPER,
+        "Waxed Exposed Cut Copper",
+        "waxed_exposed_cut_copper",
+        3.0,
+        true,
+        true,
+    ),
+    block(
+        WAXED_CUT_COPPER,
+        "Waxed Cut Copper",
+        "waxed_cut_copper",
+        3.0,
+        true,
+        true,
+    ),
+    block(
+        WAXED_OXIDIZED_CUT_COPPER_STAIRS,
+        "Waxed Oxidized Cut Copper Stairs",
+        "waxed_oxidized_cut_copper_stairs",
+        3.0,
+        true,
+        false,
+    ),
+    block(
+        WAXED_OXIDIZED_CUT_COPPER_STAIRS + 1,
+        "Waxed Oxidized Cut Copper Stairs (south)",
+        "waxed_oxidized_cut_copper_stairs",
+        3.0,
+        true,
+        false,
+    ),
+    block(
+        WAXED_OXIDIZED_CUT_COPPER_STAIRS + 2,
+        "Waxed Oxidized Cut Copper Stairs (west)",
+        "waxed_oxidized_cut_copper_stairs",
+        3.0,
+        true,
+        false,
+    ),
+    block(
+        WAXED_OXIDIZED_CUT_COPPER_STAIRS + 3,
+        "Waxed Oxidized Cut Copper Stairs (east)",
+        "waxed_oxidized_cut_copper_stairs",
+        3.0,
+        true,
+        false,
+    ),
+    block(
+        WAXED_WEATHERED_CUT_COPPER_STAIRS,
+        "Waxed Weathered Cut Copper Stairs",
+        "waxed_weathered_cut_copper_stairs",
+        3.0,
+        true,
+        false,
+    ),
+    block(
+        WAXED_WEATHERED_CUT_COPPER_STAIRS + 1,
+        "Waxed Weathered Cut Copper Stairs (south)",
+        "waxed_weathered_cut_copper_stairs",
+        3.0,
+        true,
+        false,
+    ),
+    block(
+        WAXED_WEATHERED_CUT_COPPER_STAIRS + 2,
+        "Waxed Weathered Cut Copper Stairs (west)",
+        "waxed_weathered_cut_copper_stairs",
+        3.0,
+        true,
+        false,
+    ),
+    block(
+        WAXED_WEATHERED_CUT_COPPER_STAIRS + 3,
+        "Waxed Weathered Cut Copper Stairs (east)",
+        "waxed_weathered_cut_copper_stairs",
+        3.0,
+        true,
+        false,
+    ),
+    block(
+        WAXED_EXPOSED_CUT_COPPER_STAIRS,
+        "Waxed Exposed Cut Copper Stairs",
+        "waxed_exposed_cut_copper_stairs",
+        3.0,
+        true,
+        false,
+    ),
+    block(
+        WAXED_EXPOSED_CUT_COPPER_STAIRS + 1,
+        "Waxed Exposed Cut Copper Stairs (south)",
+        "waxed_exposed_cut_copper_stairs",
+        3.0,
+        true,
+        false,
+    ),
+    block(
+        WAXED_EXPOSED_CUT_COPPER_STAIRS + 2,
+        "Waxed Exposed Cut Copper Stairs (west)",
+        "waxed_exposed_cut_copper_stairs",
+        3.0,
+        true,
+        false,
+    ),
+    block(
+        WAXED_EXPOSED_CUT_COPPER_STAIRS + 3,
+        "Waxed Exposed Cut Copper Stairs (east)",
+        "waxed_exposed_cut_copper_stairs",
+        3.0,
+        true,
+        false,
+    ),
+    block(
+        WAXED_CUT_COPPER_STAIRS,
+        "Waxed Cut Copper Stairs",
+        "waxed_cut_copper_stairs",
+        3.0,
+        true,
+        false,
+    ),
+    block(
+        WAXED_CUT_COPPER_STAIRS + 1,
+        "Waxed Cut Copper Stairs (south)",
+        "waxed_cut_copper_stairs",
+        3.0,
+        true,
+        false,
+    ),
+    block(
+        WAXED_CUT_COPPER_STAIRS + 2,
+        "Waxed Cut Copper Stairs (west)",
+        "waxed_cut_copper_stairs",
+        3.0,
+        true,
+        false,
+    ),
+    block(
+        WAXED_CUT_COPPER_STAIRS + 3,
+        "Waxed Cut Copper Stairs (east)",
+        "waxed_cut_copper_stairs",
+        3.0,
+        true,
+        false,
+    ),
+    block(
+        WAXED_OXIDIZED_CUT_COPPER_SLAB,
+        "Waxed Oxidized Cut Copper Slab",
+        "waxed_oxidized_cut_copper_slab",
+        3.0,
+        true,
+        false,
+    ),
+    block(
+        WAXED_WEATHERED_CUT_COPPER_SLAB,
+        "Waxed Weathered Cut Copper Slab",
+        "waxed_weathered_cut_copper_slab",
+        3.0,
+        true,
+        false,
+    ),
+    block(
+        WAXED_EXPOSED_CUT_COPPER_SLAB,
+        "Waxed Exposed Cut Copper Slab",
+        "waxed_exposed_cut_copper_slab",
+        3.0,
+        true,
+        false,
+    ),
+    block(
+        WAXED_CUT_COPPER_SLAB,
+        "Waxed Cut Copper Slab",
+        "waxed_cut_copper_slab",
+        3.0,
+        true,
+        false,
+    ),
+    block(
+        LIGHTNING_ROD,
+        "Lightning Rod",
+        "lightning_rod",
+        3.0,
+        true,
+        false,
+    ),
+    block(
+        POINTED_DRIPSTONE,
+        "Pointed Dripstone",
+        "pointed_dripstone",
+        1.5,
+        false,
+        false,
+    ),
+    block(
+        DRIPSTONE_BLOCK,
+        "Dripstone Block",
+        "dripstone_block",
+        1.5,
+        true,
+        true,
+    ),
+    BlockDef {
+        light_emission: 14,
+        ..block(CAVE_VINES, "Cave Vines", "cave_vines", 0.05, false, false)
+    },
+    BlockDef {
+        light_emission: 14,
+        ..block(
+            CAVE_VINES_PLANT,
+            "Cave Vines Plant",
+            "cave_vines_plant",
+            0.05,
+            false,
+            false,
+        )
+    },
+    block(
+        SPORE_BLOSSOM,
+        "Spore Blossom",
+        "spore_blossom",
+        0.05,
+        false,
+        false,
+    ),
+    block(AZALEA, "Azalea", "azalea", 0.05, false, false),
+    block(
+        FLOWERING_AZALEA,
+        "Flowering Azalea",
+        "flowering_azalea",
+        0.05,
+        false,
+        false,
+    ),
+    block(MOSS_CARPET, "Moss Carpet", "moss_carpet", 0.1, false, false),
+    block(
+        PINK_PETALS,
+        "Pink Petals",
+        "pink_petals",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        BIG_DRIPLEAF,
+        "Big Dripleaf",
+        "big_dripleaf",
+        0.1,
+        false,
+        false,
+    ),
+    block(
+        BIG_DRIPLEAF_STEM,
+        "Big Dripleaf Stem",
+        "big_dripleaf_stem",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        SMALL_DRIPLEAF,
+        "Small Dripleaf",
+        "small_dripleaf",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        HANGING_ROOTS,
+        "Hanging Roots",
+        "hanging_roots",
+        0.05,
+        false,
+        false,
+    ),
+    block(ROOTED_DIRT, "Rooted Dirt", "rooted_dirt", 0.5, true, true),
+    block(
+        COBBLED_DEEPSLATE,
+        "Cobbled Deepslate",
+        "cobbled_deepslate",
+        3.5,
+        true,
+        true,
+    ),
+    block(
+        COBBLED_DEEPSLATE_STAIRS,
+        "Cobbled Deepslate Stairs",
+        "cobbled_deepslate_stairs",
+        3.5,
+        true,
+        false,
+    ),
+    block(
+        COBBLED_DEEPSLATE_STAIRS + 1,
+        "Cobbled Deepslate Stairs (south)",
+        "cobbled_deepslate_stairs",
+        3.5,
+        true,
+        false,
+    ),
+    block(
+        COBBLED_DEEPSLATE_STAIRS + 2,
+        "Cobbled Deepslate Stairs (west)",
+        "cobbled_deepslate_stairs",
+        3.5,
+        true,
+        false,
+    ),
+    block(
+        COBBLED_DEEPSLATE_STAIRS + 3,
+        "Cobbled Deepslate Stairs (east)",
+        "cobbled_deepslate_stairs",
+        3.5,
+        true,
+        false,
+    ),
+    block(
+        COBBLED_DEEPSLATE_SLAB,
+        "Cobbled Deepslate Slab",
+        "cobbled_deepslate_slab",
+        3.5,
+        true,
+        false,
+    ),
+    block(
+        COBBLED_DEEPSLATE_WALL,
+        "Cobbled Deepslate Wall",
+        "cobbled_deepslate_wall",
+        3.5,
+        true,
+        false,
+    ),
+    block(
+        POLISHED_DEEPSLATE,
+        "Polished Deepslate",
+        "polished_deepslate",
+        3.5,
+        true,
+        true,
+    ),
+    block(
+        POLISHED_DEEPSLATE_STAIRS,
+        "Polished Deepslate Stairs",
+        "polished_deepslate_stairs",
+        3.5,
+        true,
+        false,
+    ),
+    block(
+        POLISHED_DEEPSLATE_STAIRS + 1,
+        "Polished Deepslate Stairs (south)",
+        "polished_deepslate_stairs",
+        3.5,
+        true,
+        false,
+    ),
+    block(
+        POLISHED_DEEPSLATE_STAIRS + 2,
+        "Polished Deepslate Stairs (west)",
+        "polished_deepslate_stairs",
+        3.5,
+        true,
+        false,
+    ),
+    block(
+        POLISHED_DEEPSLATE_STAIRS + 3,
+        "Polished Deepslate Stairs (east)",
+        "polished_deepslate_stairs",
+        3.5,
+        true,
+        false,
+    ),
+    block(
+        POLISHED_DEEPSLATE_SLAB,
+        "Polished Deepslate Slab",
+        "polished_deepslate_slab",
+        3.5,
+        true,
+        false,
+    ),
+    block(
+        POLISHED_DEEPSLATE_WALL,
+        "Polished Deepslate Wall",
+        "polished_deepslate_wall",
+        3.5,
+        true,
+        false,
+    ),
+    block(
+        DEEPSLATE_TILES,
+        "Deepslate Tiles",
+        "deepslate_tiles",
+        3.5,
+        true,
+        true,
+    ),
+    block(
+        DEEPSLATE_TILE_STAIRS,
+        "Deepslate Tile Stairs",
+        "deepslate_tile_stairs",
+        3.5,
+        true,
+        false,
+    ),
+    block(
+        DEEPSLATE_TILE_STAIRS + 1,
+        "Deepslate Tile Stairs (south)",
+        "deepslate_tile_stairs",
+        3.5,
+        true,
+        false,
+    ),
+    block(
+        DEEPSLATE_TILE_STAIRS + 2,
+        "Deepslate Tile Stairs (west)",
+        "deepslate_tile_stairs",
+        3.5,
+        true,
+        false,
+    ),
+    block(
+        DEEPSLATE_TILE_STAIRS + 3,
+        "Deepslate Tile Stairs (east)",
+        "deepslate_tile_stairs",
+        3.5,
+        true,
+        false,
+    ),
+    block(
+        DEEPSLATE_TILE_SLAB,
+        "Deepslate Tile Slab",
+        "deepslate_tile_slab",
+        3.5,
+        true,
+        false,
+    ),
+    block(
+        DEEPSLATE_TILE_WALL,
+        "Deepslate Tile Wall",
+        "deepslate_tile_wall",
+        3.5,
+        true,
+        false,
+    ),
+    block(
+        DEEPSLATE_BRICKS,
+        "Deepslate Bricks",
+        "deepslate_bricks",
+        3.5,
+        true,
+        true,
+    ),
+    block(
+        DEEPSLATE_BRICK_STAIRS,
+        "Deepslate Brick Stairs",
+        "deepslate_brick_stairs",
+        3.5,
+        true,
+        false,
+    ),
+    block(
+        DEEPSLATE_BRICK_STAIRS + 1,
+        "Deepslate Brick Stairs (south)",
+        "deepslate_brick_stairs",
+        3.5,
+        true,
+        false,
+    ),
+    block(
+        DEEPSLATE_BRICK_STAIRS + 2,
+        "Deepslate Brick Stairs (west)",
+        "deepslate_brick_stairs",
+        3.5,
+        true,
+        false,
+    ),
+    block(
+        DEEPSLATE_BRICK_STAIRS + 3,
+        "Deepslate Brick Stairs (east)",
+        "deepslate_brick_stairs",
+        3.5,
+        true,
+        false,
+    ),
+    block(
+        DEEPSLATE_BRICK_SLAB,
+        "Deepslate Brick Slab",
+        "deepslate_brick_slab",
+        3.5,
+        true,
+        false,
+    ),
+    block(
+        DEEPSLATE_BRICK_WALL,
+        "Deepslate Brick Wall",
+        "deepslate_brick_wall",
+        3.5,
+        true,
+        false,
+    ),
+    block(
+        CHISELED_DEEPSLATE,
+        "Chiseled Deepslate",
+        "chiseled_deepslate",
+        3.5,
+        true,
+        true,
+    ),
+    block(
+        CRACKED_DEEPSLATE_BRICKS,
+        "Cracked Deepslate Bricks",
+        "cracked_deepslate_bricks",
+        3.5,
+        true,
+        true,
+    ),
+    block(
+        CRACKED_DEEPSLATE_TILES,
+        "Cracked Deepslate Tiles",
+        "cracked_deepslate_tiles",
+        3.5,
+        true,
+        true,
+    ),
+    block(
+        INFESTED_DEEPSLATE,
+        "Infested Deepslate",
+        "infested_deepslate",
+        1.5,
+        true,
+        true,
+    ),
+    block(
+        SMOOTH_BASALT,
+        "Smooth Basalt",
+        "smooth_basalt",
+        1.25,
+        true,
+        true,
+    ),
+    block(
+        RAW_IRON_BLOCK,
+        "Raw Iron Block",
+        "raw_iron_block",
+        5.0,
+        true,
+        true,
+    ),
+    block(
+        RAW_COPPER_BLOCK,
+        "Raw Copper Block",
+        "raw_copper_block",
+        5.0,
+        true,
+        true,
+    ),
+    block(
+        RAW_GOLD_BLOCK,
+        "Raw Gold Block",
+        "raw_gold_block",
+        5.0,
+        true,
+        true,
+    ),
+    block(
+        POTTED_AZALEA_BUSH,
+        "Potted Azalea Bush",
+        "potted_azalea_bush",
+        0.05,
+        true,
+        false,
+    ),
+    block(
+        POTTED_FLOWERING_AZALEA_BUSH,
+        "Potted Flowering Azalea Bush",
+        "potted_flowering_azalea_bush",
+        0.05,
+        true,
+        false,
+    ),
+    BlockDef {
+        light_emission: 15,
+        ..block(
+            OCHRE_FROGLIGHT,
+            "Ochre Froglight",
+            "ochre_froglight",
+            0.3,
+            true,
+            true,
+        )
+    },
+    BlockDef {
+        light_emission: 15,
+        ..block(
+            VERDANT_FROGLIGHT,
+            "Verdant Froglight",
+            "verdant_froglight",
+            0.3,
+            true,
+            true,
+        )
+    },
+    BlockDef {
+        light_emission: 15,
+        ..block(
+            PEARLESCENT_FROGLIGHT,
+            "Pearlescent Froglight",
+            "pearlescent_froglight",
+            0.3,
+            true,
+            true,
+        )
+    },
+    block(FROGSPAWN, "Frogspawn", "frogspawn", 0.05, false, false),
+    block(
+        REINFORCED_DEEPSLATE,
+        "Reinforced Deepslate",
+        "reinforced_deepslate",
+        55.0,
+        true,
+        true,
+    ),
+    block(
+        DECORATED_POT,
+        "Decorated Pot",
+        "decorated_pot",
+        0.05,
+        true,
+        false,
+    ),
 ];
 
 /// Растения рисуются двумя скрещёнными плоскостями и не мешают ходьбе.
@@ -11523,6 +14363,7 @@ pub fn is_cross(id: BlockId) -> bool {
         || (SUNFLOWER..=LARGE_FERN).contains(&id)
         || (TORCHFLOWER_CROP..=BEETROOTS).contains(&id)
         || id == STRUCTURE_VOID
+        || crate::shape_table::is_cross(id)
         || matches!(
             id,
             KELP | KELP_PLANT | SEA_PICKLE | BAMBOO_SAPLING | BUBBLE_COLUMN
@@ -11539,7 +14380,9 @@ pub fn is_cross(id: BlockId) -> bool {
 /// Плоский рисунок на полу (рельсы).
 #[must_use]
 pub fn is_flat(id: BlockId) -> bool {
-    is_rail(id) || matches!(id, REDSTONE_WIRE | LILY_PAD | TRIPWIRE)
+    is_rail(id)
+        || matches!(id, REDSTONE_WIRE | LILY_PAD | TRIPWIRE)
+        || crate::shape_table::is_flat(id)
 }
 
 /// Блок, который рисуется спрайтом и не мешает ходьбе.
@@ -11585,6 +14428,10 @@ pub fn stripped_variant(id: BlockId) -> Option<BlockId> {
         DARK_OAK_LOG => STRIPPED_DARK_OAK_LOG,
         MANGROVE_LOG => STRIPPED_MANGROVE_LOG,
         BAMBOO_BLOCK => STRIPPED_BAMBOO_BLOCK,
+        WARPED_STEM => STRIPPED_WARPED_STEM,
+        WARPED_HYPHAE => STRIPPED_WARPED_HYPHAE,
+        CRIMSON_STEM => STRIPPED_CRIMSON_STEM,
+        CRIMSON_HYPHAE => STRIPPED_CRIMSON_HYPHAE,
         OAK_WOOD => STRIPPED_OAK_WOOD,
         SPRUCE_WOOD => STRIPPED_SPRUCE_WOOD,
         BIRCH_WOOD => STRIPPED_BIRCH_WOOD,
@@ -11710,6 +14557,7 @@ pub fn is_slab(id: BlockId) -> bool {
         || (PRISMARINE_SLAB..=DARK_PRISMARINE_SLAB).contains(&id)
         || (CUT_SANDSTONE_SLAB..=PURPUR_SLAB).contains(&id)
         || (POLISHED_GRANITE_SLAB..=DIORITE_SLAB).contains(&id)
+        || crate::shape_table::is_slab(id)
         || (SPRUCE_SLAB..=BAMBOO_MOSAIC_SLAB).contains(&id)
 }
 
@@ -11773,7 +14621,7 @@ mod tests {
             "Crafting Table",
             "Furnace",
         ];
-        assert_eq!(BLOCKS.len(), 1506);
+        assert_eq!(BLOCKS.len(), 1838);
         for (offset, name) in expected.iter().enumerate() {
             let id = 17 + offset;
             assert_eq!(BLOCKS[id].id as usize, id);
@@ -11784,12 +14632,22 @@ mod tests {
 
     #[test]
     fn chest_extends_registry_without_changing_foundation_ids() {
-        assert_eq!(BLOCKS.len(), 1506);
+        assert_eq!(BLOCKS.len(), 1838);
         let chest = BLOCKS.get(16).expect("сундук зарегистрирован");
         assert_eq!(chest.name, "Chest");
         assert!(is_solid(16));
         assert!(is_opaque(16));
         assert_eq!(BLOCKS.get(15).unwrap().name, "Sandstone");
+    }
+
+    #[test]
+    fn nether_stems_strip_and_fire_ignores_them() {
+        assert_eq!(stripped_variant(WARPED_STEM), Some(STRIPPED_WARPED_STEM));
+        assert_eq!(
+            stripped_variant(CRIMSON_HYPHAE),
+            Some(STRIPPED_CRIMSON_HYPHAE)
+        );
+        assert_eq!(flammability(WARPED_STEM), 0);
     }
 
     #[test]

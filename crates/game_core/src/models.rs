@@ -132,6 +132,12 @@ pub enum Shape {
     Bell,
     Grindstone,
     Lectern,
+    Candle,
+    CandleCake,
+    SculkSensor,
+    Composter,
+    Dripleaf,
+    Jar,
 }
 
 /// Форма блока, если он не обычный куб, не растение и не плоский рисунок.
@@ -244,7 +250,7 @@ pub fn shape_of(id: BlockId) -> Option<Shape> {
         _ if in_range(id, NETHER_PORTAL, 2) => Shape::Portal,
         OAK_FENCE => Shape::Fence,
         IRON_BARS | GLASS_PANE => Shape::Pane,
-        _ => return None,
+        _ => return crate::shape_table::lookup(id),
     })
 }
 
@@ -478,6 +484,18 @@ pub fn model_boxes(id: BlockId) -> Vec<ModelBox> {
             bx([2, 0, 5], [4, 8, 11]),
             bx([12, 0, 5], [14, 8, 11]),
         ],
+        Shape::Candle => vec![bx([7, 0, 7], [9, 6, 9])],
+        Shape::CandleCake => vec![bx([1, 0, 1], [15, 8, 15]), ax([7, 8, 7], [9, 14, 9])],
+        Shape::SculkSensor => vec![bx([0, 0, 0], [16, 8, 16])],
+        Shape::Composter => vec![
+            bx([0, 0, 0], [16, 4, 16]),
+            bx([0, 4, 0], [16, 16, 2]),
+            bx([0, 4, 14], [16, 16, 16]),
+            bx([0, 4, 2], [2, 16, 14]),
+            bx([14, 4, 2], [16, 16, 14]),
+        ],
+        Shape::Dripleaf => vec![bx([0, 11, 0], [16, 15, 16])],
+        Shape::Jar => vec![bx([1, 0, 1], [15, 16, 15])],
         Shape::Lectern => vec![
             bx([0, 0, 0], [16, 2, 16]),
             bx([4, 2, 4], [12, 14, 12]),

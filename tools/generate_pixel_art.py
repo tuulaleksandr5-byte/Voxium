@@ -3976,6 +3976,402 @@ def campfire():
 
 
 
+# ------------------------------------------------------------ part 7-8 tiles
+
+
+def tinted(name, src, mult, add=0):
+    def build():
+        image = load_tile(src)
+        image[..., :3] = np.clip(image[..., :3] * np.array(mult) + add, 0, 255)
+        return image
+
+    TILES[name] = build
+
+
+def colored(name, hexv, spread=0.14, specks=None, count=40, scale=None):
+    def build():
+        r = rng(name)
+        image = fill(canvas(), fbm(r, scale) if scale else fbm(r), shades(hexv, spread))
+        if specks:
+            speckle(image, r, specks, count)
+        return image
+
+    TILES[name] = build
+
+
+def bars(name, hexv, dark, vertical=True):
+    def build():
+        r = rng(name)
+        image = fill(canvas(), fbm(r), shades(hexv, 0.1))
+        for k in range(0, N, 4):
+            if vertical:
+                rect(image, k, 0, 1, N, dark)
+            else:
+                rect(image, 0, k, N, 1, dark)
+        return image
+
+    TILES[name] = build
+
+
+def ringtop(name, hexv, ring):
+    def build():
+        r = rng(name)
+        image = fill(canvas(), fbm(r), shades(hexv, 0.1))
+        border(image, ring, 2)
+        rect(image, 8, 8, 16, 16, "#%02x%02x%02x" % tuple(int(v) for v in np.clip(rgb(hexv) * 1.15, 0, 255)))
+        rect(image, 13, 13, 6, 6, ring)
+        return image
+
+    TILES[name] = build
+
+
+# ---- nether wood
+for _w, _hex, _bark in (("warped", "#2a9a8a", "#1a6a64"), ("crimson", "#8a2a4a", "#5a1630")):
+    bars(f"{_w}_stem", _hex, _bark)
+    ringtop(f"{_w}_stem_top", _hex, _bark)
+    bars(f"stripped_{_w}_stem", "#" + "%02x%02x%02x" % tuple(int(v) for v in np.clip(rgb(_hex) * 1.2 + 20, 0, 255)), _bark)
+    ringtop(f"stripped_{_w}_stem_top", "#" + "%02x%02x%02x" % tuple(int(v) for v in np.clip(rgb(_hex) * 1.2 + 20, 0, 255)), _bark)
+    bars(f"{_w}_hyphae", _bark, "#000000")
+    bars(f"stripped_{_w}_hyphae", _hex, _bark, False)
+
+    def _nylium(w=_w, hexv=_hex):
+        def top():
+            r = rng(w + "_nylium_top")
+            image = fill(canvas(), fbm(r), shades(hexv, 0.14))
+            speckle(image, r, ["#ffffff", "#103a30"], 30)
+            return image
+
+        def side():
+            image = load_tile("netherrack")
+            t = top()
+            for y in range(0, 8):
+                for x in range(N):
+                    if y < 6 or (x * 5 + y) % 4 < 2:
+                        image[y, x, :] = t[y, x, :]
+            return image
+
+        TILES[f"{w}_nylium_top"] = top
+        TILES[f"{w}_nylium_side"] = side
+
+    _nylium()
+    tinted(f"{_w}_wart_block", "nether_wart_block", (0.3, 1.5, 1.4) if _w == "warped" else (1, 1, 1))
+
+    def _plant(w=_w, hexv=_hex):
+        def fungus():
+            image = transparent()
+            rect(image, 14, 12, 4, 20, "#8a7a6a")
+            rect(image, 8, 4, 16, 9, hexv)
+            rect(image, 10, 6, 12, 3, "#e8e0c0" if w == "warped" else "#f0a0a0")
+            return image
+
+        def roots():
+            image = transparent()
+            r = rng(w + "_roots")
+            for x in range(3, 29, 4):
+                h = int(10 + r.integers(0, 16))
+                for y in range(N - h, N):
+                    rect(image, x, y, 2, 1, hexv if y % 3 else "#3a2a2a")
+            return image
+
+        TILES[f"{w}_fungus"] = fungus
+        TILES[f"{w}_roots"] = roots
+
+    _plant()
+    door_tile(f"{_w}_door_top", f"{_w}_planks", True, False)
+    door_tile(f"{_w}_door_bottom", f"{_w}_planks", False, False)
+
+    def _trap(w=_w):
+        def build():
+            image = load_tile(f"{w}_planks")
+            border(image, "#2e2210", 2)
+            for k in (8, 16, 24):
+                rect(image, 2, k, 28, 2, "#2e2210")
+            rect(image, 13, 25, 6, 3, "#3a3a3a")
+            return image
+
+        TILES[f"{w}_trapdoor"] = build
+
+    _trap()
+
+# ---- misc nether
+for _n, _b, _s in (("nether_sprouts", "#2aa88a", 8), ("sweet_berry_bush", "#3a7a3a", 0)):
+    def _mk(n=_n, b=_b, s=_s):
+        def build():
+            r = rng(n)
+            image = transparent()
+            for x in range(2, 30, 4):
+                h = int(8 + r.integers(0, 12)) if s else int(14 + r.integers(0, 12))
+                for y in range(N - h, N):
+                    rect(image, x, y, 3, 1, b if y % 3 else "#256a3a")
+                if not s:
+                    rect(image, x - 1, N - h, 3, 3, "#c82a4a")
+            return image
+
+        TILES[n] = build
+
+    _mk()
+
+
+def vine_tile(name, hexv, tip):
+    def build():
+        r = rng(name)
+        image = transparent()
+        for x in range(2, 30, 6):
+            length = int(12 + r.integers(0, 20))
+            for y in range(length):
+                rect(image, x, y, 2, 1, hexv)
+            rect(image, x - 1, length - 3, 4, 3, tip)
+        return image
+
+    TILES[name] = build
+
+
+vine_tile("weeping_vines", "#8a1a22", "#c83a3a")
+vine_tile("weeping_vines_plant", "#7a1a22", "#7a1a22")
+vine_tile("twisting_vines", "#1a8a7a", "#3ad8c0")
+vine_tile("twisting_vines_plant", "#1a7a6a", "#1a7a6a")
+vine_tile("cave_vines", "#4a8a2a", "#ff9a2a")
+vine_tile("cave_vines_plant", "#3a7a2a", "#3a7a2a")
+vine_tile("hanging_roots", "#8a6a4a", "#8a6a4a")
+
+
+@tile("soul_campfire")
+def soul_campfire():
+    image = load_tile("campfire")
+    for y in range(N):
+        for x in range(N):
+            if image[y, x, 0] > 200 and image[y, x, 1] > 100 and image[y, x, 2] < 120:
+                image[y, x, :3] = (40, 200, 230)
+    return image
+
+
+colored("shroomlight", "#f0a040", 0.2, ["#ffe8a0", "#c87020"], 60, ((4, 1.0), (8, 0.8)))
+colored("structure_block", "#6a4a8a", 0.12, ["#a888d8"])
+colored("jigsaw", "#5a4a7a", 0.12, ["#c8a8f0"])
+colored("honey_block", "#e8a82a", 0.12, ["#ffe090", "#a87010"], 40)
+colored("honeycomb_block", "#e8a030", 0.1, ["#c87810", "#ffd070"], 50)
+colored("netherite_block", "#3a3236", 0.1, ["#5a4e52", "#1e1a1c"], 40)
+colored("crying_obsidian", "#2a1050", 0.2, ["#8a3ae0", "#b070ff", "#14082a"], 60)
+colored("rooted_dirt", "#7a5a3a", 0.12, ["#c8b090", "#4a3220"], 50)
+colored("tinted_glass", "#3a2a44", 0.08, ["#5a4a68"], 30)
+colored("sculk", "#0e2a34", 0.2, ["#2ae0e0", "#0a1a22"], 40)
+colored("smooth_basalt", "#4a4a52", 0.06)
+colored("dripstone_block", "#8a6a54", 0.12, ["#a8886e", "#6a4a38"], 50)
+colored("budding_amethyst", "#8a5ac0", 0.14, ["#d8a8ff", "#5a2a90"], 40)
+colored("raw_iron_block", "#c8a07a", 0.18, ["#e8c8a0", "#8a6a48"], 60)
+colored("raw_copper_block", "#c06a3a", 0.18, ["#e89a68", "#7a3a1a"], 60)
+colored("raw_gold_block", "#e8c030", 0.18, ["#fff090", "#a07a10"], 60)
+colored("reinforced_deepslate_top", "#34343c", 0.1, ["#5a5a68"])
+colored("reinforced_deepslate_side", "#34343c", 0.1, ["#5a5a68"])
+colored("target_top", "#e8d8b0", 0.08, ["#c82a2a"])
+colored("lodestone_top", "#8a8a92", 0.06, ["#4a4a52"])
+colored("lodestone_side", "#7a7a84", 0.06, ["#4a4a52"])
+colored("ancient_debris_top", "#6a4a3a", 0.12, ["#3a2418", "#9a7a5a"], 50)
+colored("ancient_debris_side", "#7a5444", 0.12, ["#3a2418", "#b89a7a"], 50)
+colored("respawn_anchor_top", "#2a1a3a", 0.1, ["#8a3ae0"])
+colored("respawn_anchor_side", "#2a1a3a", 0.1, ["#6a2ab0"])
+colored("bee_nest_top", "#d8a850", 0.1, ["#8a6a28"])
+colored("bee_nest_side", "#c89848", 0.1, ["#8a6a28", "#3a2a10"])
+colored("beehive_top", "#a87a3a", 0.1, ["#6a4a1a"])
+colored("beehive_side", "#98702e", 0.1, ["#6a4a1a", "#2a1a08"])
+colored("composter_top", "#6a4a2a", 0.1, ["#3a2810"])
+colored("composter_side", "#7a5a34", 0.1, ["#3a2810"])
+colored("blackstone", "#2a262a", 0.1, ["#4a444a", "#16121a"], 40)
+colored("blackstone_top", "#2e2a2e", 0.1, ["#4a444a"], 30)
+colored("polished_blackstone", "#34303a", 0.08, ["#4e4858"], 20)
+colored("gilded_blackstone", "#2a262a", 0.1, ["#4a444a"], 30)
+colored("quartz_bricks", "#e8e2d8", 0.06, ["#c8c0b4"], 30)
+colored("moss_carpet", "#5a8a2a", 0.14, ["#7aaa3a", "#3a6a1a"], 40)
+colored("sculk_sensor_top", "#16384a", 0.12, ["#2ae0e0"])
+colored("sculk_sensor_side", "#12303e", 0.12, ["#2ae0e0"])
+colored("calibrated_sculk_sensor_top", "#16384a", 0.12, ["#e8c82a", "#2ae0e0"])
+colored("sculk_catalyst_top", "#16343e", 0.12, ["#2ae0e0", "#e8f0f0"])
+colored("sculk_catalyst_side", "#12303a", 0.12, ["#2ae0e0"])
+colored("sculk_shrieker_top", "#e0d8c0", 0.08, ["#2ae0e0"])
+colored("sculk_shrieker_side", "#16343e", 0.12, ["#e0d8c0"])
+colored("frogspawn", "#2a5a3a", 0.1, ["#e8f0e8"])
+colored("decorated_pot", "#a85a3a", 0.1, ["#6a3220", "#d88a5a"])
+colored("lightning_rod", "#c06a3a", 0.12, ["#e89a68"])
+for _f, _hex in (("ochre", "#f0c860"), ("verdant", "#a8e8a0"), ("pearlescent", "#e8c0e8")):
+    colored(f"{_f}_froglight_top", _hex, 0.12, ["#ffffff"], 30)
+    colored(f"{_f}_froglight_side", _hex, 0.12, ["#ffffff", "#8a7a30"], 40)
+tinted("blackstone_bricks_src", "stone_bricks", (0.4, 0.38, 0.42))
+tinted("polished_blackstone_bricks", "stone_bricks", (0.42, 0.4, 0.46))
+tinted("cracked_polished_blackstone_bricks", "cracked_stone_bricks", (0.42, 0.4, 0.46))
+tinted("chiseled_polished_blackstone", "chiseled_stone_bricks", (0.42, 0.4, 0.46))
+tinted("chiseled_nether_bricks", "nether_bricks", (1.1, 1.1, 1.1), 10)
+tinted("cracked_nether_bricks", "nether_bricks", (0.9, 0.85, 0.85))
+for _n, _src, _m in (("cobbled_deepslate", "cobblestone", (0.45, 0.45, 0.52)), ("polished_deepslate", "stone", (0.4, 0.4, 0.48)), ("deepslate_tiles", "stone_bricks", (0.36, 0.36, 0.42)), ("deepslate_bricks", "stone_bricks", (0.4, 0.4, 0.46)), ("chiseled_deepslate", "chiseled_stone_bricks", (0.4, 0.4, 0.46)), ("cracked_deepslate_bricks", "cracked_stone_bricks", (0.4, 0.4, 0.46)), ("cracked_deepslate_tiles", "cracked_stone_bricks", (0.34, 0.34, 0.4))):
+    tinted(_n, _src, _m)
+for _n, _m in (("exposed_copper", (0.95, 0.78, 0.7)), ("weathered_copper", (0.45, 0.95, 0.7)), ("oxidized_copper", (0.25, 0.95, 0.85))):
+    tinted(_n, "copper_block", _m)
+    def _cut(n=_n):
+        def build():
+            image = load_tile(n)
+            for k in (0, 15):
+                rect(image, 0, k, N, 1, "#8a4a24")
+                rect(image, k, 0, 1, N, "#8a4a24")
+            for k in (16, 31):
+                rect(image, 0, k, N, 1, "#202020")
+                rect(image, k, 0, 1, N, "#202020")
+            return image
+
+        TILES[n.replace("_copper", "_cut_copper")] = build
+
+    _cut()
+
+
+@tile("cut_copper")
+def cut_copper():
+    image = load_tile("copper_block")
+    for k in (0, 15, 16, 31):
+        rect(image, 0, k, N, 1, "#5a2a14")
+        rect(image, k, 0, 1, N, "#5a2a14")
+    return image
+
+
+@tile("deepslate_copper_ore")
+def deepslate_copper_ore():
+    image = load_tile("deepslate")
+    o = rng("deepslate_copper_ore")
+    for cx, cy in ((7, 7), (22, 8), (13, 18), (6, 24), (25, 24)):
+        for y in range(cy - 3, cy + 4):
+            for x in range(cx - 3, cx + 4):
+                d = math.hypot(x - cx, y - cy) + o.uniform(-0.5, 0.5)
+                if d < 2.5:
+                    put(image, x, y, "#e89a68" if (x + y) % 2 else "#c06a3a")
+    return image
+
+
+candle_colors = {"": "#e8dcc0", **COLORS}
+for _c, _hex in candle_colors.items():
+    def _candle(c=_c, hexv=_hex):
+        def build():
+            image = transparent()
+            rect(image, 13, 10, 6, 22, hexv)
+            rect(image, 15, 4, 2, 6, "#3a2a1a")
+            rect(image, 15, 1, 2, 3, "#ffc83a")
+            return image
+
+        return build
+
+    TILES[f"{_c}_candle".lstrip("_")] = _candle()
+
+
+for _n, _hex, _tip in (("amethyst_cluster", "#a878e0", "#e8c8ff"), ("large_amethyst_bud", "#9868d0", "#d8b0ff"), ("medium_amethyst_bud", "#8858c0", "#c8a0f0"), ("small_amethyst_bud", "#7848b0", "#b890e8")):
+    def _am(n=_n, hexv=_hex, tip=_tip):
+        def build():
+            image = transparent()
+            sizes = {"amethyst_cluster": 22, "large_amethyst_bud": 16, "medium_amethyst_bud": 12, "small_amethyst_bud": 8}[n]
+            for cx in (9, 16, 23):
+                for y in range(N - sizes, N):
+                    w = 2 + (y - (N - sizes)) // 6
+                    rect(image, cx - w, y, w * 2, 1, hexv)
+                rect(image, cx - 1, N - sizes, 2, 3, tip)
+            return image
+
+        return build
+
+    TILES[_n] = _am()
+
+
+@tile("sculk_vein")
+def sculk_vein():
+    image = transparent()
+    r = rng("sculk_vein")
+    for _ in range(70):
+        x, y = r.integers(0, N, 2)
+        put(image, x, y, "#1a6a7a" if r.random() < 0.7 else "#2ae0e0")
+    return image
+
+
+@tile("pointed_dripstone")
+def pointed_dripstone():
+    image = transparent()
+    for y in range(N):
+        w = 7 - y // 5
+        if w > 0:
+            rect(image, 16 - w, y, w * 2, 1, "#8a6a54" if y % 2 else "#7a5a46")
+    return image
+
+
+@tile("spore_blossom")
+def spore_blossom():
+    image = transparent()
+    for dx, dy in ((0, 0), (-6, 4), (6, 4), (-3, 9), (3, 9)):
+        rect(image, 12 + dx, 8 + dy, 8, 6, "#e068b0")
+    rect(image, 14, 10, 4, 4, "#fff0a0")
+    return image
+
+
+def bush(name, bloom):
+    def build():
+        r = rng(name)
+        image = transparent()
+        for _ in range(160):
+            x, y = r.integers(2, 30, 2)
+            if y > 8:
+                rect(image, x, y, 2, 2, "#4a7a2a" if r.random() < 0.6 else "#5e9a34")
+        if bloom:
+            for _ in range(10):
+                x, y = r.integers(4, 28, 2)
+                rect(image, x, y, 2, 2, "#e868b8")
+        rect(image, 14, 22, 4, 10, "#6a4a2a")
+        return image
+
+    TILES[name] = build
+
+
+bush("azalea", False)
+bush("flowering_azalea", True)
+
+
+@tile("pink_petals")
+def pink_petals():
+    image = transparent()
+    r = rng("pink_petals")
+    for _ in range(12):
+        x, y = r.integers(2, 28, 2)
+        rect(image, x, y, 4, 4, "#f4a8d0" if r.random() < 0.6 else "#e888c0")
+    return image
+
+
+@tile("big_dripleaf")
+def big_dripleaf():
+    image = fill(canvas(), fbm(rng("big_dripleaf")), ["#3a8a2a", "#44982e", "#4ea632"])
+    rect(image, 0, 14, N, 2, "#2a6a1e")
+    return image
+
+
+@tile("big_dripleaf_stem")
+def big_dripleaf_stem():
+    image = transparent()
+    rect(image, 13, 0, 6, N, "#3a8a2a")
+    rect(image, 15, 0, 2, N, "#2a6a1e")
+    return image
+
+
+@tile("small_dripleaf")
+def small_dripleaf():
+    image = transparent()
+    rect(image, 15, 10, 2, 22, "#3a8a2a")
+    rect(image, 6, 8, 20, 4, "#4ea632")
+    rect(image, 10, 4, 12, 4, "#44982e")
+    return image
+
+
+@tile("frogspawn_decal")
+def frogspawn_decal():
+    image = transparent()
+    r = rng("frogspawn_decal")
+    for _ in range(26):
+        x, y = r.integers(1, 30, 2)
+        rect(image, x, y, 2, 2, "#2a3a2a")
+        put(image, x, y, "#8aa88a")
+    return image
+
+
+
 def main():
     pixel = ROOT / "assets/textures/pixel"
     tiles = {}

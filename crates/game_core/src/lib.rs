@@ -20,6 +20,7 @@ pub mod mobs;
 pub mod models;
 pub mod ores;
 pub mod persistence;
+mod shape_table;
 pub mod smelting;
 pub mod stonecutting;
 pub mod survival;

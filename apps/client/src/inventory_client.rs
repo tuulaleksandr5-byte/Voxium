@@ -673,8 +673,12 @@ pub(crate) fn oriented_block(
         let shape = game_core::models::shape_of(base);
         // Табличка на боковой грани становится настенной.
         if let Some(face) = outward.filter(|_| shape == Some(Shape::Sign)) {
-            let wood = (base - game_core::OAK_SIGN) / 4;
-            return game_core::facing_variant(game_core::OAK_WALL_SIGN + wood * 4, face);
+            let wall = if base >= game_core::CRIMSON_SIGN {
+                game_core::CRIMSON_WALL_SIGN + (base - game_core::CRIMSON_SIGN)
+            } else {
+                game_core::OAK_WALL_SIGN + (base - game_core::OAK_SIGN)
+            };
+            return game_core::facing_variant(wall, face);
         }
         if let Some(face) = outward.filter(|_| shape == Some(Shape::Banner)) {
             let color = (base - game_core::WHITE_BANNER) / 4;
@@ -2356,6 +2360,32 @@ mod tests {
             stairs.world.block([8, 101, 6]),
             game_core::GRANITE_STAIRS + 1
         );
+    }
+
+    #[test]
+    fn nether_signs_become_wall_signs_and_nether_doors_place_two_halves() {
+        let mut game = world();
+        equip(&mut game, "voxium:warped_sign");
+        process_action(
+            &mut game,
+            &InventoryAction::Place {
+                position: [8, 101, 6],
+            },
+        );
+        assert_eq!(
+            game.world.block([8, 101, 6]),
+            game_core::WARPED_WALL_SIGN + 1
+        );
+        let mut door = world();
+        equip(&mut door, "voxium:crimson_door");
+        process_action(
+            &mut door,
+            &InventoryAction::Place {
+                position: [8, 101, 6],
+            },
+        );
+        assert_eq!(door.world.block([8, 101, 6]), game_core::CRIMSON_DOOR + 1);
+        assert_eq!(door.world.block([8, 102, 6]), game_core::CRIMSON_DOOR + 9);
     }
 
     #[test]

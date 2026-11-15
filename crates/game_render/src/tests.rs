@@ -636,6 +636,23 @@ fn every_model_block_meshes_with_outward_faces_inside_its_cell() {
         GRINDSTONE,
         LECTERN,
         POLISHED_GRANITE_STAIRS + 3,
+        CRIMSON_TRAPDOOR + 2,
+        CRIMSON_FENCE_GATE + 5,
+        CRIMSON_DOOR + 9,
+        CRIMSON_SIGN + 1,
+        WARPED_BUTTON + 2,
+        SOUL_CAMPFIRE,
+        COMPOSTER,
+        CANDLE,
+        RED_CANDLE_CAKE,
+        SCULK_SENSOR,
+        BIG_DRIPLEAF,
+        DECORATED_POT,
+        LIGHTNING_ROD,
+        BLACKSTONE_WALL,
+        CUT_COPPER_STAIRS + 1,
+        POLISHED_BLACKSTONE_PRESSURE_PLATE,
+        MOSS_CARPET,
     ];
     for block in samples {
         let meshes = single(block);
@@ -708,4 +725,18 @@ fn invisible_air_blocks_and_plants_mesh_as_expected() {
     assert!(single(game_core::CAVE_AIR).is_empty());
     assert!(!single(game_core::TUBE_CORAL_FAN).is_empty());
     assert!(!single(game_core::KELP).is_empty());
+}
+
+#[test]
+fn part_seven_and_eight_plants_and_decals_mesh() {
+    for block in [
+        game_core::AMETHYST_CLUSTER,
+        game_core::WEEPING_VINES,
+        game_core::WARPED_FUNGUS,
+        game_core::PINK_PETALS,
+        game_core::FROGSPAWN,
+        game_core::CAVE_VINES,
+    ] {
+        assert!(!single(block).is_empty(), "{block}");
+    }
 }
