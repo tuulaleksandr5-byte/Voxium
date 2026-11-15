@@ -14,6 +14,8 @@ struct FluidClock {
     fire_tick: u64,
     growth: f32,
     growth_tick: u64,
+    nature: f32,
+    nature_tick: u64,
 }
 
 #[derive(Component)]
@@ -65,6 +67,20 @@ fn tick_fire_and_growth(
         clock.fire_tick += 1;
         let tick = clock.fire_tick;
         game_core::fire::tick(&mut game.world, tick, 256);
+    }
+    clock.nature = (clock.nature + delta).min(game_core::nature::TICK_SECONDS * 4.0);
+    while clock.nature >= game_core::nature::TICK_SECONDS {
+        clock.nature -= game_core::nature::TICK_SECONDS;
+        clock.nature_tick += 1;
+        let tick = clock.nature_tick;
+        game_core::nature::tick(&mut game.world, tick, 512);
+        let center = game.feet.to_array().map(|v| v.floor() as i32);
+        game_core::nature::random_tick(
+            &mut game.world,
+            center,
+            tick,
+            game_core::nature::RANDOM_SAMPLES_PER_TICK,
+        );
     }
     clock.growth = (clock.growth + delta).min(game_core::growth::TICK_SECONDS * 2.0);
     while clock.growth >= game_core::growth::TICK_SECONDS {

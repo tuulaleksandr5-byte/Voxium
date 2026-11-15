@@ -574,6 +574,8 @@ pub struct World {
     pub fire_active: HashSet<[i32; 3]>,
     /// Саженцы, которые могут вырасти; их обрабатывает `growth::tick`.
     pub grow_active: HashSet<[i32; 3]>,
+    /// Клетки для `nature::tick`: падение, опора, листва, бетон.
+    pub nature_active: HashSet<[i32; 3]>,
     /// Динамит, который сейчас взорвётся; его обрабатывает `mechanics::run_blasts`.
     pub blasts: Vec<[i32; 3]>,
     /// Состояние редстоуна: клетки, таймеры, события.
@@ -590,6 +592,7 @@ impl World {
             fluid_active: HashSet::new(),
             fire_active: HashSet::new(),
             grow_active: HashSet::new(),
+            nature_active: HashSet::new(),
             blasts: Vec::new(),
             rs: crate::redstone::Redstone::default(),
         }
@@ -624,6 +627,7 @@ impl World {
         self.edits.insert(position, id);
         self.wake_fluids(position);
         self.wake_special(position, id);
+        self.wake_nature(position);
         let section = position.map(section_coordinate);
         // AO samples diagonals too: an edit at a section corner can affect
         // eight sections, not just the three face-adjacent neighbors.
@@ -641,6 +645,24 @@ impl World {
             }
         }
         true
+    }
+    /// Будит клетку и её соседей для `nature::tick`.
+    fn wake_nature(&mut self, position: [i32; 3]) {
+        if self.nature_active.len() > 20_000 {
+            return;
+        }
+        self.nature_active.insert(position);
+        for d in [
+            [1, 0, 0],
+            [-1, 0, 0],
+            [0, 1, 0],
+            [0, -1, 0],
+            [0, 0, 1],
+            [0, 0, -1],
+        ] {
+            self.nature_active
+                .insert([position[0] + d[0], position[1] + d[1], position[2] + d[2]]);
+        }
     }
     /// Огонь и саженцы живут сами по себе: их сразу берут в работу.
     fn wake_special(&mut self, position: [i32; 3], id: BlockId) {

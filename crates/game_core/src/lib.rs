@@ -20,6 +20,7 @@ pub mod mechanics;
 pub mod mining;
 pub mod mobs;
 pub mod models;
+pub mod nature;
 pub mod ores;
 pub mod persistence;
 pub mod redstone;

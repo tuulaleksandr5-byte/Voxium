@@ -162,3 +162,4 @@ cargo build --locked -p voxel-client
 - [Все предметы списка](docs/ITEMS_UPDATE.md)
 - [Творческий инвентарь](docs/CREATIVE_INVENTORY.md)
 - [Мобы](docs/MOBS_UPDATE.md)
+- [Сверка с Minecraft](docs/MINECRAFT_PARITY.md)
