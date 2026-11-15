@@ -1828,5 +1828,12 @@
         (block: 1835, hardness: 0.05, tool: Hand, harvest_tier: 0, seconds: None),
         (block: 1836, hardness: 55.0, tool: Pickaxe, harvest_tier: 4, seconds: None),
         (block: 1837, hardness: 0.05, tool: Hand, harvest_tier: 0, seconds: None),
+        (block: 1838, hardness: 0.05, tool: Hand, harvest_tier: 0, seconds: None),
+        (block: 1839, hardness: 0.3, tool: Hand, harvest_tier: 0, seconds: None),
+        (block: 1840, hardness: 0.05, tool: Hand, harvest_tier: 0, seconds: None),
+        (block: 1841, hardness: 0.05, tool: Hand, harvest_tier: 0, seconds: None),
+        (block: 1842, hardness: 0.05, tool: Hand, harvest_tier: 0, seconds: None),
+        (block: 1843, hardness: 0.05, tool: Hand, harvest_tier: 0, seconds: None),
+        (block: 1844, hardness: 0.05, tool: Hand, harvest_tier: 0, seconds: None),
     ],
 )

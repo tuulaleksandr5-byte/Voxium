@@ -60,6 +60,10 @@ pub enum InventoryAction {
     Pot {
         position: [i32; 3],
     },
+    /// ПКМ по повторителю: задержка 1…4 шага.
+    Delay {
+        position: [i32; 3],
+    },
     /// ПКМ ведром по котлу: наполнить или опустошить.
     Cauldron {
         position: [i32; 3],
@@ -117,6 +121,42 @@ pub(crate) fn target_block(game: &Game, position: [i32; 3]) -> game_core::BlockI
 /// Ночь: Солнце под горизонтом.
 pub(crate) fn is_night(clock: f64) -> bool {
     ((clock / 1200.0) * std::f64::consts::TAU).sin() < 0.05
+}
+
+/// Раздатчик или выбрасыватель стреляет: берёт предмет из первой занятой ячейки.
+/// Раздатчик ставит блок в свободную клетку перед собой, иначе (и выбрасыватель)
+/// выбрасывает предмет.
+pub(crate) fn dispense(game: &mut Game, position: [i32; 3], dir: [i32; 3], dropper: bool) {
+    let key = position;
+    let Some(container) = game.containers.get_mut(&key) else {
+        return;
+    };
+    let Some(slot) = container.slots.iter().position(Option::is_some) else {
+        return;
+    };
+    let stack = container.slots[slot].as_mut().expect("занято");
+    let item = stack.item;
+    stack.count -= 1;
+    if stack.count == 0 {
+        container.slots[slot] = None;
+    }
+    let front = [
+        position[0] + dir[0],
+        position[1] + dir[1],
+        position[2] + dir[2],
+    ];
+    if !dropper
+        && let Some(block) = game.content.block_for_item(item)
+        && loaded_block(&game.world, front) == Some(AIR)
+        && game.world.set(front, block)
+    {
+        game.revision += 1;
+        return;
+    }
+    let center =
+        block_center(position) + Vec3::new(dir[0] as f32, dir[1] as f32, dir[2] as f32) * 0.8;
+    let velocity = Vec3::new(dir[0] as f32, dir[1] as f32 + 0.3, dir[2] as f32) * 3.0;
+    spawn_drop(game, ItemStack::new(item, 1), center, velocity);
 }
 
 /// Заменить одно ведро в выбранном слоте другим; лишние пустые ведра остаются в стопке.
@@ -481,15 +521,26 @@ fn process_action(game: &mut Game, action: &InventoryAction) -> Effects {
             if game_core::models::shape_of(block) != Some(game_core::models::Shape::Button) {
                 return effects;
             }
-            game_core::mechanics::power_area(&mut game.world, *position, true);
-            game.power_timers.retain(|(p, _)| p != position);
-            game.power_timers.push((*position, 1.0));
+            game.world.rs.press(*position);
             effects.sounds.push(BlockSound {
                 block,
                 kind: crate::block_audio::SoundKind::Place,
                 position: block_center(*position),
             });
             game.revision += 1;
+        }
+        InventoryAction::Delay { position }
+            if game.mode == Mode::Playing && game.world_mouse.allowed() =>
+        {
+            if game_core::models::shape_of(game.world.block(*position))
+                != Some(game_core::models::Shape::Repeater)
+            {
+                return effects;
+            }
+            let delay = game.world.rs.delay.entry(*position).or_insert(1);
+            *delay = *delay % 4 + 1;
+            game.status = format!("Задержка повторителя: {} шаг.", *delay);
+            game.ui_dirty = true;
         }
         InventoryAction::Pot { position }
             if game.mode == Mode::Playing && game.world_mouse.allowed() =>
@@ -600,9 +651,6 @@ fn process_action(game: &mut Game, action: &InventoryAction) -> Effects {
                     .then(|| (cell, game_core::models::toggled(half, toward)))
             });
             game.world.set(*position, next);
-            if let Some(on) = game_core::mechanics::lever_on(next) {
-                game_core::mechanics::power_area(&mut game.world, *position, on);
-            }
             if let Some((cell, Some(next))) = other {
                 game.world.set(cell, next);
             }
@@ -2482,30 +2530,44 @@ mod tests {
 
     #[test]
     fn lever_button_pots_cauldrons_and_ender_chests_work() {
-        // Рычаг открывает дверь рядом, второй щелчок закрывает.
+        // Рычаг рядом с дверью: включил — открылась, выключил — закрылась.
         let mut game = world();
         game.world.set([8, 101, 6], game_core::OAK_DOOR + 1);
         game.world.set([8, 102, 6], game_core::OAK_DOOR + 9);
         game.world.set([8, 101, 7], game_core::LEVER + 1);
+        game_core::redstone::tick(&mut game.world);
         let toggle = InventoryAction::Toggle {
             position: [8, 101, 7],
         };
         process_action(&mut game, &toggle);
         assert_eq!(game.world.block([8, 101, 7]), game_core::LEVER + 5);
+        game_core::redstone::tick(&mut game.world);
+        game_core::redstone::tick(&mut game.world);
         assert_eq!(game.world.block([8, 101, 6]), game_core::OAK_DOOR + 5);
         process_action(&mut game, &toggle);
+        game_core::redstone::tick(&mut game.world);
+        game_core::redstone::tick(&mut game.world);
         assert_eq!(game.world.block([8, 101, 6]), game_core::OAK_DOOR + 1);
-        // Кнопка открывает на секунду.
+        // Кнопка включает сигнал на 10 шагов.
         game.world.set([8, 101, 8], game_core::STONE_BUTTON);
-        game.world.set([8, 101, 6], game_core::OAK_DOOR + 1);
         process_action(
             &mut game,
             &InventoryAction::Press {
                 position: [8, 101, 8],
             },
         );
-        assert_eq!(game.world.block([8, 101, 6]), game_core::OAK_DOOR + 5);
-        assert_eq!(game.power_timers.len(), 1);
+        assert!(game.world.rs.timers.contains_key(&[8, 101, 8]));
+        // Повторитель: ПКМ меняет задержку по кругу 1→2→3→4→1.
+        game.world.set([8, 101, 9], game_core::REPEATER);
+        for expected in [2, 3, 4, 1] {
+            process_action(
+                &mut game,
+                &InventoryAction::Delay {
+                    position: [8, 101, 9],
+                },
+            );
+            assert_eq!(game.world.rs.delay[&[8, 101, 9]], expected);
+        }
         // Горшок принимает цветок.
         let mut pot = world();
         pot.world.set([8, 101, 6], game_core::FLOWER_POT);
@@ -2528,6 +2590,30 @@ mod tests {
             container_key(game_core::TRAPPED_CHEST, [1, 2, 3]),
             [1, 2, 3]
         );
+    }
+
+    #[test]
+    fn dispensers_place_blocks_and_droppers_throw_items() {
+        let mut game = world();
+        game.world.set([8, 101, 8], game_core::DISPENSER + 1);
+        let dirt = game.content.find("foundation:dirt").unwrap();
+        let mut container = Container::new(9);
+        container.slots[2] = Some(ItemStack::new(dirt, 2));
+        game.containers.insert([8, 101, 8], container);
+        dispense(&mut game, [8, 101, 8], [0, 0, 1], false);
+        assert_eq!(game.world.block([8, 101, 9]), game_core::DIRT);
+        assert_eq!(
+            game.containers[&[8, 101, 8]].slots[2]
+                .as_ref()
+                .unwrap()
+                .count,
+            1
+        );
+        // Занятая клетка впереди: предмет улетает на землю.
+        let before = game.drops.entities.len();
+        dispense(&mut game, [8, 101, 8], [0, 0, 1], false);
+        assert_eq!(game.drops.entities.len(), before + 1);
+        assert!(game.containers[&[8, 101, 8]].slots[2].is_none());
     }
 
     #[test]

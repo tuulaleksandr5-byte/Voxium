@@ -21,6 +21,7 @@ pub mod mobs;
 pub mod models;
 pub mod ores;
 pub mod persistence;
+pub mod redstone;
 mod shape_table;
 pub mod smelting;
 pub mod stonecutting;

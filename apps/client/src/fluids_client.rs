@@ -81,27 +81,13 @@ fn tick_mechanics(
     mut game: ResMut<Game>,
     mut actions: MessageWriter<crate::survival_client::PlayerActionMessage>,
     mut contact: Local<f32>,
+    mut redstone_clock: Local<f32>,
 ) {
     use crate::survival_client::{PlayerAction, PlayerActionMessage};
     if game.world_id.is_none() || !matches!(game.mode, Mode::Playing | Mode::Inventory) {
         return;
     }
     let delta = time.delta_secs();
-    // Кнопки отпускаются через секунду.
-    let mut released = Vec::new();
-    game.power_timers.retain_mut(|(position, left)| {
-        *left -= delta;
-        if *left <= 0.0 {
-            released.push(*position);
-            false
-        } else {
-            true
-        }
-    });
-    for position in released {
-        game_core::mechanics::power_area(&mut game.world, position, false);
-        game.revision += 1;
-    }
     // Нажимная плита работает, пока игрок стоит на ней.
     let cell = [
         game.feet.x.floor() as i32,
@@ -111,15 +97,34 @@ fn tick_mechanics(
     let on_plate = (game_core::models::shape_of(game.world.block(cell))
         == Some(game_core::models::Shape::Plate))
     .then_some(cell);
-    if on_plate != game.pressed_plate {
-        if let Some(old) = game.pressed_plate {
-            game_core::mechanics::power_area(&mut game.world, old, false);
-        }
-        if let Some(new) = on_plate {
-            game_core::mechanics::power_area(&mut game.world, new, true);
-        }
-        game.pressed_plate = on_plate;
+    let expected: std::collections::HashSet<[i32; 3]> = on_plate.into_iter().collect();
+    if game.world.rs.pressed != expected {
+        game.world.rs.pressed = expected;
+    }
+    // Редстоун считается шагами по 0,1 с.
+    *redstone_clock += delta;
+    let mut steps = 0;
+    while *redstone_clock >= game_core::redstone::TICK_SECONDS && steps < 4 {
+        *redstone_clock -= game_core::redstone::TICK_SECONDS;
+        steps += 1;
+        game.world.rs.day = !crate::inventory_client::is_night(game.clock);
+        game_core::redstone::tick(&mut game.world);
         game.revision += 1;
+    }
+    *redstone_clock = redstone_clock.min(game_core::redstone::TICK_SECONDS);
+    let events = std::mem::take(&mut game.world.rs.events);
+    for event in events {
+        match event {
+            game_core::redstone::Event::Dispense {
+                position,
+                dir,
+                dropper,
+            } => crate::inventory_client::dispense(&mut game, position, dir, dropper),
+            game_core::redstone::Event::Note { .. } => {
+                game.status = "♪ Нотный блок".into();
+                game.ui_dirty = true;
+            }
+        }
     }
     // Взрывы.
     let centers = game_core::mechanics::run_blasts(&mut game.world, 8);

@@ -429,6 +429,7 @@ mod tests {
                 || crate::base_block(id) != id
                 || flowing
                 || crate::unlit(id) != id
+                || matches!(id, crate::REDSTONE_WALL_TORCH_OFF)
             {
                 continue;
             }

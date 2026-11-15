@@ -1839,4 +1839,11 @@
     (top: 604, side: 604, bottom: 604), // frogspawn
     (top: 662, side: 663, bottom: 662), // reinforced_deepslate
     (top: 690, side: 690, bottom: 690), // decorated_pot
+    (top: 719, side: 719, bottom: 719), // redstone_wire_on
+    (top: 721, side: 721, bottom: 721), // redstone_lamp_lit
+    (top: 720, side: 720, bottom: 720), // redstone_torch_off
+    (top: 720, side: 720, bottom: 720), // redstone_wall_torch_off
+    (top: 720, side: 720, bottom: 720), // redstone_wall_torch_off
+    (top: 720, side: 720, bottom: 720), // redstone_wall_torch_off
+    (top: 720, side: 720, bottom: 720), // redstone_wall_torch_off
 ]

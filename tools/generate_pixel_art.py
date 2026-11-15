@@ -4372,6 +4372,47 @@ def frogspawn_decal():
 
 
 
+# ------------------------------------------------------------ redstone state tiles
+
+
+@tile("redstone_wire_on")
+def redstone_wire_on():
+    image = transparent()
+    for k in range(N):
+        for w in (14, 15, 16, 17):
+            put(image, w, k, "#ff2a1a")
+            put(image, k, w, "#ff2a1a")
+    rect(image, 12, 12, 8, 8, "#ff5a3a")
+    rect(image, 14, 14, 4, 4, "#ffd8c8")
+    return image
+
+
+@tile("redstone_torch_off")
+def redstone_torch_off():
+    image = transparent()
+    for y in range(11, N):
+        for x in (14, 15, 16, 17):
+            put(image, x, y, "#8a5a2a" if x < 16 else "#6a4420")
+    for y in range(6, 12):
+        for x in range(13, 19):
+            put(image, x, y, "#4a1a1a")
+    return image
+
+
+@tile("redstone_lamp_on")
+def redstone_lamp_on():
+    image = canvas("#e8a040")
+    for y in range(0, N, 8):
+        rect(image, 0, y, N, 1, "#a8641a")
+    for x in range(0, N, 8):
+        rect(image, x, 0, 1, N, "#a8641a")
+    rect(image, 3, 3, 26, 26, "#ffe080")
+    rect(image, 8, 8, 16, 16, "#fff4b0")
+    rect(image, 12, 12, 8, 8, "#ffffff")
+    return image
+
+
+
 def main():
     pixel = ROOT / "assets/textures/pixel"
     tiles = {}

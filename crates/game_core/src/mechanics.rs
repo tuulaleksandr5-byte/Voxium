@@ -1,5 +1,5 @@
-//! Поведение новых блоков: двери от рычага, кнопки и плит, взрыв динамита,
-//! цветочные горшки, опасные и вязкие блоки.
+//! Поведение новых блоков: взрыв динамита, цветочные горшки, опасные и вязкие блоки.
+//! Сигнал редстоуна живёт в модуле `redstone`.
 
 use crate::{
     AIR, BEDROCK, BLOCKS, BlockId, FamilyKind, TNT, World, family_of, is_fluid,
@@ -8,8 +8,6 @@ use crate::{
 
 /// Радиус взрыва динамита в клетках.
 pub const BLAST_RADIUS: i32 = 3;
-/// Радиус действия рычага, кнопки и нажимной плиты вокруг неё.
-pub const POWER_RADIUS: i32 = 2;
 
 /// Дверь, калитка или люк в нужном состоянии; `None`, если блок не открывается
 /// или уже в этом состоянии.
@@ -33,34 +31,6 @@ pub fn with_open(id: BlockId, open: bool) -> Option<BlockId> {
 #[must_use]
 pub fn lever_on(id: BlockId) -> Option<bool> {
     (shape_of(id) == Some(Shape::Lever)).then(|| family_of(id).is_some_and(|(_, i, _)| i >= 4))
-}
-
-/// Подаёт или снимает сигнал вокруг `origin`: двери, калитки и люки открываются и
-/// закрываются, динамит при сигнале ставится в очередь на взрыв. Возвращает число
-/// изменённых блоков.
-pub fn power_area(world: &mut World, origin: [i32; 3], powered: bool) -> usize {
-    let mut changed = 0;
-    for dx in -POWER_RADIUS..=POWER_RADIUS {
-        for dy in -POWER_RADIUS..=POWER_RADIUS {
-            for dz in -POWER_RADIUS..=POWER_RADIUS {
-                let p = [origin[0] + dx, origin[1] + dy, origin[2] + dz];
-                if p == origin || !crate::fluids::loaded(world, p) {
-                    continue;
-                }
-                let id = world.block(p);
-                if let Some(next) = with_open(id, powered)
-                    && world.set(p, next)
-                {
-                    changed += 1;
-                }
-                if powered && id == TNT {
-                    world.blasts.push(p);
-                    changed += 1;
-                }
-            }
-        }
-    }
-    changed
 }
 
 /// Выполняет не более `budget` взрывов из очереди. Возвращает центры взрывов, чтобы
@@ -249,25 +219,6 @@ mod tests {
         assert_eq!(lever_on(LEVER), Some(false));
         assert_eq!(lever_on(LEVER + 5), Some(true));
         assert_eq!(lever_on(STONE), None);
-    }
-
-    #[test]
-    fn a_lever_opens_and_closes_nearby_doors_both_halves_and_primes_tnt() {
-        let mut w = world();
-        w.set([2, 70, 2], OAK_DOOR);
-        w.set([2, 71, 2], OAK_DOOR + 8);
-        w.set([1, 70, 2], OAK_TRAPDOOR);
-        w.set([30, 70, 2], OAK_DOOR);
-        w.set([0, 70, 1], TNT);
-        assert_eq!(power_area(&mut w, [0, 70, 0], true), 4);
-        assert_eq!(w.block([2, 70, 2]), OAK_DOOR + 4);
-        assert_eq!(w.block([2, 71, 2]), OAK_DOOR + 12);
-        assert_eq!(w.block([1, 70, 2]), OAK_TRAPDOOR + 1);
-        assert_eq!(w.block([30, 70, 2]), OAK_DOOR, "далёкая дверь не тронута");
-        assert_eq!(w.blasts, vec![[0, 70, 1]]);
-        power_area(&mut w, [0, 70, 0], false);
-        assert_eq!(w.block([2, 70, 2]), OAK_DOOR);
-        assert_eq!(w.block([1, 70, 2]), OAK_TRAPDOOR);
     }
 
     #[test]

@@ -472,7 +472,7 @@ pub enum FamilyKind {
 }
 
 /// Семейства блоков с состоянием: (первый ID, число вариантов, вид).
-pub const FAMILIES: [(BlockId, u8, FamilyKind); 211] = [
+pub const FAMILIES: [(BlockId, u8, FamilyKind); 212] = [
     (322, 4, FamilyKind::H4),
     (330, 4, FamilyKind::H4),
     (334, 4, FamilyKind::H4),
@@ -684,6 +684,7 @@ pub const FAMILIES: [(BlockId, u8, FamilyKind); 211] = [
     (1802, 4, FamilyKind::H4),
     (1809, 4, FamilyKind::H4),
     (1816, 4, FamilyKind::H4),
+    (1841, 4, FamilyKind::H4),
 ];
 
 pub const PART2_FIRST: BlockId = 321;
@@ -1325,6 +1326,10 @@ pub const REINFORCED_DEEPSLATE: BlockId = 1836;
 pub const DECORATED_POT: BlockId = 1837;
 pub const PART78_FIRST: BlockId = 1506;
 pub const PART78_LAST: BlockId = 1837;
+pub const REDSTONE_WIRE_ON: BlockId = 1838;
+pub const REDSTONE_LAMP_LIT: BlockId = 1839;
+pub const REDSTONE_TORCH_OFF: BlockId = 1840;
+pub const REDSTONE_WALL_TORCH_OFF: BlockId = 1841;
 pub const PLANT2_FIRST: BlockId = 251;
 pub const PLANT2_LAST: BlockId = 280;
 
@@ -1348,7 +1353,7 @@ const fn block(
 }
 
 #[allow(clippy::large_const_arrays)]
-pub const BLOCKS: [BlockDef; 1838] = [
+pub const BLOCKS: [BlockDef; 1845] = [
     block(AIR, "Air", "air", 0.0, false, false),
     block(GRASS, "Grass", "grass", 0.6, true, true),
     block(DIRT, "Dirt", "dirt", 0.5, true, true),
@@ -14079,6 +14084,65 @@ pub const BLOCKS: [BlockDef; 1838] = [
         true,
         false,
     ),
+    block(
+        REDSTONE_WIRE_ON,
+        "Redstone Wire (on)",
+        "redstone_wire_on",
+        0.05,
+        false,
+        false,
+    ),
+    BlockDef {
+        light_emission: 15,
+        ..block(
+            REDSTONE_LAMP_LIT,
+            "Redstone Lamp (lit)",
+            "redstone_lamp_lit",
+            0.3,
+            true,
+            true,
+        )
+    },
+    block(
+        REDSTONE_TORCH_OFF,
+        "Redstone Torch (off)",
+        "redstone_torch_off",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        REDSTONE_WALL_TORCH_OFF,
+        "Redstone Wall Torch (off)",
+        "redstone_wall_torch_off",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        REDSTONE_WALL_TORCH_OFF + 1,
+        "Redstone Wall Torch (off) (south)",
+        "redstone_wall_torch_off",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        REDSTONE_WALL_TORCH_OFF + 2,
+        "Redstone Wall Torch (off) (west)",
+        "redstone_wall_torch_off",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        REDSTONE_WALL_TORCH_OFF + 3,
+        "Redstone Wall Torch (off) (east)",
+        "redstone_wall_torch_off",
+        0.05,
+        false,
+        false,
+    ),
 ];
 
 /// Растения рисуются двумя скрещёнными плоскостями и не мешают ходьбе.
@@ -14371,7 +14435,11 @@ pub fn is_rail_x(id: BlockId) -> bool {
 
 #[must_use]
 pub fn is_wall_torch(id: BlockId) -> bool {
-    WALL_TORCHES.contains(&id) || matches!(base_block(id), REDSTONE_WALL_TORCH | SOUL_WALL_TORCH)
+    WALL_TORCHES.contains(&id)
+        || matches!(
+            base_block(id),
+            REDSTONE_WALL_TORCH | SOUL_WALL_TORCH | REDSTONE_WALL_TORCH_OFF
+        )
 }
 
 /// Блок, из которого получается выпадающий предмет: без направления и состояния,
@@ -14380,7 +14448,7 @@ pub fn is_wall_torch(id: BlockId) -> bool {
 pub fn drop_base(id: BlockId) -> BlockId {
     match base_block(unlit(id)) {
         WALL_TORCH => TORCH,
-        REDSTONE_WALL_TORCH => REDSTONE_TORCH,
+        REDSTONE_WALL_TORCH | REDSTONE_WALL_TORCH_OFF => REDSTONE_TORCH,
         SOUL_WALL_TORCH => SOUL_TORCH,
         PISTON_HEAD => PISTON,
         other => other,
@@ -14394,7 +14462,7 @@ pub fn is_cross(id: BlockId) -> bool {
         || (PLANT2_FIRST..=PLANT2_LAST).contains(&id)
         || matches!(
             id,
-            WHEAT | SUGAR_CANE | REDSTONE_TORCH | SOUL_TORCH | BARRIER | LIGHT
+            WHEAT | SUGAR_CANE | REDSTONE_TORCH | SOUL_TORCH | BARRIER | LIGHT | REDSTONE_TORCH_OFF
         )
         || (SUNFLOWER..=LARGE_FERN).contains(&id)
         || (TORCHFLOWER_CROP..=BEETROOTS).contains(&id)
@@ -14417,7 +14485,7 @@ pub fn is_cross(id: BlockId) -> bool {
 #[must_use]
 pub fn is_flat(id: BlockId) -> bool {
     is_rail(id)
-        || matches!(id, REDSTONE_WIRE | LILY_PAD | TRIPWIRE)
+        || matches!(id, REDSTONE_WIRE | REDSTONE_WIRE_ON | LILY_PAD | TRIPWIRE)
         || crate::shape_table::is_flat(id)
 }
 
@@ -14604,6 +14672,9 @@ pub fn unlit(id: BlockId) -> BlockId {
         FURNACE_LIT => FURNACE,
         SMOKER_LIT => SMOKER,
         BLAST_FURNACE_LIT => BLAST_FURNACE,
+        REDSTONE_LAMP_LIT => REDSTONE_LAMP,
+        REDSTONE_WIRE_ON => REDSTONE_WIRE,
+        REDSTONE_TORCH_OFF => REDSTONE_TORCH,
         other => other,
     }
 }
@@ -14657,7 +14728,7 @@ mod tests {
             "Crafting Table",
             "Furnace",
         ];
-        assert_eq!(BLOCKS.len(), 1838);
+        assert_eq!(BLOCKS.len(), 1845);
         for (offset, name) in expected.iter().enumerate() {
             let id = 17 + offset;
             assert_eq!(BLOCKS[id].id as usize, id);
@@ -14668,7 +14739,7 @@ mod tests {
 
     #[test]
     fn chest_extends_registry_without_changing_foundation_ids() {
-        assert_eq!(BLOCKS.len(), 1838);
+        assert_eq!(BLOCKS.len(), 1845);
         let chest = BLOCKS.get(16).expect("сундук зарегистрирован");
         assert_eq!(chest.name, "Chest");
         assert!(is_solid(16));

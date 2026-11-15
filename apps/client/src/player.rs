@@ -464,6 +464,12 @@ pub fn controls(
                         position: hit.block,
                     })
                 } else if game_core::models::shape_of(game.world.block(hit.block))
+                    == Some(game_core::models::Shape::Repeater)
+                {
+                    Some(InventoryAction::Delay {
+                        position: hit.block,
+                    })
+                } else if game_core::models::shape_of(game.world.block(hit.block))
                     == Some(game_core::models::Shape::Button)
                 {
                     Some(InventoryAction::Press {

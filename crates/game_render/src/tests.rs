@@ -740,3 +740,15 @@ fn part_seven_and_eight_plants_and_decals_mesh() {
         assert!(!single(block).is_empty(), "{block}");
     }
 }
+
+#[test]
+fn redstone_state_blocks_mesh() {
+    for block in [
+        game_core::REDSTONE_WIRE_ON,
+        game_core::REDSTONE_LAMP_LIT,
+        game_core::REDSTONE_TORCH_OFF,
+        game_core::REDSTONE_WALL_TORCH_OFF + 2,
+    ] {
+        assert!(!single(block).is_empty(), "{block}");
+    }
+}

@@ -29,10 +29,6 @@ pub enum Mode {
 
 #[derive(Resource)]
 pub struct Game {
-    /// Нажатые кнопки: клетка и сколько секунд ещё держится сигнал.
-    pub power_timers: Vec<([i32; 3], f32)>,
-    /// Нажимная плита, на которой сейчас стоит игрок.
-    pub pressed_plate: Option<[i32; 3]>,
     pub content: ContentRegistry,
     pub recipes: RecipeBook,
     pub smelting: game_core::smelting::SmeltingBook,
@@ -89,8 +85,6 @@ pub struct Game {
 impl Default for Game {
     fn default() -> Self {
         Self {
-            power_timers: Vec::new(),
-            pressed_plate: None,
             content: ContentRegistry::default(),
             recipes: RecipeBook::default(),
             smelting: Default::default(),

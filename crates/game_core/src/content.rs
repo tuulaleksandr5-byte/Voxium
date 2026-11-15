@@ -65,7 +65,7 @@ pub struct ContentRegistry {
 
 // Имена соответствуют стабильным сохранённым ID; новые блоки только дописываются.
 #[allow(clippy::large_const_arrays)]
-pub(crate) const BLOCK_NAMES: [&str; 1838] = [
+pub(crate) const BLOCK_NAMES: [&str; 1845] = [
     "foundation:air",
     "foundation:grass",
     "foundation:dirt",
@@ -1904,6 +1904,13 @@ pub(crate) const BLOCK_NAMES: [&str; 1838] = [
     "voxium:frogspawn",
     "voxium:reinforced_deepslate",
     "voxium:decorated_pot",
+    "voxium:redstone_wire_on",
+    "voxium:redstone_lamp_lit",
+    "voxium:redstone_torch_off",
+    "voxium:redstone_wall_torch_off",
+    "voxium:redstone_wall_torch_off_south",
+    "voxium:redstone_wall_torch_off_west",
+    "voxium:redstone_wall_torch_off_east",
 ];
 
 impl Default for ContentRegistry {

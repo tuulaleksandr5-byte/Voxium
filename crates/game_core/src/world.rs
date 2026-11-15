@@ -576,6 +576,8 @@ pub struct World {
     pub grow_active: HashSet<[i32; 3]>,
     /// Динамит, который сейчас взорвётся; его обрабатывает `mechanics::run_blasts`.
     pub blasts: Vec<[i32; 3]>,
+    /// Состояние редстоуна: клетки, таймеры, события.
+    pub rs: crate::redstone::Redstone,
 }
 impl World {
     #[must_use]
@@ -589,6 +591,7 @@ impl World {
             fire_active: HashSet::new(),
             grow_active: HashSet::new(),
             blasts: Vec::new(),
+            rs: crate::redstone::Redstone::default(),
         }
     }
     #[must_use]
@@ -647,6 +650,9 @@ impl World {
         if crate::growth::is_sapling(id) {
             self.grow_active.insert(position);
         }
+        if crate::redstone::is_component(id) {
+            self.rs.cells.insert(position);
+        }
     }
     /// Будит жидкость вокруг клетки, если в ней самой или рядом есть жидкость.
     fn wake_fluids(&mut self, position: [i32; 3]) {
@@ -666,6 +672,7 @@ impl World {
         let mut settled = Vec::new();
         let mut burning = Vec::new();
         let mut saplings = Vec::new();
+        let mut components = Vec::new();
         for (&position, &id) in &self.edits {
             if [
                 section_coordinate(position[0]),
@@ -685,11 +692,15 @@ impl World {
                 if crate::growth::is_sapling(id) {
                     saplings.push(position);
                 }
+                if crate::redstone::is_component(id) {
+                    components.push(position);
+                }
             }
         }
         self.fluid_active.extend(settled);
         self.fire_active.extend(burning);
         self.grow_active.extend(saplings);
+        self.rs.cells.extend(components);
         if let Some(old) = self.chunks.remove(&chunk.position) {
             self.dirty_chunk(&old);
         }
