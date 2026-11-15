@@ -7,6 +7,7 @@ pub use world::*;
 pub mod catalog;
 pub mod content;
 pub mod crafting;
+pub mod creative;
 pub mod drops;
 pub mod fire;
 pub mod fluids;

@@ -433,12 +433,32 @@ fn actions(
                 };
                 game.screen(mode);
             }
-            Action::SelectSlot(slot) => {
-                game.selected = slot.min(8);
-                game.ui_dirty = true;
-            }
             Action::CatalogTab(tab) => {
                 game.catalog_tab = tab.min(ui::CATALOG_TAB_COUNT - 1);
+                game.catalog_scroll = 0;
+                game.ui_dirty = true;
+            }
+            Action::ScrollCatalog(rows) => {
+                let tab = game_core::creative::Tab::from_index(game.catalog_tab);
+                let count =
+                    game_core::creative::items(&game.content, tab, &game.catalog_search).len();
+                let max = game_core::creative::max_scroll(count);
+                let next = (game.catalog_scroll as i64 + i64::from(rows)).clamp(0, max as i64);
+                if next as usize != game.catalog_scroll {
+                    game.catalog_scroll = next as usize;
+                    game.ui_dirty = true;
+                }
+            }
+            Action::SearchInput(text) => {
+                if game.catalog_search.chars().count() < 40 {
+                    game.catalog_search.push_str(&text);
+                    game.catalog_scroll = 0;
+                    game.ui_dirty = true;
+                }
+            }
+            Action::SearchBackspace => {
+                game.catalog_search.pop();
+                game.catalog_scroll = 0;
                 game.ui_dirty = true;
             }
             Action::TrashCursor => {

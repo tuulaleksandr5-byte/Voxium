@@ -38,6 +38,10 @@ pub struct Game {
     pub attack_lock: bool,
     /// Открытая вкладка творческого каталога.
     pub catalog_tab: usize,
+    /// На сколько рядов прокручена сетка творческого меню.
+    pub catalog_scroll: usize,
+    /// Запрос во вкладке «Поиск».
+    pub catalog_search: String,
     pub mining_config: game_core::mining::MiningConfig,
     pub mining: game_core::mining::MiningState,
     pub world_mouse: crate::control_input::WorldMouseGate,
@@ -92,6 +96,8 @@ impl Default for Game {
             mobs: Default::default(),
             attack_lock: false,
             catalog_tab: 0,
+            catalog_scroll: 0,
+            catalog_search: String::new(),
             mining_config: Default::default(),
             mining: Default::default(),
             world_mouse: Default::default(),

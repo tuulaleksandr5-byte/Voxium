@@ -45,7 +45,51 @@ impl<T: Copy + PartialEq> DragGesture<T> {
 
 pub(super) fn plugin(app: &mut App) {
     app.init_resource::<PointerGesture>()
-        .add_systems(Update, (input, pointer_overlay).chain());
+        .add_systems(Update, (input, pointer_overlay, catalog_input).chain());
+}
+
+/// Колесо мыши над сеткой и ввод в поле поиска творческого меню.
+fn catalog_input(
+    game: Res<Game>,
+    mut wheel: MessageReader<bevy::input::mouse::MouseWheel>,
+    mut keys: MessageReader<bevy::input::keyboard::KeyboardInput>,
+    grid: Query<&Hovered, With<NoPanelScroll>>,
+    mut intents: ResMut<UiIntent>,
+) {
+    let active = game.mode == Mode::Inventory
+        && game.game_mode == GameMode::Creative
+        && game.open_container.is_none();
+    if !active {
+        wheel.clear();
+        keys.clear();
+        return;
+    }
+    let over_grid = grid.iter().any(Hovered::get);
+    for event in wheel.read() {
+        if over_grid && event.y != 0.0 {
+            intents
+                .0
+                .push(Action::ScrollCatalog(if event.y > 0.0 { -1 } else { 1 }));
+        }
+    }
+    let searching =
+        game_core::creative::Tab::from_index(game.catalog_tab) == game_core::creative::Tab::Search;
+    for event in keys.read() {
+        if !searching || event.state != bevy::input::ButtonState::Pressed {
+            continue;
+        }
+        match &event.logical_key {
+            bevy::input::keyboard::Key::Backspace => intents.0.push(Action::SearchBackspace),
+            bevy::input::keyboard::Key::Space => intents.0.push(Action::SearchInput(" ".into())),
+            bevy::input::keyboard::Key::Character(text) => {
+                let text: String = text.chars().filter(|c| !c.is_control()).collect();
+                if !text.is_empty() {
+                    intents.0.push(Action::SearchInput(text));
+                }
+            }
+            _ => {}
+        }
+    }
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -88,9 +132,11 @@ fn input(
         } else if game.game_mode == GameMode::Creative
             && let Some((_, item)) = catalog.iter().find(|(hovered, _)| hovered.get())
         {
-            actions.write(InventoryActionMessage(InventoryAction::CreativeGrant(
-                item.0,
-            )));
+            actions.write(InventoryActionMessage(if shift {
+                InventoryAction::CreativeShift(item.0)
+            } else {
+                InventoryAction::CreativeGrant(item.0)
+            }));
         }
     }
     if mouse.just_pressed(MouseButton::Right) {
@@ -105,6 +151,12 @@ fn input(
             actions.write(InventoryActionMessage(InventoryAction::TakeCraftResult {
                 all: shift,
             }));
+        } else if game.game_mode == GameMode::Creative
+            && let Some((_, item)) = catalog.iter().find(|(hovered, _)| hovered.get())
+        {
+            actions.write(InventoryActionMessage(InventoryAction::CreativeGrantOne(
+                item.0,
+            )));
         }
     }
     if mouse.just_released(MouseButton::Left)
@@ -526,184 +578,302 @@ fn stonecutter(
     }
 }
 
-/// Вкладки творческого каталога; нулевая показывает всё.
-pub(crate) const CATALOG_TABS: [&str; 7] = [
-    "Все",
-    "Строительство",
-    "Природа",
-    "Механизмы",
-    "Инструменты",
-    "Броня",
-    "Еда и материалы",
-];
-
-/// Номер вкладки каталога для предмета.
-/// Вкладка «Механизмы»: факелы, рельсы, кровати, поршни и прочая техника.
-fn is_mechanism(block: game_core::BlockId) -> bool {
-    matches!(
-        block,
-        game_core::DISPENSER
-            | game_core::DROPPER
-            | game_core::PISTON
-            | game_core::STICKY_PISTON
-            | game_core::NOTE_BLOCK
-            | game_core::TNT
-            | game_core::POWERED_RAIL
-            | game_core::DETECTOR_RAIL
-            | game_core::TORCH
-            | game_core::FIRE
-            | game_core::SOUL_FIRE
-            | game_core::CHISELED_BOOKSHELF
-    ) || game_core::is_bed(block)
-}
-
-/// Вкладка «Природа»: растения, листва, древесина, породы и подобное.
-fn is_nature(block: game_core::BlockId) -> bool {
-    use game_core::*;
-    (PLANT2_FIRST..=PLANT2_LAST).contains(&block)
-        || matches!(
-            block,
-            SPRUCE_LEAVES
-                | AZALEA_LEAVES
-                | FLOWERING_AZALEA_LEAVES
-                | MANGROVE_ROOTS
-                | MUDDY_MANGROVE_ROOTS
-                | SPRUCE_LOG
-                | BAMBOO_BLOCK
-                | DIORITE
-                | ANDESITE
-                | SUSPICIOUS_SAND
-                | SUSPICIOUS_GRAVEL
-                | DEEPSLATE_COAL_ORE
-                | DEEPSLATE_IRON_ORE
-                | DEEPSLATE_GOLD_ORE
-                | DEEPSLATE_LAPIS_ORE
-                | NETHER_GOLD_ORE
-                | WET_SPONGE
-        )
-}
-
-fn catalog_tab(game: &Game, id: ItemId) -> usize {
-    use game_core::content::ItemKind;
-    let Some(definition) = game.content.get(id) else {
-        return 0;
-    };
-    match &definition.kind {
-        ItemKind::Tool => 4,
-        ItemKind::Armor { .. } => 5,
-        ItemKind::Food | ItemKind::Material => 6,
-        ItemKind::Block { .. } => match game.content.block_for_item(id).unwrap_or(0) {
-            block if is_mechanism(block) => 3,
-            block if is_nature(block) => 2,
-            game_core::CHEST
-            | game_core::CRAFTING_TABLE
-            | game_core::FURNACE
-            | game_core::LAMP
-            | game_core::BOOKSHELF
-            | game_core::BARREL
-            | game_core::SMOKER
-            | game_core::BLAST_FURNACE
-            | game_core::STONECUTTER
-            | game_core::VAULT => 3,
-            game_core::GRASS
-            | game_core::DIRT
-            | game_core::STONE
-            | game_core::DEEP_STONE
-            | game_core::SAND
-            | game_core::GRAVEL
-            | game_core::WOOD
-            | game_core::LEAVES
-            | game_core::WATER
-            | game_core::SNOW
-            | game_core::COAL_ORE
-            | game_core::IRON_ORE
-            | game_core::GOLD_ORE
-            | game_core::DIAMOND_ORE
-            | game_core::BIRCH_LOG
-            | game_core::BIRCH_LEAVES
-            | game_core::CLAY
-            | game_core::ICE
-            | game_core::OBSIDIAN
-            | game_core::GRANITE
-            | game_core::MARBLE
-            | game_core::BASALT
-            | game_core::SLATE
-            | game_core::LIMESTONE
-            | game_core::PINE_LOG
-            | game_core::PINE_LEAVES
-            | game_core::POPPY
-            | game_core::DANDELION
-            | game_core::CORNFLOWER
-            | game_core::DAISY
-            | game_core::MUD
-            | game_core::MOSS_BLOCK
-            | game_core::PODZOL
-            | game_core::COARSE_DIRT
-            | game_core::RED_SAND
-            | game_core::CALCITE
-            | game_core::TUFF
-            | game_core::MELON
-            | game_core::PUMPKIN
-            | game_core::SPONGE
-            | game_core::COPPER_ORE
-            | game_core::EMERALD_ORE
-            | game_core::LAPIS_ORE
-            | game_core::ACACIA_LOG
-            | game_core::JUNGLE_LOG
-            | game_core::DARK_OAK_LOG
-            | game_core::MANGROVE_LOG
-            | game_core::CHERRY_LOG
-            | game_core::ACACIA_LEAVES
-            | game_core::JUNGLE_LEAVES
-            | game_core::DARK_OAK_LEAVES
-            | game_core::MANGROVE_LEAVES
-            | game_core::CHERRY_LEAVES
-            | game_core::LAVA
-            | game_core::TALL_GRASS => 2,
-            _ => 1,
-        },
+/// Короткая подпись вкладки на кнопке; полное название — в подсказке и заголовке.
+fn tab_label(tab: game_core::creative::Tab) -> &'static str {
+    use game_core::creative::Tab;
+    match tab {
+        Tab::Building => "Строить",
+        Tab::Colored => "Цвета",
+        Tab::Natural => "Природа",
+        Tab::Functional => "Функции",
+        Tab::Redstone => "Редстоун",
+        Tab::Search => "Поиск",
+        Tab::Tools => "Орудия",
+        Tab::Combat => "Бой",
+        Tab::Food => "Еда",
+        Tab::Ingredients => "Сырьё",
+        Tab::Eggs => "Яйца",
+        Tab::Survival => "Выживание",
     }
 }
 
-/// Творческий каталог: вкладки категорий, слот выдачи и сетка предметов.
-fn catalog(
+/// Ряд вкладок творческого меню.
+fn tab_row(commands: &mut Commands, panel: Entity, game: &Game, tabs: &[game_core::creative::Tab]) {
+    let holder = node(
+        commands,
+        panel,
+        Node {
+            width: percent(100),
+            flex_wrap: FlexWrap::Wrap,
+            column_gap: px(6),
+            row_gap: px(6),
+            flex_shrink: 0.,
+            ..default()
+        },
+        Color::NONE,
+    );
+    for tab in tabs {
+        let tab_button = button(
+            commands,
+            holder,
+            tab_label(*tab),
+            Action::CatalogTab(tab.index()),
+            if game.catalog_tab == tab.index() {
+                Tone::Gold
+            } else {
+                Tone::Normal
+            },
+        );
+        commands.entity(tab_button).insert((
+            Node {
+                min_height: px(36),
+                flex_shrink: 0.,
+                padding: UiRect::axes(px(12), px(4)),
+                border: UiRect::all(px(1)),
+                border_radius: BorderRadius::all(px(4)),
+                align_items: AlignItems::Center,
+                justify_content: JustifyContent::Center,
+                ..default()
+            },
+            SlotHint(tab.name().to_string()),
+        ));
+    }
+}
+
+/// Подсказка предмета: название и, у оружия и орудий, урон удара.
+fn item_hint(game: &Game, id: ItemId) -> String {
+    let Some(definition) = game.content.get(id) else {
+        return String::new();
+    };
+    let damage = game_core::food::attack_damage(Some(&definition.id));
+    if damage > 1.0 {
+        format!(
+            "{}\nУрон при атаке: {damage}\n{}",
+            definition.name, definition.id
+        )
+    } else {
+        format!("{}\n{}", definition.name, definition.id)
+    }
+}
+
+/// Окно творческого меню: сетка 9×5 с прокруткой, поиск, ряд быстрого доступа и корзина.
+fn creative_grid(
     commands: &mut Commands,
     panel: Entity,
     game: &Game,
     icons: &ItemIcons,
     blocks: &BlockIcons,
 ) {
+    use game_core::creative::{self, GRID_COLUMNS, GRID_ROWS, Tab};
+    let tab = Tab::from_index(game.catalog_tab);
+    label(commands, panel, tab.name(), 16., TEXT);
+    if tab == Tab::Search {
+        let field = node(
+            commands,
+            panel,
+            Node {
+                width: percent(100),
+                min_height: px(40),
+                flex_shrink: 0.,
+                padding: UiRect::axes(px(12), px(8)),
+                border: UiRect::all(px(1)),
+                border_radius: BorderRadius::all(px(4)),
+                align_items: AlignItems::Center,
+                ..default()
+            },
+            Color::srgba(0.03, 0.01, 0.06, 0.98),
+        );
+        commands.entity(field).insert(BorderColor::all(AMBER));
+        let shown = if game.catalog_search.is_empty() {
+            "Начните печатать название…".to_string()
+        } else {
+            format!("{}▏", game.catalog_search)
+        };
+        label(
+            commands,
+            field,
+            shown,
+            15.,
+            if game.catalog_search.is_empty() {
+                MUTED
+            } else {
+                TEXT
+            },
+        );
+    }
+    let list = creative::items(&game.content, tab, &game.catalog_search);
+    let max_scroll = creative::max_scroll(list.len());
+    let scroll = game.catalog_scroll.min(max_scroll);
+    let total_rows = list.len().div_ceil(GRID_COLUMNS).max(GRID_ROWS);
+    let body = row(commands, panel, 8.);
+    commands.entity(body).insert(Node {
+        width: percent(100),
+        column_gap: px(8),
+        align_items: AlignItems::FlexStart,
+        flex_shrink: 0.,
+        ..default()
+    });
+    let grid = column(commands, body, 6.);
+    commands.entity(grid).insert(Node {
+        flex_direction: FlexDirection::Column,
+        row_gap: px(6),
+        flex_shrink: 0.,
+        ..default()
+    });
+    for line in 0..GRID_ROWS {
+        let cells = row(commands, grid, 6.);
+        for column_index in 0..GRID_COLUMNS {
+            let index = (scroll + line) * GRID_COLUMNS + column_index;
+            let child = node(
+                commands,
+                cells,
+                Node {
+                    width: px(54),
+                    height: px(54),
+                    flex_shrink: 0.,
+                    border: UiRect::all(px(1)),
+                    border_radius: BorderRadius::all(px(4)),
+                    align_items: AlignItems::Center,
+                    justify_content: JustifyContent::Center,
+                    ..default()
+                },
+                Color::srgba(0.16, 0.07, 0.23, 0.96),
+            );
+            commands.entity(child).insert((
+                Hovered::default(),
+                BorderColor::all(LINE),
+                NoPanelScroll,
+            ));
+            if let Some(id) = list.get(index).copied() {
+                commands.entity(child).insert((
+                    Button,
+                    CatalogItem(id),
+                    SlotHint(item_hint(game, id)),
+                ));
+                let image = commands
+                    .spawn((
+                        ImageNode::new(icons.get(id, &game.content, blocks)),
+                        Node {
+                            width: px(46),
+                            height: px(46),
+                            ..default()
+                        },
+                        Pickable::IGNORE,
+                    ))
+                    .id();
+                commands.entity(child).add_child(image);
+            }
+        }
+    }
+    // Полоса прокрутки: кнопки и ползунок.
+    let bar = column(commands, body, 4.);
+    commands.entity(bar).insert(Node {
+        width: px(30),
+        flex_direction: FlexDirection::Column,
+        row_gap: px(4),
+        flex_shrink: 0.,
+        ..default()
+    });
+    for (caption, rows) in [("▲", -1), ("▼", 1)] {
+        let arrow = button(
+            commands,
+            bar,
+            caption,
+            Action::ScrollCatalog(rows),
+            Tone::Normal,
+        );
+        commands.entity(arrow).insert((
+            Node {
+                width: px(30),
+                min_height: px(30),
+                flex_shrink: 0.,
+                padding: UiRect::all(px(0)),
+                border: UiRect::all(px(1)),
+                border_radius: BorderRadius::all(px(4)),
+                align_items: AlignItems::Center,
+                justify_content: JustifyContent::Center,
+                ..default()
+            },
+            NoPanelScroll,
+        ));
+        if rows < 0 {
+            // Дорожка между кнопками: ползунок стоит по доле прокрутки.
+            let track = node(
+                commands,
+                bar,
+                Node {
+                    width: px(30),
+                    height: px(194),
+                    flex_shrink: 0.,
+                    border: UiRect::all(px(1)),
+                    border_radius: BorderRadius::all(px(4)),
+                    ..default()
+                },
+                Color::srgba(0.03, 0.01, 0.06, 0.98),
+            );
+            commands.entity(track).insert((
+                BorderColor::all(LINE),
+                Hovered::default(),
+                NoPanelScroll,
+            ));
+            let thumb_height = (194. * GRID_ROWS as f32 / total_rows as f32).clamp(24., 192.);
+            let travel = 192. - thumb_height;
+            let top = if max_scroll == 0 {
+                0.
+            } else {
+                travel * scroll as f32 / max_scroll as f32
+            };
+            let thumb = node(
+                commands,
+                track,
+                Node {
+                    position_type: PositionType::Absolute,
+                    left: px(1),
+                    top: px(top),
+                    width: px(26),
+                    height: px(thumb_height),
+                    border_radius: BorderRadius::all(px(3)),
+                    ..default()
+                },
+                Color::srgba(0.72, 0.62, 0.86, 0.95),
+            );
+            commands.entity(thumb).insert(Pickable::IGNORE);
+        }
+    }
     label(
         commands,
         panel,
-        format!("КАТАЛОГ ∞ · выдача в слот {}", game.selected + 1),
-        13.,
-        AMBER,
-    );
-    label(
-        commands,
-        panel,
-        "1–9: выбрать слот выдачи · каждый предмет доступен без ограничений",
+        format!(
+            "{} предметов · колесо: прокрутка · ЛКМ: стопка на курсор · ПКМ: один · Shift: в инвентарь · клик по сетке с предметом на курсоре: удалить",
+            list.len()
+        ),
         12.,
         MUTED,
     );
-    let targets = row(commands, panel, 6.);
+    // Ряд быстрого доступа и корзина.
+    let hotbar = row(commands, panel, 6.);
     for index in 0..9 {
-        let target = button(
+        slot(
             commands,
-            targets,
-            (index + 1).to_string(),
-            Action::SelectSlot(index),
-            if game.selected == index {
-                Tone::Gold
-            } else {
-                Tone::Normal
-            },
+            hotbar,
+            game,
+            icons,
+            blocks,
+            SlotRef::Hotbar(index),
+            "",
         );
-        commands.entity(target).insert(Node {
-            width: px(44),
-            height: px(44),
-            min_height: px(44),
+    }
+    trash_slot(commands, hotbar);
+}
+
+/// Ячейка «Удалить предмет»: клик с предметом на курсоре убирает его навсегда.
+fn trash_slot(commands: &mut Commands, parent: Entity) {
+    let trash = button(commands, parent, "✕", Action::TrashCursor, Tone::Normal);
+    commands.entity(trash).insert((
+        Node {
+            width: px(54),
+            height: px(54),
+            min_height: px(54),
             flex_shrink: 0.,
             padding: UiRect::all(px(0)),
             border: UiRect::all(px(1)),
@@ -711,113 +881,9 @@ fn catalog(
             align_items: AlignItems::Center,
             justify_content: JustifyContent::Center,
             ..default()
-        });
-    }
-    let tabs = node(
-        commands,
-        panel,
-        Node {
-            width: percent(100),
-            flex_wrap: FlexWrap::Wrap,
-            column_gap: px(6),
-            row_gap: px(6),
-            flex_shrink: 0.,
-            ..default()
         },
-        Color::NONE,
-    );
-    let compact = Node {
-        min_height: px(36),
-        flex_shrink: 0.,
-        padding: UiRect::axes(px(12), px(4)),
-        border: UiRect::all(px(1)),
-        border_radius: BorderRadius::all(px(4)),
-        align_items: AlignItems::Center,
-        justify_content: JustifyContent::Center,
-        ..default()
-    };
-    for (index, name) in CATALOG_TABS.iter().enumerate() {
-        let tab = button(
-            commands,
-            tabs,
-            *name,
-            Action::CatalogTab(index),
-            if game.catalog_tab == index {
-                Tone::Gold
-            } else {
-                Tone::Normal
-            },
-        );
-        commands.entity(tab).insert(compact.clone());
-    }
-    if game.inventory.cursor.is_some() {
-        let trash = button(
-            commands,
-            tabs,
-            "✕ Убрать с курсора",
-            Action::TrashCursor,
-            Tone::Normal,
-        );
-        commands.entity(trash).insert(compact);
-    }
-    let catalog = node(
-        commands,
-        panel,
-        Node {
-            width: percent(100),
-            flex_wrap: FlexWrap::Wrap,
-            column_gap: px(6),
-            row_gap: px(6),
-            flex_shrink: 0.,
-            ..default()
-        },
-        Color::NONE,
-    );
-    for (id, definition) in game.content.iter() {
-        if game.catalog_tab != 0 && catalog_tab(game, id) != game.catalog_tab {
-            continue;
-        }
-        let child = node(
-            commands,
-            catalog,
-            Node {
-                width: px(54),
-                height: px(54),
-                border: UiRect::all(px(1)),
-                border_radius: BorderRadius::all(px(4)),
-                align_items: AlignItems::Center,
-                justify_content: JustifyContent::Center,
-                ..default()
-            },
-            Color::srgba(0.16, 0.07, 0.23, 0.96),
-        );
-        commands.entity(child).insert((
-            Button,
-            Hovered::default(),
-            CatalogItem(id),
-            SlotHint(format!("{} · ∞", definition.name)),
-            BorderColor::all(LINE),
-        ));
-        let image = commands
-            .spawn((
-                ImageNode::new(icons.get(id, &game.content, blocks)),
-                Node {
-                    width: px(46),
-                    height: px(46),
-                    ..default()
-                },
-                Pickable::IGNORE,
-            ))
-            .id();
-        commands.entity(child).add_child(image);
-        let infinity = label(commands, child, "∞", 13., AMBER);
-        commands.entity(infinity).insert(Node {
-            position_type: PositionType::Absolute,
-            right: px(3),
-            bottom: px(1),
-            ..default()
-        });
-    }
+        SlotHint("Удалить предмет".to_string()),
+    ));
 }
 
 pub(super) fn menu(
@@ -855,10 +921,19 @@ pub(super) fn menu(
         12.,
         MUTED,
     );
-    // Открытый блок важнее каталога: при нём каталог уходит под инвентарь.
-    let catalog_first = game.open_container.is_none();
-    if game.game_mode == GameMode::Creative && catalog_first {
-        catalog(commands, panel, game, icons, blocks);
+    // В творческом режиме без открытого блока меню как в оригинале: вкладки сверху и
+    // снизу, сетка 9×5, ряд быстрого доступа; «Инвентарь выживания» — обычный экран.
+    let creative_menu = game.game_mode == GameMode::Creative && game.open_container.is_none();
+    if creative_menu {
+        tab_row(commands, panel, game, &game_core::creative::Tab::TOP);
+        if game_core::creative::Tab::from_index(game.catalog_tab)
+            != game_core::creative::Tab::Survival
+        {
+            creative_grid(commands, panel, game, icons, blocks);
+            tab_row(commands, panel, game, &game_core::creative::Tab::BOTTOM);
+            menu_footer(commands, panel);
+            return;
+        }
     }
     let content = row(commands, panel, 24.);
     commands.entity(content).insert(Node {
@@ -993,9 +1068,16 @@ pub(super) fn menu(
     slot(commands, cells, game, icons, blocks, SlotRef::Offhand, "");
     label(commands, cells, "Вторая рука", 12., MUTED);
     label(commands, equipment, "Броня пока\nбез бонусов.", 12., MUTED);
-    if game.game_mode == GameMode::Creative && !catalog_first {
-        catalog(commands, panel, game, icons, blocks);
+    if creative_menu {
+        let trash = row(commands, storage, 6.);
+        trash_slot(commands, trash);
+        label(commands, trash, "Удалить предмет", 12., MUTED);
+        tab_row(commands, panel, game, &game_core::creative::Tab::BOTTOM);
     }
+    menu_footer(commands, panel);
+}
+
+fn menu_footer(commands: &mut Commands, panel: Entity) {
     label(
         commands,
         panel,
@@ -1254,6 +1336,89 @@ mod tests {
             assert_eq!(images, usize::from(ready));
         }
     }
+    fn build_menu(game: &Game) -> World {
+        let mut world = World::new();
+        let panel = world.spawn_empty().id();
+        let mut queue = bevy::ecs::world::CommandQueue::default();
+        let mut commands = Commands::new(&mut queue, &world);
+        menu(
+            &mut commands,
+            panel,
+            game,
+            &ItemIcons::default(),
+            &BlockIcons::default(),
+        );
+        queue.apply(&mut world);
+        world
+    }
+
+    #[test]
+    fn creative_menu_has_twelve_tabs_a_nine_by_five_grid_a_hotbar_and_a_trash_slot() {
+        let mut game = Game {
+            mode: Mode::Inventory,
+            game_mode: GameMode::Creative,
+            ..Default::default()
+        };
+        let mut world = build_menu(&game);
+        let tabs = world
+            .query::<&UiButton>()
+            .iter(&world)
+            .filter(|b| matches!(b.action, Action::CatalogTab(_)))
+            .count();
+        assert_eq!(tabs, 12);
+        assert_eq!(world.query::<&CatalogItem>().iter(&world).count(), 45);
+        let hotbar = world
+            .query::<&InventorySlot>()
+            .iter(&world)
+            .filter(|s| matches!(s.0, SlotRef::Hotbar(_)))
+            .count();
+        assert_eq!(hotbar, 9);
+        let trash = world
+            .query::<&UiButton>()
+            .iter(&world)
+            .filter(|b| matches!(b.action, Action::TrashCursor))
+            .count();
+        assert_eq!(trash, 1);
+        // Прокрутка сдвигает сетку на ряд.
+        let first = |world: &mut World| {
+            world
+                .query::<(&CatalogItem, &Hovered)>()
+                .iter(world)
+                .map(|(item, _)| item.0)
+                .next()
+        };
+        let before = first(&mut world);
+        game.catalog_scroll = 1;
+        let mut scrolled = build_menu(&game);
+        assert_ne!(first(&mut scrolled), before);
+        // Поиск фильтрует по названию; пустой результат оставляет пустые клетки.
+        game.catalog_scroll = 0;
+        game.catalog_tab = game_core::creative::Tab::Search.index();
+        game.catalog_search = "алмазн".into();
+        let mut found = build_menu(&game);
+        let count = found.query::<&CatalogItem>().iter(&found).count();
+        assert!((5..45).contains(&count), "{count}");
+        game.catalog_search = "нет-такого-предмета".into();
+        let mut none = build_menu(&game);
+        assert_eq!(none.query::<&CatalogItem>().iter(&none).count(), 0);
+        // «Инвентарь выживания» — обычный экран: 27 ячеек рюкзака и корзина, без сетки.
+        game.catalog_tab = game_core::creative::Tab::Survival.index();
+        let mut survival = build_menu(&game);
+        assert_eq!(survival.query::<&CatalogItem>().iter(&survival).count(), 0);
+        let main = survival
+            .query::<&InventorySlot>()
+            .iter(&survival)
+            .filter(|s| matches!(s.0, SlotRef::Main(_)))
+            .count();
+        assert_eq!(main, 27);
+        assert!(
+            survival
+                .query::<&UiButton>()
+                .iter(&survival)
+                .any(|b| matches!(b.action, Action::TrashCursor))
+        );
+    }
+
     #[test]
     fn inventory_rebuild_preserves_scroll_after_events_and_catalog_reload() {
         let mut app = scrolling_app();
@@ -1266,6 +1431,11 @@ mod tests {
             .unwrap();
         for action in [
             InventoryAction::CreativeGrant(item),
+            InventoryAction::Click {
+                slot: SlotRef::Hotbar(0),
+                button: ClickButton::Left,
+                shift: false,
+            },
             InventoryAction::Click {
                 slot: SlotRef::Hotbar(0),
                 button: ClickButton::Left,
@@ -1293,6 +1463,8 @@ mod tests {
             include_str!("../../../../assets/data/items.ron").replace("Дёрн", "Обновлённый дёрн");
         let mut game = app.world_mut().resource_mut::<Game>();
         game.content = game.content.reload(&updated).unwrap();
+        // Ячейки рюкзака видны на вкладке «Инвентарь выживания».
+        game.catalog_tab = game_core::creative::Tab::Survival.index();
         game.ui_dirty = true;
         app.update();
         assert_eq!(panel_scroll(&mut app), 187.);
@@ -1379,7 +1551,7 @@ mod tests {
         assert_eq!(world.query::<&CatalogItem>().iter(&world).count(), 0);
     }
     #[test]
-    fn open_chest_adds_twenty_seven_slots_and_creative_catalog() {
+    fn open_chest_adds_twenty_seven_slots_and_hides_the_creative_grid() {
         let mut game = Game {
             game_mode: GameMode::Creative,
             open_container: Some([1, 2, 3]),
@@ -1387,7 +1559,6 @@ mod tests {
         };
         game.containers
             .insert([1, 2, 3], game_core::inventory::Container::new(27));
-        let expected_catalog = game.content.len();
         let mut world = World::new();
         let panel = world.spawn_empty().id();
         let mut queue = bevy::ecs::world::CommandQueue::default();
@@ -1401,10 +1572,8 @@ mod tests {
         );
         queue.apply(&mut world);
         assert_eq!(world.query::<&InventorySlot>().iter(&world).count(), 72);
-        assert_eq!(
-            world.query::<&CatalogItem>().iter(&world).count(),
-            expected_catalog
-        );
+        // С открытым блоком творческая сетка не показывается, как в оригинале.
+        assert_eq!(world.query::<&CatalogItem>().iter(&world).count(), 0);
     }
     fn input_app(mode: GameMode) -> App {
         let mut app = App::new();

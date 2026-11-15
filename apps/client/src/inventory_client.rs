@@ -23,7 +23,12 @@ pub enum InventoryAction {
         button: ClickButton,
         shift: bool,
     },
+    /// Творческое меню, ЛКМ: взять стопку на курсор или удалить то, что на курсоре.
     CreativeGrant(ItemId),
+    /// Творческое меню, ПКМ: взять по одному.
+    CreativeGrantOne(ItemId),
+    /// Творческое меню, Shift: полная стопка прямо в инвентарь.
+    CreativeShift(ItemId),
     TakeCraftResult {
         all: bool,
     },
@@ -346,10 +351,42 @@ fn process_action(game: &mut Game, action: &InventoryAction) -> Effects {
             if game.mode == Mode::Inventory && game.game_mode == GameMode::Creative =>
         {
             let count = game.content.max_stack(*item);
-            if count > 0
-                && let Some(slot) = game.inventory.hotbar.get_mut(game.selected)
-            {
-                *slot = Some(ItemStack::new(*item, count));
+            if game.inventory.cursor.is_some() {
+                // Положить предмет обратно в каталог — значит удалить его.
+                game.inventory.cursor = None;
+                game.ui_dirty = true;
+            } else if count > 0 {
+                game.inventory.cursor = Some(ItemStack::new(*item, count));
+                game.ui_dirty = true;
+            }
+        }
+        InventoryAction::CreativeGrantOne(item)
+            if game.mode == Mode::Inventory && game.game_mode == GameMode::Creative =>
+        {
+            let max = game.content.max_stack(*item);
+            let next = match game.inventory.cursor.take() {
+                Some(mut held) if held.item == *item && held.count < max => {
+                    held.count += 1;
+                    Some(held)
+                }
+                Some(held) => Some(held),
+                None if max > 0 => Some(ItemStack::new(*item, 1)),
+                None => None,
+            };
+            game.inventory.cursor = next;
+            game.ui_dirty = true;
+        }
+        InventoryAction::CreativeShift(item)
+            if game.mode == Mode::Inventory && game.game_mode == GameMode::Creative =>
+        {
+            let count = game.content.max_stack(*item);
+            if count > 0 {
+                let rest = game
+                    .inventory
+                    .insert(ItemStack::new(*item, count), &game.content);
+                if let Some(left) = rest {
+                    game.status = format!("Нет места: осталось {} шт.", left.count);
+                }
                 game.ui_dirty = true;
             }
         }
@@ -1879,10 +1916,22 @@ mod tests {
         game.game_mode = GameMode::Creative;
         game.mode = Mode::Inventory;
         let egg = game.content.find("survival:egg").unwrap();
+        let click = InventoryAction::Click {
+            slot: SlotRef::Hotbar(0),
+            button: ClickButton::Left,
+            shift: false,
+        };
         process_action(&mut game, &InventoryAction::CreativeGrant(egg));
+        assert_eq!(game.inventory.cursor, Some(ItemStack::new(egg, 16)));
+        process_action(&mut game, &click);
         assert_eq!(game.inventory.hotbar[0], Some(ItemStack::new(egg, 16)));
         let dirt = game.content.item_for_block(game_core::DIRT).unwrap();
         process_action(&mut game, &InventoryAction::CreativeGrant(dirt));
+        process_action(&mut game, &click);
+        // Яйца ушли на курсор; положить их в каталог значит удалить.
+        assert_eq!(game.inventory.cursor, Some(ItemStack::new(egg, 16)));
+        process_action(&mut game, &InventoryAction::CreativeGrant(egg));
+        assert!(game.inventory.cursor.is_none());
         game.mode = Mode::Playing;
         assert_eq!(
             process_action(
@@ -1898,6 +1947,32 @@ mod tests {
         process_action(&mut game, &InventoryAction::DropSelected { all: false });
         assert_eq!(game.inventory.hotbar[0].as_ref().unwrap().count, 64);
         assert_eq!(total_drops(&game), 1);
+    }
+
+    #[test]
+    fn creative_one_and_shift_picks_follow_the_vanilla_rules() {
+        let mut game = world();
+        game.game_mode = GameMode::Creative;
+        game.mode = Mode::Inventory;
+        let dirt = game.content.item_for_block(game_core::DIRT).unwrap();
+        let stone = game.content.item_for_block(game_core::STONE).unwrap();
+        // ПКМ берёт по одному и добавляет к тому же предмету.
+        process_action(&mut game, &InventoryAction::CreativeGrantOne(dirt));
+        process_action(&mut game, &InventoryAction::CreativeGrantOne(dirt));
+        assert_eq!(game.inventory.cursor, Some(ItemStack::new(dirt, 2)));
+        // Другой предмет на курсоре не заменяется.
+        process_action(&mut game, &InventoryAction::CreativeGrantOne(stone));
+        assert_eq!(game.inventory.cursor, Some(ItemStack::new(dirt, 2)));
+        // Shift кладёт полную стопку в инвентарь, курсор не трогает.
+        process_action(&mut game, &InventoryAction::CreativeShift(stone));
+        assert_eq!(game.inventory.hotbar[0], Some(ItemStack::new(stone, 64)));
+        assert_eq!(game.inventory.cursor, Some(ItemStack::new(dirt, 2)));
+        // В выживании каталог недоступен.
+        let mut survival = world();
+        survival.mode = Mode::Inventory;
+        process_action(&mut survival, &InventoryAction::CreativeGrant(dirt));
+        process_action(&mut survival, &InventoryAction::CreativeShift(dirt));
+        assert!(survival.inventory.cursor.is_none());
     }
 
     #[test]

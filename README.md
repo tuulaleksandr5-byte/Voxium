@@ -160,3 +160,4 @@ cargo build --locked -p voxel-client
 - [Функции новых блоков](docs/FUNCTIONS_UPDATE.md)
 - [Редстоун](docs/REDSTONE.md)
 - [Все предметы списка](docs/ITEMS_UPDATE.md)
+- [Творческий инвентарь](docs/CREATIVE_INVENTORY.md)

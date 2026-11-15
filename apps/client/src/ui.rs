@@ -32,13 +32,17 @@ pub enum Action {
     Exit,
     Settings,
     Back,
-    SelectSlot(usize),
     CycleDistance,
     ToggleVsync,
     ToggleFullscreen,
     CycleResolution,
     ToggleTextures,
     CatalogTab(usize),
+    /// Прокрутить сетку творческого меню на столько рядов.
+    ScrollCatalog(i32),
+    /// Дописать в поиск.
+    SearchInput(String),
+    SearchBackspace,
     TrashCursor,
     /// Камнерез: вырезать выбранный вариант.
     Stonecut(game_core::content::ItemId),
@@ -50,7 +54,11 @@ pub enum Action {
     CommitSettings,
 }
 
-pub const CATALOG_TAB_COUNT: usize = inventory::CATALOG_TABS.len();
+pub const CATALOG_TAB_COUNT: usize = game_core::creative::Tab::ALL.len();
+
+/// Узел, над которым колесо мыши прокручивает сетку, а не панель.
+#[derive(Component)]
+pub(crate) struct NoPanelScroll;
 
 #[derive(Resource, Default)]
 pub struct UiIntent(pub Vec<Action>);
@@ -381,7 +389,12 @@ fn edit_world_form(
 fn scroll_panels(
     mut wheel: MessageReader<MouseWheel>,
     mut panels: Query<(&Hovered, &mut ScrollPosition, &ComputedNode), With<ScrollArea>>,
+    grid: Query<&Hovered, With<NoPanelScroll>>,
 ) {
+    if grid.iter().any(Hovered::get) {
+        wheel.clear();
+        return;
+    }
     let delta: f32 = wheel
         .read()
         .map(|event| {
