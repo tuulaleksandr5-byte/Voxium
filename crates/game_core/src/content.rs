@@ -64,7 +64,7 @@ pub struct ContentRegistry {
 }
 
 // Имена соответствуют стабильным сохранённым ID; новые блоки только дописываются.
-pub(crate) const BLOCK_NAMES: [&str; 196] = [
+pub(crate) const BLOCK_NAMES: [&str; 301] = [
     "foundation:air",
     "foundation:grass",
     "foundation:dirt",
@@ -261,6 +261,111 @@ pub(crate) const BLOCK_NAMES: [&str; 196] = [
     "fluid:lava_1",
     "fluid:lava_2",
     "fluid:lava_3",
+    "voxium:diorite",
+    "voxium:polished_diorite",
+    "voxium:andesite",
+    "voxium:polished_andesite",
+    "voxium:spruce_planks",
+    "voxium:bamboo_planks",
+    "voxium:bamboo_mosaic",
+    "voxium:suspicious_sand",
+    "voxium:suspicious_gravel",
+    "voxium:deepslate_gold_ore",
+    "voxium:deepslate_iron_ore",
+    "voxium:deepslate_coal_ore",
+    "voxium:nether_gold_ore",
+    "voxium:spruce_log",
+    "voxium:bamboo_block",
+    "voxium:stripped_spruce_log",
+    "voxium:stripped_birch_log",
+    "voxium:stripped_jungle_log",
+    "voxium:stripped_acacia_log",
+    "voxium:stripped_cherry_log",
+    "voxium:stripped_dark_oak_log",
+    "voxium:stripped_oak_log",
+    "voxium:stripped_mangrove_log",
+    "voxium:stripped_bamboo_block",
+    "voxium:oak_wood",
+    "voxium:spruce_wood",
+    "voxium:birch_wood",
+    "voxium:jungle_wood",
+    "voxium:acacia_wood",
+    "voxium:cherry_wood",
+    "voxium:dark_oak_wood",
+    "voxium:mangrove_wood",
+    "voxium:stripped_oak_wood",
+    "voxium:stripped_spruce_wood",
+    "voxium:stripped_birch_wood",
+    "voxium:stripped_jungle_wood",
+    "voxium:stripped_acacia_wood",
+    "voxium:stripped_cherry_wood",
+    "voxium:stripped_dark_oak_wood",
+    "voxium:stripped_mangrove_wood",
+    "voxium:wet_sponge",
+    "voxium:deepslate_lapis_ore",
+    "voxium:dispenser",
+    "voxium:chiseled_sandstone",
+    "voxium:cut_sandstone",
+    "voxium:note_block",
+    "voxium:sticky_piston",
+    "voxium:piston",
+    "voxium:tnt",
+    "voxium:chiseled_bookshelf",
+    "voxium:mangrove_roots",
+    "voxium:muddy_mangrove_roots",
+    "voxium:spruce_leaves",
+    "voxium:azalea_leaves",
+    "voxium:flowering_azalea_leaves",
+    "voxium:oak_sapling",
+    "voxium:spruce_sapling",
+    "voxium:birch_sapling",
+    "voxium:jungle_sapling",
+    "voxium:acacia_sapling",
+    "voxium:cherry_sapling",
+    "voxium:dark_oak_sapling",
+    "voxium:mangrove_propagule",
+    "voxium:cobweb",
+    "voxium:grass",
+    "voxium:fern",
+    "voxium:dead_bush",
+    "voxium:seagrass",
+    "voxium:tall_seagrass",
+    "voxium:torchflower",
+    "voxium:blue_orchid",
+    "voxium:allium",
+    "voxium:azure_bluet",
+    "voxium:red_tulip",
+    "voxium:orange_tulip",
+    "voxium:white_tulip",
+    "voxium:pink_tulip",
+    "voxium:wither_rose",
+    "voxium:lily_of_the_valley",
+    "voxium:brown_mushroom",
+    "voxium:red_mushroom",
+    "voxium:torch",
+    "voxium:wall_torch",
+    "voxium:fire",
+    "voxium:soul_fire",
+    "voxium:powered_rail",
+    "voxium:detector_rail",
+    "voxium:white_bed",
+    "voxium:orange_bed",
+    "voxium:magenta_bed",
+    "voxium:light_blue_bed",
+    "voxium:yellow_bed",
+    "voxium:lime_bed",
+    "voxium:pink_bed",
+    "voxium:gray_bed",
+    "voxium:light_gray_bed",
+    "voxium:cyan_bed",
+    "voxium:purple_bed",
+    "voxium:blue_bed",
+    "voxium:brown_bed",
+    "voxium:green_bed",
+    "voxium:red_bed",
+    "voxium:black_bed",
+    "voxium:piston_head",
+    "voxium:moving_piston",
 ];
 
 impl Default for ContentRegistry {
@@ -530,7 +635,7 @@ mod tests {
                 assert_eq!(def.max_stack, 1);
             }
         }
-        assert_eq!(registry.len(), 267);
+        assert_eq!(registry.len(), 369);
     }
 
     fn material(id: &str, max_stack: u16) -> String {
@@ -540,7 +645,7 @@ mod tests {
     #[test]
     fn default_catalog_preserves_original_stage_three_blocks_and_fixtures() {
         let registry = ContentRegistry::default();
-        assert_eq!(registry.len(), 267);
+        assert_eq!(registry.len(), 369);
         assert!(!registry.is_empty());
         let names = [
             "foundation:air",
@@ -609,7 +714,7 @@ mod tests {
         let registry = ContentRegistry::default();
         assert_eq!(registry.drop_for_block(1), registry.item_for_block(2));
         assert_eq!(registry.drop_for_block(3), registry.item_for_block(10));
-        for block in [0, 11, 12, 13, 255] {
+        for block in [0, 11, 12, 13, crate::BlockId::MAX] {
             assert_eq!(registry.drop_for_block(block), None);
         }
         for block in [2, 4, 5, 6, 7, 8, 9, 10, 14, 15, 16] {
@@ -699,7 +804,7 @@ mod tests {
         ] {
             assert!(original.reload(&changed).is_err());
         }
-        assert_eq!(original.len(), 267);
+        assert_eq!(original.len(), 369);
         assert_eq!(
             original.max_stack(original.find("survival:egg").unwrap()),
             16

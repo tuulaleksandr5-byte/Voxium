@@ -2,7 +2,9 @@ use game_core::BLOCKS;
 use serde::Deserialize;
 
 /// Слои 0…35 — исходный атлас 6×6, слои 36…215 — дополнительные пиксельные тайлы.
-pub const MATERIAL_COUNT: usize = 216;
+pub const MATERIAL_COUNT: usize = 354;
+/// Строк в атласе: по шесть слоёв в строке.
+pub const ATLAS_ROWS: u32 = (MATERIAL_COUNT / 6) as u32;
 /// Слой листвы дуба в исходном атласе.
 pub const OAK_LEAVES_LAYER: usize = 9;
 pub const GLASS_LAYER: usize = 12;
@@ -19,13 +21,20 @@ pub fn is_cutout_layer(layer: usize) -> bool {
         layer,
         OAK_LEAVES_LAYER | BIRCH_LEAVES_LAYER | PINE_LEAVES_LAYER
     ) || PLANT_LAYERS.contains(&layer)
+        || LEAF2_LAYERS.contains(&layer)
+        || PLANT2_LAYERS.contains(&layer)
         || matches!(layer, 125 | 129 | 133 | 137 | 141)
 }
 
-/// Слои растений: рисуются крест-накрест, видны с обеих сторон.
+/// Листва и корни этой партии: кубы с вырезанной по альфе текстурой.
+pub const LEAF2_LAYERS: std::ops::RangeInclusive<usize> = 204..=208;
+/// Растения, факелы, огонь и рельсы этой партии.
+pub const PLANT2_LAYERS: std::ops::RangeInclusive<usize> = 209..=239;
+
+/// Слои растений: рисуются плоскостями, видны с обеих сторон.
 #[must_use]
 pub fn is_double_sided_layer(layer: usize) -> bool {
-    PLANT_LAYERS.contains(&layer)
+    PLANT_LAYERS.contains(&layer) || PLANT2_LAYERS.contains(&layer)
 }
 
 /// Слои цветного стекла.
@@ -87,7 +96,7 @@ impl BlockTextures {
                 .flatten()
                 .any(|i| i as usize >= MATERIAL_COUNT)
         }) {
-            return Err("texture layer must be in 0..216".into());
+            return Err(format!("texture layer must be in 0..{MATERIAL_COUNT}"));
         }
         Ok(Self(faces.try_into().expect("length checked")))
     }
@@ -179,9 +188,11 @@ mod tests {
     #[test]
     fn rejects_missing_blocks_and_out_of_range_layers() {
         assert!(BlockTextures::from_ron("[]").is_err());
-        let source = include_str!("../../../assets/blocks.ron").replace("top: 0", "top: 216");
+        let source = include_str!("../../../assets/blocks.ron")
+            .replace("top: 0", &format!("top: {MATERIAL_COUNT}"));
         assert!(BlockTextures::from_ron(&source).is_err());
-        let source = include_str!("../../../assets/blocks.ron").replace("Some(26)", "Some(216)");
+        let source = include_str!("../../../assets/blocks.ron")
+            .replace("Some(26)", &format!("Some({MATERIAL_COUNT})"));
         assert!(BlockTextures::from_ron(&source).is_err());
     }
 }

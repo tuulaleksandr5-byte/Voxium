@@ -40,6 +40,14 @@ pub enum InventoryAction {
     OpenContainer {
         position: [i32; 3],
     },
+    /// ПКМ по кровати: точка возрождения; ночью — пропустить её.
+    Sleep {
+        position: [i32; 3],
+    },
+    /// ПКМ топором по бревну или древесине: снять кору.
+    Strip {
+        position: [i32; 3],
+    },
     /// Ведро в руке: набрать источник или вылить жидкость.
     UseBucket {
         target: [i32; 3],
@@ -84,6 +92,11 @@ pub(crate) fn target_block(game: &Game, position: [i32; 3]) -> game_core::BlockI
     } else {
         block
     }
+}
+
+/// Ночь: Солнце под горизонтом.
+pub(crate) fn is_night(clock: f64) -> bool {
+    ((clock / 1200.0) * std::f64::consts::TAU).sin() < 0.05
 }
 
 /// Заменить одно ведро в выбранном слоте другим; лишние пустые ведра остаются в стопке.
@@ -343,9 +356,18 @@ fn process_action(game: &mut Game, action: &InventoryAction) -> Effects {
         InventoryAction::Place { position }
             if game.mode == Mode::Playing && game.world_mouse.allowed() =>
         {
-            let block = game.selected_block();
+            let mut block = game.selected_block();
+            let hit = visible_hit(game);
+            // Факел, поставленный на боковую грань, становится настенным.
+            if block == game_core::TORCH
+                && hit
+                    .as_ref()
+                    .is_some_and(|hit| hit.previous[1] == hit.block[1] && hit.previous != hit.block)
+            {
+                block = game_core::WALL_TORCH;
+            }
             if block != AIR
-                && visible_hit(game).is_some_and(|hit| {
+                && hit.as_ref().is_some_and(|hit| {
                     hit.previous == *position
                         || (hit.block == *position
                             && game_core::is_plant(game.world.block(hit.block)))
@@ -367,6 +389,49 @@ fn process_action(game: &mut Game, action: &InventoryAction) -> Effects {
                 effects.sounds.push(BlockSound {
                     block,
                     kind: crate::block_audio::SoundKind::Place,
+                    position: block_center(*position),
+                });
+                game.revision += 1;
+                game.ui_dirty = true;
+            }
+        }
+        InventoryAction::Sleep { position }
+            if game.mode == Mode::Playing && game.world_mouse.allowed() =>
+        {
+            if !visible_hit(game).is_some_and(|hit| hit.block == *position)
+                || !game_core::is_bed(game.world.block(*position))
+            {
+                return effects;
+            }
+            game.spawn = block_center(*position) + Vec3::Y * 0.6;
+            game.status = if is_night(game.clock) {
+                // Сутки длятся 1200 с; новый день начинается на границе суток.
+                game.clock = ((game.clock / 1200.0).floor() + 1.0) * 1200.0 + 30.0;
+                "Вы проспали ночь. Точка возрождения установлена".into()
+            } else {
+                "Точка возрождения установлена. Спать можно только ночью".into()
+            };
+            game.ui_dirty = true;
+        }
+        InventoryAction::Strip { position }
+            if game.mode == Mode::Playing && game.world_mouse.allowed() =>
+        {
+            let block = game.world.block(*position);
+            let Some(stripped) = game_core::stripped_variant(block) else {
+                return effects;
+            };
+            if matches!(
+                crate::mining_client::chosen_tool(game),
+                game_core::mining::Tool::Equipped {
+                    kind: game_core::mining::ToolKind::Axe,
+                    ..
+                }
+            ) && visible_hit(game).is_some_and(|hit| hit.block == *position)
+                && game.world.set(*position, stripped)
+            {
+                effects.sounds.push(BlockSound {
+                    block,
+                    kind: crate::block_audio::SoundKind::Break,
                     position: block_center(*position),
                 });
                 game.revision += 1;
@@ -469,7 +534,7 @@ fn process_action(game: &mut Game, action: &InventoryAction) -> Effects {
 pub(crate) fn container_size(block: game_core::BlockId) -> Option<usize> {
     match block {
         CHEST | game_core::BARREL | game_core::VAULT => Some(27),
-        CRAFTING_TABLE => Some(9),
+        CRAFTING_TABLE | game_core::DISPENSER => Some(9),
         game_core::STONECUTTER => Some(1),
         _ => game_core::smelting::FurnaceKind::of_block(block)
             .map(|_| game_core::smelting::FURNACE_SLOTS),
@@ -1742,6 +1807,7 @@ mod tests {
             (game_core::VAULT, 27),
             (CRAFTING_TABLE, 9),
             (game_core::STONECUTTER, 1),
+            (game_core::DISPENSER, 9),
             (FURNACE, 3),
             (game_core::SMOKER_LIT, 3),
             (game_core::BLAST_FURNACE, 3),
@@ -1757,5 +1823,77 @@ mod tests {
             ..Default::default()
         };
         assert_eq!(open_block(&game), Some(game_core::VAULT));
+    }
+
+    #[test]
+    fn bed_sets_the_spawn_and_only_skips_the_night_when_it_is_night() {
+        let mut game = world();
+        game.world.set([8, 101, 7], game_core::RED_BED);
+        let sleep = InventoryAction::Sleep {
+            position: [8, 101, 7],
+        };
+        game.clock = 300.0;
+        process_action(&mut game, &sleep);
+        assert_eq!(game.clock, 300.0, "днём время не меняется");
+        assert!((game.spawn - (block_center([8, 101, 7]) + Vec3::Y * 0.6)).length() < 1e-4);
+        game.clock = 900.0;
+        process_action(&mut game, &sleep);
+        assert_eq!(game.clock, 1230.0, "ночь заменена утром");
+        assert!(!is_night(game.clock) && is_night(900.0) && !is_night(300.0));
+        // Не кровать — ничего не делает.
+        game.spawn = Vec3::ZERO;
+        process_action(
+            &mut game,
+            &InventoryAction::Sleep {
+                position: [8, 101, 5],
+            },
+        );
+        assert_eq!(game.spawn, Vec3::ZERO);
+    }
+
+    #[test]
+    fn only_an_axe_strips_bark_and_every_variant_exists_as_a_block() {
+        let mut game = world();
+        game.world.set([8, 101, 7], game_core::WOOD);
+        let strip = InventoryAction::Strip {
+            position: [8, 101, 7],
+        };
+        equip(&mut game, "survival:iron_pickaxe");
+        process_action(&mut game, &strip);
+        assert_eq!(game.world.block([8, 101, 7]), game_core::WOOD);
+        equip(&mut game, "survival:iron_axe");
+        process_action(&mut game, &strip);
+        assert_eq!(game.world.block([8, 101, 7]), game_core::STRIPPED_OAK_LOG);
+        for block in 0..game_core::BLOCKS.len() as game_core::BlockId {
+            if let Some(stripped) = game_core::stripped_variant(block) {
+                assert!(usize::from(stripped) < game_core::BLOCKS.len());
+                assert_ne!(stripped, block);
+                assert_eq!(game_core::stripped_variant(stripped), None);
+            }
+        }
+    }
+
+    #[test]
+    fn torch_on_a_wall_becomes_a_wall_torch_and_the_item_is_consumed() {
+        let mut game = world();
+        game.game_mode = GameMode::Survival;
+        equip(&mut game, "voxium:torch");
+        game.inventory.hotbar[0].as_mut().unwrap().count = 2;
+        sync_hotbar(&mut game);
+        let effects = process_action(
+            &mut game,
+            &InventoryAction::Place {
+                position: [8, 101, 6],
+            },
+        );
+        assert_eq!(game.world.block([8, 101, 6]), game_core::WALL_TORCH);
+        assert!(!effects.sounds.is_empty());
+        assert_eq!(game.inventory.hotbar[0].as_ref().unwrap().count, 1);
+        // Сломанный настенный факел возвращает обычный факел.
+        let torch = game.content.find("voxium:torch").unwrap();
+        assert_eq!(
+            game.content.drop_for_block(game_core::WALL_TORCH),
+            Some(torch)
+        );
     }
 }

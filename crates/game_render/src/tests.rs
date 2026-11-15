@@ -234,7 +234,7 @@ fn array_materials_share_image_and_use_linear_anisotropic_filtering() {
     let mut png = std::io::Cursor::new(Vec::new());
     fixture.write_to(&mut png, image::ImageFormat::Png).unwrap();
     let handles = create_materials(&mut images, &mut materials, png.get_ref()).unwrap();
-    assert_eq!(handles.len(), 216);
+    assert_eq!(handles.len(), MATERIAL_COUNT);
     let first = materials.get(&handles[0]).unwrap().extension.image.clone();
     for (layer, handle) in handles.iter().enumerate() {
         let m = materials.get(handle).unwrap();
@@ -243,7 +243,10 @@ fn array_materials_share_image_and_use_linear_anisotropic_filtering() {
     }
     let image = images.get(&first).unwrap();
     assert_eq!((image.width(), image.height()), (128, 128));
-    assert_eq!(image.texture_descriptor.size.depth_or_array_layers, 216);
+    assert_eq!(
+        image.texture_descriptor.size.depth_or_array_layers,
+        MATERIAL_COUNT as u32
+    );
     assert_eq!(image.texture_descriptor.mip_level_count, 8);
     let ImageSampler::Descriptor(s) = &image.sampler else {
         panic!("explicit sampler required");
@@ -480,4 +483,64 @@ fn level_steps_show_a_strip_on_the_taller_side_and_source_water_merges_with_flow
 fn slab_faces_wind_outward_too() {
     let meshes = single(game_core::OAK_SLAB);
     assert_outward_winding(&meshes[0].1);
+}
+
+#[test]
+fn rails_are_one_flat_quad_and_moving_pistons_are_invisible() {
+    let rail = single(game_core::POWERED_RAIL);
+    assert_eq!(rail.len(), 1);
+    assert!(crate::PLANT2_LAYERS.contains(&usize::from(rail[0].0)));
+    assert_quads(&rail[0].1, 1);
+    assert!(
+        positions(&rail[0].1)
+            .iter()
+            .all(|p| (p[1] - 4.03).abs() < 1e-5)
+    );
+    assert!(single(game_core::MOVING_PISTON).is_empty());
+}
+
+#[test]
+fn beds_are_half_blocks_and_torches_stand_in_the_cell_centre() {
+    // У кровати разные текстуры верха, боков и низа: по мешу на материал.
+    let bed = single(game_core::RED_BED);
+    assert_eq!(bed.len(), 3);
+    let quads: usize = bed.iter().map(|(_, mesh)| mesh.count_vertices() / 4).sum();
+    assert_eq!(quads, 6);
+    let mut top = f32::MIN;
+    for (_, mesh) in &bed {
+        assert_outward_winding(mesh);
+        top = positions(mesh).iter().map(|p| p[1]).fold(top, f32::max);
+    }
+    assert!((top - 4.5).abs() < 1e-5);
+    let torch = single(game_core::TORCH);
+    assert_quads(&torch[0].1, 2);
+    let xs: Vec<f32> = positions(&torch[0].1).iter().map(|p| p[0]).collect();
+    let centre = (xs.iter().copied().fold(f32::MIN, f32::max)
+        + xs.iter().copied().fold(f32::MAX, f32::min))
+        / 2.0;
+    assert!((centre - 4.5).abs() < 0.01, "{centre}");
+}
+
+#[test]
+fn new_leaf_and_plant_layers_are_alpha_masked_and_plants_double_sided() {
+    let textures = BlockTextures::default();
+    for block in [
+        game_core::AZALEA_LEAVES,
+        game_core::MANGROVE_ROOTS,
+        game_core::SPRUCE_LEAVES,
+    ] {
+        let layer = usize::from(textures.layer(block, 1, true));
+        assert!(crate::is_cutout_layer(layer), "{block}");
+        assert!(!crate::is_double_sided_layer(layer), "{block}");
+    }
+    for block in [
+        game_core::FIRE,
+        game_core::OAK_SAPLING,
+        game_core::COBWEB,
+        game_core::DETECTOR_RAIL,
+    ] {
+        let layer = usize::from(textures.layer(block, 1, true));
+        assert!(crate::is_cutout_layer(layer), "{block}");
+        assert!(crate::is_double_sided_layer(layer), "{block}");
+    }
 }

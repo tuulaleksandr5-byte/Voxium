@@ -1016,6 +1016,7 @@ WOODS = {
     "jungle": (["#4a3f1e", "#564a24", "#62552a", "#6e6030"], ["#a07550", "#aa7e58", "#b48760", "#be9068"], ["#1f6a12", "#277a18", "#2f8a1e", "#389a26", "#44ac30"]),
     "dark_oak": (["#2a1e10", "#332514", "#3c2c18", "#45331c"], ["#3e2912", "#463016", "#4e371a", "#563e1e"], ["#1f4f14", "#265c19", "#2d691e", "#357624", "#3e842c"]),
     "mangrove": (["#4e3a2a", "#584232", "#624a3a", "#6c5242"], ["#6e2c2a", "#783230", "#823836", "#8c3e3c"], ["#3a7a1e", "#448a24", "#4e9a2a", "#58aa32", "#64ba3c"]),
+    "spruce": (["#2c2218", "#362a1e", "#403224", "#4a3a2a"], ["#6e5230", "#785a36", "#82623c", "#8c6a42"], ["#2a5a34", "#306840", "#367648", "#3e8452", "#48925c"]),
     "cherry": (["#2e1c22", "#382228", "#42282e", "#4c2e34"], ["#deb0a8", "#e4b8b0", "#eac0b8", "#f0c8c0"], ["#e896b8", "#eea6c4", "#f4b6d0", "#f8c6dc", "#fcd8e8"]),
 }
 for _wood, (_bark, _planks, _leaf) in WOODS.items():
@@ -1244,6 +1245,693 @@ def bucket(name, fill_color=None):
 bucket("bucket")
 bucket("water_bucket", "#3a74d8")
 bucket("lava_bucket", "#ff8a1a")
+
+
+# ------------------------------------------------------------- part 1 batch
+
+
+def transparent():
+    return np.zeros((N, N, 4), dtype=float)
+
+
+for _color, _hex in COLORS.items():
+    pass
+
+rock("diorite", ["#8f8f8f", "#9a9a9a", "#a6a6a6", "#b2b2b2"], ["#e4e4e4", "#5e5e5e", "#f4f4f4", "#6e6e6e"])
+rock("andesite", ["#7b7b7b", "#858585", "#8f8f8f", "#9a9a9a"], ["#6a6a6a", "#a6a6a6", "#5a5a5a"])
+
+WOOD_PLANKS = {name: palette[1] for name, palette in WOODS.items()}
+WOOD_PLANKS["oak"] = OAK_WOOD
+WOOD_PLANKS["birch"] = BIRCH_WOOD
+
+
+def stripped(wood):
+    palette = WOOD_PLANKS[wood]
+
+    def side():
+        r = rng(f"stripped_{wood}_log")
+        columns = fbm(r, ((16, 1.0), (32, 0.5)))[0]
+        field = np.clip(columns[None, :] * 0.7 + fbm(r, ((2, 1.0), (8, 0.3))) * 0.3, 0, 0.999)
+        image = fill(canvas(), field, palette)
+        dark = shades(palette[0], 0.2)[0]
+        for x in range(N):
+            if columns[x] < 0.16:
+                for y in range(N):
+                    if r.random() < 0.7:
+                        put(image, x, y, dark)
+        return image
+
+    def top():
+        r = rng(f"stripped_{wood}_log_top")
+        image = fill(canvas(), fbm(r, ((16, 1.0),)), palette)
+        ring = shades(palette[0], 0.25)[0]
+        for y in range(N):
+            for x in range(N):
+                radius = max(abs(x - 15.5), abs(y - 15.5))
+                if radius > 14.2:
+                    image[y, x, :3] = rgb(shades(palette[0], 0.2)[0])
+                elif int(radius + 0.5 * math.sin(x * 0.9)) % 4 == 0:
+                    image[y, x, :3] = rgb(ring)
+        return image
+
+    TILES[f"stripped_{wood}_log"] = side
+    TILES[f"stripped_{wood}_log_top"] = top
+
+
+for _wood in ["oak", "spruce", "birch", "jungle", "acacia", "cherry", "dark_oak", "mangrove"]:
+    stripped(_wood)
+
+BAMBOO = ["#c8b34a", "#d2bd52", "#dcc75c", "#e6d166"]
+TILES["bamboo_planks"] = lambda: planks("bamboo_planks", BAMBOO, "#8a7a2a", "#a08c34")
+
+
+@tile("bamboo_mosaic")
+def bamboo_mosaic():
+    r = rng("bamboo_mosaic")
+    image = fill(canvas(), fbm(r, ((16, 1.0), (32, 0.5))), BAMBOO)
+    dark = "#8a7a2a"
+    for by in range(4):
+        for bx in range(4):
+            x0, y0 = bx * 8, by * 8
+            horizontal = (bx + by) % 2 == 0
+            for i in range(8):
+                put(image, x0 + i, y0, dark)
+                put(image, x0, y0 + i, dark)
+            for k in range(2, 8, 2):
+                for i in range(1, 8):
+                    if horizontal:
+                        put(image, x0 + i, y0 + k, shades(BAMBOO[0], 0.1)[0])
+                    else:
+                        put(image, x0 + k, y0 + i, shades(BAMBOO[0], 0.1)[0])
+    return image
+
+
+@tile("bamboo_block")
+def bamboo_block():
+    r = rng("bamboo_block")
+    image = fill(canvas(), fbm(r, ((16, 1.0), (32, 0.4)))[:, :] * 0 + np.linspace(0.2, 0.9, N)[None, :].repeat(N, 0), ["#3e7a1a", "#4a8a20", "#589a28", "#68aa32", "#7aba3e"])
+    for y in (0, 1, 15, 16, 30, 31):
+        for x in range(N):
+            put(image, x, y, "#2e5a12" if y in (0, 15, 30) else "#8ed04a")
+    return image
+
+
+@tile("bamboo_block_top")
+def bamboo_block_top():
+    image = canvas("#6aa82e")
+    for y in range(N):
+        for x in range(N):
+            d = max(abs(x - 15.5), abs(y - 15.5))
+            image[y, x, :3] = rgb("#3a7014" if d > 13 else "#7ac040" if d > 7 else "#d8c86a" if d > 3 else "#6a5a22")
+    return image
+
+
+@tile("stripped_bamboo_block")
+def stripped_bamboo_block():
+    image = TILES["bamboo_block"]()
+    image[..., :3] = image[..., :3] * 0.4 + np.array(rgb("#d8c350")) * 0.6
+    return image
+
+
+@tile("stripped_bamboo_block_top")
+def stripped_bamboo_block_top():
+    image = canvas("#d8c350")
+    for y in range(N):
+        for x in range(N):
+            d = max(abs(x - 15.5), abs(y - 15.5))
+            image[y, x, :3] = rgb("#a89830" if d > 13 else "#e8d460" if d > 7 else "#f0e080" if d > 3 else "#8a7a28")
+    return image
+
+
+def sapling(name, palette, shape="round", trunk="#6a4a2a"):
+    def build():
+        r = rng(name)
+        image = transparent()
+        for y in range(20, N):
+            for x in (15, 16):
+                put(image, x, y, trunk)
+        leaf = fill(canvas(), fbm(r, ((8, 1.0), (16, 1.0))), palette)
+        dark = shades(palette[0], 0.2)[0]
+        for y in range(N):
+            for x in range(N):
+                if shape == "round":
+                    inside = math.hypot((x - 15.5) / 9, (y - 12) / 8.5) < 1
+                elif shape == "cone":
+                    inside = 3 <= y <= 24 and abs(x - 15.5) < (y - 2) * 0.42
+                else:
+                    inside = math.hypot((x - 15.5) / 6, (y - 10) / 8) < 1
+                if inside:
+                    image[y, x, :3] = leaf[y, x, :3]
+                    image[y, x, 3] = 255
+        solid = image[..., 3] > 0
+        for y in range(N):
+            for x in range(N):
+                if solid[y, x] and (y + 1 >= N or not solid[y + 1, x] or x + 1 >= N or not solid[y, x + 1]) and y < 20:
+                    image[y, x, :3] = rgb(dark)
+        return image
+
+    TILES[name] = build
+
+
+sapling("oak_sapling", ["#2f6b1f", "#3a7c26", "#46902e", "#55a538"])
+sapling("spruce_sapling", ["#1f4a2c", "#265a36", "#2e6a40", "#387a4a"], "cone")
+sapling("birch_sapling", ["#5d8f2c", "#6fa334", "#82b53e", "#96c64c"])
+sapling("jungle_sapling", ["#1f6a12", "#277a18", "#2f8a1e", "#389a26"])
+sapling("acacia_sapling", ["#5c7a22", "#6a8a28", "#789a2e", "#86aa36"], "flat", "#8a7a6a")
+sapling("cherry_sapling", ["#e896b8", "#eea6c4", "#f4b6d0", "#f8c6dc"])
+sapling("dark_oak_sapling", ["#1f4f14", "#265c19", "#2d691e", "#357624"])
+
+
+@tile("mangrove_propagule")
+def mangrove_propagule():
+    r = rng("propagule")
+    image = transparent()
+    for y in range(8, 26):
+        for x in (15, 16):
+            put(image, x, y, "#4a7a2a" if y < 22 else "#6a8a3a")
+    for cx, cy, tilt in ((11, 8, -1), (20, 8, 1), (15, 4, 0), (9, 13, -1), (22, 13, 1)):
+        for k in range(5):
+            put(image, cx + tilt * k // 2, cy + k, "#5aa03a")
+            put(image, cx + tilt * k // 2 + 1, cy + k, "#3e7a26")
+    for y in range(26, 32):
+        put(image, 15, y, "#5a3e22")
+        put(image, 16, y, "#4a3018")
+    return image
+
+
+def suspicious(name, base):
+    def build():
+        image = TILES[base]()
+        r = rng(name)
+        for _ in range(3):
+            x, y = r.integers(3, N - 6, 2)
+            for i in range(int(r.integers(4, 9))):
+                put(image, x + i, y + int(r.integers(0, 2)), shades("#8a7a5a", 0.1)[0])
+        speckle(image, r, ["#e8dcc0", "#5a4a30"], 18)
+        return image
+
+    TILES[name] = build
+
+
+suspicious("suspicious_sand", "sand")
+suspicious("suspicious_gravel", "gravel")
+
+
+def ore_on(name, colors, palette, host, crack, speck):
+    def build():
+        r = rng(host)
+        image = stone_base(r, palette, crack_color=crack)
+        speckle(image, r, speck, 40)
+        o = rng(name)
+        light, mid, dark = colors
+        for cx, cy in ((7, 7), (22, 6), (14, 16), (5, 23), (24, 24), (16, 27)):
+            cx += int(o.integers(-2, 3))
+            cy += int(o.integers(-2, 3))
+            radius = float(o.uniform(2.0, 3.4))
+            for y in range(cy - 4, cy + 5):
+                for x in range(cx - 4, cx + 5):
+                    d = math.hypot(x - cx, (y - cy) * 1.2) + o.uniform(-0.6, 0.6)
+                    if d < radius:
+                        put(image, x, y, light if (x - cx) + (y - cy) < -1 else mid)
+                    elif d < radius + 1.0 and (x - cx) + (y - cy) > 0:
+                        put(image, x, y, dark)
+        return image
+
+    TILES[name] = build
+
+
+ore_on("deepslate_coal_ore", ("#4a4a4a", "#1e1e1e", "#0e0e10"), DEEP, "deepslate", "#25252c", ["#5c5c6c"])
+ore_on("deepslate_iron_ore", ("#e8c3a0", "#c9966c", "#3a3a40"), DEEP, "deepslate", "#25252c", ["#5c5c6c"])
+ore_on("deepslate_gold_ore", ("#fff08a", "#f2c12e", "#3a3a40"), DEEP, "deepslate", "#25252c", ["#5c5c6c"])
+ore_on("deepslate_lapis_ore", ("#7a9cff", "#2a4fc8", "#2a2a40"), DEEP, "deepslate", "#25252c", ["#5c5c6c"])
+ore_on("nether_gold_ore", ("#fff08a", "#f2c12e", "#3a1414"), ["#6a2828", "#742e2e", "#7e3434", "#883a3a"], "netherrack", "#4a1818", ["#a04a4a", "#4a1818"])
+
+
+def roots(name, palette, muddy):
+    def build():
+        r = rng(name)
+        image = transparent()
+        for _ in range(11):
+            x, y = int(r.integers(0, N)), int(r.integers(0, N))
+            for _ in range(int(r.integers(14, 28))):
+                for dx in range(2):
+                    for dy in range(2):
+                        color = palette[int(r.integers(0, len(palette)))]
+                        put(image, x + dx, y + dy, color)
+                x += int(r.integers(-1, 2))
+                y += int(r.integers(-1, 2))
+                if r.random() < 0.55:
+                    x += 1 if r.random() < 0.5 else 0
+        if muddy:
+            mud = fbm(rng(name + "mud"), ((8, 1.0), (16, 0.6)))
+            for y in range(N):
+                for x in range(N):
+                    if image[y, x, 3] > 0 and mud[y, x] > 0.45:
+                        image[y, x, :3] = rgb("#4a3a32")
+        speckle_alpha = image[..., 3] > 0
+        image[~speckle_alpha, :3] = rgb(palette[1])
+        return image
+
+    TILES[name] = build
+
+
+roots("mangrove_roots", ["#4a3622", "#5a4429", "#6a5232", "#7a5e3a"], False)
+roots("muddy_mangrove_roots", ["#4a3622", "#5a4429", "#6a5232", "#7a5e3a"], True)
+TILES["azalea_leaves"] = lambda: leaves("azalea_leaves", ["#4a6a1a", "#567a20", "#628a26", "#6e9a2e", "#7aaa38"], "#365010", 0.3)
+
+
+@tile("flowering_azalea_leaves")
+def flowering_azalea_leaves():
+    image = TILES["azalea_leaves"]()
+    r = rng("blossom")
+    for _ in range(26):
+        x, y = r.integers(1, N - 1, 2)
+        if image[y, x, 3] > 0:
+            for dx, dy in ((0, 0), (1, 0), (0, 1)):
+                put(image, x + dx, y + dy, "#f0a0d8" if (dx + dy) % 2 == 0 else "#d870b8")
+    return image
+
+
+@tile("wet_sponge")
+def wet_sponge():
+    image = TILES["sponge"]()
+    image[..., :3] = image[..., :3] * np.array([0.62, 0.68, 0.45]) + np.array([10, 14, 6])
+    return image
+
+
+def stone_box(face, name):
+    r = rng("dispenser")
+    image, _ = cells(r, 17, "#4a4a4a", ["#6c6c6c", "#7a7a7a", "#888888", "#969696"], 18)
+    if face == "front":
+        frame(image, "#3a3a3a", "#9a9a9a")
+        rect(image, 8, 8, 16, 16, "#3a3a3a")
+        rect(image, 10, 10, 12, 12, "#222222")
+        rect(image, 13, 13, 6, 6, "#0c0c0c")
+        rect(image, 14, 14, 4, 4, "#000000")
+        for i in range(2, 6):
+            put(image, 16, 5 - i // 2 + 8, "#555555")
+    return image
+
+
+TILES["dispenser_front"] = lambda: stone_box("front", "dispenser")
+TILES["dispenser_side"] = lambda: stone_box("side", "dispenser")
+
+
+@tile("note_block")
+def note_block():
+    image = planks("note_block", ["#8a5f30", "#966a38", "#a27540", "#ae8048"], "#5e3e1a", "#6e4a22")
+    frame(image, "#4a300e", "#7a5430")
+    for y in range(N):
+        for x in range(N):
+            d = math.hypot(x - 15.5, y - 15.5)
+            if d < 5.2:
+                image[y, x, :3] = rgb("#2e1c0a" if d < 3.2 else "#5e3e1a")
+    for dx, dy in ((-1, -1), (0, -1), (-1, 0)):
+        put(image, 15 + dx, 15 + dy, "#c8a068")
+    return image
+
+
+@tile("chiseled_sandstone")
+def chiseled_sandstone():
+    image = sandstone_base(rng("chiseled"))
+    for i in range(4, 28):
+        for edge in (4, 27):
+            put(image, i, edge, "#a89462")
+            put(image, edge, i, "#a89462")
+    for i in range(7, 25):
+        put(image, i, 16, "#bfa96e")
+        put(image, 16, i, "#bfa96e")
+    rect(image, 13, 13, 6, 6, "#a89462")
+    rect(image, 14, 14, 4, 4, "#d6c38e")
+    for x in range(N):
+        put(image, x, 0, "#efe2b8")
+        put(image, x, N - 1, "#b39d62")
+    return image
+
+
+@tile("cut_sandstone")
+def cut_sandstone():
+    image = sandstone_base(rng("cut_sandstone"))
+    for y in (0, 15, 16, N - 1):
+        for x in range(N):
+            put(image, x, y, "#bfa96e" if y in (15, N - 1) else "#efe2b8")
+    for x in (0, 15, 16, N - 1):
+        for y in range(N):
+            put(image, x, y, "#c9b67c")
+    return image
+
+
+def bed(color):
+    hexc = COLORS[color]
+
+    def top():
+        r = rng("bed-" + color)
+        image = fill(canvas(), fbm(r, ((8, 1.0), (16, 0.6))), shades(hexc, 0.1))
+        edge = shades(hexc, 0.3)[0]
+        light = shades(hexc, 0.3)[3]
+        for i in range(N):
+            put(image, 0, i, edge)
+            put(image, N - 1, i, edge)
+            put(image, i, N - 1, edge)
+        for y in range(14, N - 2, 5):
+            for x in range(2, N - 2):
+                put(image, x, y, edge)
+        rect(image, 3, 2, 26, 9, "#e8ecec")
+        for x in range(3, 29):
+            put(image, x, 2, "#ffffff")
+            put(image, x, 10, "#b8bcc0")
+        for y in range(2, 11):
+            put(image, 3, y, "#b8bcc0")
+            put(image, 28, y, "#b8bcc0")
+        return image
+
+    def side():
+        image = planks("oak_planks", OAK_WOOD, "#7a5c30", "#8f6f3d")
+        r = rng("bedside-" + color)
+        for y in range(0, 17):
+            for x in range(N):
+                image[y, x, :3] = rgb(shades(hexc, 0.1)[int(r.integers(1, 3))])
+        for x in range(N):
+            put(image, x, 16, shades(hexc, 0.3)[0])
+            put(image, x, 0, shades(hexc, 0.3)[3])
+        return image
+
+    TILES[f"bed_top_{color}"] = top
+    TILES[f"bed_side_{color}"] = side
+
+
+for _color in COLORS:
+    bed(_color)
+
+
+def railtile(name, rail_color, tie_color, plate=None):
+    def build():
+        image = transparent()
+        for y in range(1, N, 6):
+            rect(image, 2, y, 28, 3, tie_color)
+            rect(image, 2, y, 28, 1, shades(tie_color, 0.3)[3])
+        for x in (6, 23):
+            for y in range(N):
+                put(image, x, y, rail_color)
+                put(image, x + 1, y, shades(rail_color, 0.3)[3])
+                put(image, x + 2, y, shades(rail_color, 0.3)[0])
+        if plate:
+            rect(image, 10, 8, 12, 16, plate)
+            rect(image, 11, 9, 10, 14, shades(plate, 0.2)[3])
+        return image
+
+    TILES[name] = build
+
+
+railtile("powered_rail", "#d8b020", "#6e4c22")
+railtile("detector_rail", "#b8bcc4", "#6e4c22", "#8a8a8a")
+
+
+@tile("piston_side")
+def piston_side():
+    r = rng("piston")
+    image, _ = cells(r, 17, "#4a4a4a", ["#6c6c6c", "#7a7a7a", "#888888", "#969696"], 18)
+    planks_part = planks("oak_planks", OAK_WOOD, "#7a5c30", "#8f6f3d")
+    image[:9] = planks_part[:9]
+    for x in range(N):
+        put(image, x, 9, "#5e4020")
+    return image
+
+
+@tile("piston_top")
+def piston_top():
+    image = planks("oak_planks", OAK_WOOD, "#7a5c30", "#8f6f3d")
+    frame(image, "#5e4020", "#9a7038")
+    return image
+
+
+@tile("sticky_piston_top")
+def sticky_piston_top():
+    r = rng("slime")
+    image = fill(canvas(), fbm(r, ((4, 1.0), (8, 0.5))), ["#5ea83a", "#6ab845", "#78c850", "#88d860"])
+    frame(image, "#3a7a22", "#a8f080")
+    for x in range(6, 26, 4):
+        for y in range(6, 26, 4):
+            put(image, x, y, "#a8f080")
+    return image
+
+
+@tile("piston_bottom")
+def piston_bottom():
+    image, _ = cells(rng("pistonb"), 17, "#4a4a4a", ["#6c6c6c", "#7a7a7a", "#888888", "#969696"], 18)
+    return image
+
+
+LETTERS = {"T": ["111", "010", "010", "010", "010"], "N": ["101", "111", "111", "111", "101"]}
+
+
+@tile("tnt_side")
+def tnt_side():
+    r = rng("tnt")
+    image = fill(canvas(), fbm(r, ((8, 1.0), (16, 0.5))), ["#b8281e", "#c4301f", "#d03a24", "#dc4a2e"])
+    for y in range(9, 23):
+        for x in range(N):
+            image[y, x, :3] = rgb("#e8e0d0" if y not in (9, 22) else "#b8b0a0")
+    for index, ch in enumerate("TNT"):
+        for row, bits in enumerate(LETTERS[ch]):
+            for col, bit in enumerate(bits):
+                if bit == "1":
+                    rect(image, 5 + index * 8 + col * 2, 11 + row * 2, 2, 2, "#2a2a2a")
+    for y in (0, N - 1):
+        for x in range(N):
+            put(image, x, y, "#8a1c14")
+    return image
+
+
+@tile("tnt_top")
+def tnt_top():
+    r = rng("tnt-top")
+    image = fill(canvas(), fbm(r, ((4, 1.0), (8, 0.5))), ["#8a8a8a", "#969696", "#a2a2a2", "#aeaeae"])
+    frame(image, "#5a5a5a", "#c8c8c8")
+    rect(image, 14, 14, 4, 4, "#2a2a2a")
+    put(image, 15, 12, "#d8a020")
+    put(image, 16, 11, "#f0d040")
+    return image
+
+
+@tile("chiseled_bookshelf_front")
+def chiseled_bookshelf_front():
+    r = rng("cbs")
+    image = planks("oak_planks", OAK_WOOD, "#7a5c30", "#8f6f3d")
+    frame(image, "#5e4020", "#9a7038")
+    covers = ["#a83232", "#2f6b9c", "#3d8a3d", "#b98a2c", "#6b3d8a", "#8a5a2c"]
+    for row in range(2):
+        for col in range(3):
+            x0, y0 = 3 + col * 9, 3 + row * 14
+            rect(image, x0, y0, 8, 12, "#2e2012")
+            if r.random() < 0.8:
+                for i in range(int(r.integers(2, 4))):
+                    rect(image, x0 + 1 + i * 2, y0 + 3, 2, 8, covers[int(r.integers(0, len(covers)))])
+    return image
+
+
+@tile("chiseled_bookshelf_side")
+def chiseled_bookshelf_side():
+    image = planks("oak_planks", OAK_WOOD, "#7a5c30", "#8f6f3d")
+    frame(image, "#5e4020", "#9a7038")
+    return image
+
+
+def tuft(name, palette, count, low, high, wave=0.0, seed_name=None):
+    def build():
+        r = rng(seed_name or name)
+        image = transparent()
+        for blade in range(count):
+            x = 2 + blade * (N - 4) / max(count, 1) + r.uniform(-1, 1)
+            height = int(r.integers(low, high))
+            lean = r.uniform(-0.3, 0.3)
+            for step in range(height):
+                px = int(x + lean * step + wave * math.sin(step * 0.45 + blade))
+                put(image, px, N - 1 - step, palette[min(len(palette) - 1, step * len(palette) // height)])
+                if step < height * 0.55:
+                    put(image, px + 1, N - 1 - step, palette[0])
+        return image
+
+    TILES[name] = build
+
+
+tuft("grass", ["#356b24", "#4c8c30", "#6aad42", "#8fd05a"], 9, 6, 15)
+tuft("seagrass", ["#1f5a3a", "#2a7048", "#369058", "#4ab070"], 7, 12, 26, 1.8)
+tuft("tall_seagrass", ["#1f5a3a", "#2a7048", "#369058", "#4ab070"], 7, 22, 31, 2.4)
+
+
+@tile("fern")
+def fern():
+    r = rng("fern")
+    image = transparent()
+    for stem, (lean, length) in enumerate(((-0.55, 22), (0.0, 28), (0.55, 22), (-0.25, 18), (0.3, 19))):
+        for step in range(length):
+            x = 15.5 + lean * step * 0.7
+            y = N - 1 - step
+            put(image, int(x), y, "#2f6a26")
+            if step > 4 and step % 2 == 0:
+                for side in (-1, 1):
+                    for k in range(1, 4):
+                        put(image, int(x + side * k), y - k // 2, "#4c9a3a" if k < 3 else "#3a7a2c")
+    return image
+
+
+@tile("dead_bush")
+def dead_bush():
+    r = rng("dead_bush")
+    image = transparent()
+    def branch(x, y, angle, length):
+        for step in range(length):
+            put(image, int(x), int(y), "#7a5a32" if step % 3 else "#5e4422")
+            x += math.cos(angle) * 1.0
+            y -= math.sin(angle) * 1.0
+            if step in (length // 3, length * 2 // 3) and length > 5:
+                branch(x, y, angle + r.uniform(-0.8, 0.8), length // 2)
+    for angle in (1.2, 1.57, 1.95, 0.9, 2.2):
+        branch(15.5, N - 2, angle, int(r.integers(10, 17)))
+    return image
+
+
+@tile("cobweb")
+def cobweb():
+    image = transparent()
+    for angle in range(0, 360, 30):
+        dx, dy = math.cos(math.radians(angle)), math.sin(math.radians(angle))
+        for t in range(0, 17):
+            put(image, int(15.5 + dx * t), int(15.5 + dy * t), "#e8ecec")
+    for radius in (4, 8, 12, 15):
+        for angle in range(0, 360, 5):
+            put(image, int(15.5 + math.cos(math.radians(angle)) * radius), int(15.5 + math.sin(math.radians(angle)) * radius), "#d0d4d4")
+    return image
+
+
+def blossom(name, petals, center, shape="star"):
+    plant(name, petals, center)
+
+
+plant("blue_orchid", ("#8ae8ff", "#2ab4e8", "#14709a"), "#ffffff")
+plant("azure_bluet", ("#ffffff", "#d8e0f8", "#98a8d8"), "#f8e060")
+plant("wither_rose", ("#4a4a50", "#26262a", "#101012"), "#0a0a0a")
+plant("torchflower", ("#ffc070", "#f08020", "#c04a10"), "#ffe080")
+
+
+def tulip(name, color):
+    def build():
+        image = transparent()
+        for y in range(13, N):
+            put(image, 15, y, "#356b24")
+            put(image, 16, y, "#4c8c30")
+        for side, y0 in ((-1, 22), (1, 25)):
+            for step in range(6):
+                put(image, 15 + side * (step + 1), y0 - step // 2, "#4c8c30")
+        light, mid, dark = shades(color, 0.25)[3], color, shades(color, 0.25)[0]
+        for y in range(4, 15):
+            half = 4 - abs(y - 10) // 2 if y > 7 else 2 + (y - 4)
+            for x in range(int(15.5 - half), int(16.5 + half)):
+                put(image, x, y, light if x < 14 else mid if x < 17 else dark)
+        for x in (12, 15, 18):
+            put(image, x, 4, mid)
+            put(image, x, 3, mid)
+        return image
+
+    TILES[name] = build
+
+
+tulip("red_tulip", "#d83020")
+tulip("orange_tulip", "#f08a20")
+tulip("white_tulip", "#f0f0f0")
+tulip("pink_tulip", "#f090b0")
+
+
+@tile("allium")
+def allium():
+    r = rng("allium")
+    image = transparent()
+    for y in range(13, N):
+        put(image, 15, y, "#356b24")
+        put(image, 16, y, "#4c8c30")
+    for y in range(1, 16):
+        for x in range(8, 24):
+            d = math.hypot(x - 15.5, y - 7.5)
+            if d < 7.2 and r.random() < 0.85:
+                put(image, x, y, ["#b86ad8", "#a050c8", "#d890f0", "#8a3ab0"][int(r.integers(0, 4))])
+    return image
+
+
+@tile("lily_of_the_valley")
+def lily_of_the_valley():
+    image = transparent()
+    for y in range(5, N):
+        put(image, 15, y, "#356b24")
+        put(image, 16, y, "#4c8c30")
+    for side, y0 in ((-1, 20), (1, 24)):
+        for step in range(8):
+            put(image, 15 + side * (step + 1), y0 - step // 2, "#4c8c30")
+            put(image, 15 + side * (step + 1), y0 - step // 2 + 1, "#356b24")
+    for k, y in enumerate(range(3, 14, 3)):
+        x = 17 + (k % 2) * 2
+        for dx, dy in ((0, 0), (1, 0), (0, 1), (1, 1), (0, 2)):
+            put(image, x + dx, y + dy, "#f4f4f4" if dx + dy < 2 else "#c8c8d0")
+    return image
+
+
+def mushroom(name, cap, spot):
+    def build():
+        r = rng(name)
+        image = transparent()
+        for y in range(18, N):
+            for x in (14, 15, 16, 17):
+                put(image, x, y, "#d8d0b8" if x < 16 else "#b8b098")
+        for y in range(8, 20):
+            for x in range(6, 26):
+                d = math.hypot((x - 15.5) / 10, (y - 19) / 11)
+                if d < 1 and y < 19:
+                    put(image, x, y, shades(cap, 0.2)[3] if y < 12 else cap if y < 16 else shades(cap, 0.2)[0])
+        if spot:
+            for x, y in ((11, 13), (16, 11), (20, 15), (14, 16), (22, 17)):
+                rect(image, x, y, 2, 2, spot)
+        return image
+
+    TILES[name] = build
+
+
+mushroom("brown_mushroom", "#8a5c3a", None)
+mushroom("red_mushroom", "#d02828", "#f4f0e8")
+
+
+@tile("torch")
+def torch():
+    image = transparent()
+    for y in range(13, N):
+        for x in (14, 15, 16, 17):
+            put(image, x, y, "#9a6a34" if x < 16 else "#7a5224")
+    for y in range(13, 17):
+        for x in (14, 15, 16, 17):
+            put(image, x, y, "#3a2a1a" if x < 16 else "#2a1c10")
+    for y in range(4, 13):
+        half = 3 if 6 < y < 11 else 2
+        for x in range(int(15.5 - half), int(16.5 + half)):
+            put(image, x, y, "#fff3a0" if y > 7 and abs(x - 15.5) < 2 else "#ffb02e" if y > 5 else "#e2501a")
+    return image
+
+
+def fire(name, palette):
+    def build():
+        r = rng(name)
+        image = transparent()
+        for x in range(2, N - 2):
+            height = int(8 + 14 * abs(math.sin(x * 0.55 + 1.2)) + r.integers(0, 6))
+            for step in range(height):
+                y = N - 1 - step
+                t = step / max(height, 1)
+                put(image, x, y, palette[0] if t < 0.3 else palette[1] if t < 0.62 else palette[2])
+        return image
+
+    TILES[name] = build
+
+
+fire("fire", ["#fff3a0", "#ffb02e", "#e2501a"])
+fire("soul_fire", ["#d8ffff", "#4ac8f0", "#1a6ac8"])
 
 
 # ------------------------------------------------------- functional blocks

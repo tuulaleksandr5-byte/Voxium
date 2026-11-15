@@ -252,8 +252,18 @@ pub fn controls(
                 collision_block(&game.world, p)
             })
         };
+        // Паутина вязнет, как мёд: движение и прыжки почти невозможны.
+        let web = !game.flying
+            && game_core::interaction::body_touches(
+                game.feet.to_array(),
+                game.height,
+                |p| collision_block(&game.world, p),
+                |id| id == game_core::COBWEB,
+            );
         // В воде и лаве ходьба замедляется, течение сносит тело.
-        let speed = if fluid.lava {
+        let speed = if web {
+            speed * 0.25
+        } else if fluid.lava {
             1.5
         } else if fluid.water {
             if sprint { 4.4 } else { 3.0 }
@@ -278,7 +288,12 @@ pub fn controls(
             (game.feet.z.floor() as i32).div_euclid(16),
         ];
         if game.world.chunks.contains_key(&chunk) {
-            if !game.flying && keys.just_pressed(KeyCode::Space) && game.grounded && !fluid.any() {
+            if !game.flying
+                && keys.just_pressed(KeyCode::Space)
+                && game.grounded
+                && !fluid.any()
+                && !web
+            {
                 game.velocity.y = 8.0;
                 player_actions.write(crate::survival_client::PlayerActionMessage(
                     crate::survival_client::PlayerAction::Jump { sprinting: sprint },
@@ -308,6 +323,8 @@ pub fn controls(
                     -1.6
                 };
                 game.velocity.y += (target - game.velocity.y) * (5.0 * dt).min(1.0);
+            } else if web {
+                game.velocity.y = (game.velocity.y - 6.0 * dt).clamp(-1.0, 1.0);
             } else {
                 game.velocity.y = (game.velocity.y - 24.0 * dt).max(-45.0);
             }
@@ -409,6 +426,24 @@ pub fn controls(
                     && !(keys.pressed(KeyCode::ShiftLeft) || keys.pressed(KeyCode::ShiftRight))
                 {
                     Some(InventoryAction::OpenContainer {
+                        position: hit.block,
+                    })
+                } else if game_core::is_bed(game.world.block(hit.block))
+                    && !(keys.pressed(KeyCode::ShiftLeft) || keys.pressed(KeyCode::ShiftRight))
+                {
+                    Some(InventoryAction::Sleep {
+                        position: hit.block,
+                    })
+                } else if game_core::stripped_variant(game.world.block(hit.block)).is_some()
+                    && matches!(
+                        crate::mining_client::chosen_tool(&game),
+                        game_core::mining::Tool::Equipped {
+                            kind: game_core::mining::ToolKind::Axe,
+                            ..
+                        }
+                    )
+                {
+                    Some(InventoryAction::Strip {
                         position: hit.block,
                     })
                 } else if crate::inventory_client::bucket_kind(&game).is_some() {

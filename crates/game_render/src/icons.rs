@@ -67,7 +67,7 @@ pub fn bake_atlas_icons(
         .flatten()
         .any(|layer| layer as usize >= MATERIAL_COUNT)
     }) {
-        return Err("icon texture layer must be in 0..216".into());
+        return Err(format!("icon texture layer must be in 0..{MATERIAL_COUNT}"));
     }
     Ok((0..BLOCKS.len())
         .map(|block| {
@@ -374,13 +374,16 @@ mod tests {
         );
         assert!(bake_block_icons(b"not a PNG", &BlockTextures::default()).is_err());
         let (bytes, mut textures) = fixture(255);
-        for (side, front) in [(216, None), (7, Some(216))] {
+        for (side, front) in [
+            (MATERIAL_COUNT as u16, None),
+            (7, Some(MATERIAL_COUNT as u16)),
+        ] {
             textures.0[1].side = side;
             textures.0[1].front = front;
             assert!(
                 bake_block_icons(&bytes, &textures)
                     .unwrap_err()
-                    .contains("0..216")
+                    .contains(&format!("0..{MATERIAL_COUNT}"))
             );
         }
     }

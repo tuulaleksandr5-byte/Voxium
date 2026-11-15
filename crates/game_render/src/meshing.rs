@@ -7,7 +7,7 @@ use bevy::{
 use game_core::{
     AIR, BLOCKS, BlockId, SECTION_SIZE, WATER,
     fluids::{fluid_of, surface_height},
-    is_fluid, is_opaque, is_plant, is_slab, is_water,
+    is_flat, is_fluid, is_half, is_invisible, is_opaque, is_plant, is_water,
 };
 
 const SIZE: usize = SECTION_SIZE as usize;
@@ -72,7 +72,11 @@ pub fn mesh_section_with_textures(
                         let id = blocks[padded_index(local)];
                         // Источник воды сливается в крупные грани; остальные жидкости,
                         // растения и плиты строятся отдельно ниже.
-                        if id == AIR || is_plant(id) || is_slab(id) || (is_fluid(id) && id != WATER)
+                        if id == AIR
+                            || is_plant(id)
+                            || is_half(id)
+                            || is_invisible(id)
+                            || (is_fluid(id) && id != WATER)
                         {
                             continue;
                         }
@@ -143,17 +147,37 @@ pub fn mesh_section_with_textures(
             for x in 0..SECTION_SIZE {
                 let local = [x, y, z];
                 let id = blocks[padded_index(local)];
+                if is_invisible(id) {
+                    continue;
+                }
+                if is_flat(id) {
+                    let material = textures.layer(id, 1, true);
+                    builders[usize::from(material)].flat(local);
+                    continue;
+                }
                 if is_plant(id) {
                     let world = std::array::from_fn(|axis| origin[axis] + i64::from(local[axis]));
                     let material = textures.layer(id, 0, true);
-                    builders[usize::from(material)].cross(local, leaf_hash(world));
+                    // Факелы и огонь стоят строго по центру клетки.
+                    let hash = if matches!(
+                        id,
+                        game_core::TORCH
+                            | game_core::WALL_TORCH
+                            | game_core::FIRE
+                            | game_core::SOUL_FIRE
+                    ) {
+                        0x8080_8080_8080_8080
+                    } else {
+                        leaf_hash(world)
+                    };
+                    builders[usize::from(material)].cross(local, hash);
                     continue;
                 }
                 if is_fluid(id) && id != WATER {
                     fluid_cell(&mut builders, textures, &blocks, local, id);
                     continue;
                 }
-                if is_slab(id) {
+                if is_half(id) {
                     // Плита: половина куба. Верх виден всегда, бока прячутся за
                     // непрозрачным соседом или другой плитой.
                     for axis in 0..3 {
@@ -164,7 +188,7 @@ pub fn mesh_section_with_textures(
                             let hidden = match (axis, positive) {
                                 (1, true) => false,
                                 (1, false) => is_opaque(other),
-                                _ => is_opaque(other) || is_slab(other),
+                                _ => is_opaque(other) || is_half(other),
                             };
                             if !hidden {
                                 let material = textures.layer(id, axis, positive);
@@ -418,6 +442,24 @@ impl MeshBuilder {
         self.normals.extend([normal; 4]);
         self.uvs
             .extend([[0.0, v.1], [1.0, v.1], [1.0, v.0], [0.0, v.0]]);
+        self.colors.extend([[1.0, 1.0, 1.0, 1.0]; 4]);
+        self.indices
+            .extend([0, 1, 2, 0, 2, 3].map(|index| first + index));
+    }
+
+    /// Рисунок на полу клетки: одна горизонтальная плоскость чуть выше пола.
+    fn flat(&mut self, local: [i32; 3]) {
+        let (x, y, z) = (local[0] as f32, local[1] as f32 + 0.03, local[2] as f32);
+        let first = self.positions.len() as u32;
+        self.positions.extend([
+            [x, y, z],
+            [x, y, z + 1.0],
+            [x + 1.0, y, z + 1.0],
+            [x + 1.0, y, z],
+        ]);
+        self.normals.extend([[0.0, 1.0, 0.0]; 4]);
+        self.uvs
+            .extend([[0.0, 0.0], [0.0, 1.0], [1.0, 1.0], [1.0, 0.0]]);
         self.colors.extend([[1.0, 1.0, 1.0, 1.0]; 4]);
         self.indices
             .extend([0, 1, 2, 0, 2, 3].map(|index| first + index));

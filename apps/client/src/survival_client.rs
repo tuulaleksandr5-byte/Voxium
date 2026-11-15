@@ -288,7 +288,12 @@ pub fn simulate(
     let environment = Environment {
         underwater: body.head,
         in_lava: body.lava,
-        in_fire: false,
+        in_fire: game_core::interaction::body_touches(
+            game.feet.to_array(),
+            game.height,
+            |p| game.world.block(p),
+            game_core::is_fire,
+        ),
         out_of_world: game.feet.y < (WORLD_MIN_Y - 16) as f32
             || game.feet.y > (WORLD_MAX_Y + 16) as f32,
     };

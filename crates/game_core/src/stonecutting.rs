@@ -32,7 +32,11 @@ const CUTS: [(&str, &[&str]); 13] = [
     ("palette:limestone", &["palette:polished_limestone"]),
     (
         "foundation:sandstone",
-        &["foundation:sand", "palette:sandstone_bricks"],
+        &[
+            "foundation:sand",
+            "palette:sandstone_bricks",
+            "voxium:cut_sandstone",
+        ],
     ),
     ("foundation:gravel", &["foundation:sand"]),
     ("foundation:deepslate", &["foundation:cobblestone"]),

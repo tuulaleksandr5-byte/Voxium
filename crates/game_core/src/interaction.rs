@@ -118,6 +118,24 @@ pub fn can_stand(feet: [f32; 3], sample: impl Fn([i32; 3]) -> crate::BlockId) ->
         .is_some_and(|cells| !cells_have_solid(cells, &sample))
 }
 
+/// Есть ли среди клеток у ног, посередине тела и на уровне глаз блок, для которого
+/// `matches` истинно (паутина, огонь и подобное).
+#[must_use]
+pub fn body_touches(
+    feet: [f32; 3],
+    height: f32,
+    sample: impl Fn([i32; 3]) -> crate::BlockId,
+    matches: impl Fn(crate::BlockId) -> bool,
+) -> bool {
+    [0.05, height * 0.5, height - 0.15].into_iter().any(|dy| {
+        matches(sample([
+            feet[0].floor() as i32,
+            (feet[1] + dy).floor() as i32,
+            feet[2].floor() as i32,
+        ]))
+    })
+}
+
 /// Moves a 0.6-wide AABB using swept voxel planes on each axis.
 ///
 /// Horizontal axes resolve before Y so the player can slide along walls. Every
@@ -143,7 +161,7 @@ pub fn move_player(
     }
     let halves = |p: [i32; 3]| {
         let id = sample([p[0], p[1].div_euclid(2), p[2]]);
-        if crate::is_slab(id) && p[1].rem_euclid(2) == 1 {
+        if crate::is_half(id) && p[1].rem_euclid(2) == 1 {
             crate::AIR
         } else {
             id
@@ -610,5 +628,25 @@ mod tests {
         close(low.position[0], 1.3);
         let high = move_player([1.5, 5.5, 0.5], [-4.0, 0.0, 0.0], 0.2, 1.8, world);
         close(high.position[0], 0.7);
+    }
+
+    #[test]
+    fn body_probe_finds_blocks_at_feet_middle_and_eyes() {
+        let at = |cell: [i32; 3]| move |p: [i32; 3]| if p == cell { crate::COBWEB } else { 0 };
+        for (cell, expected) in [
+            ([0, 10, 0], true),
+            ([0, 11, 0], true),
+            ([0, 11, 1], false),
+            ([0, 12, 0], false),
+        ] {
+            assert_eq!(
+                body_touches([0.5, 10.0, 0.5], 1.8, at(cell), |id| id == crate::COBWEB),
+                expected,
+                "{cell:?}"
+            );
+        }
+        // Присед (высота 1.3) всё ещё достаёт до клетки на метр выше ног.
+        assert!(body_touches([0.5, 10.0, 0.5], 1.3, at([0, 11, 0]), |id| id
+            == crate::COBWEB));
     }
 }

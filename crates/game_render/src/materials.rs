@@ -13,7 +13,7 @@ use bevy::{
 
 pub const TEXTURE_SIZE: u32 = 128;
 const ATLAS_WIDTH: u32 = TEXTURE_SIZE * 6;
-const ATLAS_HEIGHT: u32 = TEXTURE_SIZE * 36;
+const ATLAS_HEIGHT: u32 = TEXTURE_SIZE * crate::ATLAS_ROWS;
 const LEGACY_EXPANDED_HEIGHT: u32 = TEXTURE_SIZE * 6;
 
 pub type VoxelMaterial = ExtendedMaterial<StandardMaterial, TileArray>;
@@ -66,7 +66,9 @@ pub fn atlas_array(rgba: &[u8]) -> Result<Image, String> {
         return atlas_array(&padded);
     }
     if rgba.len() != (ATLAS_WIDTH * ATLAS_HEIGHT * 4) as usize {
-        return Err("atlas RGBA byte count does not match 768×384, 768×768 or 768×4608".into());
+        return Err(format!(
+            "atlas RGBA byte count does not match 768×384 or 768×{ATLAS_HEIGHT}"
+        ));
     }
     let mut data = Vec::new();
     for layer in 0..MATERIAL_COUNT {

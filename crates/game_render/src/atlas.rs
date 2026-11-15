@@ -6,7 +6,7 @@ use std::io::Cursor;
 const TILE_SIZE: u32 = 128;
 const ATLAS_WIDTH: u32 = TILE_SIZE * 6;
 const SOURCE_HEIGHT: u32 = TILE_SIZE * 3;
-const ATLAS_HEIGHT: u32 = TILE_SIZE * 36;
+const ATLAS_HEIGHT: u32 = TILE_SIZE * crate::ATLAS_ROWS;
 const EXTRA_FIRST_LAYER: usize = 36;
 const SOURCE_TILE_COUNT: usize = 17;
 
@@ -59,7 +59,7 @@ macro_rules! pixel_tile {
     };
 }
 /// Пиксельные тайлы новых блоков: слои 36…54 в обоих стилях графики.
-const EXTRA_TILES: [(&str, &[u8]); 168] = [
+const EXTRA_TILES: [(&str, &[u8]); 286] = [
     pixel_tile!("bricks"),
     pixel_tile!("stone_bricks"),
     pixel_tile!("mossy_cobblestone"),
@@ -228,6 +228,124 @@ const EXTRA_TILES: [(&str, &[u8]); 168] = [
     pixel_tile!("amethyst_block"),
     pixel_tile!("quartz_block"),
     pixel_tile!("lava"),
+    pixel_tile!("mangrove_roots"),
+    pixel_tile!("muddy_mangrove_roots"),
+    pixel_tile!("spruce_leaves"),
+    pixel_tile!("azalea_leaves"),
+    pixel_tile!("flowering_azalea_leaves"),
+    pixel_tile!("oak_sapling"),
+    pixel_tile!("spruce_sapling"),
+    pixel_tile!("birch_sapling"),
+    pixel_tile!("jungle_sapling"),
+    pixel_tile!("acacia_sapling"),
+    pixel_tile!("cherry_sapling"),
+    pixel_tile!("dark_oak_sapling"),
+    pixel_tile!("mangrove_propagule"),
+    pixel_tile!("cobweb"),
+    pixel_tile!("grass"),
+    pixel_tile!("fern"),
+    pixel_tile!("dead_bush"),
+    pixel_tile!("seagrass"),
+    pixel_tile!("tall_seagrass"),
+    pixel_tile!("torchflower"),
+    pixel_tile!("blue_orchid"),
+    pixel_tile!("allium"),
+    pixel_tile!("azure_bluet"),
+    pixel_tile!("red_tulip"),
+    pixel_tile!("orange_tulip"),
+    pixel_tile!("white_tulip"),
+    pixel_tile!("pink_tulip"),
+    pixel_tile!("wither_rose"),
+    pixel_tile!("lily_of_the_valley"),
+    pixel_tile!("brown_mushroom"),
+    pixel_tile!("red_mushroom"),
+    pixel_tile!("torch"),
+    pixel_tile!("fire"),
+    pixel_tile!("soul_fire"),
+    pixel_tile!("powered_rail"),
+    pixel_tile!("detector_rail"),
+    pixel_tile!("diorite"),
+    pixel_tile!("polished_diorite"),
+    pixel_tile!("andesite"),
+    pixel_tile!("polished_andesite"),
+    pixel_tile!("spruce_planks"),
+    pixel_tile!("bamboo_planks"),
+    pixel_tile!("bamboo_mosaic"),
+    pixel_tile!("suspicious_sand"),
+    pixel_tile!("suspicious_gravel"),
+    pixel_tile!("deepslate_gold_ore"),
+    pixel_tile!("deepslate_iron_ore"),
+    pixel_tile!("deepslate_coal_ore"),
+    pixel_tile!("nether_gold_ore"),
+    pixel_tile!("spruce_log_top"),
+    pixel_tile!("spruce_log"),
+    pixel_tile!("bamboo_block_top"),
+    pixel_tile!("bamboo_block"),
+    pixel_tile!("stripped_spruce_log_top"),
+    pixel_tile!("stripped_spruce_log"),
+    pixel_tile!("stripped_birch_log_top"),
+    pixel_tile!("stripped_birch_log"),
+    pixel_tile!("stripped_jungle_log_top"),
+    pixel_tile!("stripped_jungle_log"),
+    pixel_tile!("stripped_acacia_log_top"),
+    pixel_tile!("stripped_acacia_log"),
+    pixel_tile!("stripped_cherry_log_top"),
+    pixel_tile!("stripped_cherry_log"),
+    pixel_tile!("stripped_dark_oak_log_top"),
+    pixel_tile!("stripped_dark_oak_log"),
+    pixel_tile!("stripped_oak_log_top"),
+    pixel_tile!("stripped_oak_log"),
+    pixel_tile!("stripped_mangrove_log_top"),
+    pixel_tile!("stripped_mangrove_log"),
+    pixel_tile!("stripped_bamboo_block_top"),
+    pixel_tile!("stripped_bamboo_block"),
+    pixel_tile!("wet_sponge"),
+    pixel_tile!("deepslate_lapis_ore"),
+    pixel_tile!("dispenser_side"),
+    pixel_tile!("dispenser_front"),
+    pixel_tile!("chiseled_sandstone"),
+    pixel_tile!("cut_sandstone"),
+    pixel_tile!("note_block"),
+    pixel_tile!("sticky_piston_top"),
+    pixel_tile!("piston_side"),
+    pixel_tile!("piston_bottom"),
+    pixel_tile!("piston_top"),
+    pixel_tile!("tnt_top"),
+    pixel_tile!("tnt_side"),
+    pixel_tile!("chiseled_bookshelf_side"),
+    pixel_tile!("chiseled_bookshelf_front"),
+    pixel_tile!("bed_top_white"),
+    pixel_tile!("bed_side_white"),
+    pixel_tile!("bed_top_orange"),
+    pixel_tile!("bed_side_orange"),
+    pixel_tile!("bed_top_magenta"),
+    pixel_tile!("bed_side_magenta"),
+    pixel_tile!("bed_top_light_blue"),
+    pixel_tile!("bed_side_light_blue"),
+    pixel_tile!("bed_top_yellow"),
+    pixel_tile!("bed_side_yellow"),
+    pixel_tile!("bed_top_lime"),
+    pixel_tile!("bed_side_lime"),
+    pixel_tile!("bed_top_pink"),
+    pixel_tile!("bed_side_pink"),
+    pixel_tile!("bed_top_gray"),
+    pixel_tile!("bed_side_gray"),
+    pixel_tile!("bed_top_light_gray"),
+    pixel_tile!("bed_side_light_gray"),
+    pixel_tile!("bed_top_cyan"),
+    pixel_tile!("bed_side_cyan"),
+    pixel_tile!("bed_top_purple"),
+    pixel_tile!("bed_side_purple"),
+    pixel_tile!("bed_top_blue"),
+    pixel_tile!("bed_side_blue"),
+    pixel_tile!("bed_top_brown"),
+    pixel_tile!("bed_side_brown"),
+    pixel_tile!("bed_top_green"),
+    pixel_tile!("bed_side_green"),
+    pixel_tile!("bed_top_red"),
+    pixel_tile!("bed_side_red"),
+    pixel_tile!("bed_top_black"),
+    pixel_tile!("bed_side_black"),
 ];
 /// Пиксельные версии семнадцати исходных тайлов (слои 0…16).
 const PIXEL_SOURCE_TILES: [(&str, &[u8]); 17] = [
@@ -488,7 +606,7 @@ mod tests {
         let expanded_gpu = atlas_array(atlas.rgba.as_raw()).unwrap();
         assert_eq!(legacy_gpu.data, expanded_gpu.data);
         let data = expanded_gpu.data.unwrap();
-        let stride = data.len() / 216;
+        let stride = data.len() / crate::MATERIAL_COUNT;
         for layer in 0..18 {
             let expected =
                 image::imageops::crop_imm(&source, (layer % 6) * 128, (layer / 6) * 128, 128, 128)
@@ -587,10 +705,10 @@ mod tests {
             BlockAtlas::from_tiles(&ORIGINAL_TILES).unwrap(),
             BlockAtlas::from_png(source.get_ref()).unwrap(),
         ] {
-            assert_eq!(atlas.rgba.dimensions(), (768, 4608));
+            assert_eq!(atlas.rgba.dimensions(), (768, ATLAS_HEIGHT));
             let gpu = atlas_array(atlas.rgba.as_raw()).unwrap();
             let data = gpu.data.unwrap();
-            let stride = data.len() / 216;
+            let stride = data.len() / crate::MATERIAL_COUNT;
             for (offset, png) in tiles.iter().enumerate() {
                 let layer = offset + 18;
                 let expected = image::load_from_memory(png).unwrap().into_rgba8();
@@ -658,7 +776,7 @@ mod tests {
         let atlas = BlockAtlas::from_tiles(&ORIGINAL_TILES).unwrap();
         let combined = atlas_array(atlas.rgba.as_raw()).unwrap();
         let combined_bytes = combined.data.as_ref().unwrap();
-        let layer_stride = combined_bytes.len() / 216;
+        let layer_stride = combined_bytes.len() / crate::MATERIAL_COUNT;
         for (layer, bytes) in ORIGINAL_TILES.iter().enumerate() {
             // Repeat just this source tile into every slot. Its mip chain must
             // match the chain built among the seventeen different real images,

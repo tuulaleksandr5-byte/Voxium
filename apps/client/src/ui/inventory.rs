@@ -538,6 +538,50 @@ pub(crate) const CATALOG_TABS: [&str; 7] = [
 ];
 
 /// Номер вкладки каталога для предмета.
+/// Вкладка «Механизмы»: факелы, рельсы, кровати, поршни и прочая техника.
+fn is_mechanism(block: game_core::BlockId) -> bool {
+    matches!(
+        block,
+        game_core::DISPENSER
+            | game_core::PISTON
+            | game_core::STICKY_PISTON
+            | game_core::NOTE_BLOCK
+            | game_core::TNT
+            | game_core::POWERED_RAIL
+            | game_core::DETECTOR_RAIL
+            | game_core::TORCH
+            | game_core::FIRE
+            | game_core::SOUL_FIRE
+            | game_core::CHISELED_BOOKSHELF
+    ) || game_core::is_bed(block)
+}
+
+/// Вкладка «Природа»: растения, листва, древесина, породы и подобное.
+fn is_nature(block: game_core::BlockId) -> bool {
+    use game_core::*;
+    (PLANT2_FIRST..=PLANT2_LAST).contains(&block)
+        || matches!(
+            block,
+            SPRUCE_LEAVES
+                | AZALEA_LEAVES
+                | FLOWERING_AZALEA_LEAVES
+                | MANGROVE_ROOTS
+                | MUDDY_MANGROVE_ROOTS
+                | SPRUCE_LOG
+                | BAMBOO_BLOCK
+                | DIORITE
+                | ANDESITE
+                | SUSPICIOUS_SAND
+                | SUSPICIOUS_GRAVEL
+                | DEEPSLATE_COAL_ORE
+                | DEEPSLATE_IRON_ORE
+                | DEEPSLATE_GOLD_ORE
+                | DEEPSLATE_LAPIS_ORE
+                | NETHER_GOLD_ORE
+                | WET_SPONGE
+        )
+}
+
 fn catalog_tab(game: &Game, id: ItemId) -> usize {
     use game_core::content::ItemKind;
     let Some(definition) = game.content.get(id) else {
@@ -548,6 +592,8 @@ fn catalog_tab(game: &Game, id: ItemId) -> usize {
         ItemKind::Armor { .. } => 5,
         ItemKind::Food | ItemKind::Material => 6,
         ItemKind::Block { .. } => match game.content.block_for_item(id).unwrap_or(0) {
+            block if is_mechanism(block) => 3,
+            block if is_nature(block) => 2,
             game_core::CHEST
             | game_core::CRAFTING_TABLE
             | game_core::FURNACE
@@ -792,6 +838,7 @@ pub(super) fn menu(
         Some(game_core::SMOKER | game_core::SMOKER_LIT) => "Коптильня",
         Some(game_core::BLAST_FURNACE | game_core::BLAST_FURNACE_LIT) => "Плавильня",
         Some(game_core::BARREL) => "Бочка",
+        Some(game_core::DISPENSER) => "Раздатчик",
         Some(game_core::VAULT) => "Общий сундук",
         Some(game_core::STONECUTTER) => "Камнерез",
         _ => "Инвентарь",
@@ -836,20 +883,24 @@ pub(super) fn menu(
         stonecutter(commands, storage, game, icons, blocks);
     } else if matches!(
         open,
-        Some(game_core::CHEST | game_core::BARREL | game_core::VAULT)
+        Some(game_core::CHEST | game_core::BARREL | game_core::VAULT | game_core::DISPENSER)
     ) {
         label(
             commands,
             storage,
             match open {
                 Some(game_core::BARREL) => "БОЧКА · 27 ЯЧЕЕК",
+                Some(game_core::DISPENSER) => "РАЗДАТЧИК · 9 ЯЧЕЕК",
                 Some(game_core::VAULT) => "ОБЩИЙ СУНДУК · одно хранилище на все такие блоки",
                 _ => "СУНДУК · 27 ЯЧЕЕК",
             },
             12.,
             AMBER,
         );
-        for line in 0..3 {
+        let lines = open
+            .and_then(crate::inventory_client::container_size)
+            .map_or(3, |size| size / 9);
+        for line in 0..lines {
             let cells = row(commands, storage, 6.);
             for index in 0..9 {
                 slot(

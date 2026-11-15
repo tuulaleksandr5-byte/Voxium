@@ -407,6 +407,128 @@ impl Chunk {
             }
         }
     }
+    /// Дополнения генератора 6: глубинные руды, диорит и андезит, ели, новые цветы,
+    /// грибы и сухие кусты. Как и раньше, всё зависит только от seed и координат.
+    pub(crate) fn decorate_v6(&mut self, seed: u64) {
+        let min_x = i64::from(self.position[0]) * 16;
+        let min_z = i64::from(self.position[1]) * 16;
+        if self.sections.is_empty() {
+            return;
+        }
+        for gx in (min_x - 2).div_euclid(5)..=(min_x + 17).div_euclid(5) {
+            for gz in (min_z - 2).div_euclid(5)..=(min_z + 17).div_euclid(5) {
+                let Some(tree) = tree_at_cell(seed, gx, gz) else {
+                    continue;
+                };
+                if !coordinate_hash(seed ^ 0x5A5A, gx, gz).is_multiple_of(6) {
+                    continue;
+                }
+                let top = tree.ground + tree.height;
+                for dy in -1_i32..=1 {
+                    for dx in -2_i32..=2 {
+                        for dz in -2_i32..=2 {
+                            let (Some(x), Some(z)) =
+                                (tree.x.checked_add(dx), tree.z.checked_add(dz))
+                            else {
+                                continue;
+                            };
+                            let p = [x, top + dy, z];
+                            if self.block(p) == LEAVES {
+                                self.write(p, SPRUCE_LEAVES);
+                            }
+                        }
+                    }
+                }
+                for y in tree.ground + 1..=top {
+                    let p = [tree.x, y, tree.z];
+                    if self.block(p) == WOOD {
+                        self.write(p, SPRUCE_LOG);
+                    }
+                }
+            }
+        }
+        let rocks = [
+            (DIORITE, 0x71_u64, 44.0, 18.0),
+            (ANDESITE, 0x72, 22.0, 18.0),
+        ];
+        for x in min_x as i32..=(min_x + 15) as i32 {
+            for z in min_z as i32..=(min_z + 15) as i32 {
+                let (fx, fz) = (f64::from(x), f64::from(z));
+                let column = terrain_column(seed, x, z);
+                let height = column.height;
+                for (rock, salt, center, spread) in rocks {
+                    let strength = noise(seed ^ (0x6D00 + salt), fx / 23.0, fz / 23.0);
+                    if strength < 0.46 {
+                        continue;
+                    }
+                    let middle =
+                        center + noise(seed ^ (0x6D80 + salt), fx / 35.0, fz / 35.0) * spread;
+                    let thickness = (strength - 0.46) * 20.0;
+                    let low = (middle - thickness).floor() as i32;
+                    let high = (middle + thickness).ceil() as i32;
+                    for y in low.max(WORLD_MIN_Y + 3)..=high.min(height - 5) {
+                        if self.block([x, y, z]) == STONE {
+                            self.write([x, y, z], rock);
+                        }
+                    }
+                }
+                for y in WORLD_MIN_Y + 1..-12.min(height) {
+                    let deep = match self.block([x, y, z]) {
+                        COAL_ORE => DEEPSLATE_COAL_ORE,
+                        IRON_ORE => DEEPSLATE_IRON_ORE,
+                        GOLD_ORE => DEEPSLATE_GOLD_ORE,
+                        LAPIS_ORE => DEEPSLATE_LAPIS_ORE,
+                        _ => continue,
+                    };
+                    self.write([x, y, z], deep);
+                }
+                if height >= WORLD_MAX_Y || self.block([x, height + 1, z]) != AIR {
+                    continue;
+                }
+                let ground = self.block([x, height, z]);
+                let roll = coordinate_hash(seed ^ 0xF1F1, i64::from(x), i64::from(z)) % 1000;
+                let kind = noise(seed ^ 0xF1F2, fx / 45.0, fz / 45.0);
+                let plant = if ground == GRASS && roll < 14 {
+                    Some(if kind < -0.45 {
+                        ALLIUM
+                    } else if kind < -0.2 {
+                        AZURE_BLUET
+                    } else if kind < 0.0 {
+                        RED_TULIP
+                    } else if kind < 0.15 {
+                        ORANGE_TULIP
+                    } else if kind < 0.3 {
+                        WHITE_TULIP
+                    } else if kind < 0.45 {
+                        PINK_TULIP
+                    } else if kind < 0.6 {
+                        BLUE_ORCHID
+                    } else {
+                        LILY_OF_THE_VALLEY
+                    })
+                } else if ground == GRASS && roll < 70 {
+                    Some(if roll.is_multiple_of(5) {
+                        FERN
+                    } else {
+                        SHORT_GRASS
+                    })
+                } else if ground == GRASS && roll >= 990 {
+                    Some(if roll.is_multiple_of(2) {
+                        BROWN_MUSHROOM
+                    } else {
+                        RED_MUSHROOM
+                    })
+                } else if ground == SAND && column.biome == Biome::Desert && roll < 12 {
+                    Some(DEAD_BUSH)
+                } else {
+                    None
+                };
+                if let Some(plant) = plant {
+                    self.write([x, height + 1, z], plant);
+                }
+            }
+        }
+    }
     fn plant(&mut self, tree: Tree) {
         let top = tree.ground + tree.height;
         for dy in -1_i32..=1 {

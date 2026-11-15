@@ -13,6 +13,21 @@ use crate::{
     unlit,
 };
 
+/// Виды блоков в порядке сводной таблицы.
+const KINDS: [&str; 11] = [
+    "куб",
+    "прозрачный куб",
+    "листва",
+    "плита",
+    "растение",
+    "жидкость",
+    "функциональный",
+    "низкий блок",
+    "плоский",
+    "технический",
+    "пустота",
+];
+
 fn tier_name(tier: u8) -> &'static str {
     match tier {
         0 => "любая",
@@ -38,15 +53,26 @@ fn kind_of(id: crate::BlockId, def: &BlockDef) -> &'static str {
         "пустота"
     } else if is_fluid(id) {
         "жидкость"
+    } else if crate::is_invisible(id) {
+        "технический"
+    } else if crate::is_flat(id) {
+        "плоский"
     } else if is_plant(id) {
         "растение"
     } else if is_slab(id) {
         "плита"
+    } else if crate::is_half(id) {
+        "низкий блок"
     } else if crate::is_leaves(id) {
         "листва"
     } else if matches!(
         id,
-        crate::CHEST | crate::BARREL | crate::VAULT | crate::STONECUTTER | crate::CRAFTING_TABLE
+        crate::CHEST
+            | crate::BARREL
+            | crate::VAULT
+            | crate::STONECUTTER
+            | crate::CRAFTING_TABLE
+            | crate::DISPENSER
     ) || crate::smelting::FurnaceKind::of_block(id).is_some()
     {
         "функциональный"
@@ -58,6 +84,7 @@ fn kind_of(id: crate::BlockId, def: &BlockDef) -> &'static str {
 }
 
 fn function_note(id: crate::BlockId) -> &'static str {
+    #[allow(clippy::match_overlapping_arm)]
     match id {
         crate::CHEST | crate::BARREL => "хранилище на 27 ячеек",
         crate::VAULT => "общее хранилище: все такие блоки открывают одно",
@@ -66,6 +93,14 @@ fn function_note(id: crate::BlockId) -> &'static str {
         crate::FURNACE | crate::FURNACE_LIT => "печь: плавка и жарка",
         crate::SMOKER | crate::SMOKER_LIT => "коптильня: еда вдвое быстрее",
         crate::BLAST_FURNACE | crate::BLAST_FURNACE_LIT => "плавильня: руда вдвое быстрее",
+        crate::DISPENSER => "хранилище на 9 ячеек",
+        crate::WHITE_BED..=crate::BLACK_BED => "ПКМ: точка возрождения, ночь пропускается",
+        crate::COBWEB => "замедляет движение",
+        crate::FIRE | crate::SOUL_FIRE => "жжёт",
+        crate::TORCH | crate::WALL_TORCH => "светится",
+        crate::MOVING_PISTON | crate::PISTON_HEAD => "технический блок",
+        crate::TNT => "декоративный",
+        crate::NOTE_BLOCK | crate::PISTON | crate::STICKY_PISTON => "декоративный, без редстоуна",
         crate::LAMP => "светится",
         crate::LAVA => "жжёт, течёт на 3 клетки",
         crate::WATER => "течёт на 7 клеток, плавание",
@@ -93,6 +128,12 @@ fn display_name(id: crate::BlockId, registry: &ContentRegistry) -> String {
             FluidKind::Lava => "Лава",
         };
         return format!("{name} (течение {level})");
+    }
+    match id {
+        crate::WALL_TORCH => return "Настенный факел".into(),
+        crate::PISTON_HEAD => return "Головка поршня".into(),
+        crate::MOVING_PISTON => return "Движущийся поршень".into(),
+        _ => {}
     }
     let base = unlit(id);
     if base != id
@@ -172,16 +213,7 @@ pub fn markdown() -> String {
         rows.len() - 1
     ));
     out.push_str("| Тип | Сколько |\n|---|---|\n");
-    for kind in [
-        "куб",
-        "прозрачный куб",
-        "листва",
-        "плита",
-        "растение",
-        "жидкость",
-        "функциональный",
-        "пустота",
-    ] {
+    for kind in KINDS {
         out.push_str(&format!("| {kind} | {} |\n", count(kind)));
     }
     out.push_str(
@@ -251,19 +283,10 @@ mod tests {
             assert!(names.insert(row.name_id), "{}", row.name_id);
             assert!(!row.name.trim().is_empty());
         }
-        let kinds: usize = [
-            "куб",
-            "прозрачный куб",
-            "листва",
-            "плита",
-            "растение",
-            "жидкость",
-            "функциональный",
-            "пустота",
-        ]
-        .iter()
-        .map(|kind| rows.iter().filter(|row| row.kind == *kind).count())
-        .sum();
+        let kinds: usize = KINDS
+            .iter()
+            .map(|kind| rows.iter().filter(|row| row.kind == *kind).count())
+            .sum();
         assert_eq!(kinds, rows.len(), "у каждого блока есть вид");
     }
 

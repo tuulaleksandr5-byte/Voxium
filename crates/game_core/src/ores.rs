@@ -60,14 +60,15 @@ pub struct WorldGenerator {
     ore_config: Option<OreConfig>,
     /// Уровень дополнений поверх руд: 3 — берёзы, глина, обсидиан;
     /// 4 — ещё сосны, породы камня, цветы и трава;
-    /// 5 — ещё пять пород деревьев, три руды, красный песок, тыквы и арбузы.
+    /// 5 — ещё пять пород деревьев, три руды, красный песок, тыквы и арбузы;
+    /// 6 — ещё глубинные руды, диорит, андезит, ели, новые цветы и грибы.
     level: u32,
 }
 impl WorldGenerator {
     pub fn from_snapshot(version: u32, snapshot: Option<OreConfig>) -> Result<Self, String> {
         match (version, snapshot) {
             (1, None) => Ok(Self::default()),
-            (2..=5, Some(config)) => {
+            (2..=6, Some(config)) => {
                 config.validate()?;
                 Ok(Self {
                     ore_config: Some(config),
@@ -139,6 +140,9 @@ impl WorldGenerator {
         }
         if self.level >= 5 {
             chunk.decorate_v5(seed);
+        }
+        if self.level >= 6 {
+            chunk.decorate_v6(seed);
         }
         chunk
     }

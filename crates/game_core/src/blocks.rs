@@ -216,6 +216,115 @@ pub const LAVA: BlockId = 192;
 pub const FLOW_LAVA_1: BlockId = 193;
 pub const FLOW_LAVA_2: BlockId = 194;
 pub const FLOW_LAVA_3: BlockId = 195;
+// Часть 1 списка блоков Minecraft: камень, дерево, растения, кровати и прочее.
+pub const DIORITE: BlockId = 196;
+pub const POLISHED_DIORITE: BlockId = 197;
+pub const ANDESITE: BlockId = 198;
+pub const POLISHED_ANDESITE: BlockId = 199;
+pub const SPRUCE_PLANKS: BlockId = 200;
+pub const BAMBOO_PLANKS: BlockId = 201;
+pub const BAMBOO_MOSAIC: BlockId = 202;
+pub const SUSPICIOUS_SAND: BlockId = 203;
+pub const SUSPICIOUS_GRAVEL: BlockId = 204;
+pub const DEEPSLATE_GOLD_ORE: BlockId = 205;
+pub const DEEPSLATE_IRON_ORE: BlockId = 206;
+pub const DEEPSLATE_COAL_ORE: BlockId = 207;
+pub const NETHER_GOLD_ORE: BlockId = 208;
+pub const SPRUCE_LOG: BlockId = 209;
+pub const BAMBOO_BLOCK: BlockId = 210;
+pub const STRIPPED_SPRUCE_LOG: BlockId = 211;
+pub const STRIPPED_BIRCH_LOG: BlockId = 212;
+pub const STRIPPED_JUNGLE_LOG: BlockId = 213;
+pub const STRIPPED_ACACIA_LOG: BlockId = 214;
+pub const STRIPPED_CHERRY_LOG: BlockId = 215;
+pub const STRIPPED_DARK_OAK_LOG: BlockId = 216;
+pub const STRIPPED_OAK_LOG: BlockId = 217;
+pub const STRIPPED_MANGROVE_LOG: BlockId = 218;
+pub const STRIPPED_BAMBOO_BLOCK: BlockId = 219;
+pub const OAK_WOOD: BlockId = 220;
+pub const SPRUCE_WOOD: BlockId = 221;
+pub const BIRCH_WOOD: BlockId = 222;
+pub const JUNGLE_WOOD: BlockId = 223;
+pub const ACACIA_WOOD: BlockId = 224;
+pub const CHERRY_WOOD: BlockId = 225;
+pub const DARK_OAK_WOOD: BlockId = 226;
+pub const MANGROVE_WOOD: BlockId = 227;
+pub const STRIPPED_OAK_WOOD: BlockId = 228;
+pub const STRIPPED_SPRUCE_WOOD: BlockId = 229;
+pub const STRIPPED_BIRCH_WOOD: BlockId = 230;
+pub const STRIPPED_JUNGLE_WOOD: BlockId = 231;
+pub const STRIPPED_ACACIA_WOOD: BlockId = 232;
+pub const STRIPPED_CHERRY_WOOD: BlockId = 233;
+pub const STRIPPED_DARK_OAK_WOOD: BlockId = 234;
+pub const STRIPPED_MANGROVE_WOOD: BlockId = 235;
+pub const WET_SPONGE: BlockId = 236;
+pub const DEEPSLATE_LAPIS_ORE: BlockId = 237;
+pub const DISPENSER: BlockId = 238;
+pub const CHISELED_SANDSTONE: BlockId = 239;
+pub const CUT_SANDSTONE: BlockId = 240;
+pub const NOTE_BLOCK: BlockId = 241;
+pub const STICKY_PISTON: BlockId = 242;
+pub const PISTON: BlockId = 243;
+pub const TNT: BlockId = 244;
+pub const CHISELED_BOOKSHELF: BlockId = 245;
+pub const MANGROVE_ROOTS: BlockId = 246;
+pub const MUDDY_MANGROVE_ROOTS: BlockId = 247;
+pub const SPRUCE_LEAVES: BlockId = 248;
+pub const AZALEA_LEAVES: BlockId = 249;
+pub const FLOWERING_AZALEA_LEAVES: BlockId = 250;
+pub const OAK_SAPLING: BlockId = 251;
+pub const SPRUCE_SAPLING: BlockId = 252;
+pub const BIRCH_SAPLING: BlockId = 253;
+pub const JUNGLE_SAPLING: BlockId = 254;
+pub const ACACIA_SAPLING: BlockId = 255;
+pub const CHERRY_SAPLING: BlockId = 256;
+pub const DARK_OAK_SAPLING: BlockId = 257;
+pub const MANGROVE_PROPAGULE: BlockId = 258;
+pub const COBWEB: BlockId = 259;
+pub const SHORT_GRASS: BlockId = 260;
+pub const FERN: BlockId = 261;
+pub const DEAD_BUSH: BlockId = 262;
+pub const SEAGRASS: BlockId = 263;
+pub const TALL_SEAGRASS: BlockId = 264;
+pub const TORCHFLOWER: BlockId = 265;
+pub const BLUE_ORCHID: BlockId = 266;
+pub const ALLIUM: BlockId = 267;
+pub const AZURE_BLUET: BlockId = 268;
+pub const RED_TULIP: BlockId = 269;
+pub const ORANGE_TULIP: BlockId = 270;
+pub const WHITE_TULIP: BlockId = 271;
+pub const PINK_TULIP: BlockId = 272;
+pub const WITHER_ROSE: BlockId = 273;
+pub const LILY_OF_THE_VALLEY: BlockId = 274;
+pub const BROWN_MUSHROOM: BlockId = 275;
+pub const RED_MUSHROOM: BlockId = 276;
+pub const TORCH: BlockId = 277;
+pub const WALL_TORCH: BlockId = 278;
+pub const FIRE: BlockId = 279;
+pub const SOUL_FIRE: BlockId = 280;
+pub const POWERED_RAIL: BlockId = 281;
+pub const DETECTOR_RAIL: BlockId = 282;
+pub const WHITE_BED: BlockId = 283;
+pub const ORANGE_BED: BlockId = 284;
+pub const MAGENTA_BED: BlockId = 285;
+pub const LIGHT_BLUE_BED: BlockId = 286;
+pub const YELLOW_BED: BlockId = 287;
+pub const LIME_BED: BlockId = 288;
+pub const PINK_BED: BlockId = 289;
+pub const GRAY_BED: BlockId = 290;
+pub const LIGHT_GRAY_BED: BlockId = 291;
+pub const CYAN_BED: BlockId = 292;
+pub const PURPLE_BED: BlockId = 293;
+pub const BLUE_BED: BlockId = 294;
+pub const BROWN_BED: BlockId = 295;
+pub const GREEN_BED: BlockId = 296;
+pub const RED_BED: BlockId = 297;
+pub const BLACK_BED: BlockId = 298;
+pub const PISTON_HEAD: BlockId = 299;
+pub const MOVING_PISTON: BlockId = 300;
+/// Растения этой партии идут подряд: OAK_SAPLING…SOUL_FIRE.
+pub const PLANT2_FIRST: BlockId = 251;
+pub const PLANT2_LAST: BlockId = 280;
 
 const fn block(
     id: BlockId,
@@ -236,7 +345,7 @@ const fn block(
     }
 }
 
-pub const BLOCKS: [BlockDef; 196] = [
+pub const BLOCKS: [BlockDef; 301] = [
     block(AIR, "Air", "air", 0.0, false, false),
     block(GRASS, "Grass", "grass", 0.6, true, true),
     block(DIRT, "Dirt", "dirt", 0.5, true, true),
@@ -1074,12 +1183,647 @@ pub const BLOCKS: [BlockDef; 196] = [
         light_emission: 15,
         ..block(FLOW_LAVA_3, "Flowing Lava 3", "lava", 100.0, false, false)
     },
+    block(DIORITE, "Diorite", "diorite", 1.5, true, true),
+    block(
+        POLISHED_DIORITE,
+        "Polished Diorite",
+        "polished_diorite",
+        1.5,
+        true,
+        true,
+    ),
+    block(ANDESITE, "Andesite", "andesite", 1.5, true, true),
+    block(
+        POLISHED_ANDESITE,
+        "Polished Andesite",
+        "polished_andesite",
+        1.5,
+        true,
+        true,
+    ),
+    block(
+        SPRUCE_PLANKS,
+        "Spruce Planks",
+        "spruce_planks",
+        2.0,
+        true,
+        true,
+    ),
+    block(
+        BAMBOO_PLANKS,
+        "Bamboo Planks",
+        "bamboo_planks",
+        2.0,
+        true,
+        true,
+    ),
+    block(
+        BAMBOO_MOSAIC,
+        "Bamboo Mosaic",
+        "bamboo_mosaic",
+        2.0,
+        true,
+        true,
+    ),
+    block(
+        SUSPICIOUS_SAND,
+        "Suspicious Sand",
+        "suspicious_sand",
+        0.25,
+        true,
+        true,
+    ),
+    block(
+        SUSPICIOUS_GRAVEL,
+        "Suspicious Gravel",
+        "suspicious_gravel",
+        0.25,
+        true,
+        true,
+    ),
+    block(
+        DEEPSLATE_GOLD_ORE,
+        "Deepslate Gold Ore",
+        "deepslate_gold_ore",
+        4.5,
+        true,
+        true,
+    ),
+    block(
+        DEEPSLATE_IRON_ORE,
+        "Deepslate Iron Ore",
+        "deepslate_iron_ore",
+        4.5,
+        true,
+        true,
+    ),
+    block(
+        DEEPSLATE_COAL_ORE,
+        "Deepslate Coal Ore",
+        "deepslate_coal_ore",
+        4.5,
+        true,
+        true,
+    ),
+    block(
+        NETHER_GOLD_ORE,
+        "Nether Gold Ore",
+        "nether_gold_ore",
+        4.5,
+        true,
+        true,
+    ),
+    block(SPRUCE_LOG, "Spruce Log", "spruce_log", 2.0, true, true),
+    block(
+        BAMBOO_BLOCK,
+        "Bamboo Block",
+        "bamboo_block",
+        2.0,
+        true,
+        true,
+    ),
+    block(
+        STRIPPED_SPRUCE_LOG,
+        "Stripped Spruce Log",
+        "stripped_spruce_log",
+        2.0,
+        true,
+        true,
+    ),
+    block(
+        STRIPPED_BIRCH_LOG,
+        "Stripped Birch Log",
+        "stripped_birch_log",
+        2.0,
+        true,
+        true,
+    ),
+    block(
+        STRIPPED_JUNGLE_LOG,
+        "Stripped Jungle Log",
+        "stripped_jungle_log",
+        2.0,
+        true,
+        true,
+    ),
+    block(
+        STRIPPED_ACACIA_LOG,
+        "Stripped Acacia Log",
+        "stripped_acacia_log",
+        2.0,
+        true,
+        true,
+    ),
+    block(
+        STRIPPED_CHERRY_LOG,
+        "Stripped Cherry Log",
+        "stripped_cherry_log",
+        2.0,
+        true,
+        true,
+    ),
+    block(
+        STRIPPED_DARK_OAK_LOG,
+        "Stripped Dark Oak Log",
+        "stripped_dark_oak_log",
+        2.0,
+        true,
+        true,
+    ),
+    block(
+        STRIPPED_OAK_LOG,
+        "Stripped Oak Log",
+        "stripped_oak_log",
+        2.0,
+        true,
+        true,
+    ),
+    block(
+        STRIPPED_MANGROVE_LOG,
+        "Stripped Mangrove Log",
+        "stripped_mangrove_log",
+        2.0,
+        true,
+        true,
+    ),
+    block(
+        STRIPPED_BAMBOO_BLOCK,
+        "Stripped Bamboo Block",
+        "stripped_bamboo_block",
+        2.0,
+        true,
+        true,
+    ),
+    block(OAK_WOOD, "Oak Wood", "oak_wood", 2.0, true, true),
+    block(SPRUCE_WOOD, "Spruce Wood", "spruce_wood", 2.0, true, true),
+    block(BIRCH_WOOD, "Birch Wood", "birch_wood", 2.0, true, true),
+    block(JUNGLE_WOOD, "Jungle Wood", "jungle_wood", 2.0, true, true),
+    block(ACACIA_WOOD, "Acacia Wood", "acacia_wood", 2.0, true, true),
+    block(CHERRY_WOOD, "Cherry Wood", "cherry_wood", 2.0, true, true),
+    block(
+        DARK_OAK_WOOD,
+        "Dark Oak Wood",
+        "dark_oak_wood",
+        2.0,
+        true,
+        true,
+    ),
+    block(
+        MANGROVE_WOOD,
+        "Mangrove Wood",
+        "mangrove_wood",
+        2.0,
+        true,
+        true,
+    ),
+    block(
+        STRIPPED_OAK_WOOD,
+        "Stripped Oak Wood",
+        "stripped_oak_wood",
+        2.0,
+        true,
+        true,
+    ),
+    block(
+        STRIPPED_SPRUCE_WOOD,
+        "Stripped Spruce Wood",
+        "stripped_spruce_wood",
+        2.0,
+        true,
+        true,
+    ),
+    block(
+        STRIPPED_BIRCH_WOOD,
+        "Stripped Birch Wood",
+        "stripped_birch_wood",
+        2.0,
+        true,
+        true,
+    ),
+    block(
+        STRIPPED_JUNGLE_WOOD,
+        "Stripped Jungle Wood",
+        "stripped_jungle_wood",
+        2.0,
+        true,
+        true,
+    ),
+    block(
+        STRIPPED_ACACIA_WOOD,
+        "Stripped Acacia Wood",
+        "stripped_acacia_wood",
+        2.0,
+        true,
+        true,
+    ),
+    block(
+        STRIPPED_CHERRY_WOOD,
+        "Stripped Cherry Wood",
+        "stripped_cherry_wood",
+        2.0,
+        true,
+        true,
+    ),
+    block(
+        STRIPPED_DARK_OAK_WOOD,
+        "Stripped Dark Oak Wood",
+        "stripped_dark_oak_wood",
+        2.0,
+        true,
+        true,
+    ),
+    block(
+        STRIPPED_MANGROVE_WOOD,
+        "Stripped Mangrove Wood",
+        "stripped_mangrove_wood",
+        2.0,
+        true,
+        true,
+    ),
+    block(WET_SPONGE, "Wet Sponge", "wet_sponge", 0.6, true, true),
+    block(
+        DEEPSLATE_LAPIS_ORE,
+        "Deepslate Lapis Ore",
+        "deepslate_lapis_ore",
+        4.5,
+        true,
+        true,
+    ),
+    block(DISPENSER, "Dispenser", "dispenser", 3.5, true, true),
+    block(
+        CHISELED_SANDSTONE,
+        "Chiseled Sandstone",
+        "chiseled_sandstone",
+        0.8,
+        true,
+        true,
+    ),
+    block(
+        CUT_SANDSTONE,
+        "Cut Sandstone",
+        "cut_sandstone",
+        0.8,
+        true,
+        true,
+    ),
+    block(NOTE_BLOCK, "Note Block", "note_block", 0.8, true, true),
+    block(
+        STICKY_PISTON,
+        "Sticky Piston",
+        "sticky_piston",
+        1.5,
+        true,
+        true,
+    ),
+    block(PISTON, "Piston", "piston", 1.5, true, true),
+    block(TNT, "Tnt", "tnt", 0.05, true, true),
+    block(
+        CHISELED_BOOKSHELF,
+        "Chiseled Bookshelf",
+        "chiseled_bookshelf",
+        1.5,
+        true,
+        true,
+    ),
+    block(
+        MANGROVE_ROOTS,
+        "Mangrove Roots",
+        "mangrove_roots",
+        0.7,
+        true,
+        false,
+    ),
+    block(
+        MUDDY_MANGROVE_ROOTS,
+        "Muddy Mangrove Roots",
+        "muddy_mangrove_roots",
+        0.7,
+        true,
+        false,
+    ),
+    block(
+        SPRUCE_LEAVES,
+        "Spruce Leaves",
+        "spruce_leaves",
+        0.2,
+        true,
+        false,
+    ),
+    block(
+        AZALEA_LEAVES,
+        "Azalea Leaves",
+        "azalea_leaves",
+        0.2,
+        true,
+        false,
+    ),
+    block(
+        FLOWERING_AZALEA_LEAVES,
+        "Flowering Azalea Leaves",
+        "flowering_azalea_leaves",
+        0.2,
+        true,
+        false,
+    ),
+    block(
+        OAK_SAPLING,
+        "Oak Sapling",
+        "oak_sapling",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        SPRUCE_SAPLING,
+        "Spruce Sapling",
+        "spruce_sapling",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        BIRCH_SAPLING,
+        "Birch Sapling",
+        "birch_sapling",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        JUNGLE_SAPLING,
+        "Jungle Sapling",
+        "jungle_sapling",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        ACACIA_SAPLING,
+        "Acacia Sapling",
+        "acacia_sapling",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        CHERRY_SAPLING,
+        "Cherry Sapling",
+        "cherry_sapling",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        DARK_OAK_SAPLING,
+        "Dark Oak Sapling",
+        "dark_oak_sapling",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        MANGROVE_PROPAGULE,
+        "Mangrove Propagule",
+        "mangrove_propagule",
+        0.05,
+        false,
+        false,
+    ),
+    block(COBWEB, "Cobweb", "cobweb", 0.05, false, false),
+    block(SHORT_GRASS, "Grass", "grass", 0.05, false, false),
+    block(FERN, "Fern", "fern", 0.05, false, false),
+    block(DEAD_BUSH, "Dead Bush", "dead_bush", 0.05, false, false),
+    block(SEAGRASS, "Seagrass", "seagrass", 0.05, false, false),
+    block(
+        TALL_SEAGRASS,
+        "Tall Seagrass",
+        "tall_seagrass",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        TORCHFLOWER,
+        "Torchflower",
+        "torchflower",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        BLUE_ORCHID,
+        "Blue Orchid",
+        "blue_orchid",
+        0.05,
+        false,
+        false,
+    ),
+    block(ALLIUM, "Allium", "allium", 0.05, false, false),
+    block(
+        AZURE_BLUET,
+        "Azure Bluet",
+        "azure_bluet",
+        0.05,
+        false,
+        false,
+    ),
+    block(RED_TULIP, "Red Tulip", "red_tulip", 0.05, false, false),
+    block(
+        ORANGE_TULIP,
+        "Orange Tulip",
+        "orange_tulip",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        WHITE_TULIP,
+        "White Tulip",
+        "white_tulip",
+        0.05,
+        false,
+        false,
+    ),
+    block(PINK_TULIP, "Pink Tulip", "pink_tulip", 0.05, false, false),
+    block(
+        WITHER_ROSE,
+        "Wither Rose",
+        "wither_rose",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        LILY_OF_THE_VALLEY,
+        "Lily Of The Valley",
+        "lily_of_the_valley",
+        0.05,
+        false,
+        false,
+    ),
+    BlockDef {
+        light_emission: 1,
+        ..block(
+            BROWN_MUSHROOM,
+            "Brown Mushroom",
+            "brown_mushroom",
+            0.05,
+            false,
+            false,
+        )
+    },
+    block(
+        RED_MUSHROOM,
+        "Red Mushroom",
+        "red_mushroom",
+        0.05,
+        false,
+        false,
+    ),
+    BlockDef {
+        light_emission: 14,
+        ..block(TORCH, "Torch", "torch", 0.05, false, false)
+    },
+    BlockDef {
+        light_emission: 14,
+        ..block(WALL_TORCH, "Wall Torch", "wall_torch", 0.05, false, false)
+    },
+    BlockDef {
+        light_emission: 15,
+        ..block(FIRE, "Fire", "fire", 0.05, false, false)
+    },
+    BlockDef {
+        light_emission: 10,
+        ..block(SOUL_FIRE, "Soul Fire", "soul_fire", 0.05, false, false)
+    },
+    block(
+        POWERED_RAIL,
+        "Powered Rail",
+        "powered_rail",
+        0.7,
+        false,
+        false,
+    ),
+    block(
+        DETECTOR_RAIL,
+        "Detector Rail",
+        "detector_rail",
+        0.7,
+        false,
+        false,
+    ),
+    block(WHITE_BED, "White Bed", "white_bed", 0.2, true, false),
+    block(ORANGE_BED, "Orange Bed", "orange_bed", 0.2, true, false),
+    block(MAGENTA_BED, "Magenta Bed", "magenta_bed", 0.2, true, false),
+    block(
+        LIGHT_BLUE_BED,
+        "Light Blue Bed",
+        "light_blue_bed",
+        0.2,
+        true,
+        false,
+    ),
+    block(YELLOW_BED, "Yellow Bed", "yellow_bed", 0.2, true, false),
+    block(LIME_BED, "Lime Bed", "lime_bed", 0.2, true, false),
+    block(PINK_BED, "Pink Bed", "pink_bed", 0.2, true, false),
+    block(GRAY_BED, "Gray Bed", "gray_bed", 0.2, true, false),
+    block(
+        LIGHT_GRAY_BED,
+        "Light Gray Bed",
+        "light_gray_bed",
+        0.2,
+        true,
+        false,
+    ),
+    block(CYAN_BED, "Cyan Bed", "cyan_bed", 0.2, true, false),
+    block(PURPLE_BED, "Purple Bed", "purple_bed", 0.2, true, false),
+    block(BLUE_BED, "Blue Bed", "blue_bed", 0.2, true, false),
+    block(BROWN_BED, "Brown Bed", "brown_bed", 0.2, true, false),
+    block(GREEN_BED, "Green Bed", "green_bed", 0.2, true, false),
+    block(RED_BED, "Red Bed", "red_bed", 0.2, true, false),
+    block(BLACK_BED, "Black Bed", "black_bed", 0.2, true, false),
+    block(PISTON_HEAD, "Piston Head", "piston_head", 1.5, true, false),
+    block(
+        MOVING_PISTON,
+        "Moving Piston",
+        "moving_piston",
+        1.5,
+        false,
+        false,
+    ),
 ];
 
 /// Растения рисуются двумя скрещёнными плоскостями и не мешают ходьбе.
 #[must_use]
 pub fn is_plant(id: BlockId) -> bool {
-    (POPPY..=TALL_GRASS).contains(&id)
+    is_sprite(id)
+}
+
+/// Растение, факел или огонь: две скрещённые плоскости, без столкновений.
+#[must_use]
+pub fn is_cross(id: BlockId) -> bool {
+    (POPPY..=TALL_GRASS).contains(&id) || (PLANT2_FIRST..=PLANT2_LAST).contains(&id)
+}
+
+/// Плоский рисунок на полу (рельсы).
+#[must_use]
+pub fn is_flat(id: BlockId) -> bool {
+    (POWERED_RAIL..=DETECTOR_RAIL).contains(&id)
+}
+
+/// Блок, который рисуется спрайтом и не мешает ходьбе.
+#[must_use]
+pub fn is_sprite(id: BlockId) -> bool {
+    is_cross(id) || is_flat(id)
+}
+
+/// Кровать: низкий блок цвета одеяла.
+#[must_use]
+pub fn is_bed(id: BlockId) -> bool {
+    (WHITE_BED..=BLACK_BED).contains(&id)
+}
+
+/// Огонь: жжёт тело игрока.
+#[must_use]
+pub fn is_fire(id: BlockId) -> bool {
+    id == FIRE || id == SOUL_FIRE
+}
+
+/// Невидимый технический блок.
+#[must_use]
+pub fn is_invisible(id: BlockId) -> bool {
+    id == MOVING_PISTON
+}
+
+/// Нижняя половина клетки: плиты, кровати, головка поршня.
+#[must_use]
+pub fn is_half(id: BlockId) -> bool {
+    is_slab(id) || (WHITE_BED..=PISTON_HEAD).contains(&id)
+}
+
+/// Что получится, если ударить бревно или древесину топором ПКМ.
+#[must_use]
+pub fn stripped_variant(id: BlockId) -> Option<BlockId> {
+    Some(match id {
+        WOOD => STRIPPED_OAK_LOG,
+        SPRUCE_LOG => STRIPPED_SPRUCE_LOG,
+        BIRCH_LOG => STRIPPED_BIRCH_LOG,
+        JUNGLE_LOG => STRIPPED_JUNGLE_LOG,
+        ACACIA_LOG => STRIPPED_ACACIA_LOG,
+        CHERRY_LOG => STRIPPED_CHERRY_LOG,
+        DARK_OAK_LOG => STRIPPED_DARK_OAK_LOG,
+        MANGROVE_LOG => STRIPPED_MANGROVE_LOG,
+        BAMBOO_BLOCK => STRIPPED_BAMBOO_BLOCK,
+        OAK_WOOD => STRIPPED_OAK_WOOD,
+        SPRUCE_WOOD => STRIPPED_SPRUCE_WOOD,
+        BIRCH_WOOD => STRIPPED_BIRCH_WOOD,
+        JUNGLE_WOOD => STRIPPED_JUNGLE_WOOD,
+        ACACIA_WOOD => STRIPPED_ACACIA_WOOD,
+        CHERRY_WOOD => STRIPPED_CHERRY_WOOD,
+        DARK_OAK_WOOD => STRIPPED_DARK_OAK_WOOD,
+        MANGROVE_WOOD => STRIPPED_MANGROVE_WOOD,
+        _ => return None,
+    })
 }
 
 /// Любая вода: источник или течение.
@@ -1113,6 +1857,9 @@ pub fn unlit(id: BlockId) -> BlockId {
         FURNACE_LIT => FURNACE,
         SMOKER_LIT => SMOKER,
         BLAST_FURNACE_LIT => BLAST_FURNACE,
+        // Технические варианты выпадают и сохраняются как основной блок.
+        WALL_TORCH => TORCH,
+        PISTON_HEAD => PISTON,
         other => other,
     }
 }
@@ -1130,6 +1877,9 @@ pub fn is_leaves(id: BlockId) -> bool {
             | DARK_OAK_LEAVES
             | MANGROVE_LEAVES
             | CHERRY_LEAVES
+            | SPRUCE_LEAVES
+            | AZALEA_LEAVES
+            | FLOWERING_AZALEA_LEAVES
     )
 }
 
@@ -1163,7 +1913,7 @@ mod tests {
             "Crafting Table",
             "Furnace",
         ];
-        assert_eq!(BLOCKS.len(), 196);
+        assert_eq!(BLOCKS.len(), 301);
         for (offset, name) in expected.iter().enumerate() {
             let id = 17 + offset;
             assert_eq!(BLOCKS[id].id as usize, id);
@@ -1174,7 +1924,7 @@ mod tests {
 
     #[test]
     fn chest_extends_registry_without_changing_foundation_ids() {
-        assert_eq!(BLOCKS.len(), 196);
+        assert_eq!(BLOCKS.len(), 301);
         let chest = BLOCKS.get(16).expect("сундук зарегистрирован");
         assert_eq!(chest.name, "Chest");
         assert!(is_solid(16));
