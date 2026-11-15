@@ -118,6 +118,10 @@ pub enum Shape {
     Carpet,
     Banner,
     WallBanner,
+    Rod,
+    ChorusPlant,
+    ChorusFlower,
+    DirtPath,
 }
 
 /// Форма блока, если он не обычный куб, не растение и не плоский рисунок.
@@ -153,7 +157,14 @@ pub fn shape_of(id: BlockId) -> Option<Shape> {
         _ if in_range(id, WHITE_CARPET, 16) => Shape::Carpet,
         _ if in_range(id, WHITE_BANNER, 64) => Shape::Banner,
         _ if in_range(id, WHITE_WALL_BANNER, 64) => Shape::WallBanner,
-        _ if in_range(id, OAK_FENCE_GATE, 8) => Shape::Gate,
+        _ if in_range(id, OAK_FENCE_GATE, 8) || in_range(id, SPRUCE_FENCE_GATE, 64) => Shape::Gate,
+        _ if in_range(id, SPRUCE_FENCE, 8) => Shape::Fence,
+        _ if in_range(id, SPRUCE_DOOR, 128) => Shape::Door,
+        _ if in_range(id, PURPUR_STAIRS, 4) => Shape::Stairs,
+        END_ROD => Shape::Rod,
+        CHORUS_PLANT => Shape::ChorusPlant,
+        CHORUS_FLOWER => Shape::ChorusFlower,
+        DIRT_PATH => Shape::DirtPath,
         COBBLESTONE_WALL | MOSSY_COBBLESTONE_WALL => Shape::Wall,
         NETHER_BRICK_FENCE => Shape::Fence,
         FLOWER_POT => Shape::Pot,
@@ -426,6 +437,10 @@ pub fn model_boxes(id: BlockId) -> Vec<ModelBox> {
         ],
         Shape::Daylight => vec![bx([0, 0, 0], [16, 6, 16])],
         Shape::Carpet => vec![bx([0, 0, 0], [16, 1, 16])],
+        Shape::Rod => vec![bx([6, 0, 6], [10, 16, 10])],
+        Shape::ChorusPlant => vec![bx([4, 0, 4], [12, 16, 12])],
+        Shape::ChorusFlower => vec![bx([2, 0, 2], [14, 14, 14])],
+        Shape::DirtPath => vec![bx([0, 0, 0], [16, 15, 16])],
         Shape::Banner => rotated(
             &[ax([7, 0, 7], [9, 16, 9]), bx([2, 2, 9], [14, 15, 10])],
             h4(state),

@@ -843,6 +843,7 @@ pub(super) fn menu(
         Some(game_core::DROPPER) => "Выбрасыватель",
         Some(game_core::VAULT) => "Общий сундук",
         Some(game_core::STONECUTTER) => "Камнерез",
+        Some(block) if game_core::is_shulker(block) => "Шалкеровый ящик",
         _ => "Инвентарь",
     };
     label(commands, panel, title, 26., TEXT);
@@ -883,21 +884,24 @@ pub(super) fn menu(
         furnace(commands, storage, game, icons, blocks, kind);
     } else if open == Some(game_core::STONECUTTER) {
         stonecutter(commands, storage, game, icons, blocks);
-    } else if matches!(
-        open,
-        Some(
-            game_core::CHEST
-                | game_core::BARREL
-                | game_core::VAULT
-                | game_core::DISPENSER
-                | game_core::DROPPER
+    } else if open.is_some_and(game_core::is_shulker)
+        || matches!(
+            open,
+            Some(
+                game_core::CHEST
+                    | game_core::BARREL
+                    | game_core::VAULT
+                    | game_core::DISPENSER
+                    | game_core::DROPPER
+            )
         )
-    ) {
+    {
         label(
             commands,
             storage,
             match open {
                 Some(game_core::BARREL) => "БОЧКА · 27 ЯЧЕЕК",
+                Some(block) if game_core::is_shulker(block) => "ШАЛКЕРОВЫЙ ЯЩИК · 27 ЯЧЕЕК",
                 Some(game_core::DISPENSER) => "РАЗДАТЧИК · 9 ЯЧЕЕК",
                 Some(game_core::DROPPER) => "ВЫБРАСЫВАТЕЛЬ · 9 ЯЧЕЕК",
                 Some(game_core::VAULT) => "ОБЩИЙ СУНДУК · одно хранилище на все такие блоки",

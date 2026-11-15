@@ -615,6 +615,15 @@ fn every_model_block_meshes_with_outward_faces_inside_its_cell() {
         WHITE_WALL_BANNER + 2,
         PRISMARINE_STAIRS,
         PRISMARINE_SLAB,
+        SPRUCE_FENCE_GATE + 5,
+        BAMBOO_FENCE,
+        SPRUCE_DOOR + 9,
+        BAMBOO_DOOR + 6,
+        PURPUR_STAIRS + 2,
+        END_ROD,
+        CHORUS_PLANT,
+        CHORUS_FLOWER,
+        DIRT_PATH,
     ];
     for block in samples {
         let meshes = single(block);

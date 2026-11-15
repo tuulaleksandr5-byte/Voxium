@@ -744,6 +744,7 @@ pub(crate) fn oriented_block(
     if [
         game_core::DISPENSER,
         game_core::DROPPER,
+        game_core::OBSERVER,
         game_core::PISTON,
         game_core::STICKY_PISTON,
     ]
@@ -776,6 +777,7 @@ pub(crate) fn container_size(block: game_core::BlockId) -> Option<usize> {
         {
             Some(9)
         }
+        block if game_core::is_shulker(block) => Some(27),
         game_core::STONECUTTER => Some(1),
         _ => game_core::smelting::FurnaceKind::of_block(block)
             .map(|_| game_core::smelting::FURNACE_SLOTS),
@@ -2287,6 +2289,44 @@ mod tests {
             banner.world.block([8, 101, 6]),
             game_core::RED_WALL_BANNER + 1
         );
+    }
+
+    #[test]
+    fn shulker_boxes_hold_27_items_and_new_wooden_doors_and_observers_orient() {
+        let mut game = world();
+        equip(&mut game, "voxium:red_shulker_box");
+        process_action(
+            &mut game,
+            &InventoryAction::Place {
+                position: [8, 101, 6],
+            },
+        );
+        let block = game.world.block([8, 101, 6]);
+        assert_eq!(block, game_core::RED_SHULKER_BOX);
+        assert_eq!(container_size(block), Some(27));
+        assert!(
+            game.containers
+                .contains_key(&container_key(block, [8, 101, 6]))
+        );
+        let mut door = world();
+        equip(&mut door, "voxium:bamboo_door");
+        process_action(
+            &mut door,
+            &InventoryAction::Place {
+                position: [8, 101, 6],
+            },
+        );
+        assert_eq!(door.world.block([8, 101, 6]), game_core::BAMBOO_DOOR + 1);
+        assert_eq!(door.world.block([8, 102, 6]), game_core::BAMBOO_DOOR + 9);
+        let mut observer = world();
+        equip(&mut observer, "voxium:observer");
+        process_action(
+            &mut observer,
+            &InventoryAction::Place {
+                position: [8, 101, 6],
+            },
+        );
+        assert_eq!(observer.world.block([8, 101, 6]), game_core::OBSERVER + 1);
     }
 
     #[test]

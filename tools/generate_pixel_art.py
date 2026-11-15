@@ -3539,6 +3539,211 @@ def large_fern():
 
 
 
+# ------------------------------------------------------------ part 5 tiles
+
+for _w in ("spruce", "birch", "jungle", "acacia", "cherry", "dark_oak", "mangrove", "bamboo"):
+    door_tile(f"{_w}_door_top", f"{_w}_planks", True, False)
+    door_tile(f"{_w}_door_bottom", f"{_w}_planks", False, False)
+
+for _c, _hex in COLORS.items():
+    def _powder(c=_c, hexv=_hex):
+        def build():
+            r = rng("powder_" + c)
+            image = load_tile(f"concrete_{c}")
+            image[..., :3] = np.clip(image[..., :3] * 0.92 + 14, 0, 255)
+            speckle(image, r, [hexv, "#ffffff", "#000000"], 120)
+            return image
+
+        return build
+
+    TILES[f"{_c}_concrete_powder"] = _powder()
+
+    def _glazed(c=_c, hexv=_hex):
+        def build():
+            base = rgb(hexv)
+            light = "#%02x%02x%02x" % tuple(int(v) for v in np.clip(base * 1.35 + 30, 0, 255))
+            dark = "#%02x%02x%02x" % tuple(int(v) for v in np.clip(base * 0.6, 0, 255))
+            image = canvas(hexv)
+            for k in range(N):
+                for x, y in ((k, 0), (k, N - 1), (0, k), (N - 1, k)):
+                    put(image, x, y, dark)
+            for y in range(N):
+                for x in range(N):
+                    d = abs(x - 15.5) + abs(y - 15.5)
+                    if 9 < d < 12:
+                        put(image, x, y, light)
+                    elif d <= 9 and (x + y) % 4 == 0:
+                        put(image, x, y, dark)
+                    elif d >= 22:
+                        put(image, x, y, light if (x + y) % 6 < 2 else hexv)
+            return image
+
+        return build
+
+    TILES[f"{_c}_glazed_terracotta"] = _glazed()
+
+    def _shulker(c=_c, hexv=_hex):
+        def build():
+            r = rng("shulker_" + c)
+            image = fill(canvas(), fbm(r, ((8, 1.0), (16, 0.6))), shades(hexv, 0.12))
+            base = rgb(hexv)
+            dark = "#%02x%02x%02x" % tuple(int(v) for v in np.clip(base * 0.55, 0, 255))
+            rect(image, 0, 13, N, 3, dark)
+            rect(image, 13, 12, 6, 5, "#e8e0c0")
+            rect(image, 14, 14, 4, 2, dark)
+            border(image, dark, 1)
+            return image
+
+        return build
+
+    TILES[f"shulker_box_{_c}"] = _shulker()
+
+
+def _plain_shulker():
+    r = rng("shulker_plain")
+    image = fill(canvas(), fbm(r, ((8, 1.0), (16, 0.6))), ["#7a4e7a", "#86588a", "#92628f", "#9e6c9a"])
+    rect(image, 0, 13, N, 3, "#4a2a4a")
+    rect(image, 13, 12, 6, 5, "#e8e0c0")
+    rect(image, 14, 14, 4, 2, "#4a2a4a")
+    border(image, "#4a2a4a", 1)
+    return image
+
+
+TILES["shulker_box"] = _plain_shulker
+
+noise_tile("purpur_block", ["#9a6a9a", "#a574a5", "#b07eb0", "#8a5a8a"], specks=["#c898c8", "#6a3a6a"], count=40)
+noise_tile("magma_block", ["#3a1408", "#5a1c0a", "#7a240c", "#481608"], specks=["#ff7a1a", "#ffb030", "#200a04"], count=70)
+noise_tile("nether_wart_block", ["#8a1a22", "#9a2028", "#aa262e", "#7a161c"], specks=["#c83a40", "#5a1014"], count=50)
+noise_tile("red_nether_bricks", ["#5a1218", "#661820", "#721e26", "#4e0e14"], specks=["#8a2a30", "#34080c"], count=50)
+noise_tile("dirt_path_top", ["#8a6a3a", "#96743f", "#a07e46", "#7a5c30"], specks=["#6a4a24", "#b89458"], count=40)
+
+
+@tile("purpur_pillar_side")
+def purpur_pillar_side():
+    image = load_tile("purpur_block")
+    for x in (0, 8, 16, 24):
+        rect(image, x, 0, 1, N, "#6a3a6a")
+        rect(image, x + 1, 0, 1, N, "#c898c8")
+    return image
+
+
+@tile("purpur_pillar_top")
+def purpur_pillar_top():
+    image = load_tile("purpur_block")
+    border(image, "#6a3a6a", 2)
+    rect(image, 8, 8, 16, 16, "#a070a0")
+    return image
+
+
+@tile("end_stone_bricks")
+def end_stone_bricks():
+    image = load_tile("end_stone")
+    for row in range(4):
+        y = row * 8
+        rect(image, 0, y + 7, N, 1, "#a8a870")
+        off = 0 if row % 2 == 0 else 8
+        for x in range(off, N + 8, 16):
+            rect(image, x % N, y, 1, 7, "#a8a870")
+    return image
+
+
+@tile("end_rod")
+def end_rod():
+    image = canvas("#f8f4e8")
+    for y in range(0, N, 6):
+        rect(image, 12, y, 8, 2, "#c8c4b8")
+    return image
+
+
+@tile("chorus_plant")
+def chorus_plant():
+    r = rng("chorus_plant")
+    image = fill(canvas(), fbm(r), ["#6a466a", "#745074", "#7e5a7e", "#5e3c5e"])
+    speckle(image, r, ["#8a648a", "#4a2c4a"], 40)
+    return image
+
+
+@tile("chorus_flower")
+def chorus_flower():
+    image = canvas("#9a7aa8")
+    border(image, "#5a3a68", 2)
+    rect(image, 8, 8, 16, 16, "#b898c4")
+    rect(image, 12, 12, 8, 8, "#d8c0e0")
+    return image
+
+
+def command_variant(name, accent):
+    def build():
+        image = load_tile("command_block")
+        border(image, accent, 2)
+        rect(image, 12, 12, 8, 8, accent)
+        return image
+
+    TILES[name] = build
+
+
+command_variant("repeating_command_block", "#7a5ac8")
+command_variant("chain_command_block", "#4aa070")
+
+
+@tile("observer_front")
+def observer_front():
+    image = canvas("#6a6a6e")
+    border(image, "#3a3a3e", 2)
+    rect(image, 8, 12, 6, 6, "#1a1a1e")
+    rect(image, 18, 12, 6, 6, "#1a1a1e")
+    rect(image, 10, 22, 12, 3, "#a82a2a")
+    return image
+
+
+@tile("torchflower_crop")
+def torchflower_crop():
+    image = transparent()
+    rect(image, 15, 12, 2, 20, "#4a9a34")
+    rect(image, 13, 8, 6, 5, "#f08020")
+    rect(image, 14, 6, 4, 3, "#ffb050")
+    return image
+
+
+@tile("pitcher_crop")
+def pitcher_crop():
+    image = transparent()
+    rect(image, 15, 14, 2, 18, "#5aaa6a")
+    rect(image, 10, 16, 5, 2, "#5aaa6a")
+    rect(image, 17, 20, 5, 2, "#5aaa6a")
+    return image
+
+
+@tile("pitcher_plant")
+def pitcher_plant():
+    image = transparent()
+    rect(image, 15, 14, 2, 18, "#4a9a7a")
+    rect(image, 11, 4, 10, 10, "#c8c0e8")
+    rect(image, 12, 6, 8, 6, "#8a7ac8")
+    rect(image, 10, 20, 5, 2, "#4a9a7a")
+    return image
+
+
+@tile("beetroots")
+def beetroots():
+    image = transparent()
+    for x in range(2, 30, 7):
+        for y in range(10, N):
+            rect(image, x + 1, y, 2, 1, "#3a8a3a")
+        rect(image, x - 1, 6, 6, 6, "#7a1a3a")
+        rect(image, x, 4, 4, 3, "#3a8a3a")
+    return image
+
+
+@tile("structure_void")
+def structure_void():
+    image = transparent()
+    rect(image, 12, 12, 8, 8, "#d0d0e8")
+    rect(image, 14, 14, 4, 4, "#8a8aa8")
+    return image
+
+
+
 def main():
     pixel = ROOT / "assets/textures/pixel"
     tiles = {}
