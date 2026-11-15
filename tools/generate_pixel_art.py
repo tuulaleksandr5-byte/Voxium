@@ -2424,67 +2424,6 @@ def chicken():
     ]
 
 
-def ghoul():
-    skin = ["#7c728a", "#8a8098", "#988ea6"]
-    cloth = ["#3e3028", "#4a3a30", "#564438"]
-    trousers = ["#26222e", "#2e2a38", "#363242"]
-
-    def head(face, p, r):
-        if face == "front":
-            p.rect(1, 2, 2, 2, "#1c1622")
-            p.rect(5, 2, 2, 2, "#1c1622")
-            p.px(2, 3, "#ffb020")
-            p.px(5, 3, "#ffb020")
-            p.rect(2, 5, 4, 1, "#1c1622")
-            p.px(3, 5, "#d8d0c0")
-            p.px(5, 5, "#d8d0c0")
-        if face == "top":
-            for x in range(p.w):
-                for y in range(p.h):
-                    if (x * 3 + y * 5) % 4:
-                        p.px(x, y, "#2c2634")
-        if face in ("west", "east", "back", "front"):
-            for x in range(p.w):
-                p.px(x, 0, "#2c2634")
-                if (x * 7) % 3 == 0:
-                    p.px(x, 1, "#2c2634")
-
-    def torso(face, p, r):
-        if face in ("front", "back"):
-            for x, y in ((1, 2), (2, 3), (6, 6), (7, 7), (3, 8)):
-                p.px(x, y, skin[1])
-            p.rect(0, p.h - 2, p.w, 1, "#8a6a2c")
-            p.px(p.w // 2, p.h - 2, "#d8b040")
-            for x in range(0, p.w, 2):
-                p.px(x, p.h - 1, skin[0])
-
-    def arm(face, p, r):
-        if face in ("west", "east", "front", "back"):
-            p.rect(0, 0, p.w, 4, cloth[1])
-            for x in range(p.w):
-                if (x + p.x) % 2:
-                    p.px(x, 4, cloth[0])
-            p.rect(0, p.h - 2, p.w, 2, "#6a6078")
-        if face == "top":
-            p.rect(0, 0, p.w, p.h, cloth[1])
-
-    def leg(face, p, r):
-        if face in ("west", "east", "front", "back"):
-            for x in range(p.w):
-                if (x * 5 + p.x) % 3 == 0:
-                    p.px(x, p.h - 3, skin[0])
-            p.rect(0, p.h - 2, p.w, 2, skin[0])
-
-    return [
-        Part("body", (0, 10, 0), (-4.5, 0, -2.5), (9, 11, 5), cloth, paint=torso),
-        Part("head", (0, 21, 0), (-4, 0, -4), (8, 7, 8), skin, parent="body", paint=head),
-        Part("arm_l", (6, 20, 0), (-1.5, -12, -1.5), (3, 13, 3), skin, parent="body", paint=arm),
-        Part("arm_r", (-6, 20, 0), (-1.5, -12, -1.5), (3, 13, 3), skin, parent="body", paint=arm),
-        Part("leg_l", (2.25, 10, 0), (-2, -10, -2), (4, 10, 4), trousers, paint=leg),
-        Part("leg_r", (-2.25, 10, 0), (-2, -10, -2), (4, 10, 4), trousers, paint=leg),
-    ]
-
-
 def spider():
     shell = ["#241e2a", "#2e2634", "#3a3042"]
 
@@ -2521,7 +2460,135 @@ def spider():
     return parts
 
 
-MOBS = {"cow": cow, "pig": pig, "sheep": sheep, "chicken": chicken, "ghoul": ghoul, "spider": spider}
+# ---- generated archetype mobs (data from tools/mobs.json, see generate_mobs.py) ----
+import json as _json
+
+WINGED = {"allay", "bat", "bee", "parrot", "phantom", "vex", "ender_dragon"}
+LEGGED_BLOB = {"creeper": 4, "turtle": 4}
+
+
+def _shades(hexcolor):
+    base = rgb(hexcolor)
+    out = []
+    for k in (0.84, 1.0, 1.14):
+        out.append("#%02x%02x%02x" % tuple(int(min(255, max(0, c * k))) for c in base))
+    return out
+
+
+def _arch_mob(m):
+    c1, c2, eye = _shades(m["c1"]), _shades(m["c2"]), m["eye"]
+    hostile, name = m["hostile"] and not m["neutral"], m["id"]
+    unit = min(28.0 / m["h"], 30.0 / max(m["w"], 0.2))
+    H = max(6.0, m["h"] * unit)
+    W = max(4.0, m["w"] * unit)
+    i = lambda v, lo=1: max(lo, int(round(v)))
+    seed = zlib.crc32(name.encode())
+
+    def head_paint(face, p, r):
+        if face == "front":
+            es = 2 if p.w >= 6 else 1
+            y = max(1, p.h // 3)
+            lx = max(0, p.w // 4 - es // 2)
+            rx = min(p.w - es, p.w - p.w // 4 - (es + 1) // 2)
+            p.rect(lx, y, es, es, eye)
+            p.rect(rx, y, es, es, eye)
+            if p.h >= 5:
+                p.rect(p.w // 4, p.h - 2, max(1, p.w // 2), 1, "#2a1818" if hostile else c2[0])
+        elif face == "top" and seed % 3 == 0:
+            for x in range(0, p.w, 2):
+                p.px(x, 0, c2[1])
+
+    def body_paint(face, p, r):
+        if face == "bottom":
+            p.rect(0, 0, p.w, p.h, c2[0])
+        elif face in ("front", "back", "west", "east"):
+            kind = seed % 4
+            for y in range(p.h):
+                for x in range(p.w):
+                    if kind == 0 and y % 3 == 2:
+                        p.px(x, y, c2[1])
+                    elif kind == 1 and p.h > 3 and y >= p.h * 2 // 3:
+                        p.px(x, y, c2[1])
+                    elif kind == 2 and (x * 7 + y * 11 + seed) % 9 == 0:
+                        p.px(x, y, c2[2])
+
+    def limb_paint(face, p, r):
+        if face in ("front", "back", "west", "east") and p.h > 2:
+            p.rect(0, p.h - 2, p.w, 2, c2[0])
+
+    parts = []
+    arch = m["arch"]
+    if arch == "biped":
+        legh = i(H * 0.40)
+        bodyh = i(H * 0.36)
+        headh = i(H - legh - bodyh, 3)
+        bw = i(min(W * 0.75, 12), 3)
+        bd = i(bw * 0.55, 2)
+        hs = i(min(headh, bw * 1.1), 3)
+        aw = i(bw * 0.28)
+        lw = i(bw * 0.45)
+        parts.append(Part("body", (0, legh, 0), (-bw / 2, 0, -bd / 2), (bw, bodyh, bd), c1, paint=body_paint))
+        parts.append(Part("head", (0, legh + bodyh, 0), (-hs / 2, 0, -hs / 2), (hs, hs, hs), c2 if seed % 2 else c1, parent="body", paint=head_paint))
+        ay = legh + bodyh - 1
+        parts.append(Part("arm_l", (bw / 2 + aw / 2, ay, 0), (-aw / 2, -bodyh + 1, -aw / 2), (aw, bodyh, aw), c2, parent="body", paint=limb_paint))
+        parts.append(Part("arm_r", (-bw / 2 - aw / 2, ay, 0), (-aw / 2, -bodyh + 1, -aw / 2), (aw, bodyh, aw), c2, parent="body", paint=limb_paint))
+        parts.append(Part("leg_l", (lw / 2, legh, 0), (-lw / 2, -legh, -lw / 2), (lw, legh, lw), c1, paint=limb_paint))
+        parts.append(Part("leg_r", (-lw / 2, legh, 0), (-lw / 2, -legh, -lw / 2), (lw, legh, lw), c1, paint=limb_paint))
+    elif arch == "quad":
+        legh = i(H * 0.38)
+        bodyh = i(H * 0.34)
+        L = i(min(W, 28), 5)
+        bw = i(min(L * 0.6, 12), 3)
+        L = min(L, 31 - bw)
+        hs = i(min(H * 0.34, bw * 1.1, 12), 3)
+        lw = i(bw * 0.3)
+        parts.append(Part("body", (0, legh, 0), (-bw / 2, 0, -L / 2), (bw, bodyh, L), c1, paint=body_paint))
+        parts.append(Part("head", (0, legh + bodyh * 0.75, -L / 2), (-hs / 2, -hs / 2, -hs), (hs, hs, i(hs * 1.1)), c2 if seed % 2 else c1, parent="body", paint=head_paint))
+        parts.append(Part("tail", (0, legh + bodyh * 0.8, L / 2), (-0.5, -1, 0), (1, 1, i(L * 0.2, 2)), c2))
+        for n, x, z in (("leg_fl", bw / 2 - lw / 2, -L / 2 + lw), ("leg_fr", -bw / 2 + lw / 2, -L / 2 + lw), ("leg_bl", bw / 2 - lw / 2, L / 2 - lw), ("leg_br", -bw / 2 + lw / 2, L / 2 - lw)):
+            parts.append(Part(n, (x, legh, z), (-lw / 2, -legh, -lw / 2), (lw, legh, lw), c1, paint=limb_paint))
+    elif arch == "flyer":
+        bw = i(min(W * (0.5 if name in WINGED else 0.9), 14), 3)
+        bh = i(H * 0.6, 3)
+        hs = i(min(H * 0.35, bw), 2)
+        y0 = i(H * 0.1, 1)
+        parts.append(Part("body", (0, y0, 0), (-bw / 2, 0, -bw / 2), (bw, bh, i(bw * 0.8, 2)), c1, paint=body_paint))
+        parts.append(Part("head", (0, y0 + bh, 0), (-hs / 2, 0, -hs / 2), (hs, hs, hs), c2, parent="body", paint=head_paint))
+        if name in WINGED:
+            ww = i((W - bw) / 2, 2)
+            ws = i(bw * 1.1, 2)
+            py = y0 + bh - 1
+            parts.append(Part("wing_l", (bw / 2, py, 0), (0, -1, -ws / 2), (ww, 1, ws), c2, parent="body"))
+            parts.append(Part("wing_r", (-bw / 2, py, 0), (-ww, -1, -ws / 2), (ww, 1, ws), c2, parent="body"))
+        else:
+            parts.append(Part("tail", (0, y0, 0), (-1, -4, -1), (2, 4, 2), c2))
+    elif arch == "fish":
+        bw = i(min(H * 0.6, 10), 2)
+        L = min(i(min(W, 28), 5), 31 - bw)
+        hs = i(bw * 0.9, 2)
+        parts.append(Part("body", (0, 0, 0), (-bw / 2, 0, -L / 2), (bw, bw, L), c1, paint=body_paint))
+        parts.append(Part("head", (0, bw / 2, -L / 2), (-hs / 2, -hs / 2, -hs), (hs, hs, hs), c2, parent="body", paint=head_paint))
+        parts.append(Part("tail", (0, bw / 2, L / 2), (-0.5, -bw / 2, 0), (1, bw, i(L * 0.3, 2)), c2))
+    else:  # blob
+        legn = LEGGED_BLOB.get(name, 0)
+        legh = i(H * 0.28) if legn else 0
+        bw = i(min(W, 14), 4)
+        bodyh = i((H - legh) * 0.55, 3)
+        hs = i(min(bw, H - legh - bodyh), 3)
+        parts.append(Part("body", (0, legh, 0), (-bw / 2, 0, -bw / 2), (bw, bodyh, bw), c1, paint=body_paint))
+        parts.append(Part("head", (0, legh + bodyh, 0), (-bw / 2, 0, -bw / 2), (bw, hs, bw), c2 if seed % 2 else c1, parent="body", paint=head_paint))
+        if legn:
+            lw = i(bw * 0.4, 2)
+            for n, x, z in (("leg_fl", bw / 2 - lw / 2, -bw / 2 + lw / 2), ("leg_fr", -bw / 2 + lw / 2, -bw / 2 + lw / 2), ("leg_bl", bw / 2 - lw / 2, bw / 2 - lw / 2), ("leg_br", -bw / 2 + lw / 2, bw / 2 - lw / 2)):
+                parts.append(Part(n, (x, legh, z), (-lw / 2, -legh, -lw / 2), (lw, legh, lw), c1, paint=limb_paint))
+    return parts
+
+
+_HAND = {"cow": cow, "pig": pig, "sheep": sheep, "chicken": chicken, "spider": spider}
+MOBS = dict(_HAND)
+for _m in _json.load(open(ROOT / "tools/mobs.json", encoding="utf-8")):
+    if _m["id"] not in _HAND:
+        MOBS[_m["id"]] = (lambda m=_m: _arch_mob(m))
 
 
 def number(value):

@@ -610,7 +610,7 @@ fn process_action(game: &mut Game, action: &InventoryAction) -> Effects {
                     let name = other
                         .trim_start_matches("voxium:")
                         .trim_end_matches("_spawn_egg");
-                    let wanted = if name == "zombie" { "ghoul" } else { name };
+                    let wanted = name;
                     if let Some(kind) = game_core::mobs::MobKind::ALL
                         .into_iter()
                         .find(|kind| kind.spec().id == wanted)

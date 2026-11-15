@@ -10,14 +10,23 @@ use crate::{
 };
 use std::collections::BTreeMap;
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
-pub enum MobKind {
-    Cow,
-    Pig,
-    Sheep,
-    Chicken,
-    Ghoul,
-    Spider,
+#[path = "mob_table.rs"]
+mod table;
+pub use table::MobKind;
+
+/// Каркас модели: как двигаются части тела.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Archetype {
+    /// Четвероногое.
+    Quad,
+    /// Двуногое с руками.
+    Biped,
+    /// Летающее с крыльями.
+    Flyer,
+    /// Рыба или спрут.
+    Fish,
+    /// Куб, шар или многоногий комок.
+    Blob,
 }
 
 #[derive(Debug)]
@@ -25,6 +34,8 @@ pub struct MobSpec {
     pub id: &'static str,
     pub name: &'static str,
     pub hostile: bool,
+    /// Нападает только после удара, как волк или пчела.
+    pub neutral: bool,
     pub max_health: f32,
     pub speed: f32,
     /// Высота тела для столкновений с блоками.
@@ -34,90 +45,17 @@ pub struct MobSpec {
     pub attack: f32,
     /// (предмет, минимум, максимум) при гибели.
     pub drops: &'static [(&'static str, u16, u16)],
-}
-
-impl MobKind {
-    pub const ALL: [Self; 6] = [
-        Self::Cow,
-        Self::Pig,
-        Self::Sheep,
-        Self::Chicken,
-        Self::Ghoul,
-        Self::Spider,
-    ];
-    const PASSIVE: [Self; 4] = [Self::Cow, Self::Pig, Self::Sheep, Self::Chicken];
-
-    #[must_use]
-    pub fn spec(self) -> &'static MobSpec {
-        match self {
-            Self::Cow => &MobSpec {
-                id: "cow",
-                name: "Корова",
-                hostile: false,
-                max_health: 10.0,
-                speed: 1.6,
-                height: 1.4,
-                half_width: 0.45,
-                attack: 0.0,
-                drops: &[("survival:leather", 0, 2), ("builder:raw_beef", 1, 3)],
-            },
-            Self::Pig => &MobSpec {
-                id: "pig",
-                name: "Свинья",
-                hostile: false,
-                max_health: 10.0,
-                speed: 1.8,
-                height: 0.9,
-                half_width: 0.45,
-                attack: 0.0,
-                drops: &[("builder:raw_pork", 1, 3)],
-            },
-            Self::Sheep => &MobSpec {
-                id: "sheep",
-                name: "Овца",
-                hostile: false,
-                max_health: 8.0,
-                speed: 1.7,
-                height: 1.2,
-                half_width: 0.45,
-                attack: 0.0,
-                drops: &[("builder:wool", 1, 1), ("builder:raw_mutton", 1, 2)],
-            },
-            Self::Chicken => &MobSpec {
-                id: "chicken",
-                name: "Курица",
-                hostile: false,
-                max_health: 4.0,
-                speed: 1.5,
-                height: 0.8,
-                half_width: 0.3,
-                attack: 0.0,
-                drops: &[("builder:feather", 0, 2), ("builder:raw_chicken", 1, 1)],
-            },
-            Self::Ghoul => &MobSpec {
-                id: "ghoul",
-                name: "Гуль",
-                hostile: true,
-                max_health: 20.0,
-                speed: 2.5,
-                height: 1.85,
-                half_width: 0.4,
-                attack: 3.0,
-                drops: &[("builder:rotten_meat", 0, 2)],
-            },
-            Self::Spider => &MobSpec {
-                id: "spider",
-                name: "Паук",
-                hostile: true,
-                max_health: 14.0,
-                speed: 3.1,
-                height: 0.8,
-                half_width: 0.6,
-                attack: 2.0,
-                drops: &[("builder:string", 0, 2)],
-            },
-        }
-    }
+    pub flies: bool,
+    pub aquatic: bool,
+    /// Дальность выстрела; 0 — только ближний бой.
+    pub ranged: f32,
+    /// Горит под солнцем.
+    pub burns: bool,
+    /// Взрывается рядом с целью.
+    pub explodes: bool,
+    pub archetype: Archetype,
+    /// Настоящие ширина и высота в блоках (модель рисуется в этом размере).
+    pub size: [f32; 2],
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -159,6 +97,8 @@ pub struct Mob {
     cooldown: f32,
     angry: f32,
     egg: f32,
+    /// Запал крипера: секунды до взрыва, пока цель рядом.
+    fuse: f32,
     threat: [f32; 2],
     impulse: [f32; 2],
 }
@@ -180,6 +120,8 @@ pub struct MobEvents {
     pub knockback: [f32; 3],
     /// (предмет, количество, позиция) для создания дропа.
     pub drops: Vec<(&'static str, u16, [f32; 3])>,
+    /// Центры взрывов криперов.
+    pub explosions: Vec<[f32; 3]>,
 }
 
 #[derive(Clone, Debug)]
@@ -244,6 +186,7 @@ impl MobStore {
                 cooldown: 0.0,
                 angry: 0.0,
                 egg,
+                fuse: 0.0,
                 threat: [0.0; 2],
                 impulse: [0.0; 2],
             },
@@ -381,8 +324,8 @@ impl MobStore {
                 mob.speed = 0.0;
                 continue;
             }
-            // Гули не переносят солнечный свет под открытым небом.
-            if mob.kind == MobKind::Ghoul
+            // Нежить не переносит солнечный свет под открытым небом.
+            if spec.burns
                 && daylight > 0.35
                 && (1..24).all(|dy| !is_solid(solid([cell[0], cell[1] + dy, cell[2]])))
             {
@@ -395,6 +338,7 @@ impl MobStore {
             }
             let aggressive = spec.hostile
                 && player_targetable
+                && (!spec.neutral || mob.angry > 0.0)
                 && (mob.kind != MobKind::Spider || daylight < 0.3 || mob.angry > 0.0);
             if aggressive && flat < SIGHT && offset[1].abs() < 8.0 {
                 mob.behavior = Behavior::Chase;
@@ -407,8 +351,35 @@ impl MobStore {
                 Behavior::Chase => {
                     mob.target_yaw = (-offset[0]).atan2(-offset[2]);
                     mob.look_yaw = 0.0;
-                    wanted = if flat > 0.9 { spec.speed } else { 0.0 };
-                    if flat < 1.35 && offset[1].abs() < 1.7 && mob.cooldown <= 0.0 {
+                    let keep = if spec.ranged > 0.0 {
+                        spec.ranged * 0.5
+                    } else if spec.explodes {
+                        2.0
+                    } else {
+                        0.9
+                    };
+                    wanted = if flat > keep { spec.speed } else { 0.0 };
+                    if spec.explodes {
+                        // Крипер: рядом с целью шипит и взрывается через 1,5 с.
+                        if flat < 3.0 && offset[1].abs() < 2.5 {
+                            mob.fuse += dt;
+                            wanted = 0.0;
+                            if mob.fuse >= 1.5 {
+                                events.explosions.push(mob.position);
+                                mob.health = 0.0;
+                                mob.dying = Some(0.0);
+                                continue;
+                            }
+                        } else {
+                            mob.fuse = (mob.fuse - dt).max(0.0);
+                        }
+                    } else if spec.ranged > 0.0 {
+                        if flat < spec.ranged && offset[1].abs() < 10.0 && mob.cooldown <= 0.0 {
+                            mob.cooldown = 2.0;
+                            mob.swing = 0.35;
+                            events.player_damage += spec.attack;
+                        }
+                    } else if flat < 1.35 && offset[1].abs() < 1.7 && mob.cooldown <= 0.0 {
                         mob.cooldown = 1.0;
                         mob.swing = 0.35;
                         events.player_damage += spec.attack;
@@ -482,6 +453,18 @@ impl MobStore {
                     continue;
                 }
             }
+            if spec.aquatic && in_water && wanted > 0.0 {
+                // Рыбы не выплывают из воды.
+                let ahead = [
+                    (mob.position[0] + direction[0] * 0.9).floor() as i32,
+                    cell[1],
+                    (mob.position[2] + direction[1] * 0.9).floor() as i32,
+                ];
+                if !is_water(solid(ahead)) {
+                    mob.target_yaw = mob.yaw + self.rng.range(1.6, 3.1);
+                    wanted = 0.0;
+                }
+            }
             if wanted > 0.0 && mob.behavior != Behavior::Chase && mob.grounded {
                 // Не шагать с обрыва и не заходить в воду во время прогулки.
                 let ahead = [
@@ -505,7 +488,22 @@ impl MobStore {
             mob.impulse = [mob.impulse[0] * decay, mob.impulse[1] * decay];
             mob.velocity[0] = direction[0] * wanted + mob.impulse[0];
             mob.velocity[2] = direction[1] * wanted + mob.impulse[1];
-            if in_water {
+            if spec.flies {
+                // Летающие держатся над землёй или на высоте цели.
+                let ground = (0..14)
+                    .map(|dy| cell[1] - dy)
+                    .find(|y| is_solid(solid([cell[0], *y - 1, cell[2]])))
+                    .map_or(mob.position[1] - 2.0, |y| y as f32);
+                let target = if mob.behavior == Behavior::Chase {
+                    player[1] + 1.2
+                } else {
+                    ground + 2.5 + (mob.age * 0.7 + mob.id as f32).sin() * 0.8
+                };
+                mob.velocity[1] = ((target - mob.position[1]) * 2.0).clamp(-3.0, 3.0);
+                mob.grounded = false;
+            } else if spec.aquatic && in_water {
+                mob.velocity[1] = (mob.age * 1.3 + mob.id as f32).sin() * 0.25;
+            } else if in_water {
                 mob.velocity[1] = (mob.velocity[1] + 30.0 * dt).min(2.2);
             } else {
                 mob.velocity[1] -= GRAVITY * dt;
@@ -574,7 +572,7 @@ impl MobStore {
         let hostile = self
             .mobs
             .values()
-            .filter(|mob| mob.kind.spec().hostile)
+            .filter(|mob| MobKind::NATURAL_HOSTILE.contains(&mob.kind))
             .count();
         let passive = self.mobs.len() - hostile;
         let night = daylight < 0.12;
@@ -605,14 +603,12 @@ impl MobStore {
             if is_leaves(block) {
                 return;
             }
-            let kind = if self.rng.unit() < 0.6 {
-                MobKind::Ghoul
-            } else {
-                MobKind::Spider
-            };
+            let kind = MobKind::NATURAL_HOSTILE
+                [self.rng.below(MobKind::NATURAL_HOSTILE.len() as u64) as usize];
             self.spawn(kind, feet);
         } else if block == GRASS {
-            let kind = MobKind::PASSIVE[self.rng.below(4) as usize];
+            let kind = MobKind::NATURAL_PASSIVE
+                [self.rng.below(MobKind::NATURAL_PASSIVE.len() as u64) as usize];
             let group = 1 + self.rng.below(3) as usize;
             for _ in 0..group.min(MAX_PASSIVE - passive) {
                 self.spawn(kind, feet);
@@ -713,7 +709,7 @@ mod tests {
     #[test]
     fn ghoul_chases_and_damages_player_at_night_but_ignores_creative() {
         let mut store = MobStore::new(11);
-        let id = store.spawn(MobKind::Ghoul, [0.5, 64.0, 0.5]);
+        let id = store.spawn(MobKind::Zombie, [0.5, 64.0, 0.5]);
         let player = [6.5, 64.0, 0.5];
         let mut damage = 0.0;
         for _ in 0..200 {
@@ -722,7 +718,7 @@ mod tests {
         assert!(damage >= 3.0, "гуль должен дойти и ударить");
         assert_eq!(store.mobs[&id].behavior, Behavior::Chase);
         let mut store = MobStore::new(11);
-        store.spawn(MobKind::Ghoul, [0.5, 64.0, 0.5]);
+        store.spawn(MobKind::Zombie, [0.5, 64.0, 0.5]);
         let quiet: f32 = (0..200)
             .map(|_| store.tick(0.05, player, false, 0.0, flat).player_damage)
             .sum();
@@ -732,7 +728,7 @@ mod tests {
     #[test]
     fn ghoul_burns_in_daylight_and_spider_is_calm_until_provoked() {
         let mut store = MobStore::new(5);
-        let ghoul = store.spawn(MobKind::Ghoul, [0.5, 64.0, 0.5]);
+        let ghoul = store.spawn(MobKind::Zombie, [0.5, 64.0, 0.5]);
         let spider = store.spawn(MobKind::Spider, [20.5, 64.0, 0.5]);
         let player = [26.5, 64.0, 0.5];
         for _ in 0..200 {
@@ -769,14 +765,23 @@ mod tests {
         }
         assert!(!day.mobs.is_empty());
         assert!(day.mobs.len() <= MAX_PASSIVE);
-        assert!(day.mobs.values().all(|mob| !mob.kind.spec().hostile));
+        assert!(
+            day.mobs
+                .values()
+                .all(|mob| !mob.kind.spec().hostile || mob.kind.spec().neutral)
+        );
         let mut night = MobStore::new(9);
         for _ in 0..4000 {
             night.tick(0.05, player, false, 0.0, flat);
         }
         assert!(!night.mobs.is_empty());
         assert!(night.mobs.len() <= MAX_HOSTILE);
-        assert!(night.mobs.values().all(|mob| mob.kind.spec().hostile));
+        assert!(
+            night
+                .mobs
+                .values()
+                .all(|mob| MobKind::NATURAL_HOSTILE.contains(&mob.kind))
+        );
         let mut unloaded = MobStore::new(9);
         for _ in 0..2000 {
             unloaded.tick(0.05, player, false, 1.0, |_| None);
@@ -830,5 +835,49 @@ mod tests {
             store.tick(0.05, FAR, false, 1.0, pond);
         }
         assert!(store.mobs[&id].position[0] < 4.0);
+    }
+
+    #[test]
+    fn creeper_explodes_next_to_the_player() {
+        let mut store = MobStore::new(3);
+        let id = store.spawn(MobKind::Creeper, [0.5, 64.0, 2.5]);
+        let mut blasts = 0;
+        for _ in 0..200 {
+            let events = store.tick(0.05, [0.5, 64.0, 0.5], true, 0.0, flat);
+            blasts += events.explosions.len();
+        }
+        assert_eq!(blasts, 1);
+        assert!(!store.mobs.contains_key(&id) || store.mobs[&id].dying.is_some());
+    }
+
+    #[test]
+    fn neutral_mobs_ignore_the_player_until_hit() {
+        let mut store = MobStore::new(4);
+        let id = store.spawn(MobKind::Wolf, [0.5, 64.0, 3.5]);
+        let mut hurt = 0.0;
+        for _ in 0..200 {
+            hurt += store.tick(0.05, [0.5, 64.0, 0.5], true, 1.0, flat).player_damage;
+        }
+        assert_eq!(hurt, 0.0);
+        store.hit(id, 1.0, [0.5, 64.6, 0.5]);
+        for _ in 0..200 {
+            hurt += store.tick(0.05, [0.5, 64.0, 0.5], true, 1.0, flat).player_damage;
+        }
+        assert!(hurt > 0.0);
+    }
+
+    #[test]
+    fn flying_mobs_stay_above_ground_and_all_mobs_have_sane_specs() {
+        let mut store = MobStore::new(5);
+        let id = store.spawn(MobKind::Bat, [20.5, 64.0, 20.5]);
+        for _ in 0..200 {
+            store.tick(0.05, [0.5, 64.0, 0.5], false, 1.0, flat);
+        }
+        assert!(store.mobs[&id].position[1] > 64.5);
+        for kind in MobKind::ALL {
+            let spec = kind.spec();
+            assert!(spec.max_health > 0.0 && spec.height > 0.0 && spec.half_width > 0.0, "{}", spec.id);
+        }
+        assert_eq!(MobKind::ALL.len(), 79);
     }
 }

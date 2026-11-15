@@ -124,7 +124,10 @@ pub fn parse_command(text: &str) -> Result<PlayerAction, String> {
         }
         Some("/summon") => {
             let (Some(name), None) = (arguments.next(), arguments.next()) else {
-                return Err("Использование: /summon cow|pig|sheep|chicken|ghoul|spider".into());
+                return Err(
+                    "Использование: /summon <имя моба>, например cow, zombie, creeper, horse"
+                        .into(),
+                );
             };
             game_core::mobs::MobKind::ALL
                 .into_iter()

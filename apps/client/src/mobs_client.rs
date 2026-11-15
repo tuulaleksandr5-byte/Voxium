@@ -132,28 +132,6 @@ pub fn plugin(app: &mut App) {
         );
 }
 
-macro_rules! skin {
-    ($name:literal) => {
-        include_bytes!(concat!(
-            env!("CARGO_MANIFEST_DIR"),
-            "/../../assets/textures/mobs/",
-            $name,
-            ".png"
-        )) as &'static [u8]
-    };
-}
-
-fn skin_bytes(kind: MobKind) -> &'static [u8] {
-    match kind {
-        MobKind::Cow => skin!("cow"),
-        MobKind::Pig => skin!("pig"),
-        MobKind::Sheep => skin!("sheep"),
-        MobKind::Chicken => skin!("chicken"),
-        MobKind::Ghoul => skin!("ghoul"),
-        MobKind::Spider => skin!("spider"),
-    }
-}
-
 fn model_defs() -> Result<Vec<ModelDef>, String> {
     ron::from_str(include_str!("../../../assets/data/mob_models.ron")).map_err(|e| e.to_string())
 }
@@ -176,9 +154,10 @@ fn load_assets(
             error!("Нет модели моба {}", kind.spec().id);
             continue;
         };
-        let Ok(skin) =
-            image::load_from_memory_with_format(skin_bytes(kind), image::ImageFormat::Png)
-        else {
+        let Ok(skin) = image::load_from_memory_with_format(
+            crate::mob_skins::skin_bytes(kind),
+            image::ImageFormat::Png,
+        ) else {
             error!("Не удалось прочитать текстуру моба {}", kind.spec().id);
             continue;
         };
@@ -231,11 +210,7 @@ fn load_assets(
                 parts,
                 material: material(Color::WHITE, &mut materials),
                 hurt: material(Color::srgb(1.0, 0.38, 0.34), &mut materials),
-                scale: match kind {
-                    MobKind::Ghoul => 1.06,
-                    MobKind::Spider => 1.15,
-                    _ => 1.0,
-                },
+                scale: mob_scale(kind, definition),
             },
         );
     }
@@ -431,13 +406,36 @@ fn smoothstep(low: f32, high: f32, value: f32) -> f32 {
 
 /// Радианы фазы шага на один пройденный блок.
 fn stride(kind: MobKind) -> f32 {
+    use game_core::mobs::Archetype;
     match kind {
         MobKind::Cow => 4.4,
         MobKind::Pig => 6.0,
         MobKind::Sheep => 5.2,
         MobKind::Chicken => 13.0,
-        MobKind::Ghoul => 4.0,
         MobKind::Spider => 8.5,
+        other => match other.spec().archetype {
+            Archetype::Quad => 5.0 / other.spec().size[1].max(0.4).sqrt(),
+            Archetype::Biped => 4.0,
+            Archetype::Flyer => 9.0,
+            Archetype::Fish => 6.0,
+            Archetype::Blob => 3.0,
+        },
+    }
+}
+
+/// Во сколько раз рисовать модель: настоящая высота моба к высоте модели.
+fn mob_scale(kind: MobKind, def: &ModelDef) -> f32 {
+    match kind {
+        MobKind::Spider => 1.15,
+        MobKind::Cow | MobKind::Pig | MobKind::Sheep | MobKind::Chicken => 1.0,
+        other => {
+            let top = def
+                .parts
+                .iter()
+                .map(|part| part.pivot[1] + part.from[1] + part.size[1])
+                .fold(1.0_f32, f32::max);
+            (other.spec().size[1] * 16.0 / top).clamp(0.2, 20.0)
+        }
     }
 }
 
@@ -482,18 +480,39 @@ fn pose(mob: &Mob, role: Role, gait: f32) -> (Quat, Vec3) {
                 * Quat::from_rotation_x(mob.head_pitch * 0.4 - mob.swing * 1.2),
             Vec3::ZERO,
         ),
-        (MobKind::Ghoul, Role::Body) => (
+        (
+            MobKind::Zombie
+            | MobKind::Husk
+            | MobKind::ZombieVillager
+            | MobKind::Drowned
+            | MobKind::ZombifiedPiglin,
+            Role::Body,
+        ) => (
             Quat::from_rotation_x(-0.16 - mob.swing * 0.5 + (t * 1.1 + seed).sin() * 0.02)
                 * Quat::from_rotation_z(step * 0.06),
             Vec3::ZERO,
         ),
-        (MobKind::Ghoul, Role::Head) => (
+        (
+            MobKind::Zombie
+            | MobKind::Husk
+            | MobKind::ZombieVillager
+            | MobKind::Drowned
+            | MobKind::ZombifiedPiglin,
+            Role::Head,
+        ) => (
             Quat::from_rotation_y(mob.head_yaw)
                 * Quat::from_rotation_x(mob.head_pitch + 0.16)
                 * Quat::from_rotation_z((t * 0.7 + seed).sin() * 0.09),
             Vec3::ZERO,
         ),
-        (MobKind::Ghoul, Role::Arm(side)) => {
+        (
+            MobKind::Zombie
+            | MobKind::Husk
+            | MobKind::ZombieVillager
+            | MobKind::Drowned
+            | MobKind::ZombifiedPiglin,
+            Role::Arm(side),
+        ) => {
             let reach = if mob.behavior == Behavior::Chase {
                 1.4
             } else {
@@ -557,7 +576,19 @@ fn pose(mob: &Mob, role: Role, gait: f32) -> (Quat, Vec3) {
             Quat::from_rotation_z(step * 0.025),
             Vec3::Y * ((t * 1.9 + seed).sin() * 0.006 * idle),
         ),
-        (_, Role::Arm(_) | Role::Wing(_) | Role::SpiderLeg(..)) => (Quat::IDENTITY, Vec3::ZERO),
+        (_, Role::Arm(side)) => (
+            Quat::from_rotation_x(-step * side * 0.6 - mob.swing * 1.8),
+            Vec3::ZERO,
+        ),
+        (_, Role::Wing(side)) => {
+            let flap = if kind.spec().flies {
+                0.35 + (t * 14.0 + seed).sin() * 0.6
+            } else {
+                0.05 + gait * 0.1
+            };
+            (Quat::from_rotation_z(side * flap), Vec3::ZERO)
+        }
+        (_, Role::SpiderLeg(..)) => (Quat::IDENTITY, Vec3::ZERO),
     }
 }
 
@@ -678,7 +709,7 @@ mod tests {
                 .iter()
                 .find(|d| d.kind == kind.spec().id)
                 .unwrap_or_else(|| panic!("no model for {}", kind.spec().id));
-            let skin = image::load_from_memory(skin_bytes(kind)).unwrap();
+            let skin = image::load_from_memory(crate::mob_skins::skin_bytes(kind)).unwrap();
             assert_eq!((skin.width(), skin.height()), model.texture);
             assert!(model.parts.iter().any(|p| role(&p.name) == Role::Head));
             assert!(model.parts.iter().any(|p| role(&p.name) == Role::Body));

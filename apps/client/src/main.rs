@@ -14,6 +14,7 @@ mod inventory_render;
 mod item_icons;
 mod item_textures;
 mod mining_client;
+mod mob_skins;
 mod mobs_client;
 mod pixel_icons;
 mod player;
