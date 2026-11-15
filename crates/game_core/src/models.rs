@@ -115,6 +115,9 @@ pub enum Shape {
     Anvil,
     Hopper,
     Daylight,
+    Carpet,
+    Banner,
+    WallBanner,
 }
 
 /// Форма блока, если он не обычный куб, не растение и не плоский рисунок.
@@ -138,6 +141,18 @@ pub fn shape_of(id: BlockId) -> Option<Shape> {
         {
             Shape::Stairs
         }
+        _ if in_range(id, QUARTZ_STAIRS, 4)
+            || in_range(id, ACACIA_STAIRS, 24)
+            || in_range(id, PRISMARINE_STAIRS, 12)
+            || in_range(id, RED_SANDSTONE_STAIRS, 4) =>
+        {
+            Shape::Stairs
+        }
+        _ if in_range(id, WHITE_STAINED_GLASS_PANE, 16) => Shape::Pane,
+        _ if in_range(id, IRON_TRAPDOOR, 5) => Shape::Trapdoor,
+        _ if in_range(id, WHITE_CARPET, 16) => Shape::Carpet,
+        _ if in_range(id, WHITE_BANNER, 64) => Shape::Banner,
+        _ if in_range(id, WHITE_WALL_BANNER, 64) => Shape::WallBanner,
         _ if in_range(id, OAK_FENCE_GATE, 8) => Shape::Gate,
         COBBLESTONE_WALL | MOSSY_COBBLESTONE_WALL => Shape::Wall,
         NETHER_BRICK_FENCE => Shape::Fence,
@@ -410,6 +425,15 @@ pub fn model_boxes(id: BlockId) -> Vec<ModelBox> {
             bx([6, 0, 6], [10, 4, 10]),
         ],
         Shape::Daylight => vec![bx([0, 0, 0], [16, 6, 16])],
+        Shape::Carpet => vec![bx([0, 0, 0], [16, 1, 16])],
+        Shape::Banner => rotated(
+            &[ax([7, 0, 7], [9, 16, 9]), bx([2, 2, 9], [14, 15, 10])],
+            h4(state),
+        ),
+        Shape::WallBanner => rotated(
+            &[ax([1, 14, 0], [15, 16, 2]), bx([3, 0, 1], [13, 14, 3])],
+            h4(state),
+        ),
         Shape::Fence | Shape::Pane | Shape::Wall => Vec::new(),
     }
 }

@@ -134,7 +134,7 @@ fn variant_label(id: crate::BlockId) -> String {
         return facing.label().to_string();
     }
     match crate::family_of(id) {
-        Some((_, index, FamilyKind::H4)) => side(index).to_string(),
+        Some((_, index, FamilyKind::H4 | FamilyKind::H6)) => side(index).to_string(),
         Some((_, index, FamilyKind::AX2)) => {
             format!("вдоль {}", if index == 0 { "X" } else { "Z" })
         }

@@ -798,4 +798,248 @@
     (top: 408, side: 408, bottom: 408), // nether_quartz_ore
     (top: 407, side: 407, bottom: 407), // hopper
     (top: 409, side: 409, bottom: 409), // chiseled_quartz_block
+    (top: 427, side: 428, bottom: 427), // quartz_pillar
+    (top: 202, side: 202, bottom: 202), // quartz_stairs
+    (top: 202, side: 202, bottom: 202), // quartz_stairs_south
+    (top: 202, side: 202, bottom: 202), // quartz_stairs_west
+    (top: 202, side: 202, bottom: 202), // quartz_stairs_east
+    (top: 419, side: 419, bottom: 419), // activator_rail
+    (top: 419, side: 419, bottom: 419), // activator_rail_x
+    (top: 277, side: 277, bottom: 277, front: Some(429)), // dropper
+    (top: 277, side: 277, bottom: 277, front: Some(429), face: Some((2, true))), // dropper_south
+    (top: 277, side: 277, bottom: 277, front: Some(429), face: Some((0, false))), // dropper_west
+    (top: 277, side: 277, bottom: 277, front: Some(429), face: Some((0, true))), // dropper_east
+    (top: 277, side: 277, bottom: 277, front: Some(429), face: Some((1, true))), // dropper_up
+    (top: 277, side: 277, bottom: 277, front: Some(429), face: Some((1, false))), // dropper_down
+    (top: 149, side: 149, bottom: 149), // white_stained_glass_pane
+    (top: 150, side: 150, bottom: 150), // orange_stained_glass_pane
+    (top: 151, side: 151, bottom: 151), // magenta_stained_glass_pane
+    (top: 152, side: 152, bottom: 152), // light_blue_stained_glass_pane
+    (top: 153, side: 153, bottom: 153), // yellow_stained_glass_pane
+    (top: 154, side: 154, bottom: 154), // lime_stained_glass_pane
+    (top: 155, side: 155, bottom: 155), // pink_stained_glass_pane
+    (top: 156, side: 156, bottom: 156), // gray_stained_glass_pane
+    (top: 157, side: 157, bottom: 157), // light_gray_stained_glass_pane
+    (top: 158, side: 158, bottom: 158), // cyan_stained_glass_pane
+    (top: 159, side: 159, bottom: 159), // purple_stained_glass_pane
+    (top: 160, side: 160, bottom: 160), // blue_stained_glass_pane
+    (top: 161, side: 161, bottom: 161), // brown_stained_glass_pane
+    (top: 162, side: 162, bottom: 162), // green_stained_glass_pane
+    (top: 163, side: 163, bottom: 163), // red_stained_glass_pane
+    (top: 164, side: 164, bottom: 164), // black_stained_glass_pane
+    (top: 126, side: 126, bottom: 126), // acacia_stairs
+    (top: 126, side: 126, bottom: 126), // acacia_stairs_south
+    (top: 126, side: 126, bottom: 126), // acacia_stairs_west
+    (top: 126, side: 126, bottom: 126), // acacia_stairs_east
+    (top: 142, side: 142, bottom: 142), // cherry_stairs
+    (top: 142, side: 142, bottom: 142), // cherry_stairs_south
+    (top: 142, side: 142, bottom: 142), // cherry_stairs_west
+    (top: 142, side: 142, bottom: 142), // cherry_stairs_east
+    (top: 134, side: 134, bottom: 134), // dark_oak_stairs
+    (top: 134, side: 134, bottom: 134), // dark_oak_stairs_south
+    (top: 134, side: 134, bottom: 134), // dark_oak_stairs_west
+    (top: 134, side: 134, bottom: 134), // dark_oak_stairs_east
+    (top: 138, side: 138, bottom: 138), // mangrove_stairs
+    (top: 138, side: 138, bottom: 138), // mangrove_stairs_south
+    (top: 138, side: 138, bottom: 138), // mangrove_stairs_west
+    (top: 138, side: 138, bottom: 138), // mangrove_stairs_east
+    (top: 245, side: 245, bottom: 245), // bamboo_stairs
+    (top: 245, side: 245, bottom: 245), // bamboo_stairs_south
+    (top: 245, side: 245, bottom: 245), // bamboo_stairs_west
+    (top: 245, side: 245, bottom: 245), // bamboo_stairs_east
+    (top: 246, side: 246, bottom: 246), // bamboo_mosaic_stairs
+    (top: 246, side: 246, bottom: 246), // bamboo_mosaic_stairs_south
+    (top: 246, side: 246, bottom: 246), // bamboo_mosaic_stairs_west
+    (top: 246, side: 246, bottom: 246), // bamboo_mosaic_stairs_east
+    (top: 430, side: 430, bottom: 430), // slime_block
+    (top: 420, side: 420, bottom: 420), // barrier
+    (top: 421, side: 421, bottom: 421), // light
+    (top: 431, side: 431, bottom: 431), // iron_trapdoor
+    (top: 431, side: 431, bottom: 431), // iron_trapdoor_open_north
+    (top: 431, side: 431, bottom: 431), // iron_trapdoor_open_south
+    (top: 431, side: 431, bottom: 431), // iron_trapdoor_open_west
+    (top: 431, side: 431, bottom: 431), // iron_trapdoor_open_east
+    (top: 432, side: 432, bottom: 432), // prismarine
+    (top: 433, side: 433, bottom: 433), // prismarine_bricks
+    (top: 434, side: 434, bottom: 434), // dark_prismarine
+    (top: 432, side: 432, bottom: 432), // prismarine_stairs
+    (top: 432, side: 432, bottom: 432), // prismarine_stairs_south
+    (top: 432, side: 432, bottom: 432), // prismarine_stairs_west
+    (top: 432, side: 432, bottom: 432), // prismarine_stairs_east
+    (top: 433, side: 433, bottom: 433), // prismarine_brick_stairs
+    (top: 433, side: 433, bottom: 433), // prismarine_brick_stairs_south
+    (top: 433, side: 433, bottom: 433), // prismarine_brick_stairs_west
+    (top: 433, side: 433, bottom: 433), // prismarine_brick_stairs_east
+    (top: 434, side: 434, bottom: 434), // dark_prismarine_stairs
+    (top: 434, side: 434, bottom: 434), // dark_prismarine_stairs_south
+    (top: 434, side: 434, bottom: 434), // dark_prismarine_stairs_west
+    (top: 434, side: 434, bottom: 434), // dark_prismarine_stairs_east
+    (top: 432, side: 432, bottom: 432), // prismarine_slab
+    (top: 433, side: 433, bottom: 433), // prismarine_brick_slab
+    (top: 434, side: 434, bottom: 434), // dark_prismarine_slab
+    (top: 435, side: 435, bottom: 435), // sea_lantern
+    (top: 48, side: 48, bottom: 48), // white_carpet
+    (top: 68, side: 68, bottom: 68), // orange_carpet
+    (top: 69, side: 69, bottom: 69), // magenta_carpet
+    (top: 70, side: 70, bottom: 70), // light_blue_carpet
+    (top: 71, side: 71, bottom: 71), // yellow_carpet
+    (top: 72, side: 72, bottom: 72), // lime_carpet
+    (top: 73, side: 73, bottom: 73), // pink_carpet
+    (top: 74, side: 74, bottom: 74), // gray_carpet
+    (top: 75, side: 75, bottom: 75), // light_gray_carpet
+    (top: 76, side: 76, bottom: 76), // cyan_carpet
+    (top: 77, side: 77, bottom: 77), // purple_carpet
+    (top: 78, side: 78, bottom: 78), // blue_carpet
+    (top: 79, side: 79, bottom: 79), // brown_carpet
+    (top: 80, side: 80, bottom: 80), // green_carpet
+    (top: 81, side: 81, bottom: 81), // red_carpet
+    (top: 82, side: 82, bottom: 82), // black_carpet
+    (top: 436, side: 436, bottom: 436), // packed_ice
+    (top: 422, side: 422, bottom: 422), // sunflower
+    (top: 423, side: 423, bottom: 423), // lilac
+    (top: 424, side: 424, bottom: 424), // rose_bush
+    (top: 425, side: 425, bottom: 425), // peony
+    (top: 426, side: 426, bottom: 426), // large_fern
+    (top: 48, side: 48, bottom: 48, aux: Some(10)), // white_banner
+    (top: 48, side: 48, bottom: 48, aux: Some(10)), // white_banner_south
+    (top: 48, side: 48, bottom: 48, aux: Some(10)), // white_banner_west
+    (top: 48, side: 48, bottom: 48, aux: Some(10)), // white_banner_east
+    (top: 68, side: 68, bottom: 68, aux: Some(10)), // orange_banner
+    (top: 68, side: 68, bottom: 68, aux: Some(10)), // orange_banner_south
+    (top: 68, side: 68, bottom: 68, aux: Some(10)), // orange_banner_west
+    (top: 68, side: 68, bottom: 68, aux: Some(10)), // orange_banner_east
+    (top: 69, side: 69, bottom: 69, aux: Some(10)), // magenta_banner
+    (top: 69, side: 69, bottom: 69, aux: Some(10)), // magenta_banner_south
+    (top: 69, side: 69, bottom: 69, aux: Some(10)), // magenta_banner_west
+    (top: 69, side: 69, bottom: 69, aux: Some(10)), // magenta_banner_east
+    (top: 70, side: 70, bottom: 70, aux: Some(10)), // light_blue_banner
+    (top: 70, side: 70, bottom: 70, aux: Some(10)), // light_blue_banner_south
+    (top: 70, side: 70, bottom: 70, aux: Some(10)), // light_blue_banner_west
+    (top: 70, side: 70, bottom: 70, aux: Some(10)), // light_blue_banner_east
+    (top: 71, side: 71, bottom: 71, aux: Some(10)), // yellow_banner
+    (top: 71, side: 71, bottom: 71, aux: Some(10)), // yellow_banner_south
+    (top: 71, side: 71, bottom: 71, aux: Some(10)), // yellow_banner_west
+    (top: 71, side: 71, bottom: 71, aux: Some(10)), // yellow_banner_east
+    (top: 72, side: 72, bottom: 72, aux: Some(10)), // lime_banner
+    (top: 72, side: 72, bottom: 72, aux: Some(10)), // lime_banner_south
+    (top: 72, side: 72, bottom: 72, aux: Some(10)), // lime_banner_west
+    (top: 72, side: 72, bottom: 72, aux: Some(10)), // lime_banner_east
+    (top: 73, side: 73, bottom: 73, aux: Some(10)), // pink_banner
+    (top: 73, side: 73, bottom: 73, aux: Some(10)), // pink_banner_south
+    (top: 73, side: 73, bottom: 73, aux: Some(10)), // pink_banner_west
+    (top: 73, side: 73, bottom: 73, aux: Some(10)), // pink_banner_east
+    (top: 74, side: 74, bottom: 74, aux: Some(10)), // gray_banner
+    (top: 74, side: 74, bottom: 74, aux: Some(10)), // gray_banner_south
+    (top: 74, side: 74, bottom: 74, aux: Some(10)), // gray_banner_west
+    (top: 74, side: 74, bottom: 74, aux: Some(10)), // gray_banner_east
+    (top: 75, side: 75, bottom: 75, aux: Some(10)), // light_gray_banner
+    (top: 75, side: 75, bottom: 75, aux: Some(10)), // light_gray_banner_south
+    (top: 75, side: 75, bottom: 75, aux: Some(10)), // light_gray_banner_west
+    (top: 75, side: 75, bottom: 75, aux: Some(10)), // light_gray_banner_east
+    (top: 76, side: 76, bottom: 76, aux: Some(10)), // cyan_banner
+    (top: 76, side: 76, bottom: 76, aux: Some(10)), // cyan_banner_south
+    (top: 76, side: 76, bottom: 76, aux: Some(10)), // cyan_banner_west
+    (top: 76, side: 76, bottom: 76, aux: Some(10)), // cyan_banner_east
+    (top: 77, side: 77, bottom: 77, aux: Some(10)), // purple_banner
+    (top: 77, side: 77, bottom: 77, aux: Some(10)), // purple_banner_south
+    (top: 77, side: 77, bottom: 77, aux: Some(10)), // purple_banner_west
+    (top: 77, side: 77, bottom: 77, aux: Some(10)), // purple_banner_east
+    (top: 78, side: 78, bottom: 78, aux: Some(10)), // blue_banner
+    (top: 78, side: 78, bottom: 78, aux: Some(10)), // blue_banner_south
+    (top: 78, side: 78, bottom: 78, aux: Some(10)), // blue_banner_west
+    (top: 78, side: 78, bottom: 78, aux: Some(10)), // blue_banner_east
+    (top: 79, side: 79, bottom: 79, aux: Some(10)), // brown_banner
+    (top: 79, side: 79, bottom: 79, aux: Some(10)), // brown_banner_south
+    (top: 79, side: 79, bottom: 79, aux: Some(10)), // brown_banner_west
+    (top: 79, side: 79, bottom: 79, aux: Some(10)), // brown_banner_east
+    (top: 80, side: 80, bottom: 80, aux: Some(10)), // green_banner
+    (top: 80, side: 80, bottom: 80, aux: Some(10)), // green_banner_south
+    (top: 80, side: 80, bottom: 80, aux: Some(10)), // green_banner_west
+    (top: 80, side: 80, bottom: 80, aux: Some(10)), // green_banner_east
+    (top: 81, side: 81, bottom: 81, aux: Some(10)), // red_banner
+    (top: 81, side: 81, bottom: 81, aux: Some(10)), // red_banner_south
+    (top: 81, side: 81, bottom: 81, aux: Some(10)), // red_banner_west
+    (top: 81, side: 81, bottom: 81, aux: Some(10)), // red_banner_east
+    (top: 82, side: 82, bottom: 82, aux: Some(10)), // black_banner
+    (top: 82, side: 82, bottom: 82, aux: Some(10)), // black_banner_south
+    (top: 82, side: 82, bottom: 82, aux: Some(10)), // black_banner_west
+    (top: 82, side: 82, bottom: 82, aux: Some(10)), // black_banner_east
+    (top: 48, side: 48, bottom: 48, aux: Some(10)), // white_wall_banner
+    (top: 48, side: 48, bottom: 48, aux: Some(10)), // white_wall_banner_south
+    (top: 48, side: 48, bottom: 48, aux: Some(10)), // white_wall_banner_west
+    (top: 48, side: 48, bottom: 48, aux: Some(10)), // white_wall_banner_east
+    (top: 68, side: 68, bottom: 68, aux: Some(10)), // orange_wall_banner
+    (top: 68, side: 68, bottom: 68, aux: Some(10)), // orange_wall_banner_south
+    (top: 68, side: 68, bottom: 68, aux: Some(10)), // orange_wall_banner_west
+    (top: 68, side: 68, bottom: 68, aux: Some(10)), // orange_wall_banner_east
+    (top: 69, side: 69, bottom: 69, aux: Some(10)), // magenta_wall_banner
+    (top: 69, side: 69, bottom: 69, aux: Some(10)), // magenta_wall_banner_south
+    (top: 69, side: 69, bottom: 69, aux: Some(10)), // magenta_wall_banner_west
+    (top: 69, side: 69, bottom: 69, aux: Some(10)), // magenta_wall_banner_east
+    (top: 70, side: 70, bottom: 70, aux: Some(10)), // light_blue_wall_banner
+    (top: 70, side: 70, bottom: 70, aux: Some(10)), // light_blue_wall_banner_south
+    (top: 70, side: 70, bottom: 70, aux: Some(10)), // light_blue_wall_banner_west
+    (top: 70, side: 70, bottom: 70, aux: Some(10)), // light_blue_wall_banner_east
+    (top: 71, side: 71, bottom: 71, aux: Some(10)), // yellow_wall_banner
+    (top: 71, side: 71, bottom: 71, aux: Some(10)), // yellow_wall_banner_south
+    (top: 71, side: 71, bottom: 71, aux: Some(10)), // yellow_wall_banner_west
+    (top: 71, side: 71, bottom: 71, aux: Some(10)), // yellow_wall_banner_east
+    (top: 72, side: 72, bottom: 72, aux: Some(10)), // lime_wall_banner
+    (top: 72, side: 72, bottom: 72, aux: Some(10)), // lime_wall_banner_south
+    (top: 72, side: 72, bottom: 72, aux: Some(10)), // lime_wall_banner_west
+    (top: 72, side: 72, bottom: 72, aux: Some(10)), // lime_wall_banner_east
+    (top: 73, side: 73, bottom: 73, aux: Some(10)), // pink_wall_banner
+    (top: 73, side: 73, bottom: 73, aux: Some(10)), // pink_wall_banner_south
+    (top: 73, side: 73, bottom: 73, aux: Some(10)), // pink_wall_banner_west
+    (top: 73, side: 73, bottom: 73, aux: Some(10)), // pink_wall_banner_east
+    (top: 74, side: 74, bottom: 74, aux: Some(10)), // gray_wall_banner
+    (top: 74, side: 74, bottom: 74, aux: Some(10)), // gray_wall_banner_south
+    (top: 74, side: 74, bottom: 74, aux: Some(10)), // gray_wall_banner_west
+    (top: 74, side: 74, bottom: 74, aux: Some(10)), // gray_wall_banner_east
+    (top: 75, side: 75, bottom: 75, aux: Some(10)), // light_gray_wall_banner
+    (top: 75, side: 75, bottom: 75, aux: Some(10)), // light_gray_wall_banner_south
+    (top: 75, side: 75, bottom: 75, aux: Some(10)), // light_gray_wall_banner_west
+    (top: 75, side: 75, bottom: 75, aux: Some(10)), // light_gray_wall_banner_east
+    (top: 76, side: 76, bottom: 76, aux: Some(10)), // cyan_wall_banner
+    (top: 76, side: 76, bottom: 76, aux: Some(10)), // cyan_wall_banner_south
+    (top: 76, side: 76, bottom: 76, aux: Some(10)), // cyan_wall_banner_west
+    (top: 76, side: 76, bottom: 76, aux: Some(10)), // cyan_wall_banner_east
+    (top: 77, side: 77, bottom: 77, aux: Some(10)), // purple_wall_banner
+    (top: 77, side: 77, bottom: 77, aux: Some(10)), // purple_wall_banner_south
+    (top: 77, side: 77, bottom: 77, aux: Some(10)), // purple_wall_banner_west
+    (top: 77, side: 77, bottom: 77, aux: Some(10)), // purple_wall_banner_east
+    (top: 78, side: 78, bottom: 78, aux: Some(10)), // blue_wall_banner
+    (top: 78, side: 78, bottom: 78, aux: Some(10)), // blue_wall_banner_south
+    (top: 78, side: 78, bottom: 78, aux: Some(10)), // blue_wall_banner_west
+    (top: 78, side: 78, bottom: 78, aux: Some(10)), // blue_wall_banner_east
+    (top: 79, side: 79, bottom: 79, aux: Some(10)), // brown_wall_banner
+    (top: 79, side: 79, bottom: 79, aux: Some(10)), // brown_wall_banner_south
+    (top: 79, side: 79, bottom: 79, aux: Some(10)), // brown_wall_banner_west
+    (top: 79, side: 79, bottom: 79, aux: Some(10)), // brown_wall_banner_east
+    (top: 80, side: 80, bottom: 80, aux: Some(10)), // green_wall_banner
+    (top: 80, side: 80, bottom: 80, aux: Some(10)), // green_wall_banner_south
+    (top: 80, side: 80, bottom: 80, aux: Some(10)), // green_wall_banner_west
+    (top: 80, side: 80, bottom: 80, aux: Some(10)), // green_wall_banner_east
+    (top: 81, side: 81, bottom: 81, aux: Some(10)), // red_wall_banner
+    (top: 81, side: 81, bottom: 81, aux: Some(10)), // red_wall_banner_south
+    (top: 81, side: 81, bottom: 81, aux: Some(10)), // red_wall_banner_west
+    (top: 81, side: 81, bottom: 81, aux: Some(10)), // red_wall_banner_east
+    (top: 82, side: 82, bottom: 82, aux: Some(10)), // black_wall_banner
+    (top: 82, side: 82, bottom: 82, aux: Some(10)), // black_wall_banner_south
+    (top: 82, side: 82, bottom: 82, aux: Some(10)), // black_wall_banner_west
+    (top: 82, side: 82, bottom: 82, aux: Some(10)), // black_wall_banner_east
+    (top: 437, side: 437, bottom: 437), // chiseled_red_sandstone
+    (top: 438, side: 438, bottom: 438), // cut_red_sandstone
+    (top: 198, side: 198, bottom: 198), // red_sandstone_stairs
+    (top: 198, side: 198, bottom: 198), // red_sandstone_stairs_south
+    (top: 198, side: 198, bottom: 198), // red_sandstone_stairs_west
+    (top: 198, side: 198, bottom: 198), // red_sandstone_stairs_east
+    (top: 244, side: 244, bottom: 244), // spruce_slab
+    (top: 130, side: 130, bottom: 130), // jungle_slab
+    (top: 126, side: 126, bottom: 126), // acacia_slab
+    (top: 142, side: 142, bottom: 142), // cherry_slab
+    (top: 134, side: 134, bottom: 134), // dark_oak_slab
+    (top: 138, side: 138, bottom: 138), // mangrove_slab
+    (top: 245, side: 245, bottom: 245), // bamboo_slab
+    (top: 246, side: 246, bottom: 246), // bamboo_mosaic_slab
 ]

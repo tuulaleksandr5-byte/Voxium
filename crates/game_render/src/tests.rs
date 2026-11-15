@@ -607,6 +607,14 @@ fn every_model_block_meshes_with_outward_faces_inside_its_cell() {
         COMPARATOR + 2,
         OAK_BUTTON + 5,
         BRICK_STAIRS + 3,
+        QUARTZ_STAIRS + 1,
+        WHITE_STAINED_GLASS_PANE,
+        IRON_TRAPDOOR + 2,
+        WHITE_CARPET,
+        WHITE_BANNER + 1,
+        WHITE_WALL_BANNER + 2,
+        PRISMARINE_STAIRS,
+        PRISMARINE_SLAB,
     ];
     for block in samples {
         let meshes = single(block);

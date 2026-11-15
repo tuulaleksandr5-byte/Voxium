@@ -467,10 +467,12 @@ pub enum FamilyKind {
     Rail,
     /// Калитка: закрыта/открыта × четыре стороны.
     Gate,
+    /// Шесть направлений: север, юг, запад, восток, вверх, вниз.
+    H6,
 }
 
 /// Семейства блоков с состоянием: (первый ID, число вариантов, вид).
-pub const FAMILIES: [(BlockId, u8, FamilyKind); 93] = [
+pub const FAMILIES: [(BlockId, u8, FamilyKind); 139] = [
     (322, 4, FamilyKind::H4),
     (330, 4, FamilyKind::H4),
     (334, 4, FamilyKind::H4),
@@ -564,6 +566,52 @@ pub const FAMILIES: [(BlockId, u8, FamilyKind); 93] = [
     (781, 2, FamilyKind::AX2),
     (783, 2, FamilyKind::AX2),
     (788, 4, FamilyKind::H4),
+    (798, 4, FamilyKind::H4),
+    (802, 2, FamilyKind::Rail),
+    (804, 6, FamilyKind::H6),
+    (826, 4, FamilyKind::H4),
+    (830, 4, FamilyKind::H4),
+    (834, 4, FamilyKind::H4),
+    (838, 4, FamilyKind::H4),
+    (842, 4, FamilyKind::H4),
+    (846, 4, FamilyKind::H4),
+    (853, 5, FamilyKind::Trap),
+    (861, 4, FamilyKind::H4),
+    (865, 4, FamilyKind::H4),
+    (869, 4, FamilyKind::H4),
+    (899, 4, FamilyKind::H4),
+    (903, 4, FamilyKind::H4),
+    (907, 4, FamilyKind::H4),
+    (911, 4, FamilyKind::H4),
+    (915, 4, FamilyKind::H4),
+    (919, 4, FamilyKind::H4),
+    (923, 4, FamilyKind::H4),
+    (927, 4, FamilyKind::H4),
+    (931, 4, FamilyKind::H4),
+    (935, 4, FamilyKind::H4),
+    (939, 4, FamilyKind::H4),
+    (943, 4, FamilyKind::H4),
+    (947, 4, FamilyKind::H4),
+    (951, 4, FamilyKind::H4),
+    (955, 4, FamilyKind::H4),
+    (959, 4, FamilyKind::H4),
+    (963, 4, FamilyKind::H4),
+    (967, 4, FamilyKind::H4),
+    (971, 4, FamilyKind::H4),
+    (975, 4, FamilyKind::H4),
+    (979, 4, FamilyKind::H4),
+    (983, 4, FamilyKind::H4),
+    (987, 4, FamilyKind::H4),
+    (991, 4, FamilyKind::H4),
+    (995, 4, FamilyKind::H4),
+    (999, 4, FamilyKind::H4),
+    (1003, 4, FamilyKind::H4),
+    (1007, 4, FamilyKind::H4),
+    (1011, 4, FamilyKind::H4),
+    (1015, 4, FamilyKind::H4),
+    (1019, 4, FamilyKind::H4),
+    (1023, 4, FamilyKind::H4),
+    (1029, 4, FamilyKind::H4),
 ];
 
 pub const PART2_FIRST: BlockId = 321;
@@ -675,6 +723,113 @@ pub const HOPPER: BlockId = 795;
 pub const CHISELED_QUARTZ_BLOCK: BlockId = 796;
 pub const PART3_FIRST: BlockId = 604;
 pub const PART3_LAST: BlockId = 796;
+pub const QUARTZ_PILLAR: BlockId = 797;
+pub const QUARTZ_STAIRS: BlockId = 798;
+pub const ACTIVATOR_RAIL: BlockId = 802;
+pub const DROPPER: BlockId = 804;
+pub const WHITE_STAINED_GLASS_PANE: BlockId = 810;
+pub const ORANGE_STAINED_GLASS_PANE: BlockId = 811;
+pub const MAGENTA_STAINED_GLASS_PANE: BlockId = 812;
+pub const LIGHT_BLUE_STAINED_GLASS_PANE: BlockId = 813;
+pub const YELLOW_STAINED_GLASS_PANE: BlockId = 814;
+pub const LIME_STAINED_GLASS_PANE: BlockId = 815;
+pub const PINK_STAINED_GLASS_PANE: BlockId = 816;
+pub const GRAY_STAINED_GLASS_PANE: BlockId = 817;
+pub const LIGHT_GRAY_STAINED_GLASS_PANE: BlockId = 818;
+pub const CYAN_STAINED_GLASS_PANE: BlockId = 819;
+pub const PURPLE_STAINED_GLASS_PANE: BlockId = 820;
+pub const BLUE_STAINED_GLASS_PANE: BlockId = 821;
+pub const BROWN_STAINED_GLASS_PANE: BlockId = 822;
+pub const GREEN_STAINED_GLASS_PANE: BlockId = 823;
+pub const RED_STAINED_GLASS_PANE: BlockId = 824;
+pub const BLACK_STAINED_GLASS_PANE: BlockId = 825;
+pub const ACACIA_STAIRS: BlockId = 826;
+pub const CHERRY_STAIRS: BlockId = 830;
+pub const DARK_OAK_STAIRS: BlockId = 834;
+pub const MANGROVE_STAIRS: BlockId = 838;
+pub const BAMBOO_STAIRS: BlockId = 842;
+pub const BAMBOO_MOSAIC_STAIRS: BlockId = 846;
+pub const SLIME_BLOCK: BlockId = 850;
+pub const BARRIER: BlockId = 851;
+pub const LIGHT: BlockId = 852;
+pub const IRON_TRAPDOOR: BlockId = 853;
+pub const PRISMARINE: BlockId = 858;
+pub const PRISMARINE_BRICKS: BlockId = 859;
+pub const DARK_PRISMARINE: BlockId = 860;
+pub const PRISMARINE_STAIRS: BlockId = 861;
+pub const PRISMARINE_BRICK_STAIRS: BlockId = 865;
+pub const DARK_PRISMARINE_STAIRS: BlockId = 869;
+pub const PRISMARINE_SLAB: BlockId = 873;
+pub const PRISMARINE_BRICK_SLAB: BlockId = 874;
+pub const DARK_PRISMARINE_SLAB: BlockId = 875;
+pub const SEA_LANTERN: BlockId = 876;
+pub const WHITE_CARPET: BlockId = 877;
+pub const ORANGE_CARPET: BlockId = 878;
+pub const MAGENTA_CARPET: BlockId = 879;
+pub const LIGHT_BLUE_CARPET: BlockId = 880;
+pub const YELLOW_CARPET: BlockId = 881;
+pub const LIME_CARPET: BlockId = 882;
+pub const PINK_CARPET: BlockId = 883;
+pub const GRAY_CARPET: BlockId = 884;
+pub const LIGHT_GRAY_CARPET: BlockId = 885;
+pub const CYAN_CARPET: BlockId = 886;
+pub const PURPLE_CARPET: BlockId = 887;
+pub const BLUE_CARPET: BlockId = 888;
+pub const BROWN_CARPET: BlockId = 889;
+pub const GREEN_CARPET: BlockId = 890;
+pub const RED_CARPET: BlockId = 891;
+pub const BLACK_CARPET: BlockId = 892;
+pub const PACKED_ICE: BlockId = 893;
+pub const SUNFLOWER: BlockId = 894;
+pub const LILAC: BlockId = 895;
+pub const ROSE_BUSH: BlockId = 896;
+pub const PEONY: BlockId = 897;
+pub const LARGE_FERN: BlockId = 898;
+pub const WHITE_BANNER: BlockId = 899;
+pub const ORANGE_BANNER: BlockId = 903;
+pub const MAGENTA_BANNER: BlockId = 907;
+pub const LIGHT_BLUE_BANNER: BlockId = 911;
+pub const YELLOW_BANNER: BlockId = 915;
+pub const LIME_BANNER: BlockId = 919;
+pub const PINK_BANNER: BlockId = 923;
+pub const GRAY_BANNER: BlockId = 927;
+pub const LIGHT_GRAY_BANNER: BlockId = 931;
+pub const CYAN_BANNER: BlockId = 935;
+pub const PURPLE_BANNER: BlockId = 939;
+pub const BLUE_BANNER: BlockId = 943;
+pub const BROWN_BANNER: BlockId = 947;
+pub const GREEN_BANNER: BlockId = 951;
+pub const RED_BANNER: BlockId = 955;
+pub const BLACK_BANNER: BlockId = 959;
+pub const WHITE_WALL_BANNER: BlockId = 963;
+pub const ORANGE_WALL_BANNER: BlockId = 967;
+pub const MAGENTA_WALL_BANNER: BlockId = 971;
+pub const LIGHT_BLUE_WALL_BANNER: BlockId = 975;
+pub const YELLOW_WALL_BANNER: BlockId = 979;
+pub const LIME_WALL_BANNER: BlockId = 983;
+pub const PINK_WALL_BANNER: BlockId = 987;
+pub const GRAY_WALL_BANNER: BlockId = 991;
+pub const LIGHT_GRAY_WALL_BANNER: BlockId = 995;
+pub const CYAN_WALL_BANNER: BlockId = 999;
+pub const PURPLE_WALL_BANNER: BlockId = 1003;
+pub const BLUE_WALL_BANNER: BlockId = 1007;
+pub const BROWN_WALL_BANNER: BlockId = 1011;
+pub const GREEN_WALL_BANNER: BlockId = 1015;
+pub const RED_WALL_BANNER: BlockId = 1019;
+pub const BLACK_WALL_BANNER: BlockId = 1023;
+pub const CHISELED_RED_SANDSTONE: BlockId = 1027;
+pub const CUT_RED_SANDSTONE: BlockId = 1028;
+pub const RED_SANDSTONE_STAIRS: BlockId = 1029;
+pub const SPRUCE_SLAB: BlockId = 1033;
+pub const JUNGLE_SLAB: BlockId = 1034;
+pub const ACACIA_SLAB: BlockId = 1035;
+pub const CHERRY_SLAB: BlockId = 1036;
+pub const DARK_OAK_SLAB: BlockId = 1037;
+pub const MANGROVE_SLAB: BlockId = 1038;
+pub const BAMBOO_SLAB: BlockId = 1039;
+pub const BAMBOO_MOSAIC_SLAB: BlockId = 1040;
+pub const PART4_FIRST: BlockId = 797;
+pub const PART4_LAST: BlockId = 1040;
 pub const PLANT2_FIRST: BlockId = 251;
 pub const PLANT2_LAST: BlockId = 280;
 
@@ -698,7 +853,7 @@ const fn block(
 }
 
 #[allow(clippy::large_const_arrays)]
-pub const BLOCKS: [BlockDef; 797] = [
+pub const BLOCKS: [BlockDef; 1041] = [
     block(AIR, "Air", "air", 0.0, false, false),
     block(GRASS, "Grass", "grass", 0.6, true, true),
     block(DIRT, "Dirt", "dirt", 0.5, true, true),
@@ -5662,6 +5817,1726 @@ pub const BLOCKS: [BlockDef; 797] = [
         true,
         true,
     ),
+    block(
+        QUARTZ_PILLAR,
+        "Quartz Pillar",
+        "quartz_pillar",
+        0.8,
+        true,
+        true,
+    ),
+    block(
+        QUARTZ_STAIRS,
+        "Quartz Stairs",
+        "quartz_stairs",
+        0.8,
+        true,
+        false,
+    ),
+    block(
+        QUARTZ_STAIRS + 1,
+        "Quartz Stairs (south)",
+        "quartz_stairs",
+        0.8,
+        true,
+        false,
+    ),
+    block(
+        QUARTZ_STAIRS + 2,
+        "Quartz Stairs (west)",
+        "quartz_stairs",
+        0.8,
+        true,
+        false,
+    ),
+    block(
+        QUARTZ_STAIRS + 3,
+        "Quartz Stairs (east)",
+        "quartz_stairs",
+        0.8,
+        true,
+        false,
+    ),
+    block(
+        ACTIVATOR_RAIL,
+        "Activator Rail",
+        "activator_rail",
+        0.7,
+        false,
+        false,
+    ),
+    block(
+        ACTIVATOR_RAIL + 1,
+        "Activator Rail (x)",
+        "activator_rail",
+        0.7,
+        false,
+        false,
+    ),
+    block(DROPPER, "Dropper", "dropper", 3.5, true, true),
+    block(DROPPER + 1, "Dropper (south)", "dropper", 3.5, true, true),
+    block(DROPPER + 2, "Dropper (west)", "dropper", 3.5, true, true),
+    block(DROPPER + 3, "Dropper (east)", "dropper", 3.5, true, true),
+    block(DROPPER + 4, "Dropper (up)", "dropper", 3.5, true, true),
+    block(DROPPER + 5, "Dropper (down)", "dropper", 3.5, true, true),
+    block(
+        WHITE_STAINED_GLASS_PANE,
+        "White Stained Glass Pane",
+        "white_stained_glass_pane",
+        0.3,
+        true,
+        false,
+    ),
+    block(
+        ORANGE_STAINED_GLASS_PANE,
+        "Orange Stained Glass Pane",
+        "orange_stained_glass_pane",
+        0.3,
+        true,
+        false,
+    ),
+    block(
+        MAGENTA_STAINED_GLASS_PANE,
+        "Magenta Stained Glass Pane",
+        "magenta_stained_glass_pane",
+        0.3,
+        true,
+        false,
+    ),
+    block(
+        LIGHT_BLUE_STAINED_GLASS_PANE,
+        "Light Blue Stained Glass Pane",
+        "light_blue_stained_glass_pane",
+        0.3,
+        true,
+        false,
+    ),
+    block(
+        YELLOW_STAINED_GLASS_PANE,
+        "Yellow Stained Glass Pane",
+        "yellow_stained_glass_pane",
+        0.3,
+        true,
+        false,
+    ),
+    block(
+        LIME_STAINED_GLASS_PANE,
+        "Lime Stained Glass Pane",
+        "lime_stained_glass_pane",
+        0.3,
+        true,
+        false,
+    ),
+    block(
+        PINK_STAINED_GLASS_PANE,
+        "Pink Stained Glass Pane",
+        "pink_stained_glass_pane",
+        0.3,
+        true,
+        false,
+    ),
+    block(
+        GRAY_STAINED_GLASS_PANE,
+        "Gray Stained Glass Pane",
+        "gray_stained_glass_pane",
+        0.3,
+        true,
+        false,
+    ),
+    block(
+        LIGHT_GRAY_STAINED_GLASS_PANE,
+        "Light Gray Stained Glass Pane",
+        "light_gray_stained_glass_pane",
+        0.3,
+        true,
+        false,
+    ),
+    block(
+        CYAN_STAINED_GLASS_PANE,
+        "Cyan Stained Glass Pane",
+        "cyan_stained_glass_pane",
+        0.3,
+        true,
+        false,
+    ),
+    block(
+        PURPLE_STAINED_GLASS_PANE,
+        "Purple Stained Glass Pane",
+        "purple_stained_glass_pane",
+        0.3,
+        true,
+        false,
+    ),
+    block(
+        BLUE_STAINED_GLASS_PANE,
+        "Blue Stained Glass Pane",
+        "blue_stained_glass_pane",
+        0.3,
+        true,
+        false,
+    ),
+    block(
+        BROWN_STAINED_GLASS_PANE,
+        "Brown Stained Glass Pane",
+        "brown_stained_glass_pane",
+        0.3,
+        true,
+        false,
+    ),
+    block(
+        GREEN_STAINED_GLASS_PANE,
+        "Green Stained Glass Pane",
+        "green_stained_glass_pane",
+        0.3,
+        true,
+        false,
+    ),
+    block(
+        RED_STAINED_GLASS_PANE,
+        "Red Stained Glass Pane",
+        "red_stained_glass_pane",
+        0.3,
+        true,
+        false,
+    ),
+    block(
+        BLACK_STAINED_GLASS_PANE,
+        "Black Stained Glass Pane",
+        "black_stained_glass_pane",
+        0.3,
+        true,
+        false,
+    ),
+    block(
+        ACACIA_STAIRS,
+        "Acacia Stairs",
+        "acacia_stairs",
+        2.0,
+        true,
+        false,
+    ),
+    block(
+        ACACIA_STAIRS + 1,
+        "Acacia Stairs (south)",
+        "acacia_stairs",
+        2.0,
+        true,
+        false,
+    ),
+    block(
+        ACACIA_STAIRS + 2,
+        "Acacia Stairs (west)",
+        "acacia_stairs",
+        2.0,
+        true,
+        false,
+    ),
+    block(
+        ACACIA_STAIRS + 3,
+        "Acacia Stairs (east)",
+        "acacia_stairs",
+        2.0,
+        true,
+        false,
+    ),
+    block(
+        CHERRY_STAIRS,
+        "Cherry Stairs",
+        "cherry_stairs",
+        2.0,
+        true,
+        false,
+    ),
+    block(
+        CHERRY_STAIRS + 1,
+        "Cherry Stairs (south)",
+        "cherry_stairs",
+        2.0,
+        true,
+        false,
+    ),
+    block(
+        CHERRY_STAIRS + 2,
+        "Cherry Stairs (west)",
+        "cherry_stairs",
+        2.0,
+        true,
+        false,
+    ),
+    block(
+        CHERRY_STAIRS + 3,
+        "Cherry Stairs (east)",
+        "cherry_stairs",
+        2.0,
+        true,
+        false,
+    ),
+    block(
+        DARK_OAK_STAIRS,
+        "Dark Oak Stairs",
+        "dark_oak_stairs",
+        2.0,
+        true,
+        false,
+    ),
+    block(
+        DARK_OAK_STAIRS + 1,
+        "Dark Oak Stairs (south)",
+        "dark_oak_stairs",
+        2.0,
+        true,
+        false,
+    ),
+    block(
+        DARK_OAK_STAIRS + 2,
+        "Dark Oak Stairs (west)",
+        "dark_oak_stairs",
+        2.0,
+        true,
+        false,
+    ),
+    block(
+        DARK_OAK_STAIRS + 3,
+        "Dark Oak Stairs (east)",
+        "dark_oak_stairs",
+        2.0,
+        true,
+        false,
+    ),
+    block(
+        MANGROVE_STAIRS,
+        "Mangrove Stairs",
+        "mangrove_stairs",
+        2.0,
+        true,
+        false,
+    ),
+    block(
+        MANGROVE_STAIRS + 1,
+        "Mangrove Stairs (south)",
+        "mangrove_stairs",
+        2.0,
+        true,
+        false,
+    ),
+    block(
+        MANGROVE_STAIRS + 2,
+        "Mangrove Stairs (west)",
+        "mangrove_stairs",
+        2.0,
+        true,
+        false,
+    ),
+    block(
+        MANGROVE_STAIRS + 3,
+        "Mangrove Stairs (east)",
+        "mangrove_stairs",
+        2.0,
+        true,
+        false,
+    ),
+    block(
+        BAMBOO_STAIRS,
+        "Bamboo Stairs",
+        "bamboo_stairs",
+        2.0,
+        true,
+        false,
+    ),
+    block(
+        BAMBOO_STAIRS + 1,
+        "Bamboo Stairs (south)",
+        "bamboo_stairs",
+        2.0,
+        true,
+        false,
+    ),
+    block(
+        BAMBOO_STAIRS + 2,
+        "Bamboo Stairs (west)",
+        "bamboo_stairs",
+        2.0,
+        true,
+        false,
+    ),
+    block(
+        BAMBOO_STAIRS + 3,
+        "Bamboo Stairs (east)",
+        "bamboo_stairs",
+        2.0,
+        true,
+        false,
+    ),
+    block(
+        BAMBOO_MOSAIC_STAIRS,
+        "Bamboo Mosaic Stairs",
+        "bamboo_mosaic_stairs",
+        2.0,
+        true,
+        false,
+    ),
+    block(
+        BAMBOO_MOSAIC_STAIRS + 1,
+        "Bamboo Mosaic Stairs (south)",
+        "bamboo_mosaic_stairs",
+        2.0,
+        true,
+        false,
+    ),
+    block(
+        BAMBOO_MOSAIC_STAIRS + 2,
+        "Bamboo Mosaic Stairs (west)",
+        "bamboo_mosaic_stairs",
+        2.0,
+        true,
+        false,
+    ),
+    block(
+        BAMBOO_MOSAIC_STAIRS + 3,
+        "Bamboo Mosaic Stairs (east)",
+        "bamboo_mosaic_stairs",
+        2.0,
+        true,
+        false,
+    ),
+    block(SLIME_BLOCK, "Slime Block", "slime_block", 0.2, true, true),
+    block(BARRIER, "Barrier", "barrier", 0.05, true, false),
+    BlockDef {
+        light_emission: 15,
+        ..block(LIGHT, "Light", "light", 0.05, false, false)
+    },
+    block(
+        IRON_TRAPDOOR,
+        "Iron Trapdoor",
+        "iron_trapdoor",
+        5.0,
+        true,
+        false,
+    ),
+    block(
+        IRON_TRAPDOOR + 1,
+        "Iron Trapdoor (open north)",
+        "iron_trapdoor",
+        5.0,
+        false,
+        false,
+    ),
+    block(
+        IRON_TRAPDOOR + 2,
+        "Iron Trapdoor (open south)",
+        "iron_trapdoor",
+        5.0,
+        false,
+        false,
+    ),
+    block(
+        IRON_TRAPDOOR + 3,
+        "Iron Trapdoor (open west)",
+        "iron_trapdoor",
+        5.0,
+        false,
+        false,
+    ),
+    block(
+        IRON_TRAPDOOR + 4,
+        "Iron Trapdoor (open east)",
+        "iron_trapdoor",
+        5.0,
+        false,
+        false,
+    ),
+    block(PRISMARINE, "Prismarine", "prismarine", 1.5, true, true),
+    block(
+        PRISMARINE_BRICKS,
+        "Prismarine Bricks",
+        "prismarine_bricks",
+        1.5,
+        true,
+        true,
+    ),
+    block(
+        DARK_PRISMARINE,
+        "Dark Prismarine",
+        "dark_prismarine",
+        1.5,
+        true,
+        true,
+    ),
+    block(
+        PRISMARINE_STAIRS,
+        "Prismarine Stairs",
+        "prismarine_stairs",
+        1.5,
+        true,
+        false,
+    ),
+    block(
+        PRISMARINE_STAIRS + 1,
+        "Prismarine Stairs (south)",
+        "prismarine_stairs",
+        1.5,
+        true,
+        false,
+    ),
+    block(
+        PRISMARINE_STAIRS + 2,
+        "Prismarine Stairs (west)",
+        "prismarine_stairs",
+        1.5,
+        true,
+        false,
+    ),
+    block(
+        PRISMARINE_STAIRS + 3,
+        "Prismarine Stairs (east)",
+        "prismarine_stairs",
+        1.5,
+        true,
+        false,
+    ),
+    block(
+        PRISMARINE_BRICK_STAIRS,
+        "Prismarine Brick Stairs",
+        "prismarine_brick_stairs",
+        1.5,
+        true,
+        false,
+    ),
+    block(
+        PRISMARINE_BRICK_STAIRS + 1,
+        "Prismarine Brick Stairs (south)",
+        "prismarine_brick_stairs",
+        1.5,
+        true,
+        false,
+    ),
+    block(
+        PRISMARINE_BRICK_STAIRS + 2,
+        "Prismarine Brick Stairs (west)",
+        "prismarine_brick_stairs",
+        1.5,
+        true,
+        false,
+    ),
+    block(
+        PRISMARINE_BRICK_STAIRS + 3,
+        "Prismarine Brick Stairs (east)",
+        "prismarine_brick_stairs",
+        1.5,
+        true,
+        false,
+    ),
+    block(
+        DARK_PRISMARINE_STAIRS,
+        "Dark Prismarine Stairs",
+        "dark_prismarine_stairs",
+        1.5,
+        true,
+        false,
+    ),
+    block(
+        DARK_PRISMARINE_STAIRS + 1,
+        "Dark Prismarine Stairs (south)",
+        "dark_prismarine_stairs",
+        1.5,
+        true,
+        false,
+    ),
+    block(
+        DARK_PRISMARINE_STAIRS + 2,
+        "Dark Prismarine Stairs (west)",
+        "dark_prismarine_stairs",
+        1.5,
+        true,
+        false,
+    ),
+    block(
+        DARK_PRISMARINE_STAIRS + 3,
+        "Dark Prismarine Stairs (east)",
+        "dark_prismarine_stairs",
+        1.5,
+        true,
+        false,
+    ),
+    block(
+        PRISMARINE_SLAB,
+        "Prismarine Slab",
+        "prismarine_slab",
+        1.5,
+        true,
+        false,
+    ),
+    block(
+        PRISMARINE_BRICK_SLAB,
+        "Prismarine Brick Slab",
+        "prismarine_brick_slab",
+        1.5,
+        true,
+        false,
+    ),
+    block(
+        DARK_PRISMARINE_SLAB,
+        "Dark Prismarine Slab",
+        "dark_prismarine_slab",
+        1.5,
+        true,
+        false,
+    ),
+    BlockDef {
+        light_emission: 15,
+        ..block(SEA_LANTERN, "Sea Lantern", "sea_lantern", 0.3, true, true)
+    },
+    block(
+        WHITE_CARPET,
+        "White Carpet",
+        "white_carpet",
+        0.1,
+        false,
+        false,
+    ),
+    block(
+        ORANGE_CARPET,
+        "Orange Carpet",
+        "orange_carpet",
+        0.1,
+        false,
+        false,
+    ),
+    block(
+        MAGENTA_CARPET,
+        "Magenta Carpet",
+        "magenta_carpet",
+        0.1,
+        false,
+        false,
+    ),
+    block(
+        LIGHT_BLUE_CARPET,
+        "Light Blue Carpet",
+        "light_blue_carpet",
+        0.1,
+        false,
+        false,
+    ),
+    block(
+        YELLOW_CARPET,
+        "Yellow Carpet",
+        "yellow_carpet",
+        0.1,
+        false,
+        false,
+    ),
+    block(LIME_CARPET, "Lime Carpet", "lime_carpet", 0.1, false, false),
+    block(PINK_CARPET, "Pink Carpet", "pink_carpet", 0.1, false, false),
+    block(GRAY_CARPET, "Gray Carpet", "gray_carpet", 0.1, false, false),
+    block(
+        LIGHT_GRAY_CARPET,
+        "Light Gray Carpet",
+        "light_gray_carpet",
+        0.1,
+        false,
+        false,
+    ),
+    block(CYAN_CARPET, "Cyan Carpet", "cyan_carpet", 0.1, false, false),
+    block(
+        PURPLE_CARPET,
+        "Purple Carpet",
+        "purple_carpet",
+        0.1,
+        false,
+        false,
+    ),
+    block(BLUE_CARPET, "Blue Carpet", "blue_carpet", 0.1, false, false),
+    block(
+        BROWN_CARPET,
+        "Brown Carpet",
+        "brown_carpet",
+        0.1,
+        false,
+        false,
+    ),
+    block(
+        GREEN_CARPET,
+        "Green Carpet",
+        "green_carpet",
+        0.1,
+        false,
+        false,
+    ),
+    block(RED_CARPET, "Red Carpet", "red_carpet", 0.1, false, false),
+    block(
+        BLACK_CARPET,
+        "Black Carpet",
+        "black_carpet",
+        0.1,
+        false,
+        false,
+    ),
+    block(PACKED_ICE, "Packed Ice", "packed_ice", 0.5, true, true),
+    block(SUNFLOWER, "Sunflower", "sunflower", 0.05, false, false),
+    block(LILAC, "Lilac", "lilac", 0.05, false, false),
+    block(ROSE_BUSH, "Rose Bush", "rose_bush", 0.05, false, false),
+    block(PEONY, "Peony", "peony", 0.05, false, false),
+    block(LARGE_FERN, "Large Fern", "large_fern", 0.05, false, false),
+    block(
+        WHITE_BANNER,
+        "White Banner",
+        "white_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        WHITE_BANNER + 1,
+        "White Banner (south)",
+        "white_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        WHITE_BANNER + 2,
+        "White Banner (west)",
+        "white_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        WHITE_BANNER + 3,
+        "White Banner (east)",
+        "white_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        ORANGE_BANNER,
+        "Orange Banner",
+        "orange_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        ORANGE_BANNER + 1,
+        "Orange Banner (south)",
+        "orange_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        ORANGE_BANNER + 2,
+        "Orange Banner (west)",
+        "orange_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        ORANGE_BANNER + 3,
+        "Orange Banner (east)",
+        "orange_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        MAGENTA_BANNER,
+        "Magenta Banner",
+        "magenta_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        MAGENTA_BANNER + 1,
+        "Magenta Banner (south)",
+        "magenta_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        MAGENTA_BANNER + 2,
+        "Magenta Banner (west)",
+        "magenta_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        MAGENTA_BANNER + 3,
+        "Magenta Banner (east)",
+        "magenta_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        LIGHT_BLUE_BANNER,
+        "Light Blue Banner",
+        "light_blue_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        LIGHT_BLUE_BANNER + 1,
+        "Light Blue Banner (south)",
+        "light_blue_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        LIGHT_BLUE_BANNER + 2,
+        "Light Blue Banner (west)",
+        "light_blue_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        LIGHT_BLUE_BANNER + 3,
+        "Light Blue Banner (east)",
+        "light_blue_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        YELLOW_BANNER,
+        "Yellow Banner",
+        "yellow_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        YELLOW_BANNER + 1,
+        "Yellow Banner (south)",
+        "yellow_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        YELLOW_BANNER + 2,
+        "Yellow Banner (west)",
+        "yellow_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        YELLOW_BANNER + 3,
+        "Yellow Banner (east)",
+        "yellow_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(LIME_BANNER, "Lime Banner", "lime_banner", 1.0, false, false),
+    block(
+        LIME_BANNER + 1,
+        "Lime Banner (south)",
+        "lime_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        LIME_BANNER + 2,
+        "Lime Banner (west)",
+        "lime_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        LIME_BANNER + 3,
+        "Lime Banner (east)",
+        "lime_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(PINK_BANNER, "Pink Banner", "pink_banner", 1.0, false, false),
+    block(
+        PINK_BANNER + 1,
+        "Pink Banner (south)",
+        "pink_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        PINK_BANNER + 2,
+        "Pink Banner (west)",
+        "pink_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        PINK_BANNER + 3,
+        "Pink Banner (east)",
+        "pink_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(GRAY_BANNER, "Gray Banner", "gray_banner", 1.0, false, false),
+    block(
+        GRAY_BANNER + 1,
+        "Gray Banner (south)",
+        "gray_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        GRAY_BANNER + 2,
+        "Gray Banner (west)",
+        "gray_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        GRAY_BANNER + 3,
+        "Gray Banner (east)",
+        "gray_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        LIGHT_GRAY_BANNER,
+        "Light Gray Banner",
+        "light_gray_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        LIGHT_GRAY_BANNER + 1,
+        "Light Gray Banner (south)",
+        "light_gray_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        LIGHT_GRAY_BANNER + 2,
+        "Light Gray Banner (west)",
+        "light_gray_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        LIGHT_GRAY_BANNER + 3,
+        "Light Gray Banner (east)",
+        "light_gray_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(CYAN_BANNER, "Cyan Banner", "cyan_banner", 1.0, false, false),
+    block(
+        CYAN_BANNER + 1,
+        "Cyan Banner (south)",
+        "cyan_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        CYAN_BANNER + 2,
+        "Cyan Banner (west)",
+        "cyan_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        CYAN_BANNER + 3,
+        "Cyan Banner (east)",
+        "cyan_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        PURPLE_BANNER,
+        "Purple Banner",
+        "purple_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        PURPLE_BANNER + 1,
+        "Purple Banner (south)",
+        "purple_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        PURPLE_BANNER + 2,
+        "Purple Banner (west)",
+        "purple_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        PURPLE_BANNER + 3,
+        "Purple Banner (east)",
+        "purple_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(BLUE_BANNER, "Blue Banner", "blue_banner", 1.0, false, false),
+    block(
+        BLUE_BANNER + 1,
+        "Blue Banner (south)",
+        "blue_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        BLUE_BANNER + 2,
+        "Blue Banner (west)",
+        "blue_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        BLUE_BANNER + 3,
+        "Blue Banner (east)",
+        "blue_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        BROWN_BANNER,
+        "Brown Banner",
+        "brown_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        BROWN_BANNER + 1,
+        "Brown Banner (south)",
+        "brown_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        BROWN_BANNER + 2,
+        "Brown Banner (west)",
+        "brown_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        BROWN_BANNER + 3,
+        "Brown Banner (east)",
+        "brown_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        GREEN_BANNER,
+        "Green Banner",
+        "green_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        GREEN_BANNER + 1,
+        "Green Banner (south)",
+        "green_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        GREEN_BANNER + 2,
+        "Green Banner (west)",
+        "green_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        GREEN_BANNER + 3,
+        "Green Banner (east)",
+        "green_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(RED_BANNER, "Red Banner", "red_banner", 1.0, false, false),
+    block(
+        RED_BANNER + 1,
+        "Red Banner (south)",
+        "red_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        RED_BANNER + 2,
+        "Red Banner (west)",
+        "red_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        RED_BANNER + 3,
+        "Red Banner (east)",
+        "red_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        BLACK_BANNER,
+        "Black Banner",
+        "black_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        BLACK_BANNER + 1,
+        "Black Banner (south)",
+        "black_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        BLACK_BANNER + 2,
+        "Black Banner (west)",
+        "black_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        BLACK_BANNER + 3,
+        "Black Banner (east)",
+        "black_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        WHITE_WALL_BANNER,
+        "White Wall Banner",
+        "white_wall_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        WHITE_WALL_BANNER + 1,
+        "White Wall Banner (south)",
+        "white_wall_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        WHITE_WALL_BANNER + 2,
+        "White Wall Banner (west)",
+        "white_wall_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        WHITE_WALL_BANNER + 3,
+        "White Wall Banner (east)",
+        "white_wall_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        ORANGE_WALL_BANNER,
+        "Orange Wall Banner",
+        "orange_wall_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        ORANGE_WALL_BANNER + 1,
+        "Orange Wall Banner (south)",
+        "orange_wall_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        ORANGE_WALL_BANNER + 2,
+        "Orange Wall Banner (west)",
+        "orange_wall_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        ORANGE_WALL_BANNER + 3,
+        "Orange Wall Banner (east)",
+        "orange_wall_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        MAGENTA_WALL_BANNER,
+        "Magenta Wall Banner",
+        "magenta_wall_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        MAGENTA_WALL_BANNER + 1,
+        "Magenta Wall Banner (south)",
+        "magenta_wall_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        MAGENTA_WALL_BANNER + 2,
+        "Magenta Wall Banner (west)",
+        "magenta_wall_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        MAGENTA_WALL_BANNER + 3,
+        "Magenta Wall Banner (east)",
+        "magenta_wall_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        LIGHT_BLUE_WALL_BANNER,
+        "Light Blue Wall Banner",
+        "light_blue_wall_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        LIGHT_BLUE_WALL_BANNER + 1,
+        "Light Blue Wall Banner (south)",
+        "light_blue_wall_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        LIGHT_BLUE_WALL_BANNER + 2,
+        "Light Blue Wall Banner (west)",
+        "light_blue_wall_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        LIGHT_BLUE_WALL_BANNER + 3,
+        "Light Blue Wall Banner (east)",
+        "light_blue_wall_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        YELLOW_WALL_BANNER,
+        "Yellow Wall Banner",
+        "yellow_wall_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        YELLOW_WALL_BANNER + 1,
+        "Yellow Wall Banner (south)",
+        "yellow_wall_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        YELLOW_WALL_BANNER + 2,
+        "Yellow Wall Banner (west)",
+        "yellow_wall_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        YELLOW_WALL_BANNER + 3,
+        "Yellow Wall Banner (east)",
+        "yellow_wall_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        LIME_WALL_BANNER,
+        "Lime Wall Banner",
+        "lime_wall_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        LIME_WALL_BANNER + 1,
+        "Lime Wall Banner (south)",
+        "lime_wall_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        LIME_WALL_BANNER + 2,
+        "Lime Wall Banner (west)",
+        "lime_wall_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        LIME_WALL_BANNER + 3,
+        "Lime Wall Banner (east)",
+        "lime_wall_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        PINK_WALL_BANNER,
+        "Pink Wall Banner",
+        "pink_wall_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        PINK_WALL_BANNER + 1,
+        "Pink Wall Banner (south)",
+        "pink_wall_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        PINK_WALL_BANNER + 2,
+        "Pink Wall Banner (west)",
+        "pink_wall_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        PINK_WALL_BANNER + 3,
+        "Pink Wall Banner (east)",
+        "pink_wall_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        GRAY_WALL_BANNER,
+        "Gray Wall Banner",
+        "gray_wall_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        GRAY_WALL_BANNER + 1,
+        "Gray Wall Banner (south)",
+        "gray_wall_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        GRAY_WALL_BANNER + 2,
+        "Gray Wall Banner (west)",
+        "gray_wall_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        GRAY_WALL_BANNER + 3,
+        "Gray Wall Banner (east)",
+        "gray_wall_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        LIGHT_GRAY_WALL_BANNER,
+        "Light Gray Wall Banner",
+        "light_gray_wall_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        LIGHT_GRAY_WALL_BANNER + 1,
+        "Light Gray Wall Banner (south)",
+        "light_gray_wall_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        LIGHT_GRAY_WALL_BANNER + 2,
+        "Light Gray Wall Banner (west)",
+        "light_gray_wall_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        LIGHT_GRAY_WALL_BANNER + 3,
+        "Light Gray Wall Banner (east)",
+        "light_gray_wall_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        CYAN_WALL_BANNER,
+        "Cyan Wall Banner",
+        "cyan_wall_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        CYAN_WALL_BANNER + 1,
+        "Cyan Wall Banner (south)",
+        "cyan_wall_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        CYAN_WALL_BANNER + 2,
+        "Cyan Wall Banner (west)",
+        "cyan_wall_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        CYAN_WALL_BANNER + 3,
+        "Cyan Wall Banner (east)",
+        "cyan_wall_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        PURPLE_WALL_BANNER,
+        "Purple Wall Banner",
+        "purple_wall_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        PURPLE_WALL_BANNER + 1,
+        "Purple Wall Banner (south)",
+        "purple_wall_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        PURPLE_WALL_BANNER + 2,
+        "Purple Wall Banner (west)",
+        "purple_wall_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        PURPLE_WALL_BANNER + 3,
+        "Purple Wall Banner (east)",
+        "purple_wall_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        BLUE_WALL_BANNER,
+        "Blue Wall Banner",
+        "blue_wall_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        BLUE_WALL_BANNER + 1,
+        "Blue Wall Banner (south)",
+        "blue_wall_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        BLUE_WALL_BANNER + 2,
+        "Blue Wall Banner (west)",
+        "blue_wall_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        BLUE_WALL_BANNER + 3,
+        "Blue Wall Banner (east)",
+        "blue_wall_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        BROWN_WALL_BANNER,
+        "Brown Wall Banner",
+        "brown_wall_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        BROWN_WALL_BANNER + 1,
+        "Brown Wall Banner (south)",
+        "brown_wall_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        BROWN_WALL_BANNER + 2,
+        "Brown Wall Banner (west)",
+        "brown_wall_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        BROWN_WALL_BANNER + 3,
+        "Brown Wall Banner (east)",
+        "brown_wall_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        GREEN_WALL_BANNER,
+        "Green Wall Banner",
+        "green_wall_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        GREEN_WALL_BANNER + 1,
+        "Green Wall Banner (south)",
+        "green_wall_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        GREEN_WALL_BANNER + 2,
+        "Green Wall Banner (west)",
+        "green_wall_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        GREEN_WALL_BANNER + 3,
+        "Green Wall Banner (east)",
+        "green_wall_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        RED_WALL_BANNER,
+        "Red Wall Banner",
+        "red_wall_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        RED_WALL_BANNER + 1,
+        "Red Wall Banner (south)",
+        "red_wall_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        RED_WALL_BANNER + 2,
+        "Red Wall Banner (west)",
+        "red_wall_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        RED_WALL_BANNER + 3,
+        "Red Wall Banner (east)",
+        "red_wall_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        BLACK_WALL_BANNER,
+        "Black Wall Banner",
+        "black_wall_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        BLACK_WALL_BANNER + 1,
+        "Black Wall Banner (south)",
+        "black_wall_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        BLACK_WALL_BANNER + 2,
+        "Black Wall Banner (west)",
+        "black_wall_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        BLACK_WALL_BANNER + 3,
+        "Black Wall Banner (east)",
+        "black_wall_banner",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        CHISELED_RED_SANDSTONE,
+        "Chiseled Red Sandstone",
+        "chiseled_red_sandstone",
+        0.8,
+        true,
+        true,
+    ),
+    block(
+        CUT_RED_SANDSTONE,
+        "Cut Red Sandstone",
+        "cut_red_sandstone",
+        0.8,
+        true,
+        true,
+    ),
+    block(
+        RED_SANDSTONE_STAIRS,
+        "Red Sandstone Stairs",
+        "red_sandstone_stairs",
+        0.8,
+        true,
+        false,
+    ),
+    block(
+        RED_SANDSTONE_STAIRS + 1,
+        "Red Sandstone Stairs (south)",
+        "red_sandstone_stairs",
+        0.8,
+        true,
+        false,
+    ),
+    block(
+        RED_SANDSTONE_STAIRS + 2,
+        "Red Sandstone Stairs (west)",
+        "red_sandstone_stairs",
+        0.8,
+        true,
+        false,
+    ),
+    block(
+        RED_SANDSTONE_STAIRS + 3,
+        "Red Sandstone Stairs (east)",
+        "red_sandstone_stairs",
+        0.8,
+        true,
+        false,
+    ),
+    block(SPRUCE_SLAB, "Spruce Slab", "spruce_slab", 2.0, true, false),
+    block(JUNGLE_SLAB, "Jungle Slab", "jungle_slab", 2.0, true, false),
+    block(ACACIA_SLAB, "Acacia Slab", "acacia_slab", 2.0, true, false),
+    block(CHERRY_SLAB, "Cherry Slab", "cherry_slab", 2.0, true, false),
+    block(
+        DARK_OAK_SLAB,
+        "Dark Oak Slab",
+        "dark_oak_slab",
+        2.0,
+        true,
+        false,
+    ),
+    block(
+        MANGROVE_SLAB,
+        "Mangrove Slab",
+        "mangrove_slab",
+        2.0,
+        true,
+        false,
+    ),
+    block(BAMBOO_SLAB, "Bamboo Slab", "bamboo_slab", 2.0, true, false),
+    block(
+        BAMBOO_MOSAIC_SLAB,
+        "Bamboo Mosaic Slab",
+        "bamboo_mosaic_slab",
+        2.0,
+        true,
+        false,
+    ),
 ];
 
 /// Растения рисуются двумя скрещёнными плоскостями и не мешают ходьбе.
@@ -5791,7 +7666,8 @@ const WALL_TORCHES: [BlockId; 4] = [
     WALL_TORCH_EAST,
 ];
 /// Прямые рельсы: вдоль Z (основной блок) и вдоль X.
-const RAILS: [[BlockId; 2]; 3] = [
+const RAILS: [[BlockId; 2]; 4] = [
+    [ACTIVATOR_RAIL, ACTIVATOR_RAIL + 1],
     [POWERED_RAIL, POWERED_RAIL_X],
     [DETECTOR_RAIL, DETECTOR_RAIL_X],
     [RAIL, RAIL + 1],
@@ -5837,7 +7713,7 @@ pub fn facing_of(id: BlockId) -> Option<Facing> {
         return Some(Facing::ALL[index]);
     }
     match family_of(id) {
-        Some((_, index, FamilyKind::H4)) => Some(Facing::ALL[usize::from(index)]),
+        Some((_, index, FamilyKind::H4 | FamilyKind::H6)) => Some(Facing::ALL[usize::from(index)]),
         _ => None,
     }
 }
@@ -5866,6 +7742,10 @@ pub fn facing_variant(id: BlockId, facing: Facing) -> BlockId {
             .position(|f| *f == facing)
             .filter(|index| *index < 4)
             .unwrap_or(0);
+        return first + index as BlockId;
+    }
+    if let Some((first, _, FamilyKind::H6)) = family_of(base) {
+        let index = Facing::ALL.iter().position(|f| *f == facing).unwrap_or(0);
         return first + index as BlockId;
     }
     id
@@ -5928,7 +7808,11 @@ pub fn drop_base(id: BlockId) -> BlockId {
 pub fn is_cross(id: BlockId) -> bool {
     (POPPY..=TALL_GRASS).contains(&id)
         || (PLANT2_FIRST..=PLANT2_LAST).contains(&id)
-        || matches!(id, WHEAT | SUGAR_CANE | REDSTONE_TORCH | SOUL_TORCH)
+        || matches!(
+            id,
+            WHEAT | SUGAR_CANE | REDSTONE_TORCH | SOUL_TORCH | BARRIER | LIGHT
+        )
+        || (SUNFLOWER..=LARGE_FERN).contains(&id)
         || matches!(
             id,
             VINE | GLOW_LICHEN | NETHER_WART | COCOA | CARROTS | POTATOES
@@ -6108,6 +7992,8 @@ pub fn is_fluid(id: BlockId) -> bool {
 #[must_use]
 pub fn is_slab(id: BlockId) -> bool {
     (OAK_SLAB..=DARK_BRICK_SLAB).contains(&id)
+        || (PRISMARINE_SLAB..=DARK_PRISMARINE_SLAB).contains(&id)
+        || (SPRUCE_SLAB..=BAMBOO_MOSAIC_SLAB).contains(&id)
 }
 
 /// Блок без состояния «горит»: в таком виде он выпадает и сохраняется.
@@ -6170,7 +8056,7 @@ mod tests {
             "Crafting Table",
             "Furnace",
         ];
-        assert_eq!(BLOCKS.len(), 797);
+        assert_eq!(BLOCKS.len(), 1041);
         for (offset, name) in expected.iter().enumerate() {
             let id = 17 + offset;
             assert_eq!(BLOCKS[id].id as usize, id);
@@ -6181,7 +8067,7 @@ mod tests {
 
     #[test]
     fn chest_extends_registry_without_changing_foundation_ids() {
-        assert_eq!(BLOCKS.len(), 797);
+        assert_eq!(BLOCKS.len(), 1041);
         let chest = BLOCKS.get(16).expect("сундук зарегистрирован");
         assert_eq!(chest.name, "Chest");
         assert!(is_solid(16));

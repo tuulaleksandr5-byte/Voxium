@@ -676,6 +676,10 @@ pub(crate) fn oriented_block(
             let wood = (base - game_core::OAK_SIGN) / 4;
             return game_core::facing_variant(game_core::OAK_WALL_SIGN + wood * 4, face);
         }
+        if let Some(face) = outward.filter(|_| shape == Some(Shape::Banner)) {
+            let color = (base - game_core::WHITE_BANNER) / 4;
+            return game_core::facing_variant(game_core::WHITE_WALL_BANNER + color * 4, face);
+        }
         if let Some(face) = outward.filter(|_| shape == Some(Shape::Head)) {
             return game_core::facing_variant(base + 1, face);
         }
@@ -696,6 +700,7 @@ pub(crate) fn oriented_block(
                             | Shape::Button
                             | Shape::Hook
                             | Shape::WallHead
+                            | Shape::WallBanner
                     )
                 );
                 let face = if wall_attached {
@@ -738,6 +743,7 @@ pub(crate) fn oriented_block(
     }
     if [
         game_core::DISPENSER,
+        game_core::DROPPER,
         game_core::PISTON,
         game_core::STICKY_PISTON,
     ]
@@ -762,7 +768,14 @@ pub(crate) fn container_size(block: game_core::BlockId) -> Option<usize> {
     match block {
         CHEST | game_core::BARREL | game_core::VAULT => Some(27),
         CRAFTING_TABLE => Some(9),
-        block if game_core::base_block(block) == game_core::DISPENSER => Some(9),
+        block
+            if matches!(
+                game_core::base_block(block),
+                game_core::DISPENSER | game_core::DROPPER
+            ) =>
+        {
+            Some(9)
+        }
         game_core::STONECUTTER => Some(1),
         _ => game_core::smelting::FurnaceKind::of_block(block)
             .map(|_| game_core::smelting::FURNACE_SLOTS),
@@ -2242,6 +2255,37 @@ mod tests {
         assert_eq!(
             heads.world.block([8, 101, 6]),
             game_core::CREEPER_WALL_HEAD + 1
+        );
+    }
+
+    #[test]
+    fn droppers_face_the_player_open_a_nine_slot_screen_and_banners_hang_on_walls() {
+        let mut game = world();
+        equip(&mut game, "voxium:dropper");
+        process_action(
+            &mut game,
+            &InventoryAction::Place {
+                position: [8, 101, 6],
+            },
+        );
+        let block = game.world.block([8, 101, 6]);
+        assert_eq!(block, game_core::DROPPER + 1);
+        assert_eq!(container_size(block), Some(9));
+        assert!(
+            game.containers
+                .contains_key(&container_key(block, [8, 101, 6]))
+        );
+        let mut banner = world();
+        equip(&mut banner, "voxium:red_banner");
+        process_action(
+            &mut banner,
+            &InventoryAction::Place {
+                position: [8, 101, 6],
+            },
+        );
+        assert_eq!(
+            banner.world.block([8, 101, 6]),
+            game_core::RED_WALL_BANNER + 1
         );
     }
 

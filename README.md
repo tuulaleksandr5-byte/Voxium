@@ -152,3 +152,4 @@ cargo build --locked -p voxel-client
 - [Повороты, рост деревьев и огонь](docs/DIRECTIONS_GROWTH_FIRE_UPDATE.md)
 - [Часть 2: блоки 106–210](docs/PART2_UPDATE.md)
 - [Часть 3: блоки 211–315](docs/PART3_UPDATE.md)
+- [Часть 4: блоки 316–420](docs/PART4_UPDATE.md)

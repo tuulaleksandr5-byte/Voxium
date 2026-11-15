@@ -543,6 +543,7 @@ fn is_mechanism(block: game_core::BlockId) -> bool {
     matches!(
         block,
         game_core::DISPENSER
+            | game_core::DROPPER
             | game_core::PISTON
             | game_core::STICKY_PISTON
             | game_core::NOTE_BLOCK
@@ -839,6 +840,7 @@ pub(super) fn menu(
         Some(game_core::BLAST_FURNACE | game_core::BLAST_FURNACE_LIT) => "Плавильня",
         Some(game_core::BARREL) => "Бочка",
         Some(game_core::DISPENSER) => "Раздатчик",
+        Some(game_core::DROPPER) => "Выбрасыватель",
         Some(game_core::VAULT) => "Общий сундук",
         Some(game_core::STONECUTTER) => "Камнерез",
         _ => "Инвентарь",
@@ -883,7 +885,13 @@ pub(super) fn menu(
         stonecutter(commands, storage, game, icons, blocks);
     } else if matches!(
         open,
-        Some(game_core::CHEST | game_core::BARREL | game_core::VAULT | game_core::DISPENSER)
+        Some(
+            game_core::CHEST
+                | game_core::BARREL
+                | game_core::VAULT
+                | game_core::DISPENSER
+                | game_core::DROPPER
+        )
     ) {
         label(
             commands,
@@ -891,6 +899,7 @@ pub(super) fn menu(
             match open {
                 Some(game_core::BARREL) => "БОЧКА · 27 ЯЧЕЕК",
                 Some(game_core::DISPENSER) => "РАЗДАТЧИК · 9 ЯЧЕЕК",
+                Some(game_core::DROPPER) => "ВЫБРАСЫВАТЕЛЬ · 9 ЯЧЕЕК",
                 Some(game_core::VAULT) => "ОБЩИЙ СУНДУК · одно хранилище на все такие блоки",
                 _ => "СУНДУК · 27 ЯЧЕЕК",
             },

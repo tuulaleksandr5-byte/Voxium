@@ -3374,6 +3374,171 @@ stem("attached_melon_stem", "#7a9a4a", "#5aa032")
 
 
 
+# ------------------------------------------------------------ part 4 tiles
+
+
+@tile("quartz_pillar_side")
+def quartz_pillar_side():
+    image = load_tile("quartz_block")
+    for x in (0, 8, 16, 24):
+        rect(image, x, 0, 1, N, "#c8c0b8")
+        rect(image, x + 1, 0, 1, N, "#f4eee8")
+    return image
+
+
+@tile("quartz_pillar_top")
+def quartz_pillar_top():
+    image = load_tile("quartz_block")
+    border(image, "#c8c0b8", 2)
+    rect(image, 6, 6, 20, 20, "#e8e2da")
+    return image
+
+
+@tile("dropper_front")
+def dropper_front():
+    image = load_tile("dispenser_front")
+    rect(image, 12, 12, 8, 8, "#14141a")
+    rect(image, 14, 14, 4, 4, "#8a8a94")
+    return image
+
+
+@tile("slime_block")
+def slime_block():
+    r = rng("slime_block")
+    image = fill(canvas(), fbm(r), ["#5aa83a", "#68b844", "#78c850", "#88d85e"])
+    border(image, "#3a7a28", 2)
+    rect(image, 8, 8, 16, 16, "#7ed05a")
+    speckle(image, r, ["#c8ffa8", "#4a8a30"], 30)
+    return image
+
+
+@tile("iron_trapdoor")
+def iron_trapdoor():
+    image = load_tile("iron_block")
+    border(image, "#5a5a5e", 2)
+    for k in (10, 21):
+        rect(image, 2, k, 28, 2, "#7a7a7e")
+        rect(image, k, 2, 2, 28, "#7a7a7e")
+    rect(image, 13, 26, 6, 3, "#303034")
+    return image
+
+
+noise_tile("prismarine", ["#4a9a8a", "#58a898", "#66b6a6", "#42887a"], specks=["#8adac8", "#2e6a5e"], count=50)
+noise_tile("dark_prismarine", ["#2a5a4e", "#336656", "#3c7260", "#244e44"], specks=["#4a8a74", "#16382e"], count=40)
+noise_tile("packed_ice", ["#7aa8e8", "#88b4f0", "#98c0f4", "#6a98d8"], specks=["#d8ecff", "#5a88c8"], count=40)
+
+
+@tile("prismarine_bricks")
+def prismarine_bricks():
+    image = canvas("#4aa090")
+    for row in range(4):
+        y = row * 8
+        rect(image, 0, y + 7, N, 1, "#2a6a5e")
+        off = 0 if row % 2 == 0 else 8
+        for x in range(off, N + 8, 16):
+            rect(image, x % N, y, 1, 7, "#2a6a5e")
+    r = rng("prismarine_bricks")
+    speckle(image, r, ["#68c0ae", "#3a8a7a"], 80)
+    return image
+
+
+@tile("sea_lantern")
+def sea_lantern():
+    image = canvas("#cfe8e4")
+    for k in (0, 16):
+        rect(image, k, 0, 2, N, "#6aa8a8")
+        rect(image, 0, k, N, 2, "#6aa8a8")
+    rect(image, 6, 6, 4, 4, "#fffff0")
+    rect(image, 22, 22, 4, 4, "#fffff0")
+    rect(image, 22, 6, 4, 4, "#e0fffa")
+    rect(image, 6, 22, 4, 4, "#e0fffa")
+    return image
+
+
+@tile("chiseled_red_sandstone")
+def chiseled_red_sandstone():
+    image = load_tile("red_sandstone")
+    border(image, "#8a4a22", 2)
+    rect(image, 8, 8, 16, 16, "#b0652e")
+    rect(image, 12, 12, 8, 8, "#8a4a22")
+    return image
+
+
+@tile("cut_red_sandstone")
+def cut_red_sandstone():
+    image = load_tile("red_sandstone")
+    for y in (7, 15, 23):
+        rect(image, 0, y, N, 1, "#8a4a22")
+    return image
+
+
+@tile("activator_rail")
+def activator_rail():
+    image = load_tile("rail")
+    for y in range(N):
+        rect(image, 15, y, 2, 1, "#c82a2a")
+    return image
+
+
+@tile("barrier")
+def barrier():
+    image = transparent()
+    for y in range(N):
+        for x in range(N):
+            d = math.hypot(x - 15.5, y - 15.5)
+            if 10 < d < 14 or (abs((x - 15.5) - (y - 15.5)) < 1.6 and d < 14):
+                put(image, x, y, "#d82020")
+    return image
+
+
+@tile("light")
+def light():
+    image = transparent()
+    for y in range(N):
+        for x in range(N):
+            d = math.hypot(x - 15.5, y - 13.5)
+            if d < 8:
+                put(image, x, y, "#ffe45a" if d < 5 else "#f8b830")
+    rect(image, 12, 22, 8, 3, "#8a8a92")
+    rect(image, 13, 25, 6, 2, "#8a8a92")
+    return image
+
+
+def tall_flower(name, petal, center, stem="#3a8a2a", petals=True):
+    def build():
+        image = transparent()
+        rect(image, 15, 10, 2, 22, stem)
+        rect(image, 11, 20, 4, 2, stem)
+        rect(image, 17, 24, 4, 2, stem)
+        if petals:
+            for dx, dy in ((-5, 0), (5, 0), (0, -5), (0, 5), (-4, -4), (4, 4), (-4, 4), (4, -4)):
+                rect(image, 14 + dx, 6 + dy, 4, 4, petal)
+        rect(image, 14, 6, 4, 4, center)
+        return image
+
+    TILES[name] = build
+
+
+tall_flower("sunflower", "#f8d020", "#6a4a1a")
+tall_flower("lilac", "#b888d8", "#e8d0f4")
+tall_flower("rose_bush", "#d82838", "#8a1420")
+tall_flower("peony", "#f0a8c8", "#fff0f6")
+
+
+@tile("large_fern")
+def large_fern():
+    image = transparent()
+    r = rng("large_fern")
+    for k in range(7):
+        x = 4 + k * 4
+        h = int(14 + r.integers(0, 14))
+        for y in range(N - h, N):
+            put(image, x + (N - y) // 6 * (1 if k % 2 else -1), y, "#2e7a2a" if y % 3 else "#3a9a34")
+            put(image, x + 1 + (N - y) // 6 * (1 if k % 2 else -1), y, "#256a24")
+    return image
+
+
+
 def main():
     pixel = ROOT / "assets/textures/pixel"
     tiles = {}
