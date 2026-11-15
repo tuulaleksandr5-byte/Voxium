@@ -856,12 +856,16 @@ mod tests {
         let id = store.spawn(MobKind::Wolf, [0.5, 64.0, 3.5]);
         let mut hurt = 0.0;
         for _ in 0..200 {
-            hurt += store.tick(0.05, [0.5, 64.0, 0.5], true, 1.0, flat).player_damage;
+            hurt += store
+                .tick(0.05, [0.5, 64.0, 0.5], true, 1.0, flat)
+                .player_damage;
         }
         assert_eq!(hurt, 0.0);
         store.hit(id, 1.0, [0.5, 64.6, 0.5]);
         for _ in 0..200 {
-            hurt += store.tick(0.05, [0.5, 64.0, 0.5], true, 1.0, flat).player_damage;
+            hurt += store
+                .tick(0.05, [0.5, 64.0, 0.5], true, 1.0, flat)
+                .player_damage;
         }
         assert!(hurt > 0.0);
     }
@@ -876,7 +880,11 @@ mod tests {
         assert!(store.mobs[&id].position[1] > 64.5);
         for kind in MobKind::ALL {
             let spec = kind.spec();
-            assert!(spec.max_health > 0.0 && spec.height > 0.0 && spec.half_width > 0.0, "{}", spec.id);
+            assert!(
+                spec.max_health > 0.0 && spec.height > 0.0 && spec.half_width > 0.0,
+                "{}",
+                spec.id
+            );
         }
         assert_eq!(MobKind::ALL.len(), 79);
     }

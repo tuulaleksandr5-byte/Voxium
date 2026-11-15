@@ -2780,12 +2780,12 @@ mod tests {
         let before = format!("{:?}", game.mobs);
         process_action(&mut game, &use_item);
         assert_ne!(format!("{:?}", game.mobs), before);
-        // Яйцо блока без моба ничего не делает.
+        // Яйцо есть у каждого из 79 мобов.
         let mut game = world();
         equip(&mut game, "voxium:vex_spawn_egg");
         let before = format!("{:?}", game.mobs);
         process_action(&mut game, &use_item);
-        assert_eq!(format!("{:?}", game.mobs), before);
+        assert_ne!(format!("{:?}", game.mobs), before);
     }
 
     #[test]

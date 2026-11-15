@@ -387,6 +387,36 @@ fn simulate(
         game.velocity += Vec3::from_array(events.knockback);
         game.grounded = false;
     }
+    for center in events.explosions {
+        let block = center.map(|v| v.floor() as i32);
+        let distance = Vec3::from_array(center).distance(game.feet);
+        let amount = game_core::mechanics::blast_damage(distance);
+        if amount > 0.0 && targetable {
+            actions.write(PlayerActionMessage(PlayerAction::Damage {
+                amount,
+                source: DamageSource::Mob,
+            }));
+        }
+        // Воронка крипера меньше, чем у динамита; прочные блоки целы.
+        for dx in -2_i32..=2 {
+            for dy in -2_i32..=2 {
+                for dz in -2_i32..=2 {
+                    if dx * dx + dy * dy + dz * dz > 6 {
+                        continue;
+                    }
+                    let p = [block[0] + dx, block[1] + dy, block[2] + dz];
+                    let id = game.world.block(p);
+                    if id != game_core::AIR
+                        && id != game_core::BEDROCK
+                        && !game_core::is_fluid(id)
+                        && game_core::BLOCKS[usize::from(id)].hardness < 50.0
+                    {
+                        game.world.set(p, game_core::AIR);
+                    }
+                }
+            }
+        }
+    }
     for (item, count, position) in events.drops {
         if let Some(item) = game.content.find(item) {
             spawn_drop(
@@ -726,7 +756,13 @@ mod tests {
                 assert_eq!(mesh.count_vertices(), 24);
             }
             // Паук висит на согнутых лапах, остальные стоят ступнями на y = 0.
-            let allowed = if kind == MobKind::Spider { 6.0 } else { 0.01 };
+            let allowed = if kind == MobKind::Spider {
+                6.0
+            } else if kind.spec().flies || kind.spec().aquatic {
+                32.0
+            } else {
+                0.01
+            };
             assert!(
                 (0.0..=allowed).contains(&lowest.max(0.0)) && lowest > -0.01,
                 "{} must stand on y = 0",

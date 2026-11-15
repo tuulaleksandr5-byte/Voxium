@@ -86,7 +86,7 @@
     (kind: "blaze", texture: (64, 32), parts: [
         (name: "body", parent: None, pivot: (0.0, 3.0, 0.0), from: (-4.0, 0.0, -4.0), size: (8.0, 17.0, 6.0), uv: (0, 0)),
         (name: "head", parent: Some("body"), pivot: (0.0, 20.0, 0.0), from: (-4.0, 0.0, -4.0), size: (8.0, 8.0, 8.0), uv: (28, 0)),
-        (name: "tail", parent: None, pivot: (0.0, 3.0, 0.0), from: (-1.0, -4.0, -1.0), size: (2.0, 4.0, 2.0), uv: (0, 23)),
+        (name: "tail", parent: None, pivot: (0.0, 3.0, 0.0), from: (-1.0, -3.0, -1.0), size: (2.0, 3.0, 2.0), uv: (0, 23)),
     ]),
     (kind: "camel", texture: (64, 128), parts: [
         (name: "body", parent: None, pivot: (0.0, 11.0, 0.0), from: (-6.0, 0.0, -9.5), size: (12.0, 10.0, 19.0), uv: (0, 0)),
@@ -536,7 +536,7 @@
     (kind: "wither", texture: (64, 32), parts: [
         (name: "body", parent: None, pivot: (0.0, 3.0, 0.0), from: (-3.0, 0.0, -3.0), size: (6.0, 17.0, 5.0), uv: (0, 0)),
         (name: "head", parent: Some("body"), pivot: (0.0, 20.0, 0.0), from: (-3.0, 0.0, -3.0), size: (6.0, 6.0, 6.0), uv: (22, 0)),
-        (name: "tail", parent: None, pivot: (0.0, 3.0, 0.0), from: (-1.0, -4.0, -1.0), size: (2.0, 4.0, 2.0), uv: (46, 0)),
+        (name: "tail", parent: None, pivot: (0.0, 3.0, 0.0), from: (-1.0, -3.0, -1.0), size: (2.0, 3.0, 2.0), uv: (46, 0)),
     ]),
     (kind: "wither_skeleton", texture: (64, 32), parts: [
         (name: "body", parent: None, pivot: (0.0, 11.0, 0.0), from: (-3.0, 0.0, -1.5), size: (6.0, 10.0, 3.0), uv: (0, 14)),

@@ -2561,7 +2561,7 @@ def _arch_mob(m):
             parts.append(Part("wing_l", (bw / 2, py, 0), (0, -1, -ws / 2), (ww, 1, ws), c2, parent="body"))
             parts.append(Part("wing_r", (-bw / 2, py, 0), (-ww, -1, -ws / 2), (ww, 1, ws), c2, parent="body"))
         else:
-            parts.append(Part("tail", (0, y0, 0), (-1, -4, -1), (2, 4, 2), c2))
+            parts.append(Part("tail", (0, y0, 0), (-1, -y0, -1), (2, y0, 2), c2))
     elif arch == "fish":
         bw = i(min(H * 0.6, 10), 2)
         L = min(i(min(W, 28), 5), 31 - bw)
