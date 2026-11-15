@@ -16,6 +16,7 @@ pub struct ModelBox {
 pub enum Connect {
     Fence,
     Pane,
+    Wall,
 }
 
 const fn bx(min: [u8; 3], max: [u8; 3]) -> ModelBox {
@@ -97,11 +98,30 @@ pub enum Shape {
     Portal,
     Fence,
     Pane,
+    Wall,
+    Gate,
+    Potted,
+    Pot,
+    EnchantingTable,
+    Brewing,
+    Cauldron,
+    EndPortal,
+    EndFrame,
+    Egg,
+    EnderChest,
+    Hook,
+    Head,
+    WallHead,
+    Anvil,
+    Hopper,
+    Daylight,
 }
 
 /// Форма блока, если он не обычный куб, не растение и не плоский рисунок.
 #[must_use]
 pub fn shape_of(id: BlockId) -> Option<Shape> {
+    #[allow(unused_imports)]
+    use crate::*;
     use crate::{
         CACTUS, CAKE, CHAIN, COBBLESTONE_STAIRS, FARMLAND, GLASS_PANE, IRON_BARS, IRON_DOOR,
         LADDER, LEVER, NETHER_PORTAL, OAK_DOOR, OAK_FENCE, OAK_HANGING_SIGN, OAK_PRESSURE_PLATE,
@@ -109,7 +129,51 @@ pub fn shape_of(id: BlockId) -> Option<Shape> {
         SNOW_LAYER, STONE_BUTTON, STONE_PRESSURE_PLATE,
     };
     Some(match id {
-        _ if in_range(id, OAK_STAIRS, 4) || in_range(id, COBBLESTONE_STAIRS, 4) => Shape::Stairs,
+        _ if in_range(id, OAK_STAIRS, 4)
+            || in_range(id, COBBLESTONE_STAIRS, 4)
+            || in_range(id, BRICK_STAIRS, 12)
+            || in_range(id, NETHER_BRICK_STAIRS, 4)
+            || in_range(id, SANDSTONE_STAIRS, 4)
+            || in_range(id, SPRUCE_STAIRS, 12) =>
+        {
+            Shape::Stairs
+        }
+        _ if in_range(id, OAK_FENCE_GATE, 8) => Shape::Gate,
+        COBBLESTONE_WALL | MOSSY_COBBLESTONE_WALL => Shape::Wall,
+        NETHER_BRICK_FENCE => Shape::Fence,
+        FLOWER_POT => Shape::Pot,
+        _ if (POTTED_TORCHFLOWER..=POTTED_CACTUS).contains(&id) => Shape::Potted,
+        ENCHANTING_TABLE => Shape::EnchantingTable,
+        BREWING_STAND => Shape::Brewing,
+        _ if in_range(id, CAULDRON, 4) => Shape::Cauldron,
+        END_PORTAL => Shape::EndPortal,
+        END_PORTAL_FRAME => Shape::EndFrame,
+        DRAGON_EGG => Shape::Egg,
+        ENDER_CHEST => Shape::EnderChest,
+        _ if in_range(id, TRIPWIRE_HOOK, 4) => Shape::Hook,
+        SKELETON_SKULL
+        | WITHER_SKELETON_SKULL
+        | ZOMBIE_HEAD
+        | PLAYER_HEAD
+        | CREEPER_HEAD
+        | DRAGON_HEAD
+        | PIGLIN_HEAD => Shape::Head,
+        _ if in_range(id, SKELETON_WALL_SKULL, 4)
+            || in_range(id, WITHER_SKELETON_WALL_SKULL, 4)
+            || in_range(id, ZOMBIE_WALL_HEAD, 4)
+            || in_range(id, PLAYER_WALL_HEAD, 4)
+            || in_range(id, CREEPER_WALL_HEAD, 4)
+            || in_range(id, DRAGON_WALL_HEAD, 4)
+            || in_range(id, PIGLIN_WALL_HEAD, 4) =>
+        {
+            Shape::WallHead
+        }
+        _ if in_range(id, ANVIL, 6) => Shape::Anvil,
+        HOPPER => Shape::Hopper,
+        DAYLIGHT_DETECTOR => Shape::Daylight,
+        LIGHT_WEIGHTED_PRESSURE_PLATE | HEAVY_WEIGHTED_PRESSURE_PLATE => Shape::Plate,
+        _ if in_range(id, OAK_BUTTON, 36) => Shape::Button,
+        _ if in_range(id, COMPARATOR, 4) => Shape::Repeater,
         _ if in_range(id, OAK_SIGN, 36) => Shape::Sign,
         _ if in_range(id, OAK_WALL_SIGN, 36) => Shape::WallSign,
         _ if in_range(id, OAK_HANGING_SIGN, 22) => Shape::Hanging,
@@ -145,6 +209,7 @@ pub fn connect_kind(id: BlockId) -> Option<Connect> {
     match shape_of(id)? {
         Shape::Fence => Some(Connect::Fence),
         Shape::Pane => Some(Connect::Pane),
+        Shape::Wall => Some(Connect::Wall),
         _ => None,
     }
 }
@@ -155,6 +220,7 @@ pub fn connects_to(kind: Connect, neighbor: BlockId) -> bool {
     let same = match kind {
         Connect::Fence => shape_of(neighbor) == Some(Shape::Fence),
         Connect::Pane => shape_of(neighbor) == Some(Shape::Pane),
+        Connect::Wall => shape_of(neighbor) == Some(Shape::Wall),
     };
     same || (crate::is_opaque(neighbor)
         && !crate::is_sprite(neighbor)
@@ -175,6 +241,15 @@ pub fn connected_boxes(kind: Connect, sides: [bool; 4]) -> Vec<ModelBox> {
                         let arm = bx([7, y0, 0], [9, y1, 6]);
                         boxes.push(rotate(arm, Facing::ALL[index ^ 1]));
                     }
+                }
+            }
+        }
+        Connect::Wall => {
+            boxes.push(bx([4, 0, 4], [12, 16, 12]));
+            for (index, on) in sides.into_iter().enumerate() {
+                if on {
+                    let arm = bx([5, 0, 0], [11, 14, 4]);
+                    boxes.push(rotate(arm, Facing::ALL[index ^ 1]));
                 }
             }
         }
@@ -282,7 +357,60 @@ pub fn model_boxes(id: BlockId) -> Vec<ModelBox> {
                 Facing::West
             },
         ),
-        Shape::Fence | Shape::Pane => Vec::new(),
+        Shape::Gate => {
+            let facing = h4(state);
+            let mut boxes = vec![bx([0, 5, 6], [2, 16, 10]), bx([14, 5, 6], [16, 16, 10])];
+            if state < 4 {
+                boxes.push(bx([2, 6, 7], [14, 9, 9]));
+                boxes.push(bx([2, 12, 7], [14, 15, 9]));
+            } else {
+                boxes.push(bx([0, 6, 10], [2, 15, 16]));
+                boxes.push(bx([14, 6, 10], [16, 15, 16]));
+            }
+            rotated(&boxes, facing)
+        }
+        Shape::Pot | Shape::Potted => vec![bx([5, 0, 5], [11, 6, 11])],
+        Shape::EnchantingTable => vec![bx([0, 0, 0], [16, 12, 16])],
+        Shape::Brewing => vec![bx([1, 0, 1], [15, 2, 15]), bx([7, 2, 7], [9, 14, 9])],
+        Shape::Cauldron => {
+            let mut boxes = vec![
+                bx([0, 0, 0], [16, 4, 16]),
+                bx([0, 4, 0], [16, 16, 2]),
+                bx([0, 4, 14], [16, 16, 16]),
+                bx([0, 4, 2], [2, 16, 14]),
+                bx([14, 4, 2], [16, 16, 14]),
+            ];
+            if id != crate::CAULDRON {
+                boxes.push(ax([2, 4, 2], [14, 13, 14]));
+            }
+            boxes
+        }
+        Shape::EndPortal => vec![bx([0, 0, 0], [16, 12, 16])],
+        Shape::EndFrame => vec![bx([0, 0, 0], [16, 13, 16])],
+        Shape::Egg => vec![bx([1, 0, 1], [15, 16, 15])],
+        Shape::EnderChest => vec![bx([1, 0, 1], [15, 14, 15])],
+        Shape::Hook => rotated(&[bx([6, 2, 0], [10, 14, 3])], h4(state)),
+        Shape::Head => vec![bx([4, 0, 4], [12, 8, 12])],
+        Shape::WallHead => rotated(&[bx([4, 4, 0], [12, 12, 8])], h4(state)),
+        Shape::Anvil => rotated(
+            &[
+                bx([2, 0, 2], [14, 4, 14]),
+                bx([4, 4, 5], [12, 10, 11]),
+                bx([0, 10, 3], [16, 16, 13]),
+            ],
+            if state == 0 {
+                Facing::South
+            } else {
+                Facing::West
+            },
+        ),
+        Shape::Hopper => vec![
+            bx([0, 10, 0], [16, 16, 16]),
+            bx([4, 4, 4], [12, 10, 12]),
+            bx([6, 0, 6], [10, 4, 10]),
+        ],
+        Shape::Daylight => vec![bx([0, 0, 0], [16, 6, 16])],
+        Shape::Fence | Shape::Pane | Shape::Wall => Vec::new(),
     }
 }
 
@@ -295,7 +423,7 @@ pub fn toggled(id: BlockId, facing: Facing) -> Option<BlockId> {
         FamilyKind::Door if shape_of(id) == Some(Shape::Door) => {
             Some(first + BlockId::from(index ^ 4))
         }
-        FamilyKind::Lever => Some(first + BlockId::from(index ^ 4)),
+        FamilyKind::Lever | FamilyKind::Gate => Some(first + BlockId::from(index ^ 4)),
         FamilyKind::Trap => {
             if index == 0 {
                 let side = Facing::ALL

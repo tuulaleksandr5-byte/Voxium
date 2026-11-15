@@ -89,11 +89,11 @@ fn kind_of(id: crate::BlockId, def: &BlockDef) -> &'static str {
 fn function_note(id: crate::BlockId) -> &'static str {
     use crate::models::Shape;
     match crate::models::shape_of(id) {
-        Some(Shape::Door | Shape::Trapdoor) => return "ПКМ: открыть и закрыть",
+        Some(Shape::Door | Shape::Trapdoor | Shape::Gate) => return "ПКМ: открыть и закрыть",
         Some(Shape::Lever) => return "ПКМ: переключить",
         Some(Shape::Ladder) => return "лазание: пробел или движение вперёд",
         Some(Shape::Stairs) => return "ступени смотрят на игрока при установке",
-        Some(Shape::Fence | Shape::Pane) => return "соединяется с соседями",
+        Some(Shape::Fence | Shape::Pane | Shape::Wall) => return "соединяется с соседями",
         _ => {}
     }
     if id == crate::NETHER_PORTAL {
@@ -161,6 +161,15 @@ fn variant_label(id: crate::BlockId) -> String {
         ),
         Some((_, 0, FamilyKind::Trap)) => "закрыт".to_string(),
         Some((_, index, FamilyKind::Trap)) => format!("открыт, {}", side(index - 1)),
+        Some((_, index, FamilyKind::Gate)) => format!(
+            "{}, {}",
+            if index >= 4 {
+                "открыта"
+            } else {
+                "закрыта"
+            },
+            side(index)
+        ),
         Some((_, _, FamilyKind::Rail)) | None => "вдоль X".to_string(),
     }
 }

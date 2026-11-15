@@ -586,6 +586,27 @@ fn every_model_block_meshes_with_outward_faces_inside_its_cell() {
         OAK_FENCE,
         IRON_BARS,
         GLASS_PANE,
+        OAK_FENCE_GATE,
+        OAK_FENCE_GATE + 5,
+        COBBLESTONE_WALL,
+        FLOWER_POT,
+        ENCHANTING_TABLE,
+        BREWING_STAND,
+        CAULDRON,
+        CAULDRON + 1,
+        END_PORTAL,
+        END_PORTAL_FRAME,
+        DRAGON_EGG,
+        ENDER_CHEST,
+        TRIPWIRE_HOOK + 2,
+        SKELETON_SKULL,
+        SKELETON_WALL_SKULL + 1,
+        ANVIL + 1,
+        HOPPER,
+        DAYLIGHT_DETECTOR,
+        COMPARATOR + 2,
+        OAK_BUTTON + 5,
+        BRICK_STAIRS + 3,
     ];
     for block in samples {
         let meshes = single(block);
@@ -638,4 +659,16 @@ fn model_faces_hide_behind_opaque_neighbours_only_on_the_cell_boundary() {
         covered < snow_alone + 6,
         "под снегом камень: нижняя грань скрыта, камень добавляет не больше пяти граней"
     );
+}
+
+#[test]
+fn potted_plants_draw_a_pot_and_a_centred_plant_in_two_layers() {
+    let meshes = single(game_core::POTTED_POPPY);
+    assert!(meshes.len() >= 2, "горшок и цветок лежат в разных слоях");
+    let walls = mesh_section([0; 3], |p| match p {
+        [4, 4, 4] => game_core::COBBLESTONE_WALL,
+        [5, 4, 4] => game_core::COBBLESTONE_WALL,
+        _ => 0,
+    });
+    assert!(all_quads(&walls) > all_quads(&single(game_core::COBBLESTONE_WALL)) * 2 - 4);
 }

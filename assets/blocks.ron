@@ -605,4 +605,197 @@
     (top: 330, side: 330, bottom: 330), // iron_bars
     (top: 331, side: 331, bottom: 331), // chain
     (top: 332, side: 332, bottom: 332), // glass_pane
+    (top: 381, side: 381, bottom: 381), // attached_pumpkin_stem
+    (top: 382, side: 382, bottom: 382), // attached_melon_stem
+    (top: 379, side: 379, bottom: 379), // pumpkin_stem
+    (top: 380, side: 380, bottom: 380), // melon_stem
+    (top: 371, side: 371, bottom: 371), // vine
+    (top: 372, side: 372, bottom: 372), // glow_lichen
+    (top: 10, side: 10, bottom: 10), // oak_fence_gate
+    (top: 10, side: 10, bottom: 10), // oak_fence_gate_closed_south
+    (top: 10, side: 10, bottom: 10), // oak_fence_gate_closed_west
+    (top: 10, side: 10, bottom: 10), // oak_fence_gate_closed_east
+    (top: 10, side: 10, bottom: 10), // oak_fence_gate_open_north
+    (top: 10, side: 10, bottom: 10), // oak_fence_gate_open_south
+    (top: 10, side: 10, bottom: 10), // oak_fence_gate_open_west
+    (top: 10, side: 10, bottom: 10), // oak_fence_gate_open_east
+    (top: 36, side: 36, bottom: 36), // brick_stairs
+    (top: 36, side: 36, bottom: 36), // brick_stairs_south
+    (top: 36, side: 36, bottom: 36), // brick_stairs_west
+    (top: 36, side: 36, bottom: 36), // brick_stairs_east
+    (top: 37, side: 37, bottom: 37), // stone_brick_stairs
+    (top: 37, side: 37, bottom: 37), // stone_brick_stairs_south
+    (top: 37, side: 37, bottom: 37), // stone_brick_stairs_west
+    (top: 37, side: 37, bottom: 37), // stone_brick_stairs_east
+    (top: 192, side: 192, bottom: 192), // mud_brick_stairs
+    (top: 192, side: 192, bottom: 192), // mud_brick_stairs_south
+    (top: 192, side: 192, bottom: 192), // mud_brick_stairs_west
+    (top: 192, side: 192, bottom: 192), // mud_brick_stairs_east
+    (top: 384, side: 385, bottom: 2), // mycelium
+    (top: 373, side: 373, bottom: 373), // lily_pad
+    (top: 386, side: 386, bottom: 386), // nether_bricks
+    (top: 386, side: 386, bottom: 386), // nether_brick_fence
+    (top: 386, side: 386, bottom: 386), // nether_brick_stairs
+    (top: 386, side: 386, bottom: 386), // nether_brick_stairs_south
+    (top: 386, side: 386, bottom: 386), // nether_brick_stairs_west
+    (top: 386, side: 386, bottom: 386), // nether_brick_stairs_east
+    (top: 374, side: 374, bottom: 374), // nether_wart
+    (top: 387, side: 388, bottom: 388), // enchanting_table
+    (top: 383, side: 383, bottom: 383), // brewing_stand
+    (top: 390, side: 389, bottom: 389), // cauldron
+    (top: 390, side: 389, bottom: 389, aux: Some(13)), // water_cauldron
+    (top: 390, side: 389, bottom: 389, aux: Some(203)), // lava_cauldron
+    (top: 390, side: 389, bottom: 389, aux: Some(391)), // powder_snow_cauldron
+    (top: 392, side: 392, bottom: 392), // end_portal
+    (top: 393, side: 394, bottom: 394), // end_portal_frame
+    (top: 395, side: 395, bottom: 395), // end_stone
+    (top: 396, side: 396, bottom: 396), // dragon_egg
+    (top: 397, side: 397, bottom: 397), // redstone_lamp
+    (top: 375, side: 375, bottom: 375), // cocoa
+    (top: 16, side: 15, bottom: 16), // sandstone_stairs
+    (top: 16, side: 15, bottom: 16), // sandstone_stairs_south
+    (top: 16, side: 15, bottom: 16), // sandstone_stairs_west
+    (top: 16, side: 15, bottom: 16), // sandstone_stairs_east
+    (top: 398, side: 398, bottom: 398), // deepslate_emerald_ore
+    (top: 399, side: 399, bottom: 399), // ender_chest
+    (top: 400, side: 400, bottom: 400), // tripwire_hook
+    (top: 400, side: 400, bottom: 400), // tripwire_hook_south
+    (top: 400, side: 400, bottom: 400), // tripwire_hook_west
+    (top: 400, side: 400, bottom: 400), // tripwire_hook_east
+    (top: 376, side: 376, bottom: 376), // tripwire
+    (top: 244, side: 244, bottom: 244), // spruce_stairs
+    (top: 244, side: 244, bottom: 244), // spruce_stairs_south
+    (top: 244, side: 244, bottom: 244), // spruce_stairs_west
+    (top: 244, side: 244, bottom: 244), // spruce_stairs_east
+    (top: 42, side: 42, bottom: 42), // birch_stairs
+    (top: 42, side: 42, bottom: 42), // birch_stairs_south
+    (top: 42, side: 42, bottom: 42), // birch_stairs_west
+    (top: 42, side: 42, bottom: 42), // birch_stairs_east
+    (top: 130, side: 130, bottom: 130), // jungle_stairs
+    (top: 130, side: 130, bottom: 130), // jungle_stairs_south
+    (top: 130, side: 130, bottom: 130), // jungle_stairs_west
+    (top: 130, side: 130, bottom: 130), // jungle_stairs_east
+    (top: 401, side: 401, bottom: 401), // command_block
+    (top: 402, side: 402, bottom: 402), // beacon
+    (top: 11, side: 11, bottom: 11), // cobblestone_wall
+    (top: 38, side: 38, bottom: 38), // mossy_cobblestone_wall
+    (top: 403, side: 403, bottom: 403), // flower_pot
+    (top: 403, side: 403, bottom: 403, aux: Some(223)), // potted_torchflower
+    (top: 403, side: 403, bottom: 403, aux: Some(209)), // potted_oak_sapling
+    (top: 403, side: 403, bottom: 403, aux: Some(210)), // potted_spruce_sapling
+    (top: 403, side: 403, bottom: 403, aux: Some(211)), // potted_birch_sapling
+    (top: 403, side: 403, bottom: 403, aux: Some(212)), // potted_jungle_sapling
+    (top: 403, side: 403, bottom: 403, aux: Some(213)), // potted_acacia_sapling
+    (top: 403, side: 403, bottom: 403, aux: Some(214)), // potted_cherry_sapling
+    (top: 403, side: 403, bottom: 403, aux: Some(215)), // potted_dark_oak_sapling
+    (top: 403, side: 403, bottom: 403, aux: Some(216)), // potted_mangrove_propagule
+    (top: 403, side: 403, bottom: 403, aux: Some(219)), // potted_fern
+    (top: 403, side: 403, bottom: 403, aux: Some(119)), // potted_dandelion
+    (top: 403, side: 403, bottom: 403, aux: Some(118)), // potted_poppy
+    (top: 403, side: 403, bottom: 403, aux: Some(224)), // potted_blue_orchid
+    (top: 403, side: 403, bottom: 403, aux: Some(225)), // potted_allium
+    (top: 403, side: 403, bottom: 403, aux: Some(226)), // potted_azure_bluet
+    (top: 403, side: 403, bottom: 403, aux: Some(227)), // potted_red_tulip
+    (top: 403, side: 403, bottom: 403, aux: Some(228)), // potted_orange_tulip
+    (top: 403, side: 403, bottom: 403, aux: Some(229)), // potted_white_tulip
+    (top: 403, side: 403, bottom: 403, aux: Some(230)), // potted_pink_tulip
+    (top: 403, side: 403, bottom: 403, aux: Some(121)), // potted_oxeye_daisy
+    (top: 403, side: 403, bottom: 403, aux: Some(120)), // potted_cornflower
+    (top: 403, side: 403, bottom: 403, aux: Some(232)), // potted_lily_of_the_valley
+    (top: 403, side: 403, bottom: 403, aux: Some(231)), // potted_wither_rose
+    (top: 403, side: 403, bottom: 403, aux: Some(234)), // potted_red_mushroom
+    (top: 403, side: 403, bottom: 403, aux: Some(233)), // potted_brown_mushroom
+    (top: 403, side: 403, bottom: 403, aux: Some(220)), // potted_dead_bush
+    (top: 403, side: 403, bottom: 403, aux: Some(338)), // potted_cactus
+    (top: 377, side: 377, bottom: 377), // carrots
+    (top: 378, side: 378, bottom: 378), // potatoes
+    (top: 10, side: 10, bottom: 10), // oak_button
+    (top: 10, side: 10, bottom: 10), // oak_button_south
+    (top: 10, side: 10, bottom: 10), // oak_button_west
+    (top: 10, side: 10, bottom: 10), // oak_button_east
+    (top: 244, side: 244, bottom: 244), // spruce_button
+    (top: 244, side: 244, bottom: 244), // spruce_button_south
+    (top: 244, side: 244, bottom: 244), // spruce_button_west
+    (top: 244, side: 244, bottom: 244), // spruce_button_east
+    (top: 42, side: 42, bottom: 42), // birch_button
+    (top: 42, side: 42, bottom: 42), // birch_button_south
+    (top: 42, side: 42, bottom: 42), // birch_button_west
+    (top: 42, side: 42, bottom: 42), // birch_button_east
+    (top: 130, side: 130, bottom: 130), // jungle_button
+    (top: 130, side: 130, bottom: 130), // jungle_button_south
+    (top: 130, side: 130, bottom: 130), // jungle_button_west
+    (top: 130, side: 130, bottom: 130), // jungle_button_east
+    (top: 126, side: 126, bottom: 126), // acacia_button
+    (top: 126, side: 126, bottom: 126), // acacia_button_south
+    (top: 126, side: 126, bottom: 126), // acacia_button_west
+    (top: 126, side: 126, bottom: 126), // acacia_button_east
+    (top: 142, side: 142, bottom: 142), // cherry_button
+    (top: 142, side: 142, bottom: 142), // cherry_button_south
+    (top: 142, side: 142, bottom: 142), // cherry_button_west
+    (top: 142, side: 142, bottom: 142), // cherry_button_east
+    (top: 134, side: 134, bottom: 134), // dark_oak_button
+    (top: 134, side: 134, bottom: 134), // dark_oak_button_south
+    (top: 134, side: 134, bottom: 134), // dark_oak_button_west
+    (top: 134, side: 134, bottom: 134), // dark_oak_button_east
+    (top: 138, side: 138, bottom: 138), // mangrove_button
+    (top: 138, side: 138, bottom: 138), // mangrove_button_south
+    (top: 138, side: 138, bottom: 138), // mangrove_button_west
+    (top: 138, side: 138, bottom: 138), // mangrove_button_east
+    (top: 245, side: 245, bottom: 245), // bamboo_button
+    (top: 245, side: 245, bottom: 245), // bamboo_button_south
+    (top: 245, side: 245, bottom: 245), // bamboo_button_west
+    (top: 245, side: 245, bottom: 245), // bamboo_button_east
+    (top: 412, side: 412, bottom: 412), // skeleton_skull
+    (top: 412, side: 412, bottom: 412), // skeleton_wall_skull
+    (top: 412, side: 412, bottom: 412), // skeleton_wall_skull_south
+    (top: 412, side: 412, bottom: 412), // skeleton_wall_skull_west
+    (top: 412, side: 412, bottom: 412), // skeleton_wall_skull_east
+    (top: 413, side: 413, bottom: 413), // wither_skeleton_skull
+    (top: 413, side: 413, bottom: 413), // wither_skeleton_wall_skull
+    (top: 413, side: 413, bottom: 413), // wither_skeleton_wall_skull_south
+    (top: 413, side: 413, bottom: 413), // wither_skeleton_wall_skull_west
+    (top: 413, side: 413, bottom: 413), // wither_skeleton_wall_skull_east
+    (top: 414, side: 414, bottom: 414), // zombie_head
+    (top: 414, side: 414, bottom: 414), // zombie_wall_head
+    (top: 414, side: 414, bottom: 414), // zombie_wall_head_south
+    (top: 414, side: 414, bottom: 414), // zombie_wall_head_west
+    (top: 414, side: 414, bottom: 414), // zombie_wall_head_east
+    (top: 415, side: 415, bottom: 415), // player_head
+    (top: 415, side: 415, bottom: 415), // player_wall_head
+    (top: 415, side: 415, bottom: 415), // player_wall_head_south
+    (top: 415, side: 415, bottom: 415), // player_wall_head_west
+    (top: 415, side: 415, bottom: 415), // player_wall_head_east
+    (top: 416, side: 416, bottom: 416), // creeper_head
+    (top: 416, side: 416, bottom: 416), // creeper_wall_head
+    (top: 416, side: 416, bottom: 416), // creeper_wall_head_south
+    (top: 416, side: 416, bottom: 416), // creeper_wall_head_west
+    (top: 416, side: 416, bottom: 416), // creeper_wall_head_east
+    (top: 417, side: 417, bottom: 417), // dragon_head
+    (top: 417, side: 417, bottom: 417), // dragon_wall_head
+    (top: 417, side: 417, bottom: 417), // dragon_wall_head_south
+    (top: 417, side: 417, bottom: 417), // dragon_wall_head_west
+    (top: 417, side: 417, bottom: 417), // dragon_wall_head_east
+    (top: 418, side: 418, bottom: 418), // piglin_head
+    (top: 418, side: 418, bottom: 418), // piglin_wall_head
+    (top: 418, side: 418, bottom: 418), // piglin_wall_head_south
+    (top: 418, side: 418, bottom: 418), // piglin_wall_head_west
+    (top: 418, side: 418, bottom: 418), // piglin_wall_head_east
+    (top: 406, side: 406, bottom: 406), // anvil
+    (top: 406, side: 406, bottom: 406), // anvil_z
+    (top: 406, side: 406, bottom: 406), // chipped_anvil
+    (top: 406, side: 406, bottom: 406), // chipped_anvil_z
+    (top: 406, side: 406, bottom: 406), // damaged_anvil
+    (top: 406, side: 406, bottom: 406), // damaged_anvil_z
+    (top: 53, side: 53, bottom: 53), // trapped_chest
+    (top: 21, side: 21, bottom: 21), // light_weighted_pressure_plate
+    (top: 24, side: 24, bottom: 24), // heavy_weighted_pressure_plate
+    (top: 411, side: 3, bottom: 3, aux: Some(411)), // comparator
+    (top: 411, side: 3, bottom: 3, aux: Some(411)), // comparator_south
+    (top: 411, side: 3, bottom: 3, aux: Some(411)), // comparator_west
+    (top: 411, side: 3, bottom: 3, aux: Some(411)), // comparator_east
+    (top: 404, side: 405, bottom: 405), // daylight_detector
+    (top: 410, side: 410, bottom: 410), // redstone_block
+    (top: 408, side: 408, bottom: 408), // nether_quartz_ore
+    (top: 407, side: 407, bottom: 407), // hopper
+    (top: 409, side: 409, bottom: 409), // chiseled_quartz_block
 ]

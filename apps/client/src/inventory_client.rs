@@ -676,6 +676,9 @@ pub(crate) fn oriented_block(
             let wood = (base - game_core::OAK_SIGN) / 4;
             return game_core::facing_variant(game_core::OAK_WALL_SIGN + wood * 4, face);
         }
+        if let Some(face) = outward.filter(|_| shape == Some(Shape::Head)) {
+            return game_core::facing_variant(base + 1, face);
+        }
         if outward.is_some() && shape == Some(Shape::Hanging) {
             let wood = (base - game_core::OAK_HANGING_SIGN) / 2;
             let along_x = matches!(outward, Some(Facing::East | Facing::West));
@@ -685,8 +688,16 @@ pub(crate) fn oriented_block(
         }
         match game_core::family_of(base) {
             Some((first, _, FamilyKind::H4)) => {
-                let wall_attached =
-                    matches!(shape, Some(Shape::Ladder | Shape::WallSign | Shape::Button));
+                let wall_attached = matches!(
+                    shape,
+                    Some(
+                        Shape::Ladder
+                            | Shape::WallSign
+                            | Shape::Button
+                            | Shape::Hook
+                            | Shape::WallHead
+                    )
+                );
                 let face = if wall_attached {
                     outward.unwrap_or(toward)
                 } else {
@@ -701,7 +712,7 @@ pub(crate) fn oriented_block(
                 let looking_along_x = matches!(toward, Facing::East | Facing::West);
                 return first + game_core::BlockId::from(looking_along_x);
             }
-            Some((first, _, FamilyKind::Door)) => {
+            Some((first, _, FamilyKind::Door | FamilyKind::Gate)) => {
                 return game_core::facing_variant_index(first, toward);
             }
             _ => {}
@@ -2199,6 +2210,39 @@ mod tests {
             },
         );
         assert_eq!(stairs.world.block([8, 101, 6]), game_core::OAK_STAIRS + 1);
+    }
+
+    #[test]
+    fn gates_toggle_and_heads_on_walls_become_wall_heads() {
+        let mut game = world();
+        equip(&mut game, "voxium:oak_fence_gate");
+        process_action(
+            &mut game,
+            &InventoryAction::Place {
+                position: [8, 101, 6],
+            },
+        );
+        let gate = game.world.block([8, 101, 6]);
+        assert_eq!(gate, game_core::OAK_FENCE_GATE + 1);
+        process_action(
+            &mut game,
+            &InventoryAction::Toggle {
+                position: [8, 101, 6],
+            },
+        );
+        assert_eq!(game.world.block([8, 101, 6]), game_core::OAK_FENCE_GATE + 5);
+        let mut heads = world();
+        equip(&mut heads, "voxium:creeper_head");
+        process_action(
+            &mut heads,
+            &InventoryAction::Place {
+                position: [8, 101, 6],
+            },
+        );
+        assert_eq!(
+            heads.world.block([8, 101, 6]),
+            game_core::CREEPER_WALL_HEAD + 1
+        );
     }
 
     #[test]

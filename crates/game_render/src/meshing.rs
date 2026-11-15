@@ -248,6 +248,10 @@ fn model_cell(
         None => models::model_boxes(id),
     };
     let faces = textures.0[usize::from(id)];
+    if models::shape_of(id) == Some(models::Shape::Potted) {
+        // Растение в горшке: пересечённые плоскости строго по центру клетки.
+        builders[usize::from(faces.aux.unwrap_or(faces.side))].cross(local, 0x8080_8080_8080_8080);
+    }
     for b in boxes {
         for axis in 0..3 {
             for positive in [false, true] {

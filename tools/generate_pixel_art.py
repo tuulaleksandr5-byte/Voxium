@@ -2573,6 +2573,8 @@ def save(image, path, scale):
 
 
 def load_tile(name):
+    if name in TILES:
+        return TILES[name]()
     path = ROOT / "assets/textures/pixel/32x32" / f"{name}.png"
     return np.array(Image.open(path).convert("RGBA"), dtype=float)
 
@@ -3000,6 +3002,375 @@ def glass_pane():
     for k in range(4):
         put(image, 4 + k, 20 - k, "#ffffff", 200)
     return image
+
+
+
+# ------------------------------------------------------------ part 3 tiles
+
+
+noise_tile("end_stone", ["#d9d99a", "#e2e2a6", "#eaeab4", "#c8c88a"], specks=["#a8a870", "#f4f4c8"], count=50)
+noise_tile("quartz_ore", ["#7a4040", "#844848", "#8e5050", "#984a4a"], specks=["#4a2020", "#c8b0a0"], count=30)
+noise_tile("powder_snow", ["#f4f8fa", "#e8f0f4", "#dde8ee"], specks=["#ffffff", "#c8d8e0"], count=30)
+noise_tile("redstone_block", ["#a81410", "#b81c14", "#c82418", "#981008"], specks=["#e84030", "#780800"], count=40)
+noise_tile("command_block", ["#a8663a", "#b27040", "#bc7a46"], specks=["#7a4422", "#d49060"], count=40)
+
+
+@tile("mycelium_top")
+def mycelium_top():
+    r = rng("mycelium_top")
+    image = fill(canvas(), fbm(r), ["#6e5e78", "#7a6a84", "#867690", "#92829c"])
+    speckle(image, r, ["#b8a8c4", "#5a4a64", "#e0d8e8"], 60)
+    return image
+
+
+@tile("mycelium_side")
+def mycelium_side():
+    image = load_tile("dirt")
+    top = mycelium_top()
+    for y in range(0, 7):
+        for x in range(N):
+            if y < 5 or (x * 7 + y * 3) % 5 < 2:
+                image[y, x, :] = top[y, x, :]
+    return image
+
+
+@tile("nether_bricks")
+def nether_bricks():
+    image = canvas("#2e1618")
+    for row in range(4):
+        y = row * 8
+        rect(image, 0, y + 7, N, 1, "#1a0a0c")
+        off = 0 if row % 2 == 0 else 8
+        for x in range(off, N + 8, 16):
+            rect(image, x % N, y, 1, 7, "#1a0a0c")
+    r = rng("nether_bricks")
+    speckle(image, r, ["#3e1e20", "#4a2426"], 80)
+    return image
+
+
+@tile("enchanting_table_top")
+def enchanting_table_top():
+    image = canvas("#7a1830")
+    border(image, "#2a0a16", 2)
+    rect(image, 8, 8, 16, 16, "#5a1024")
+    rect(image, 12, 12, 8, 8, "#40d8c8")
+    rect(image, 14, 14, 4, 4, "#b8fff0")
+    return image
+
+
+@tile("enchanting_table_side")
+def enchanting_table_side():
+    image = canvas("#201830")
+    rect(image, 0, 0, N, 5, "#7a1830")
+    rect(image, 0, 27, N, 5, "#1a1228")
+    for x in (6, 15, 24):
+        rect(image, x, 12, 3, 3, "#40d8c8")
+    return image
+
+
+@tile("brewing_stand")
+def brewing_stand():
+    image = transparent()
+    rect(image, 14, 4, 4, 20, "#c8b890")
+    rect(image, 2, 26, 28, 4, "#8a8a8a")
+    for x in (3, 25):
+        rect(image, x, 16, 4, 10, "#d8e8f0", 180)
+    rect(image, 14, 2, 4, 4, "#f0a020")
+    return image
+
+
+@tile("cauldron_side")
+def cauldron_side():
+    image = canvas("#3a3a42")
+    border(image, "#22222a", 2)
+    rect(image, 0, 0, N, 4, "#505058")
+    r = rng("cauldron_side")
+    speckle(image, r, ["#2a2a32", "#4a4a52"], 40)
+    return image
+
+
+@tile("cauldron_top")
+def cauldron_top():
+    image = canvas("#22222a")
+    border(image, "#4a4a52", 3)
+    return image
+
+
+@tile("end_portal")
+def end_portal():
+    r = rng("end_portal")
+    image = fill(canvas(), fbm(r), ["#050810", "#0a1a2a", "#103a4a", "#1a6a6a"])
+    speckle(image, r, ["#e0fff0", "#8affc8"], 40)
+    return image
+
+
+@tile("end_portal_frame_top")
+def end_portal_frame_top():
+    image = canvas("#4a7a5a")
+    border(image, "#d8d898", 2)
+    rect(image, 8, 8, 16, 16, "#2a5a3a")
+    rect(image, 11, 11, 10, 10, "#0e2a1e")
+    return image
+
+
+@tile("end_portal_frame_side")
+def end_portal_frame_side():
+    image = load_tile("end_stone")
+    rect(image, 0, 0, N, 8, "#4a7a5a")
+    rect(image, 0, 8, N, 1, "#2a5a3a")
+    return image
+
+
+@tile("dragon_egg")
+def dragon_egg():
+    r = rng("dragon_egg")
+    image = fill(canvas(), fbm(r), ["#0c0614", "#140a22", "#1c0e30"])
+    speckle(image, r, ["#b040e0", "#e070ff", "#5a1a8a"], 90)
+    return image
+
+
+@tile("redstone_lamp")
+def redstone_lamp():
+    image = canvas("#a0602a")
+    for y in range(0, N, 8):
+        rect(image, 0, y, N, 1, "#6a3a14")
+    for x in range(0, N, 8):
+        rect(image, x, 0, 1, N, "#6a3a14")
+    rect(image, 4, 4, 24, 24, "#e8b050")
+    rect(image, 8, 8, 16, 16, "#f8d880")
+    rect(image, 12, 12, 8, 8, "#fff4c0")
+    return image
+
+
+@tile("deepslate_emerald_ore")
+def deepslate_emerald_ore():
+    r = rng("deepslate")
+    image = stone_base(r, DEEP, crack_color="#25252c")
+    speckle(image, r, ["#5c5c6c"], 40)
+    o = rng("deepslate_emerald_ore")
+    for cx, cy in ((8, 8), (22, 12), (13, 23), (25, 25)):
+        for y in range(cy - 3, cy + 4):
+            for x in range(cx - 3, cx + 4):
+                d = math.hypot(x - cx, y - cy) + o.uniform(-0.5, 0.5)
+                if d < 2.6:
+                    put(image, x, y, "#7affa0" if (x - cx) + (y - cy) < 0 else "#20b050")
+                elif d < 3.4 and x + y > cx + cy:
+                    put(image, x, y, "#0a5a2a")
+    return image
+
+
+@tile("ender_chest")
+def ender_chest():
+    image = canvas("#143a3a")
+    border(image, "#0a1e1e", 2)
+    rect(image, 0, 12, N, 3, "#0a1e1e")
+    rect(image, 13, 10, 6, 7, "#9affd8")
+    rect(image, 14, 12, 4, 3, "#2a5a5a")
+    r = rng("ender_chest")
+    speckle(image, r, ["#1e5a5a", "#0e2a2a"], 50)
+    return image
+
+
+@tile("tripwire_hook")
+def tripwire_hook():
+    image = load_tile("oak_planks")
+    rect(image, 12, 2, 8, 12, "#4a4a4a")
+    rect(image, 14, 14, 4, 14, "#8a6a34")
+    return image
+
+
+@tile("tripwire")
+def tripwire():
+    image = transparent()
+    rect(image, 0, 15, N, 2, "#e8e8e8", 220)
+    return image
+
+
+@tile("beacon")
+def beacon():
+    image = canvas("#58e8e0")
+    border(image, "#1a8a88", 2)
+    rect(image, 6, 6, 20, 20, "#1a1a28")
+    rect(image, 9, 9, 14, 14, "#6a4a9a")
+    rect(image, 13, 13, 6, 6, "#e8f0ff")
+    return image
+
+
+@tile("flower_pot")
+def flower_pot():
+    image = canvas("#8a4a32")
+    border(image, "#5a2c1c", 2)
+    for y in range(4, 30, 6):
+        rect(image, 2, y, 28, 1, "#6a3820")
+    return image
+
+
+@tile("daylight_detector_top")
+def daylight_detector_top():
+    image = canvas("#7a6a50")
+    border(image, "#4a3e2e", 2)
+    rect(image, 4, 4, 24, 24, "#3a4a8a")
+    for k in range(6, 26, 5):
+        rect(image, k, 6, 2, 20, "#7a8ad0")
+    return image
+
+
+@tile("daylight_detector_side")
+def daylight_detector_side():
+    image = canvas("#9a8860")
+    rect(image, 0, 0, N, 6, "#3a4a8a")
+    rect(image, 0, 6, N, 1, "#4a3e2e")
+    return image
+
+
+@tile("anvil")
+def anvil():
+    r = rng("anvil")
+    image = fill(canvas(), fbm(r), ["#2a2a30", "#34343c", "#3e3e46"])
+    rect(image, 0, 0, N, 3, "#52525c")
+    return image
+
+
+@tile("hopper")
+def hopper():
+    image = canvas("#4a4a52")
+    border(image, "#2a2a30", 2)
+    rect(image, 10, 10, 12, 12, "#1a1a1e")
+    return image
+
+
+@tile("chiseled_quartz_block")
+def chiseled_quartz_block():
+    image = load_tile("quartz_block")
+    border(image, "#c8c0b8", 2)
+    rect(image, 8, 14, 16, 4, "#b8b0a8")
+    rect(image, 14, 8, 4, 16, "#b8b0a8")
+    return image
+
+
+@tile("comparator_top")
+def comparator_top():
+    image = canvas("#9a9a98")
+    border(image, "#6a6a68", 2)
+    rect(image, 6, 20, 5, 6, "#c81818")
+    rect(image, 21, 20, 5, 6, "#c81818")
+    rect(image, 13, 6, 6, 6, "#e8c8c0")
+    return image
+
+
+def head(name, skin, accent, eyes):
+    def build():
+        r = rng(name)
+        image = fill(canvas(), fbm(r), skin)
+        rect(image, 6, 11, 6, 5, eyes)
+        rect(image, 20, 11, 6, 5, eyes)
+        rect(image, 8, 22, 16, 3, accent)
+        return image
+
+    TILES[name] = build
+
+
+head("skeleton_skull", ["#c8c8c0", "#d4d4cc", "#dcdcd4"], "#6a6a66", "#18181a")
+head("wither_skull", ["#2a2a2c", "#343436", "#3c3c3e"], "#0a0a0a", "#c0c0c8")
+head("zombie_head", ["#5a8a4a", "#649454", "#6e9e5e"], "#2a4a2a", "#101820")
+head("player_head", ["#c89070", "#d49c7a", "#dea884"], "#6a4a38", "#3a5acd")
+head("creeper_head", ["#5ab04a", "#66bc56", "#72c862"], "#143a14", "#0a0a0a")
+head("dragon_head", ["#1c1c24", "#24242c", "#2c2c34"], "#8a3ae0", "#d070ff")
+head("piglin_head", ["#d89a8a", "#e0a496", "#e8aea0"], "#7a3a30", "#2a1a14")
+
+
+@tile("vine")
+def vine():
+    image = transparent()
+    r = rng("vine")
+    for x in range(1, N, 3):
+        length = int(8 + r.integers(0, 22))
+        for y in range(length):
+            put(image, x, y, "#2e7a2a" if y % 3 else "#3a9a34")
+            if y % 5 == 2:
+                put(image, x + 1, y, "#3a9a34")
+    return image
+
+
+@tile("glow_lichen")
+def glow_lichen():
+    image = transparent()
+    r = rng("glow_lichen")
+    for _ in range(90):
+        x, y = r.integers(0, N, 2)
+        put(image, x, y, "#9ad8b8", 230)
+        if r.random() < 0.3:
+            put(image, x + 1, y, "#d8fff0", 255)
+    return image
+
+
+@tile("lily_pad")
+def lily_pad():
+    image = transparent()
+    for y in range(N):
+        for x in range(N):
+            d = math.hypot(x - 15.5, y - 15.5)
+            if d < 13 and not (x > 15 and 13 < y < 17):
+                put(image, x, y, "#2a7a32" if (x + y) % 5 else "#34903c")
+    return image
+
+
+@tile("nether_wart")
+def nether_wart():
+    image = transparent()
+    r = rng("nether_wart")
+    for x in range(3, 29, 6):
+        h = int(10 + r.integers(0, 8))
+        for y in range(N - h, N):
+            rect(image, x, y, 3, 1, "#a8202a" if y % 3 else "#c83038")
+    return image
+
+
+@tile("cocoa")
+def cocoa():
+    image = transparent()
+    for y in range(8, 26):
+        w = 5 if y < 20 else 3
+        rect(image, 16 - w, y, w * 2, 1, "#8a4a1e" if y % 4 else "#a85a26")
+    rect(image, 14, 4, 4, 4, "#3a7a2a")
+    return image
+
+
+def crop(name, stem, head_color):
+    def build():
+        image = transparent()
+        for x in range(2, 30, 7):
+            for y in range(12, N):
+                rect(image, x, y, 2, 1, stem)
+            rect(image, x - 2, 8, 6, 5, head_color)
+            rect(image, x - 1, 6, 4, 2, "#4a8a3a")
+        return image
+
+    TILES[name] = build
+
+
+crop("carrots", "#3a8a30", "#e88a1a")
+crop("potatoes", "#3a8a30", "#c8a060")
+
+
+def stem(name, color, attached=None):
+    def build():
+        image = transparent()
+        for y in range(10, N):
+            rect(image, 14, y, 3, 1, color)
+        if attached:
+            for x in range(17, 28):
+                rect(image, x, 14 + (x - 17) // 3, 1, 3, color)
+            rect(image, 24, 16, 7, 7, attached)
+        return image
+
+    TILES[name] = build
+
+
+stem("pumpkin_stem", "#7a9a3a")
+stem("melon_stem", "#6a9a4a")
+stem("attached_pumpkin_stem", "#8a8a3a", "#d8841c")
+stem("attached_melon_stem", "#7a9a4a", "#5aa032")
 
 
 

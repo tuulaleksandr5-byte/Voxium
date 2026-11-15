@@ -465,10 +465,12 @@ pub enum FamilyKind {
     Trap,
     /// Рельсы: вдоль Z, вдоль X.
     Rail,
+    /// Калитка: закрыта/открыта × четыре стороны.
+    Gate,
 }
 
 /// Семейства блоков с состоянием: (первый ID, число вариантов, вид).
-pub const FAMILIES: [(BlockId, u8, FamilyKind); 63] = [
+pub const FAMILIES: [(BlockId, u8, FamilyKind); 93] = [
     (322, 4, FamilyKind::H4),
     (330, 4, FamilyKind::H4),
     (334, 4, FamilyKind::H4),
@@ -532,10 +534,147 @@ pub const FAMILIES: [(BlockId, u8, FamilyKind); 63] = [
     (576, 5, FamilyKind::Trap),
     (581, 5, FamilyKind::Trap),
     (586, 5, FamilyKind::Trap),
+    (610, 8, FamilyKind::Gate),
+    (618, 4, FamilyKind::H4),
+    (622, 4, FamilyKind::H4),
+    (626, 4, FamilyKind::H4),
+    (634, 4, FamilyKind::H4),
+    (651, 4, FamilyKind::H4),
+    (657, 4, FamilyKind::H4),
+    (662, 4, FamilyKind::H4),
+    (666, 4, FamilyKind::H4),
+    (670, 4, FamilyKind::H4),
+    (708, 4, FamilyKind::H4),
+    (712, 4, FamilyKind::H4),
+    (716, 4, FamilyKind::H4),
+    (720, 4, FamilyKind::H4),
+    (724, 4, FamilyKind::H4),
+    (728, 4, FamilyKind::H4),
+    (732, 4, FamilyKind::H4),
+    (736, 4, FamilyKind::H4),
+    (740, 4, FamilyKind::H4),
+    (745, 4, FamilyKind::H4),
+    (750, 4, FamilyKind::H4),
+    (755, 4, FamilyKind::H4),
+    (760, 4, FamilyKind::H4),
+    (765, 4, FamilyKind::H4),
+    (770, 4, FamilyKind::H4),
+    (775, 4, FamilyKind::H4),
+    (779, 2, FamilyKind::AX2),
+    (781, 2, FamilyKind::AX2),
+    (783, 2, FamilyKind::AX2),
+    (788, 4, FamilyKind::H4),
 ];
 
 pub const PART2_FIRST: BlockId = 321;
 pub const PART2_LAST: BlockId = 603;
+pub const ATTACHED_PUMPKIN_STEM: BlockId = 604;
+pub const ATTACHED_MELON_STEM: BlockId = 605;
+pub const PUMPKIN_STEM: BlockId = 606;
+pub const MELON_STEM: BlockId = 607;
+pub const VINE: BlockId = 608;
+pub const GLOW_LICHEN: BlockId = 609;
+pub const OAK_FENCE_GATE: BlockId = 610;
+pub const BRICK_STAIRS: BlockId = 618;
+pub const STONE_BRICK_STAIRS: BlockId = 622;
+pub const MUD_BRICK_STAIRS: BlockId = 626;
+pub const MYCELIUM: BlockId = 630;
+pub const LILY_PAD: BlockId = 631;
+pub const NETHER_BRICKS: BlockId = 632;
+pub const NETHER_BRICK_FENCE: BlockId = 633;
+pub const NETHER_BRICK_STAIRS: BlockId = 634;
+pub const NETHER_WART: BlockId = 638;
+pub const ENCHANTING_TABLE: BlockId = 639;
+pub const BREWING_STAND: BlockId = 640;
+pub const CAULDRON: BlockId = 641;
+pub const WATER_CAULDRON: BlockId = 642;
+pub const LAVA_CAULDRON: BlockId = 643;
+pub const POWDER_SNOW_CAULDRON: BlockId = 644;
+pub const END_PORTAL: BlockId = 645;
+pub const END_PORTAL_FRAME: BlockId = 646;
+pub const END_STONE: BlockId = 647;
+pub const DRAGON_EGG: BlockId = 648;
+pub const REDSTONE_LAMP: BlockId = 649;
+pub const COCOA: BlockId = 650;
+pub const SANDSTONE_STAIRS: BlockId = 651;
+pub const DEEPSLATE_EMERALD_ORE: BlockId = 655;
+pub const ENDER_CHEST: BlockId = 656;
+pub const TRIPWIRE_HOOK: BlockId = 657;
+pub const TRIPWIRE: BlockId = 661;
+pub const SPRUCE_STAIRS: BlockId = 662;
+pub const BIRCH_STAIRS: BlockId = 666;
+pub const JUNGLE_STAIRS: BlockId = 670;
+pub const COMMAND_BLOCK: BlockId = 674;
+pub const BEACON: BlockId = 675;
+pub const COBBLESTONE_WALL: BlockId = 676;
+pub const MOSSY_COBBLESTONE_WALL: BlockId = 677;
+pub const FLOWER_POT: BlockId = 678;
+pub const POTTED_TORCHFLOWER: BlockId = 679;
+pub const POTTED_OAK_SAPLING: BlockId = 680;
+pub const POTTED_SPRUCE_SAPLING: BlockId = 681;
+pub const POTTED_BIRCH_SAPLING: BlockId = 682;
+pub const POTTED_JUNGLE_SAPLING: BlockId = 683;
+pub const POTTED_ACACIA_SAPLING: BlockId = 684;
+pub const POTTED_CHERRY_SAPLING: BlockId = 685;
+pub const POTTED_DARK_OAK_SAPLING: BlockId = 686;
+pub const POTTED_MANGROVE_PROPAGULE: BlockId = 687;
+pub const POTTED_FERN: BlockId = 688;
+pub const POTTED_DANDELION: BlockId = 689;
+pub const POTTED_POPPY: BlockId = 690;
+pub const POTTED_BLUE_ORCHID: BlockId = 691;
+pub const POTTED_ALLIUM: BlockId = 692;
+pub const POTTED_AZURE_BLUET: BlockId = 693;
+pub const POTTED_RED_TULIP: BlockId = 694;
+pub const POTTED_ORANGE_TULIP: BlockId = 695;
+pub const POTTED_WHITE_TULIP: BlockId = 696;
+pub const POTTED_PINK_TULIP: BlockId = 697;
+pub const POTTED_OXEYE_DAISY: BlockId = 698;
+pub const POTTED_CORNFLOWER: BlockId = 699;
+pub const POTTED_LILY_OF_THE_VALLEY: BlockId = 700;
+pub const POTTED_WITHER_ROSE: BlockId = 701;
+pub const POTTED_RED_MUSHROOM: BlockId = 702;
+pub const POTTED_BROWN_MUSHROOM: BlockId = 703;
+pub const POTTED_DEAD_BUSH: BlockId = 704;
+pub const POTTED_CACTUS: BlockId = 705;
+pub const CARROTS: BlockId = 706;
+pub const POTATOES: BlockId = 707;
+pub const OAK_BUTTON: BlockId = 708;
+pub const SPRUCE_BUTTON: BlockId = 712;
+pub const BIRCH_BUTTON: BlockId = 716;
+pub const JUNGLE_BUTTON: BlockId = 720;
+pub const ACACIA_BUTTON: BlockId = 724;
+pub const CHERRY_BUTTON: BlockId = 728;
+pub const DARK_OAK_BUTTON: BlockId = 732;
+pub const MANGROVE_BUTTON: BlockId = 736;
+pub const BAMBOO_BUTTON: BlockId = 740;
+pub const SKELETON_SKULL: BlockId = 744;
+pub const SKELETON_WALL_SKULL: BlockId = 745;
+pub const WITHER_SKELETON_SKULL: BlockId = 749;
+pub const WITHER_SKELETON_WALL_SKULL: BlockId = 750;
+pub const ZOMBIE_HEAD: BlockId = 754;
+pub const ZOMBIE_WALL_HEAD: BlockId = 755;
+pub const PLAYER_HEAD: BlockId = 759;
+pub const PLAYER_WALL_HEAD: BlockId = 760;
+pub const CREEPER_HEAD: BlockId = 764;
+pub const CREEPER_WALL_HEAD: BlockId = 765;
+pub const DRAGON_HEAD: BlockId = 769;
+pub const DRAGON_WALL_HEAD: BlockId = 770;
+pub const PIGLIN_HEAD: BlockId = 774;
+pub const PIGLIN_WALL_HEAD: BlockId = 775;
+pub const ANVIL: BlockId = 779;
+pub const CHIPPED_ANVIL: BlockId = 781;
+pub const DAMAGED_ANVIL: BlockId = 783;
+pub const TRAPPED_CHEST: BlockId = 785;
+pub const LIGHT_WEIGHTED_PRESSURE_PLATE: BlockId = 786;
+pub const HEAVY_WEIGHTED_PRESSURE_PLATE: BlockId = 787;
+pub const COMPARATOR: BlockId = 788;
+pub const DAYLIGHT_DETECTOR: BlockId = 792;
+pub const REDSTONE_BLOCK: BlockId = 793;
+pub const NETHER_QUARTZ_ORE: BlockId = 794;
+pub const HOPPER: BlockId = 795;
+pub const CHISELED_QUARTZ_BLOCK: BlockId = 796;
+pub const PART3_FIRST: BlockId = 604;
+pub const PART3_LAST: BlockId = 796;
 pub const PLANT2_FIRST: BlockId = 251;
 pub const PLANT2_LAST: BlockId = 280;
 
@@ -559,7 +698,7 @@ const fn block(
 }
 
 #[allow(clippy::large_const_arrays)]
-pub const BLOCKS: [BlockDef; 604] = [
+pub const BLOCKS: [BlockDef; 797] = [
     block(AIR, "Air", "air", 0.0, false, false),
     block(GRASS, "Grass", "grass", 0.6, true, true),
     block(DIRT, "Dirt", "dirt", 0.5, true, true),
@@ -4127,6 +4266,1402 @@ pub const BLOCKS: [BlockDef; 604] = [
     block(IRON_BARS, "Iron Bars", "iron_bars", 5.0, true, false),
     block(CHAIN, "Chain", "chain", 5.0, false, false),
     block(GLASS_PANE, "Glass Pane", "glass_pane", 0.3, true, false),
+    block(
+        ATTACHED_PUMPKIN_STEM,
+        "Attached Pumpkin Stem",
+        "attached_pumpkin_stem",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        ATTACHED_MELON_STEM,
+        "Attached Melon Stem",
+        "attached_melon_stem",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        PUMPKIN_STEM,
+        "Pumpkin Stem",
+        "pumpkin_stem",
+        0.05,
+        false,
+        false,
+    ),
+    block(MELON_STEM, "Melon Stem", "melon_stem", 0.05, false, false),
+    block(VINE, "Vine", "vine", 0.05, false, false),
+    BlockDef {
+        light_emission: 7,
+        ..block(
+            GLOW_LICHEN,
+            "Glow Lichen",
+            "glow_lichen",
+            0.05,
+            false,
+            false,
+        )
+    },
+    block(
+        OAK_FENCE_GATE,
+        "Oak Fence Gate",
+        "oak_fence_gate",
+        2.0,
+        true,
+        false,
+    ),
+    block(
+        OAK_FENCE_GATE + 1,
+        "Oak Fence Gate (closed south)",
+        "oak_fence_gate",
+        2.0,
+        true,
+        false,
+    ),
+    block(
+        OAK_FENCE_GATE + 2,
+        "Oak Fence Gate (closed west)",
+        "oak_fence_gate",
+        2.0,
+        true,
+        false,
+    ),
+    block(
+        OAK_FENCE_GATE + 3,
+        "Oak Fence Gate (closed east)",
+        "oak_fence_gate",
+        2.0,
+        true,
+        false,
+    ),
+    block(
+        OAK_FENCE_GATE + 4,
+        "Oak Fence Gate (open north)",
+        "oak_fence_gate",
+        2.0,
+        false,
+        false,
+    ),
+    block(
+        OAK_FENCE_GATE + 5,
+        "Oak Fence Gate (open south)",
+        "oak_fence_gate",
+        2.0,
+        false,
+        false,
+    ),
+    block(
+        OAK_FENCE_GATE + 6,
+        "Oak Fence Gate (open west)",
+        "oak_fence_gate",
+        2.0,
+        false,
+        false,
+    ),
+    block(
+        OAK_FENCE_GATE + 7,
+        "Oak Fence Gate (open east)",
+        "oak_fence_gate",
+        2.0,
+        false,
+        false,
+    ),
+    block(
+        BRICK_STAIRS,
+        "Brick Stairs",
+        "brick_stairs",
+        2.0,
+        true,
+        false,
+    ),
+    block(
+        BRICK_STAIRS + 1,
+        "Brick Stairs (south)",
+        "brick_stairs",
+        2.0,
+        true,
+        false,
+    ),
+    block(
+        BRICK_STAIRS + 2,
+        "Brick Stairs (west)",
+        "brick_stairs",
+        2.0,
+        true,
+        false,
+    ),
+    block(
+        BRICK_STAIRS + 3,
+        "Brick Stairs (east)",
+        "brick_stairs",
+        2.0,
+        true,
+        false,
+    ),
+    block(
+        STONE_BRICK_STAIRS,
+        "Stone Brick Stairs",
+        "stone_brick_stairs",
+        2.0,
+        true,
+        false,
+    ),
+    block(
+        STONE_BRICK_STAIRS + 1,
+        "Stone Brick Stairs (south)",
+        "stone_brick_stairs",
+        2.0,
+        true,
+        false,
+    ),
+    block(
+        STONE_BRICK_STAIRS + 2,
+        "Stone Brick Stairs (west)",
+        "stone_brick_stairs",
+        2.0,
+        true,
+        false,
+    ),
+    block(
+        STONE_BRICK_STAIRS + 3,
+        "Stone Brick Stairs (east)",
+        "stone_brick_stairs",
+        2.0,
+        true,
+        false,
+    ),
+    block(
+        MUD_BRICK_STAIRS,
+        "Mud Brick Stairs",
+        "mud_brick_stairs",
+        2.0,
+        true,
+        false,
+    ),
+    block(
+        MUD_BRICK_STAIRS + 1,
+        "Mud Brick Stairs (south)",
+        "mud_brick_stairs",
+        2.0,
+        true,
+        false,
+    ),
+    block(
+        MUD_BRICK_STAIRS + 2,
+        "Mud Brick Stairs (west)",
+        "mud_brick_stairs",
+        2.0,
+        true,
+        false,
+    ),
+    block(
+        MUD_BRICK_STAIRS + 3,
+        "Mud Brick Stairs (east)",
+        "mud_brick_stairs",
+        2.0,
+        true,
+        false,
+    ),
+    block(MYCELIUM, "Mycelium", "mycelium", 0.6, true, true),
+    block(LILY_PAD, "Lily Pad", "lily_pad", 0.05, false, false),
+    block(
+        NETHER_BRICKS,
+        "Nether Bricks",
+        "nether_bricks",
+        2.0,
+        true,
+        true,
+    ),
+    block(
+        NETHER_BRICK_FENCE,
+        "Nether Brick Fence",
+        "nether_brick_fence",
+        2.0,
+        true,
+        false,
+    ),
+    block(
+        NETHER_BRICK_STAIRS,
+        "Nether Brick Stairs",
+        "nether_brick_stairs",
+        2.0,
+        true,
+        false,
+    ),
+    block(
+        NETHER_BRICK_STAIRS + 1,
+        "Nether Brick Stairs (south)",
+        "nether_brick_stairs",
+        2.0,
+        true,
+        false,
+    ),
+    block(
+        NETHER_BRICK_STAIRS + 2,
+        "Nether Brick Stairs (west)",
+        "nether_brick_stairs",
+        2.0,
+        true,
+        false,
+    ),
+    block(
+        NETHER_BRICK_STAIRS + 3,
+        "Nether Brick Stairs (east)",
+        "nether_brick_stairs",
+        2.0,
+        true,
+        false,
+    ),
+    block(
+        NETHER_WART,
+        "Nether Wart",
+        "nether_wart",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        ENCHANTING_TABLE,
+        "Enchanting Table",
+        "enchanting_table",
+        5.0,
+        true,
+        false,
+    ),
+    BlockDef {
+        light_emission: 1,
+        ..block(
+            BREWING_STAND,
+            "Brewing Stand",
+            "brewing_stand",
+            0.5,
+            true,
+            false,
+        )
+    },
+    block(CAULDRON, "Cauldron", "cauldron", 2.0, true, false),
+    block(
+        WATER_CAULDRON,
+        "Water Cauldron",
+        "water_cauldron",
+        2.0,
+        true,
+        false,
+    ),
+    BlockDef {
+        light_emission: 15,
+        ..block(
+            LAVA_CAULDRON,
+            "Lava Cauldron",
+            "lava_cauldron",
+            2.0,
+            true,
+            false,
+        )
+    },
+    block(
+        POWDER_SNOW_CAULDRON,
+        "Powder Snow Cauldron",
+        "powder_snow_cauldron",
+        2.0,
+        true,
+        false,
+    ),
+    BlockDef {
+        light_emission: 15,
+        ..block(END_PORTAL, "End Portal", "end_portal", 0.5, false, false)
+    },
+    BlockDef {
+        light_emission: 1,
+        ..block(
+            END_PORTAL_FRAME,
+            "End Portal Frame",
+            "end_portal_frame",
+            5.0,
+            true,
+            false,
+        )
+    },
+    block(END_STONE, "End Stone", "end_stone", 3.0, true, true),
+    BlockDef {
+        light_emission: 1,
+        ..block(DRAGON_EGG, "Dragon Egg", "dragon_egg", 3.0, true, false)
+    },
+    BlockDef {
+        light_emission: 15,
+        ..block(
+            REDSTONE_LAMP,
+            "Redstone Lamp",
+            "redstone_lamp",
+            0.3,
+            true,
+            true,
+        )
+    },
+    block(COCOA, "Cocoa", "cocoa", 0.2, false, false),
+    block(
+        SANDSTONE_STAIRS,
+        "Sandstone Stairs",
+        "sandstone_stairs",
+        0.8,
+        true,
+        false,
+    ),
+    block(
+        SANDSTONE_STAIRS + 1,
+        "Sandstone Stairs (south)",
+        "sandstone_stairs",
+        0.8,
+        true,
+        false,
+    ),
+    block(
+        SANDSTONE_STAIRS + 2,
+        "Sandstone Stairs (west)",
+        "sandstone_stairs",
+        0.8,
+        true,
+        false,
+    ),
+    block(
+        SANDSTONE_STAIRS + 3,
+        "Sandstone Stairs (east)",
+        "sandstone_stairs",
+        0.8,
+        true,
+        false,
+    ),
+    block(
+        DEEPSLATE_EMERALD_ORE,
+        "Deepslate Emerald Ore",
+        "deepslate_emerald_ore",
+        4.5,
+        true,
+        true,
+    ),
+    BlockDef {
+        light_emission: 7,
+        ..block(ENDER_CHEST, "Ender Chest", "ender_chest", 5.0, true, false)
+    },
+    block(
+        TRIPWIRE_HOOK,
+        "Tripwire Hook",
+        "tripwire_hook",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        TRIPWIRE_HOOK + 1,
+        "Tripwire Hook (south)",
+        "tripwire_hook",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        TRIPWIRE_HOOK + 2,
+        "Tripwire Hook (west)",
+        "tripwire_hook",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        TRIPWIRE_HOOK + 3,
+        "Tripwire Hook (east)",
+        "tripwire_hook",
+        0.05,
+        false,
+        false,
+    ),
+    block(TRIPWIRE, "Tripwire", "tripwire", 0.05, false, false),
+    block(
+        SPRUCE_STAIRS,
+        "Spruce Stairs",
+        "spruce_stairs",
+        2.0,
+        true,
+        false,
+    ),
+    block(
+        SPRUCE_STAIRS + 1,
+        "Spruce Stairs (south)",
+        "spruce_stairs",
+        2.0,
+        true,
+        false,
+    ),
+    block(
+        SPRUCE_STAIRS + 2,
+        "Spruce Stairs (west)",
+        "spruce_stairs",
+        2.0,
+        true,
+        false,
+    ),
+    block(
+        SPRUCE_STAIRS + 3,
+        "Spruce Stairs (east)",
+        "spruce_stairs",
+        2.0,
+        true,
+        false,
+    ),
+    block(
+        BIRCH_STAIRS,
+        "Birch Stairs",
+        "birch_stairs",
+        2.0,
+        true,
+        false,
+    ),
+    block(
+        BIRCH_STAIRS + 1,
+        "Birch Stairs (south)",
+        "birch_stairs",
+        2.0,
+        true,
+        false,
+    ),
+    block(
+        BIRCH_STAIRS + 2,
+        "Birch Stairs (west)",
+        "birch_stairs",
+        2.0,
+        true,
+        false,
+    ),
+    block(
+        BIRCH_STAIRS + 3,
+        "Birch Stairs (east)",
+        "birch_stairs",
+        2.0,
+        true,
+        false,
+    ),
+    block(
+        JUNGLE_STAIRS,
+        "Jungle Stairs",
+        "jungle_stairs",
+        2.0,
+        true,
+        false,
+    ),
+    block(
+        JUNGLE_STAIRS + 1,
+        "Jungle Stairs (south)",
+        "jungle_stairs",
+        2.0,
+        true,
+        false,
+    ),
+    block(
+        JUNGLE_STAIRS + 2,
+        "Jungle Stairs (west)",
+        "jungle_stairs",
+        2.0,
+        true,
+        false,
+    ),
+    block(
+        JUNGLE_STAIRS + 3,
+        "Jungle Stairs (east)",
+        "jungle_stairs",
+        2.0,
+        true,
+        false,
+    ),
+    block(
+        COMMAND_BLOCK,
+        "Command Block",
+        "command_block",
+        5.0,
+        true,
+        true,
+    ),
+    BlockDef {
+        light_emission: 15,
+        ..block(BEACON, "Beacon", "beacon", 3.0, true, false)
+    },
+    block(
+        COBBLESTONE_WALL,
+        "Cobblestone Wall",
+        "cobblestone_wall",
+        2.0,
+        true,
+        false,
+    ),
+    block(
+        MOSSY_COBBLESTONE_WALL,
+        "Mossy Cobblestone Wall",
+        "mossy_cobblestone_wall",
+        2.0,
+        true,
+        false,
+    ),
+    block(FLOWER_POT, "Flower Pot", "flower_pot", 0.0, true, false),
+    block(
+        POTTED_TORCHFLOWER,
+        "Potted Torchflower",
+        "potted_torchflower",
+        0.0,
+        true,
+        false,
+    ),
+    block(
+        POTTED_OAK_SAPLING,
+        "Potted Oak Sapling",
+        "potted_oak_sapling",
+        0.0,
+        true,
+        false,
+    ),
+    block(
+        POTTED_SPRUCE_SAPLING,
+        "Potted Spruce Sapling",
+        "potted_spruce_sapling",
+        0.0,
+        true,
+        false,
+    ),
+    block(
+        POTTED_BIRCH_SAPLING,
+        "Potted Birch Sapling",
+        "potted_birch_sapling",
+        0.0,
+        true,
+        false,
+    ),
+    block(
+        POTTED_JUNGLE_SAPLING,
+        "Potted Jungle Sapling",
+        "potted_jungle_sapling",
+        0.0,
+        true,
+        false,
+    ),
+    block(
+        POTTED_ACACIA_SAPLING,
+        "Potted Acacia Sapling",
+        "potted_acacia_sapling",
+        0.0,
+        true,
+        false,
+    ),
+    block(
+        POTTED_CHERRY_SAPLING,
+        "Potted Cherry Sapling",
+        "potted_cherry_sapling",
+        0.0,
+        true,
+        false,
+    ),
+    block(
+        POTTED_DARK_OAK_SAPLING,
+        "Potted Dark Oak Sapling",
+        "potted_dark_oak_sapling",
+        0.0,
+        true,
+        false,
+    ),
+    block(
+        POTTED_MANGROVE_PROPAGULE,
+        "Potted Mangrove Propagule",
+        "potted_mangrove_propagule",
+        0.0,
+        true,
+        false,
+    ),
+    block(POTTED_FERN, "Potted Fern", "potted_fern", 0.0, true, false),
+    block(
+        POTTED_DANDELION,
+        "Potted Dandelion",
+        "potted_dandelion",
+        0.0,
+        true,
+        false,
+    ),
+    block(
+        POTTED_POPPY,
+        "Potted Poppy",
+        "potted_poppy",
+        0.0,
+        true,
+        false,
+    ),
+    block(
+        POTTED_BLUE_ORCHID,
+        "Potted Blue Orchid",
+        "potted_blue_orchid",
+        0.0,
+        true,
+        false,
+    ),
+    block(
+        POTTED_ALLIUM,
+        "Potted Allium",
+        "potted_allium",
+        0.0,
+        true,
+        false,
+    ),
+    block(
+        POTTED_AZURE_BLUET,
+        "Potted Azure Bluet",
+        "potted_azure_bluet",
+        0.0,
+        true,
+        false,
+    ),
+    block(
+        POTTED_RED_TULIP,
+        "Potted Red Tulip",
+        "potted_red_tulip",
+        0.0,
+        true,
+        false,
+    ),
+    block(
+        POTTED_ORANGE_TULIP,
+        "Potted Orange Tulip",
+        "potted_orange_tulip",
+        0.0,
+        true,
+        false,
+    ),
+    block(
+        POTTED_WHITE_TULIP,
+        "Potted White Tulip",
+        "potted_white_tulip",
+        0.0,
+        true,
+        false,
+    ),
+    block(
+        POTTED_PINK_TULIP,
+        "Potted Pink Tulip",
+        "potted_pink_tulip",
+        0.0,
+        true,
+        false,
+    ),
+    block(
+        POTTED_OXEYE_DAISY,
+        "Potted Oxeye Daisy",
+        "potted_oxeye_daisy",
+        0.0,
+        true,
+        false,
+    ),
+    block(
+        POTTED_CORNFLOWER,
+        "Potted Cornflower",
+        "potted_cornflower",
+        0.0,
+        true,
+        false,
+    ),
+    block(
+        POTTED_LILY_OF_THE_VALLEY,
+        "Potted Lily Of The Valley",
+        "potted_lily_of_the_valley",
+        0.0,
+        true,
+        false,
+    ),
+    block(
+        POTTED_WITHER_ROSE,
+        "Potted Wither Rose",
+        "potted_wither_rose",
+        0.0,
+        true,
+        false,
+    ),
+    block(
+        POTTED_RED_MUSHROOM,
+        "Potted Red Mushroom",
+        "potted_red_mushroom",
+        0.0,
+        true,
+        false,
+    ),
+    block(
+        POTTED_BROWN_MUSHROOM,
+        "Potted Brown Mushroom",
+        "potted_brown_mushroom",
+        0.0,
+        true,
+        false,
+    ),
+    block(
+        POTTED_DEAD_BUSH,
+        "Potted Dead Bush",
+        "potted_dead_bush",
+        0.0,
+        true,
+        false,
+    ),
+    block(
+        POTTED_CACTUS,
+        "Potted Cactus",
+        "potted_cactus",
+        0.0,
+        true,
+        false,
+    ),
+    block(CARROTS, "Carrots", "carrots", 0.05, false, false),
+    block(POTATOES, "Potatoes", "potatoes", 0.05, false, false),
+    block(OAK_BUTTON, "Oak Button", "oak_button", 0.5, false, false),
+    block(
+        OAK_BUTTON + 1,
+        "Oak Button (south)",
+        "oak_button",
+        0.5,
+        false,
+        false,
+    ),
+    block(
+        OAK_BUTTON + 2,
+        "Oak Button (west)",
+        "oak_button",
+        0.5,
+        false,
+        false,
+    ),
+    block(
+        OAK_BUTTON + 3,
+        "Oak Button (east)",
+        "oak_button",
+        0.5,
+        false,
+        false,
+    ),
+    block(
+        SPRUCE_BUTTON,
+        "Spruce Button",
+        "spruce_button",
+        0.5,
+        false,
+        false,
+    ),
+    block(
+        SPRUCE_BUTTON + 1,
+        "Spruce Button (south)",
+        "spruce_button",
+        0.5,
+        false,
+        false,
+    ),
+    block(
+        SPRUCE_BUTTON + 2,
+        "Spruce Button (west)",
+        "spruce_button",
+        0.5,
+        false,
+        false,
+    ),
+    block(
+        SPRUCE_BUTTON + 3,
+        "Spruce Button (east)",
+        "spruce_button",
+        0.5,
+        false,
+        false,
+    ),
+    block(
+        BIRCH_BUTTON,
+        "Birch Button",
+        "birch_button",
+        0.5,
+        false,
+        false,
+    ),
+    block(
+        BIRCH_BUTTON + 1,
+        "Birch Button (south)",
+        "birch_button",
+        0.5,
+        false,
+        false,
+    ),
+    block(
+        BIRCH_BUTTON + 2,
+        "Birch Button (west)",
+        "birch_button",
+        0.5,
+        false,
+        false,
+    ),
+    block(
+        BIRCH_BUTTON + 3,
+        "Birch Button (east)",
+        "birch_button",
+        0.5,
+        false,
+        false,
+    ),
+    block(
+        JUNGLE_BUTTON,
+        "Jungle Button",
+        "jungle_button",
+        0.5,
+        false,
+        false,
+    ),
+    block(
+        JUNGLE_BUTTON + 1,
+        "Jungle Button (south)",
+        "jungle_button",
+        0.5,
+        false,
+        false,
+    ),
+    block(
+        JUNGLE_BUTTON + 2,
+        "Jungle Button (west)",
+        "jungle_button",
+        0.5,
+        false,
+        false,
+    ),
+    block(
+        JUNGLE_BUTTON + 3,
+        "Jungle Button (east)",
+        "jungle_button",
+        0.5,
+        false,
+        false,
+    ),
+    block(
+        ACACIA_BUTTON,
+        "Acacia Button",
+        "acacia_button",
+        0.5,
+        false,
+        false,
+    ),
+    block(
+        ACACIA_BUTTON + 1,
+        "Acacia Button (south)",
+        "acacia_button",
+        0.5,
+        false,
+        false,
+    ),
+    block(
+        ACACIA_BUTTON + 2,
+        "Acacia Button (west)",
+        "acacia_button",
+        0.5,
+        false,
+        false,
+    ),
+    block(
+        ACACIA_BUTTON + 3,
+        "Acacia Button (east)",
+        "acacia_button",
+        0.5,
+        false,
+        false,
+    ),
+    block(
+        CHERRY_BUTTON,
+        "Cherry Button",
+        "cherry_button",
+        0.5,
+        false,
+        false,
+    ),
+    block(
+        CHERRY_BUTTON + 1,
+        "Cherry Button (south)",
+        "cherry_button",
+        0.5,
+        false,
+        false,
+    ),
+    block(
+        CHERRY_BUTTON + 2,
+        "Cherry Button (west)",
+        "cherry_button",
+        0.5,
+        false,
+        false,
+    ),
+    block(
+        CHERRY_BUTTON + 3,
+        "Cherry Button (east)",
+        "cherry_button",
+        0.5,
+        false,
+        false,
+    ),
+    block(
+        DARK_OAK_BUTTON,
+        "Dark Oak Button",
+        "dark_oak_button",
+        0.5,
+        false,
+        false,
+    ),
+    block(
+        DARK_OAK_BUTTON + 1,
+        "Dark Oak Button (south)",
+        "dark_oak_button",
+        0.5,
+        false,
+        false,
+    ),
+    block(
+        DARK_OAK_BUTTON + 2,
+        "Dark Oak Button (west)",
+        "dark_oak_button",
+        0.5,
+        false,
+        false,
+    ),
+    block(
+        DARK_OAK_BUTTON + 3,
+        "Dark Oak Button (east)",
+        "dark_oak_button",
+        0.5,
+        false,
+        false,
+    ),
+    block(
+        MANGROVE_BUTTON,
+        "Mangrove Button",
+        "mangrove_button",
+        0.5,
+        false,
+        false,
+    ),
+    block(
+        MANGROVE_BUTTON + 1,
+        "Mangrove Button (south)",
+        "mangrove_button",
+        0.5,
+        false,
+        false,
+    ),
+    block(
+        MANGROVE_BUTTON + 2,
+        "Mangrove Button (west)",
+        "mangrove_button",
+        0.5,
+        false,
+        false,
+    ),
+    block(
+        MANGROVE_BUTTON + 3,
+        "Mangrove Button (east)",
+        "mangrove_button",
+        0.5,
+        false,
+        false,
+    ),
+    block(
+        BAMBOO_BUTTON,
+        "Bamboo Button",
+        "bamboo_button",
+        0.5,
+        false,
+        false,
+    ),
+    block(
+        BAMBOO_BUTTON + 1,
+        "Bamboo Button (south)",
+        "bamboo_button",
+        0.5,
+        false,
+        false,
+    ),
+    block(
+        BAMBOO_BUTTON + 2,
+        "Bamboo Button (west)",
+        "bamboo_button",
+        0.5,
+        false,
+        false,
+    ),
+    block(
+        BAMBOO_BUTTON + 3,
+        "Bamboo Button (east)",
+        "bamboo_button",
+        0.5,
+        false,
+        false,
+    ),
+    block(
+        SKELETON_SKULL,
+        "Skeleton Skull",
+        "skeleton_skull",
+        1.0,
+        true,
+        false,
+    ),
+    block(
+        SKELETON_WALL_SKULL,
+        "Skeleton Wall Skull",
+        "skeleton_wall_skull",
+        1.0,
+        true,
+        false,
+    ),
+    block(
+        SKELETON_WALL_SKULL + 1,
+        "Skeleton Wall Skull (south)",
+        "skeleton_wall_skull",
+        1.0,
+        true,
+        false,
+    ),
+    block(
+        SKELETON_WALL_SKULL + 2,
+        "Skeleton Wall Skull (west)",
+        "skeleton_wall_skull",
+        1.0,
+        true,
+        false,
+    ),
+    block(
+        SKELETON_WALL_SKULL + 3,
+        "Skeleton Wall Skull (east)",
+        "skeleton_wall_skull",
+        1.0,
+        true,
+        false,
+    ),
+    block(
+        WITHER_SKELETON_SKULL,
+        "Wither Skeleton Skull",
+        "wither_skeleton_skull",
+        1.0,
+        true,
+        false,
+    ),
+    block(
+        WITHER_SKELETON_WALL_SKULL,
+        "Wither Skeleton Wall Skull",
+        "wither_skeleton_wall_skull",
+        1.0,
+        true,
+        false,
+    ),
+    block(
+        WITHER_SKELETON_WALL_SKULL + 1,
+        "Wither Skeleton Wall Skull (south)",
+        "wither_skeleton_wall_skull",
+        1.0,
+        true,
+        false,
+    ),
+    block(
+        WITHER_SKELETON_WALL_SKULL + 2,
+        "Wither Skeleton Wall Skull (west)",
+        "wither_skeleton_wall_skull",
+        1.0,
+        true,
+        false,
+    ),
+    block(
+        WITHER_SKELETON_WALL_SKULL + 3,
+        "Wither Skeleton Wall Skull (east)",
+        "wither_skeleton_wall_skull",
+        1.0,
+        true,
+        false,
+    ),
+    block(ZOMBIE_HEAD, "Zombie Head", "zombie_head", 1.0, true, false),
+    block(
+        ZOMBIE_WALL_HEAD,
+        "Zombie Wall Head",
+        "zombie_wall_head",
+        1.0,
+        true,
+        false,
+    ),
+    block(
+        ZOMBIE_WALL_HEAD + 1,
+        "Zombie Wall Head (south)",
+        "zombie_wall_head",
+        1.0,
+        true,
+        false,
+    ),
+    block(
+        ZOMBIE_WALL_HEAD + 2,
+        "Zombie Wall Head (west)",
+        "zombie_wall_head",
+        1.0,
+        true,
+        false,
+    ),
+    block(
+        ZOMBIE_WALL_HEAD + 3,
+        "Zombie Wall Head (east)",
+        "zombie_wall_head",
+        1.0,
+        true,
+        false,
+    ),
+    block(PLAYER_HEAD, "Player Head", "player_head", 1.0, true, false),
+    block(
+        PLAYER_WALL_HEAD,
+        "Player Wall Head",
+        "player_wall_head",
+        1.0,
+        true,
+        false,
+    ),
+    block(
+        PLAYER_WALL_HEAD + 1,
+        "Player Wall Head (south)",
+        "player_wall_head",
+        1.0,
+        true,
+        false,
+    ),
+    block(
+        PLAYER_WALL_HEAD + 2,
+        "Player Wall Head (west)",
+        "player_wall_head",
+        1.0,
+        true,
+        false,
+    ),
+    block(
+        PLAYER_WALL_HEAD + 3,
+        "Player Wall Head (east)",
+        "player_wall_head",
+        1.0,
+        true,
+        false,
+    ),
+    block(
+        CREEPER_HEAD,
+        "Creeper Head",
+        "creeper_head",
+        1.0,
+        true,
+        false,
+    ),
+    block(
+        CREEPER_WALL_HEAD,
+        "Creeper Wall Head",
+        "creeper_wall_head",
+        1.0,
+        true,
+        false,
+    ),
+    block(
+        CREEPER_WALL_HEAD + 1,
+        "Creeper Wall Head (south)",
+        "creeper_wall_head",
+        1.0,
+        true,
+        false,
+    ),
+    block(
+        CREEPER_WALL_HEAD + 2,
+        "Creeper Wall Head (west)",
+        "creeper_wall_head",
+        1.0,
+        true,
+        false,
+    ),
+    block(
+        CREEPER_WALL_HEAD + 3,
+        "Creeper Wall Head (east)",
+        "creeper_wall_head",
+        1.0,
+        true,
+        false,
+    ),
+    block(DRAGON_HEAD, "Dragon Head", "dragon_head", 1.0, true, false),
+    block(
+        DRAGON_WALL_HEAD,
+        "Dragon Wall Head",
+        "dragon_wall_head",
+        1.0,
+        true,
+        false,
+    ),
+    block(
+        DRAGON_WALL_HEAD + 1,
+        "Dragon Wall Head (south)",
+        "dragon_wall_head",
+        1.0,
+        true,
+        false,
+    ),
+    block(
+        DRAGON_WALL_HEAD + 2,
+        "Dragon Wall Head (west)",
+        "dragon_wall_head",
+        1.0,
+        true,
+        false,
+    ),
+    block(
+        DRAGON_WALL_HEAD + 3,
+        "Dragon Wall Head (east)",
+        "dragon_wall_head",
+        1.0,
+        true,
+        false,
+    ),
+    block(PIGLIN_HEAD, "Piglin Head", "piglin_head", 1.0, true, false),
+    block(
+        PIGLIN_WALL_HEAD,
+        "Piglin Wall Head",
+        "piglin_wall_head",
+        1.0,
+        true,
+        false,
+    ),
+    block(
+        PIGLIN_WALL_HEAD + 1,
+        "Piglin Wall Head (south)",
+        "piglin_wall_head",
+        1.0,
+        true,
+        false,
+    ),
+    block(
+        PIGLIN_WALL_HEAD + 2,
+        "Piglin Wall Head (west)",
+        "piglin_wall_head",
+        1.0,
+        true,
+        false,
+    ),
+    block(
+        PIGLIN_WALL_HEAD + 3,
+        "Piglin Wall Head (east)",
+        "piglin_wall_head",
+        1.0,
+        true,
+        false,
+    ),
+    block(ANVIL, "Anvil", "anvil", 5.0, true, false),
+    block(ANVIL + 1, "Anvil (z)", "anvil", 5.0, true, false),
+    block(
+        CHIPPED_ANVIL,
+        "Chipped Anvil",
+        "chipped_anvil",
+        5.0,
+        true,
+        false,
+    ),
+    block(
+        CHIPPED_ANVIL + 1,
+        "Chipped Anvil (z)",
+        "chipped_anvil",
+        5.0,
+        true,
+        false,
+    ),
+    block(
+        DAMAGED_ANVIL,
+        "Damaged Anvil",
+        "damaged_anvil",
+        5.0,
+        true,
+        false,
+    ),
+    block(
+        DAMAGED_ANVIL + 1,
+        "Damaged Anvil (z)",
+        "damaged_anvil",
+        5.0,
+        true,
+        false,
+    ),
+    block(
+        TRAPPED_CHEST,
+        "Trapped Chest",
+        "trapped_chest",
+        2.5,
+        true,
+        true,
+    ),
+    block(
+        LIGHT_WEIGHTED_PRESSURE_PLATE,
+        "Light Weighted Pressure Plate",
+        "light_weighted_pressure_plate",
+        0.5,
+        false,
+        false,
+    ),
+    block(
+        HEAVY_WEIGHTED_PRESSURE_PLATE,
+        "Heavy Weighted Pressure Plate",
+        "heavy_weighted_pressure_plate",
+        0.5,
+        false,
+        false,
+    ),
+    block(COMPARATOR, "Comparator", "comparator", 0.05, false, false),
+    block(
+        COMPARATOR + 1,
+        "Comparator (south)",
+        "comparator",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        COMPARATOR + 2,
+        "Comparator (west)",
+        "comparator",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        COMPARATOR + 3,
+        "Comparator (east)",
+        "comparator",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        DAYLIGHT_DETECTOR,
+        "Daylight Detector",
+        "daylight_detector",
+        0.2,
+        true,
+        false,
+    ),
+    block(
+        REDSTONE_BLOCK,
+        "Block of Redstone",
+        "redstone_block",
+        5.0,
+        true,
+        true,
+    ),
+    block(
+        NETHER_QUARTZ_ORE,
+        "Nether Quartz Ore",
+        "nether_quartz_ore",
+        3.0,
+        true,
+        true,
+    ),
+    block(HOPPER, "Hopper", "hopper", 3.0, true, false),
+    block(
+        CHISELED_QUARTZ_BLOCK,
+        "Chiseled Quartz Block",
+        "chiseled_quartz_block",
+        0.8,
+        true,
+        true,
+    ),
 ];
 
 /// Растения рисуются двумя скрещёнными плоскостями и не мешают ходьбе.
@@ -4394,13 +5929,18 @@ pub fn is_cross(id: BlockId) -> bool {
     (POPPY..=TALL_GRASS).contains(&id)
         || (PLANT2_FIRST..=PLANT2_LAST).contains(&id)
         || matches!(id, WHEAT | SUGAR_CANE | REDSTONE_TORCH | SOUL_TORCH)
+        || matches!(
+            id,
+            VINE | GLOW_LICHEN | NETHER_WART | COCOA | CARROTS | POTATOES
+        )
+        || (ATTACHED_PUMPKIN_STEM..=MELON_STEM).contains(&id)
         || is_wall_torch(id)
 }
 
 /// Плоский рисунок на полу (рельсы).
 #[must_use]
 pub fn is_flat(id: BlockId) -> bool {
-    is_rail(id) || id == REDSTONE_WIRE
+    is_rail(id) || matches!(id, REDSTONE_WIRE | LILY_PAD | TRIPWIRE)
 }
 
 /// Блок, который рисуется спрайтом и не мешает ходьбе.
@@ -4630,7 +6170,7 @@ mod tests {
             "Crafting Table",
             "Furnace",
         ];
-        assert_eq!(BLOCKS.len(), 604);
+        assert_eq!(BLOCKS.len(), 797);
         for (offset, name) in expected.iter().enumerate() {
             let id = 17 + offset;
             assert_eq!(BLOCKS[id].id as usize, id);
@@ -4641,7 +6181,7 @@ mod tests {
 
     #[test]
     fn chest_extends_registry_without_changing_foundation_ids() {
-        assert_eq!(BLOCKS.len(), 604);
+        assert_eq!(BLOCKS.len(), 797);
         let chest = BLOCKS.get(16).expect("сундук зарегистрирован");
         assert_eq!(chest.name, "Chest");
         assert!(is_solid(16));
