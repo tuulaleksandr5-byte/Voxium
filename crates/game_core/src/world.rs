@@ -569,6 +569,10 @@ pub struct World {
     pub dirty: HashSet<[i32; 3]>,
     /// Клетки, рядом с которыми менялась жидкость; их обрабатывает `fluids::tick`.
     pub fluid_active: HashSet<[i32; 3]>,
+    /// Горящие клетки; их обрабатывает `fire::tick`.
+    pub fire_active: HashSet<[i32; 3]>,
+    /// Саженцы, которые могут вырасти; их обрабатывает `growth::tick`.
+    pub grow_active: HashSet<[i32; 3]>,
 }
 impl World {
     #[must_use]
@@ -579,6 +583,8 @@ impl World {
             edits: HashMap::new(),
             dirty: HashSet::new(),
             fluid_active: HashSet::new(),
+            fire_active: HashSet::new(),
+            grow_active: HashSet::new(),
         }
     }
     #[must_use]
@@ -609,6 +615,7 @@ impl World {
         Arc::make_mut(chunk).write(position, id);
         self.edits.insert(position, id);
         self.wake_fluids(position);
+        self.wake_special(position, id);
         let section = position.map(section_coordinate);
         // AO samples diagonals too: an edit at a section corner can affect
         // eight sections, not just the three face-adjacent neighbors.
@@ -627,6 +634,15 @@ impl World {
         }
         true
     }
+    /// Огонь и саженцы живут сами по себе: их сразу берут в работу.
+    fn wake_special(&mut self, position: [i32; 3], id: BlockId) {
+        if is_fire(id) {
+            self.fire_active.insert(position);
+        }
+        if crate::growth::is_sapling(id) {
+            self.grow_active.insert(position);
+        }
+    }
     /// Будит жидкость вокруг клетки, если в ней самой или рядом есть жидкость.
     fn wake_fluids(&mut self, position: [i32; 3]) {
         let mut cells = vec![position];
@@ -643,6 +659,8 @@ impl World {
     }
     pub fn insert(&mut self, mut chunk: Chunk) {
         let mut settled = Vec::new();
+        let mut burning = Vec::new();
+        let mut saplings = Vec::new();
         for (&position, &id) in &self.edits {
             if [
                 section_coordinate(position[0]),
@@ -656,9 +674,17 @@ impl World {
                 if is_fluid(id) {
                     settled.push(position);
                 }
+                if is_fire(id) {
+                    burning.push(position);
+                }
+                if crate::growth::is_sapling(id) {
+                    saplings.push(position);
+                }
             }
         }
         self.fluid_active.extend(settled);
+        self.fire_active.extend(burning);
+        self.grow_active.extend(saplings);
         if let Some(old) = self.chunks.remove(&chunk.position) {
             self.dirty_chunk(&old);
         }

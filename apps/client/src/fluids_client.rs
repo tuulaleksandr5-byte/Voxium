@@ -10,6 +10,10 @@ const BUDGET: usize = 768;
 struct FluidClock {
     accumulated: f32,
     tick: u64,
+    fire: f32,
+    fire_tick: u64,
+    growth: f32,
+    growth_tick: u64,
 }
 
 #[derive(Component)]
@@ -20,7 +24,7 @@ pub fn plugin(app: &mut App) {
         .add_systems(Startup, spawn_overlay)
         .add_systems(
             Update,
-            (tick_fluids, update_overlay)
+            (tick_fluids, tick_fire_and_growth, update_overlay)
                 .chain()
                 .after(crate::survival_client::simulate)
                 .before(crate::player::sky),
@@ -37,6 +41,32 @@ fn tick_fluids(time: Res<Time<Real>>, mut game: ResMut<Game>, mut clock: ResMut<
         clock.tick += 1;
         let tick = clock.tick;
         fluids::tick(&mut game.world, tick, BUDGET);
+    }
+}
+
+/// Огонь (0,5 с) и рост саженцев (5 с) идут на тех же часах, что и жидкости.
+fn tick_fire_and_growth(
+    time: Res<Time<Real>>,
+    mut game: ResMut<Game>,
+    mut clock: ResMut<FluidClock>,
+) {
+    if game.world_id.is_none() || !matches!(game.mode, Mode::Playing | Mode::Inventory) {
+        return;
+    }
+    let delta = time.delta_secs();
+    clock.fire = (clock.fire + delta).min(game_core::fire::TICK_SECONDS * 4.0);
+    while clock.fire >= game_core::fire::TICK_SECONDS {
+        clock.fire -= game_core::fire::TICK_SECONDS;
+        clock.fire_tick += 1;
+        let tick = clock.fire_tick;
+        game_core::fire::tick(&mut game.world, tick, 256);
+    }
+    clock.growth = (clock.growth + delta).min(game_core::growth::TICK_SECONDS * 2.0);
+    while clock.growth >= game_core::growth::TICK_SECONDS {
+        clock.growth -= game_core::growth::TICK_SECONDS;
+        clock.growth_tick += 1;
+        let tick = clock.growth_tick;
+        game_core::growth::tick(&mut game.world, tick, 64);
     }
 }
 

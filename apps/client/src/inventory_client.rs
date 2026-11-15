@@ -342,6 +342,13 @@ fn process_action(game: &mut Game, action: &InventoryAction) -> Effects {
                         let count = if block == game_core::CLAY { 4 } else { 1 };
                         spawn_drop(game, ItemStack::new(item, count), center, Vec3::Y * 1.5);
                     }
+                    // Листва иногда роняет саженец своей породы.
+                    if let Some(sapling) = game_core::growth::sapling_for_leaves(block)
+                        && game_core::growth::chance(game.world.seed, *position, 11, 7)
+                        && let Some(item) = game.content.drop_for_block(sapling)
+                    {
+                        spawn_drop(game, ItemStack::new(item, 1), center, Vec3::Y * 1.5);
+                    }
                     effects.mined = true;
                 }
                 effects.sounds.push(BlockSound {
@@ -360,12 +367,16 @@ fn process_action(game: &mut Game, action: &InventoryAction) -> Effects {
             let hit = visible_hit(game);
             // Факел, поставленный на боковую грань, становится настенным.
             if block == game_core::TORCH
-                && hit
+                && let Some(hit) = hit
                     .as_ref()
-                    .is_some_and(|hit| hit.previous[1] == hit.block[1] && hit.previous != hit.block)
+                    .filter(|hit| hit.previous[1] == hit.block[1] && hit.previous != hit.block)
+                && let Some(facing) = game_core::Facing::from_offset(std::array::from_fn(|axis| {
+                    hit.previous[axis] - hit.block[axis]
+                }))
             {
-                block = game_core::WALL_TORCH;
+                block = game_core::facing_variant(game_core::WALL_TORCH, facing);
             }
+            block = oriented_block(game, block, *position);
             if block != AIR
                 && hit.as_ref().is_some_and(|hit| {
                     hit.previous == *position
@@ -530,11 +541,60 @@ fn process_action(game: &mut Game, action: &InventoryAction) -> Effects {
     effects
 }
 
+/// Блок с учётом поворота: механизмы смотрят «лицом» на игрока, рельсы ложатся вдоль
+/// соседних рельсов или взгляда.
+pub(crate) fn oriented_block(
+    game: &Game,
+    block: game_core::BlockId,
+    position: [i32; 3],
+) -> game_core::BlockId {
+    use game_core::Facing;
+    let base = game_core::base_block(block);
+    if game_core::is_rail(base) {
+        let rail_at = |dx: i32, dz: i32| {
+            loaded_block(
+                &game.world,
+                [position[0] + dx, position[1], position[2] + dz],
+            )
+            .filter(|id| game_core::is_rail(*id))
+        };
+        let along_x = if let Some(id) = rail_at(1, 0).or_else(|| rail_at(-1, 0)) {
+            let _ = id;
+            true
+        } else if rail_at(0, 1).or_else(|| rail_at(0, -1)).is_some() {
+            false
+        } else {
+            game.yaw.sin().abs() > game.yaw.cos().abs()
+        };
+        return game_core::rail_variant(base, along_x);
+    }
+    if [
+        game_core::DISPENSER,
+        game_core::PISTON,
+        game_core::STICKY_PISTON,
+    ]
+    .contains(&base)
+    {
+        // Вектор взгляда: лицом блок должен смотреть на игрока, то есть против взгляда.
+        let look = [
+            -game.yaw.sin() * game.pitch.cos(),
+            game.pitch.sin(),
+            -game.yaw.cos() * game.pitch.cos(),
+        ];
+        let axis = (0..3)
+            .max_by(|a, b| look[*a].abs().total_cmp(&look[*b].abs()))
+            .unwrap_or(2);
+        return game_core::facing_variant(base, Facing::from_axis(axis, look[axis] < 0.0));
+    }
+    block
+}
+
 /// Число ячеек блока-контейнера: сундук 27, верстак 3×3, печь 3.
 pub(crate) fn container_size(block: game_core::BlockId) -> Option<usize> {
     match block {
         CHEST | game_core::BARREL | game_core::VAULT => Some(27),
-        CRAFTING_TABLE | game_core::DISPENSER => Some(9),
+        CRAFTING_TABLE => Some(9),
+        block if game_core::base_block(block) == game_core::DISPENSER => Some(9),
         game_core::STONECUTTER => Some(1),
         _ => game_core::smelting::FurnaceKind::of_block(block)
             .map(|_| game_core::smelting::FURNACE_SLOTS),
@@ -597,6 +657,7 @@ pub(crate) fn open_block(game: &Game) -> Option<game_core::BlockId> {
     }
     loaded_block(&game.world, position)
         .filter(|block| container_size(*block).is_some())
+        .map(game_core::base_block)
         .or_else(|| {
             // Чанк мог выгрузиться: вид контейнера определяется числом ячеек.
             match game.containers.get(&position)?.slots.len() {
@@ -1874,6 +1935,55 @@ mod tests {
     }
 
     #[test]
+    fn mechanisms_face_the_player_and_rails_follow_neighbours_or_the_view() {
+        use game_core::Facing;
+        let mut game = world();
+        // Взгляд на -Z: «лицо» смотрит на игрока, то есть на юг.
+        assert_eq!(
+            game_core::facing_of(oriented_block(&game, game_core::PISTON, [8, 101, 6])),
+            Some(Facing::South)
+        );
+        game.yaw = std::f32::consts::FRAC_PI_2; // взгляд на -X → лицо на восток
+        assert_eq!(
+            game_core::facing_of(oriented_block(&game, game_core::DISPENSER, [8, 101, 6])),
+            Some(Facing::East)
+        );
+        game.pitch = -1.4; // взгляд вниз → лицо вверх
+        assert_eq!(
+            game_core::facing_of(oriented_block(&game, game_core::STICKY_PISTON, [8, 101, 6])),
+            Some(Facing::Up)
+        );
+        // Рельсы: без соседей — по взгляду; рядом рельс вдоль Z — тоже вдоль Z.
+        game.pitch = 0.0;
+        assert!(game_core::is_rail_x(oriented_block(
+            &game,
+            game_core::DETECTOR_RAIL,
+            [8, 101, 6]
+        )));
+        game.yaw = 0.0;
+        assert!(!game_core::is_rail_x(oriented_block(
+            &game,
+            game_core::DETECTOR_RAIL,
+            [8, 101, 6]
+        )));
+        game.world.set([9, 101, 6], game_core::POWERED_RAIL);
+        assert!(game_core::is_rail_x(oriented_block(
+            &game,
+            game_core::POWERED_RAIL,
+            [8, 101, 6]
+        )));
+        // Раздатчик любого поворота открывает свой экран на 9 ячеек.
+        for facing in Facing::ALL {
+            let block = game_core::facing_variant(game_core::DISPENSER, facing);
+            assert_eq!(container_size(block), Some(9));
+            game.world.set([8, 101, 7], block);
+            game.containers.insert([8, 101, 7], Container::new(9));
+            game.open_container = Some([8, 101, 7]);
+            assert_eq!(open_block(&game), Some(game_core::DISPENSER));
+        }
+    }
+
+    #[test]
     fn torch_on_a_wall_becomes_a_wall_torch_and_the_item_is_consumed() {
         let mut game = world();
         game.game_mode = GameMode::Survival;
@@ -1886,7 +1996,10 @@ mod tests {
                 position: [8, 101, 6],
             },
         );
-        assert_eq!(game.world.block([8, 101, 6]), game_core::WALL_TORCH);
+        assert_eq!(
+            game.world.block([8, 101, 6]),
+            game_core::facing_variant(game_core::WALL_TORCH, game_core::Facing::South)
+        );
         assert!(!effects.sounds.is_empty());
         assert_eq!(game.inventory.hotbar[0].as_ref().unwrap().count, 1);
         // Сломанный настенный факел возвращает обычный факел.

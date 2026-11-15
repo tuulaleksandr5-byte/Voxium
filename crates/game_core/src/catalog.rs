@@ -66,7 +66,7 @@ fn kind_of(id: crate::BlockId, def: &BlockDef) -> &'static str {
     } else if crate::is_leaves(id) {
         "листва"
     } else if matches!(
-        id,
+        crate::base_block(id),
         crate::CHEST
             | crate::BARREL
             | crate::VAULT
@@ -85,7 +85,7 @@ fn kind_of(id: crate::BlockId, def: &BlockDef) -> &'static str {
 
 fn function_note(id: crate::BlockId) -> &'static str {
     #[allow(clippy::match_overlapping_arm)]
-    match id {
+    match crate::base_block(id) {
         crate::CHEST | crate::BARREL => "хранилище на 27 ячеек",
         crate::VAULT => "общее хранилище: все такие блоки открывают одно",
         crate::CRAFTING_TABLE => "крафт 3×3",
@@ -115,6 +115,14 @@ fn display_name(id: crate::BlockId, registry: &ContentRegistry) -> String {
     }
     if id == crate::BEDROCK {
         return "Коренная порода".into();
+    }
+    let base_id = crate::base_block(id);
+    if base_id != id {
+        let name = display_name(base_id, registry);
+        return match crate::facing_of(id) {
+            Some(facing) => format!("{name} ({})", facing.label()),
+            None => format!("{name} (вдоль X)"),
+        };
     }
     if let Some(item) = registry
         .item_for_block(id)

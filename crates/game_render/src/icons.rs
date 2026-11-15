@@ -242,6 +242,7 @@ mod tests {
                     side: 7,
                     bottom: 17,
                     front: None,
+                    ..FaceTextures::default()
                 }; BLOCKS.len()],
             ),
         )
@@ -269,6 +270,7 @@ mod tests {
             side: 0,
             bottom: 17,
             front: None,
+            ..FaceTextures::default()
         };
         let icons = bake_block_icons(&bytes, &textures).unwrap();
         assert_eq!(icons.len(), BLOCKS.len());

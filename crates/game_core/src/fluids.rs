@@ -82,7 +82,7 @@ fn replaceable(id: BlockId) -> bool {
     id == AIR || is_plant(id)
 }
 
-fn loaded(world: &World, p: [i32; 3]) -> bool {
+pub(crate) fn loaded(world: &World, p: [i32; 3]) -> bool {
     valid_world_height(p[1])
         && world
             .chunks

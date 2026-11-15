@@ -243,8 +243,8 @@
     (top: 16, side: 279, bottom: 16), // chiseled_sandstone
     (top: 16, side: 280, bottom: 16), // cut_sandstone
     (top: 281, side: 281, bottom: 281), // note_block
-    (top: 282, side: 283, bottom: 284), // sticky_piston
-    (top: 285, side: 283, bottom: 284), // piston
+    (top: 283, side: 283, bottom: 283, front: Some(282), back: Some(284)), // sticky_piston
+    (top: 283, side: 283, bottom: 283, front: Some(285), back: Some(284)), // piston
     (top: 286, side: 287, bottom: 286), // tnt
     (top: 10, side: 288, bottom: 10, front: Some(289)), // chiseled_bookshelf
     (top: 204, side: 204, bottom: 204), // mangrove_roots
@@ -302,4 +302,24 @@
     (top: 320, side: 321, bottom: 10), // black_bed
     (top: 285, side: 283, bottom: 283), // piston_head
     (top: 285, side: 285, bottom: 285), // moving_piston
+    (top: 277, side: 277, bottom: 277, front: Some(278), face: Some((2, true))), // dispenser_south
+    (top: 277, side: 277, bottom: 277, front: Some(278), face: Some((0, false))), // dispenser_west
+    (top: 277, side: 277, bottom: 277, front: Some(278), face: Some((0, true))), // dispenser_east
+    (top: 277, side: 277, bottom: 277, front: Some(278), face: Some((1, true))), // dispenser_up
+    (top: 277, side: 277, bottom: 277, front: Some(278), face: Some((1, false))), // dispenser_down
+    (top: 283, side: 283, bottom: 283, front: Some(285), face: Some((2, true)), back: Some(284)), // piston_south
+    (top: 283, side: 283, bottom: 283, front: Some(285), face: Some((0, false)), back: Some(284)), // piston_west
+    (top: 283, side: 283, bottom: 283, front: Some(285), face: Some((0, true)), back: Some(284)), // piston_east
+    (top: 283, side: 283, bottom: 283, front: Some(285), face: Some((1, true)), back: Some(284)), // piston_up
+    (top: 283, side: 283, bottom: 283, front: Some(285), face: Some((1, false)), back: Some(284)), // piston_down
+    (top: 283, side: 283, bottom: 283, front: Some(282), face: Some((2, true)), back: Some(284)), // sticky_piston_south
+    (top: 283, side: 283, bottom: 283, front: Some(282), face: Some((0, false)), back: Some(284)), // sticky_piston_west
+    (top: 283, side: 283, bottom: 283, front: Some(282), face: Some((0, true)), back: Some(284)), // sticky_piston_east
+    (top: 283, side: 283, bottom: 283, front: Some(282), face: Some((1, true)), back: Some(284)), // sticky_piston_up
+    (top: 283, side: 283, bottom: 283, front: Some(282), face: Some((1, false)), back: Some(284)), // sticky_piston_down
+    (top: 235, side: 235, bottom: 235), // wall_torch_south
+    (top: 235, side: 235, bottom: 235), // wall_torch_west
+    (top: 235, side: 235, bottom: 235), // wall_torch_east
+    (top: 238, side: 238, bottom: 238), // powered_rail_x
+    (top: 239, side: 239, bottom: 239), // detector_rail_x
 ]

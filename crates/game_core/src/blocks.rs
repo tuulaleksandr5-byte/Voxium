@@ -323,6 +323,27 @@ pub const BLACK_BED: BlockId = 298;
 pub const PISTON_HEAD: BlockId = 299;
 pub const MOVING_PISTON: BlockId = 300;
 /// Растения этой партии идут подряд: OAK_SAPLING…SOUL_FIRE.
+// Направления: отдельный ID на каждое (север — основной блок).
+pub const DISPENSER_SOUTH: BlockId = 301;
+pub const DISPENSER_WEST: BlockId = 302;
+pub const DISPENSER_EAST: BlockId = 303;
+pub const DISPENSER_UP: BlockId = 304;
+pub const DISPENSER_DOWN: BlockId = 305;
+pub const PISTON_SOUTH: BlockId = 306;
+pub const PISTON_WEST: BlockId = 307;
+pub const PISTON_EAST: BlockId = 308;
+pub const PISTON_UP: BlockId = 309;
+pub const PISTON_DOWN: BlockId = 310;
+pub const STICKY_PISTON_SOUTH: BlockId = 311;
+pub const STICKY_PISTON_WEST: BlockId = 312;
+pub const STICKY_PISTON_EAST: BlockId = 313;
+pub const STICKY_PISTON_UP: BlockId = 314;
+pub const STICKY_PISTON_DOWN: BlockId = 315;
+pub const WALL_TORCH_SOUTH: BlockId = 316;
+pub const WALL_TORCH_WEST: BlockId = 317;
+pub const WALL_TORCH_EAST: BlockId = 318;
+pub const POWERED_RAIL_X: BlockId = 319;
+pub const DETECTOR_RAIL_X: BlockId = 320;
 pub const PLANT2_FIRST: BlockId = 251;
 pub const PLANT2_LAST: BlockId = 280;
 
@@ -345,7 +366,7 @@ const fn block(
     }
 }
 
-pub const BLOCKS: [BlockDef; 301] = [
+pub const BLOCKS: [BlockDef; 321] = [
     block(AIR, "Air", "air", 0.0, false, false),
     block(GRASS, "Grass", "grass", 0.6, true, true),
     block(DIRT, "Dirt", "dirt", 0.5, true, true),
@@ -1751,6 +1772,147 @@ pub const BLOCKS: [BlockDef; 301] = [
         false,
         false,
     ),
+    block(
+        DISPENSER_SOUTH,
+        "Dispenser South",
+        "dispenser_south",
+        3.5,
+        true,
+        true,
+    ),
+    block(
+        DISPENSER_WEST,
+        "Dispenser West",
+        "dispenser_west",
+        3.5,
+        true,
+        true,
+    ),
+    block(
+        DISPENSER_EAST,
+        "Dispenser East",
+        "dispenser_east",
+        3.5,
+        true,
+        true,
+    ),
+    block(
+        DISPENSER_UP,
+        "Dispenser Up",
+        "dispenser_up",
+        3.5,
+        true,
+        true,
+    ),
+    block(
+        DISPENSER_DOWN,
+        "Dispenser Down",
+        "dispenser_down",
+        3.5,
+        true,
+        true,
+    ),
+    block(
+        PISTON_SOUTH,
+        "Piston South",
+        "piston_south",
+        1.5,
+        true,
+        true,
+    ),
+    block(PISTON_WEST, "Piston West", "piston_west", 1.5, true, true),
+    block(PISTON_EAST, "Piston East", "piston_east", 1.5, true, true),
+    block(PISTON_UP, "Piston Up", "piston_up", 1.5, true, true),
+    block(PISTON_DOWN, "Piston Down", "piston_down", 1.5, true, true),
+    block(
+        STICKY_PISTON_SOUTH,
+        "Sticky Piston South",
+        "sticky_piston_south",
+        1.5,
+        true,
+        true,
+    ),
+    block(
+        STICKY_PISTON_WEST,
+        "Sticky Piston West",
+        "sticky_piston_west",
+        1.5,
+        true,
+        true,
+    ),
+    block(
+        STICKY_PISTON_EAST,
+        "Sticky Piston East",
+        "sticky_piston_east",
+        1.5,
+        true,
+        true,
+    ),
+    block(
+        STICKY_PISTON_UP,
+        "Sticky Piston Up",
+        "sticky_piston_up",
+        1.5,
+        true,
+        true,
+    ),
+    block(
+        STICKY_PISTON_DOWN,
+        "Sticky Piston Down",
+        "sticky_piston_down",
+        1.5,
+        true,
+        true,
+    ),
+    BlockDef {
+        light_emission: 14,
+        ..block(
+            WALL_TORCH_SOUTH,
+            "Wall Torch South",
+            "wall_torch_south",
+            0.05,
+            false,
+            false,
+        )
+    },
+    BlockDef {
+        light_emission: 14,
+        ..block(
+            WALL_TORCH_WEST,
+            "Wall Torch West",
+            "wall_torch_west",
+            0.05,
+            false,
+            false,
+        )
+    },
+    BlockDef {
+        light_emission: 14,
+        ..block(
+            WALL_TORCH_EAST,
+            "Wall Torch East",
+            "wall_torch_east",
+            0.05,
+            false,
+            false,
+        )
+    },
+    block(
+        POWERED_RAIL_X,
+        "Powered Rail X",
+        "powered_rail_x",
+        0.7,
+        false,
+        false,
+    ),
+    block(
+        DETECTOR_RAIL_X,
+        "Detector Rail X",
+        "detector_rail_x",
+        0.7,
+        false,
+        false,
+    ),
 ];
 
 /// Растения рисуются двумя скрещёнными плоскостями и не мешают ходьбе.
@@ -1759,16 +1921,236 @@ pub fn is_plant(id: BlockId) -> bool {
     is_sprite(id)
 }
 
+/// Куда смотрит «лицо» блока (или от какой стены отходит факел).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub enum Facing {
+    /// Минус Z.
+    North,
+    /// Плюс Z.
+    South,
+    /// Минус X.
+    West,
+    /// Плюс X.
+    East,
+    Up,
+    Down,
+}
+
+impl Facing {
+    pub const ALL: [Self; 6] = [
+        Self::North,
+        Self::South,
+        Self::West,
+        Self::East,
+        Self::Up,
+        Self::Down,
+    ];
+
+    /// Ось (0 = X, 1 = Y, 2 = Z) и знак направления.
+    #[must_use]
+    pub const fn axis_positive(self) -> (usize, bool) {
+        match self {
+            Self::North => (2, false),
+            Self::South => (2, true),
+            Self::West => (0, false),
+            Self::East => (0, true),
+            Self::Up => (1, true),
+            Self::Down => (1, false),
+        }
+    }
+
+    #[must_use]
+    pub const fn from_axis(axis: usize, positive: bool) -> Self {
+        match (axis, positive) {
+            (0, false) => Self::West,
+            (0, true) => Self::East,
+            (1, false) => Self::Down,
+            (1, true) => Self::Up,
+            (_, false) => Self::North,
+            (_, true) => Self::South,
+        }
+    }
+
+    #[must_use]
+    pub const fn opposite(self) -> Self {
+        let (axis, positive) = self.axis_positive();
+        Self::from_axis(axis, !positive)
+    }
+
+    /// Единичный сдвиг клетки в этом направлении.
+    #[must_use]
+    pub const fn offset(self) -> [i32; 3] {
+        let (axis, positive) = self.axis_positive();
+        let mut offset = [0; 3];
+        offset[axis] = if positive { 1 } else { -1 };
+        offset
+    }
+
+    #[must_use]
+    pub const fn label(self) -> &'static str {
+        match self {
+            Self::North => "север",
+            Self::South => "юг",
+            Self::West => "запад",
+            Self::East => "восток",
+            Self::Up => "вверх",
+            Self::Down => "вниз",
+        }
+    }
+
+    /// Направление по единичному сдвигу; `None`, если сдвиг не единичный.
+    #[must_use]
+    pub fn from_offset(offset: [i32; 3]) -> Option<Self> {
+        Self::ALL
+            .into_iter()
+            .find(|facing| facing.offset() == offset)
+    }
+}
+
+/// Блоки с шестью направлениями: раздатчик и два поршня (север — основной).
+const FACING_FAMILIES: [[BlockId; 6]; 3] = [
+    [
+        DISPENSER,
+        DISPENSER_SOUTH,
+        DISPENSER_WEST,
+        DISPENSER_EAST,
+        DISPENSER_UP,
+        DISPENSER_DOWN,
+    ],
+    [
+        PISTON,
+        PISTON_SOUTH,
+        PISTON_WEST,
+        PISTON_EAST,
+        PISTON_UP,
+        PISTON_DOWN,
+    ],
+    [
+        STICKY_PISTON,
+        STICKY_PISTON_SOUTH,
+        STICKY_PISTON_WEST,
+        STICKY_PISTON_EAST,
+        STICKY_PISTON_UP,
+        STICKY_PISTON_DOWN,
+    ],
+];
+/// Настенный факел: четыре стороны, `Facing` — от стены наружу.
+const WALL_TORCHES: [BlockId; 4] = [
+    WALL_TORCH,
+    WALL_TORCH_SOUTH,
+    WALL_TORCH_WEST,
+    WALL_TORCH_EAST,
+];
+/// Прямые рельсы: вдоль Z (основной блок) и вдоль X.
+const RAILS: [[BlockId; 2]; 2] = [
+    [POWERED_RAIL, POWERED_RAIL_X],
+    [DETECTOR_RAIL, DETECTOR_RAIL_X],
+];
+
+/// Основной блок семейства направлений: тот самый, что лежит в инвентаре.
+#[must_use]
+pub fn base_block(id: BlockId) -> BlockId {
+    for family in FACING_FAMILIES {
+        if family.contains(&id) {
+            return family[0];
+        }
+    }
+    if WALL_TORCHES.contains(&id) {
+        return WALL_TORCH;
+    }
+    for rails in RAILS {
+        if rails.contains(&id) {
+            return rails[0];
+        }
+    }
+    id
+}
+
+/// Направление блока семейства; у остальных блоков `None`.
+#[must_use]
+pub fn facing_of(id: BlockId) -> Option<Facing> {
+    for family in FACING_FAMILIES {
+        if let Some(index) = family.iter().position(|member| *member == id) {
+            return Some(Facing::ALL[index]);
+        }
+    }
+    WALL_TORCHES
+        .iter()
+        .position(|member| *member == id)
+        .map(|index| Facing::ALL[index])
+}
+
+/// Вариант блока для направления. У настенного факела вертикальные направления
+/// невозможны и заменяются на север; у блоков вне семейств ID не меняется.
+#[must_use]
+pub fn facing_variant(id: BlockId, facing: Facing) -> BlockId {
+    let base = base_block(id);
+    for family in FACING_FAMILIES {
+        if family[0] == base {
+            return family[Facing::ALL.iter().position(|f| *f == facing).unwrap_or(0)];
+        }
+    }
+    if base == WALL_TORCH {
+        let index = Facing::ALL
+            .iter()
+            .position(|f| *f == facing)
+            .filter(|index| *index < 4)
+            .unwrap_or(0);
+        return WALL_TORCHES[index];
+    }
+    id
+}
+
+/// Рельсы: вариант вдоль оси X или Z.
+#[must_use]
+pub fn rail_variant(id: BlockId, along_x: bool) -> BlockId {
+    let base = base_block(id);
+    for rails in RAILS {
+        if rails[0] == base {
+            return rails[usize::from(along_x)];
+        }
+    }
+    id
+}
+
+#[must_use]
+pub fn is_rail(id: BlockId) -> bool {
+    RAILS.iter().any(|rails| rails.contains(&id))
+}
+
+#[must_use]
+pub fn is_rail_x(id: BlockId) -> bool {
+    RAILS.iter().any(|rails| rails[1] == id)
+}
+
+#[must_use]
+pub fn is_wall_torch(id: BlockId) -> bool {
+    WALL_TORCHES.contains(&id)
+}
+
+/// Блок, из которого получается выпадающий предмет: без направления и состояния,
+/// а настенный факел и головка поршня дают обычный факел и поршень.
+#[must_use]
+pub fn drop_base(id: BlockId) -> BlockId {
+    match base_block(unlit(id)) {
+        WALL_TORCH => TORCH,
+        PISTON_HEAD => PISTON,
+        other => other,
+    }
+}
+
 /// Растение, факел или огонь: две скрещённые плоскости, без столкновений.
 #[must_use]
 pub fn is_cross(id: BlockId) -> bool {
-    (POPPY..=TALL_GRASS).contains(&id) || (PLANT2_FIRST..=PLANT2_LAST).contains(&id)
+    (POPPY..=TALL_GRASS).contains(&id)
+        || (PLANT2_FIRST..=PLANT2_LAST).contains(&id)
+        || is_wall_torch(id)
 }
 
 /// Плоский рисунок на полу (рельсы).
 #[must_use]
 pub fn is_flat(id: BlockId) -> bool {
-    (POWERED_RAIL..=DETECTOR_RAIL).contains(&id)
+    is_rail(id)
 }
 
 /// Блок, который рисуется спрайтом и не мешает ходьбе.
@@ -1826,6 +2208,94 @@ pub fn stripped_variant(id: BlockId) -> Option<BlockId> {
     })
 }
 
+/// Насколько охотно блок горит, 0…100. Камень, руды, земля и жидкости не горят.
+#[must_use]
+pub fn flammability(id: BlockId) -> u8 {
+    if is_leaves(id) || (WOOL_ORANGE..=WOOL_BLACK).contains(&id) || id == WOOL || id == HAY_BALE {
+        return 60;
+    }
+    if is_cross(id) {
+        // Растения горят, факелы и огонь — нет.
+        return if matches!(
+            id,
+            TORCH
+                | FIRE
+                | SOUL_FIRE
+                | WALL_TORCH
+                | WALL_TORCH_SOUTH
+                | WALL_TORCH_WEST
+                | WALL_TORCH_EAST
+        ) {
+            0
+        } else {
+            60
+        };
+    }
+    if is_bed(id) {
+        return 40;
+    }
+    match id {
+        PLANKS
+        | WOOD
+        | BIRCH_LOG
+        | BIRCH_PLANKS
+        | PINE_LOG
+        | PINE_PLANKS
+        | ACACIA_LOG
+        | ACACIA_PLANKS
+        | JUNGLE_LOG
+        | JUNGLE_PLANKS
+        | DARK_OAK_LOG
+        | DARK_OAK_PLANKS
+        | MANGROVE_LOG
+        | MANGROVE_PLANKS
+        | CHERRY_LOG
+        | CHERRY_PLANKS
+        | SPRUCE_LOG
+        | SPRUCE_PLANKS
+        | BAMBOO_BLOCK
+        | BAMBOO_PLANKS
+        | BAMBOO_MOSAIC
+        | OAK_WOOD
+        | SPRUCE_WOOD
+        | BIRCH_WOOD
+        | JUNGLE_WOOD
+        | ACACIA_WOOD
+        | CHERRY_WOOD
+        | DARK_OAK_WOOD
+        | MANGROVE_WOOD
+        | STRIPPED_OAK_LOG
+        | STRIPPED_SPRUCE_LOG
+        | STRIPPED_BIRCH_LOG
+        | STRIPPED_JUNGLE_LOG
+        | STRIPPED_ACACIA_LOG
+        | STRIPPED_CHERRY_LOG
+        | STRIPPED_DARK_OAK_LOG
+        | STRIPPED_MANGROVE_LOG
+        | STRIPPED_BAMBOO_BLOCK
+        | STRIPPED_OAK_WOOD
+        | STRIPPED_SPRUCE_WOOD
+        | STRIPPED_BIRCH_WOOD
+        | STRIPPED_JUNGLE_WOOD
+        | STRIPPED_ACACIA_WOOD
+        | STRIPPED_CHERRY_WOOD
+        | STRIPPED_DARK_OAK_WOOD
+        | STRIPPED_MANGROVE_WOOD
+        | BOOKSHELF
+        | CHISELED_BOOKSHELF
+        | NOTE_BLOCK
+        | CRAFTING_TABLE
+        | CHEST
+        | BARREL
+        | OAK_SLAB
+        | BIRCH_SLAB
+        | PINE_SLAB
+        | MANGROVE_ROOTS
+        | MUDDY_MANGROVE_ROOTS => 30,
+        _ => 0,
+    }
+}
+
 /// Любая вода: источник или течение.
 #[must_use]
 pub fn is_water(id: BlockId) -> bool {
@@ -1857,9 +2327,6 @@ pub fn unlit(id: BlockId) -> BlockId {
         FURNACE_LIT => FURNACE,
         SMOKER_LIT => SMOKER,
         BLAST_FURNACE_LIT => BLAST_FURNACE,
-        // Технические варианты выпадают и сохраняются как основной блок.
-        WALL_TORCH => TORCH,
-        PISTON_HEAD => PISTON,
         other => other,
     }
 }
@@ -1913,7 +2380,7 @@ mod tests {
             "Crafting Table",
             "Furnace",
         ];
-        assert_eq!(BLOCKS.len(), 301);
+        assert_eq!(BLOCKS.len(), 321);
         for (offset, name) in expected.iter().enumerate() {
             let id = 17 + offset;
             assert_eq!(BLOCKS[id].id as usize, id);
@@ -1924,7 +2391,7 @@ mod tests {
 
     #[test]
     fn chest_extends_registry_without_changing_foundation_ids() {
-        assert_eq!(BLOCKS.len(), 301);
+        assert_eq!(BLOCKS.len(), 321);
         let chest = BLOCKS.get(16).expect("сундук зарегистрирован");
         assert_eq!(chest.name, "Chest");
         assert!(is_solid(16));

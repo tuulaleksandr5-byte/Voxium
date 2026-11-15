@@ -152,7 +152,16 @@ pub fn mesh_section_with_textures(
                 }
                 if is_flat(id) {
                     let material = textures.layer(id, 1, true);
-                    builders[usize::from(material)].flat(local);
+                    builders[usize::from(material)].flat(local, game_core::is_rail_x(id));
+                    continue;
+                }
+                if let Some(facing) = game_core::is_wall_torch(id)
+                    .then(|| game_core::facing_of(id))
+                    .flatten()
+                {
+                    let [dx, _, dz] = facing.offset();
+                    let material = textures.layer(id, 0, true);
+                    builders[usize::from(material)].lean_cross(local, [dx as f32, dz as f32]);
                     continue;
                 }
                 if is_plant(id) {
@@ -448,7 +457,7 @@ impl MeshBuilder {
     }
 
     /// Рисунок на полу клетки: одна горизонтальная плоскость чуть выше пола.
-    fn flat(&mut self, local: [i32; 3]) {
+    fn flat(&mut self, local: [i32; 3], rotated: bool) {
         let (x, y, z) = (local[0] as f32, local[1] as f32 + 0.03, local[2] as f32);
         let first = self.positions.len() as u32;
         self.positions.extend([
@@ -458,11 +467,42 @@ impl MeshBuilder {
             [x + 1.0, y, z],
         ]);
         self.normals.extend([[0.0, 1.0, 0.0]; 4]);
-        self.uvs
-            .extend([[0.0, 0.0], [0.0, 1.0], [1.0, 1.0], [1.0, 0.0]]);
+        // Рельсы вдоль X — тот же рисунок, повёрнутый на четверть оборота.
+        self.uvs.extend(if rotated {
+            [[0.0, 1.0], [1.0, 1.0], [1.0, 0.0], [0.0, 0.0]]
+        } else {
+            [[0.0, 0.0], [0.0, 1.0], [1.0, 1.0], [1.0, 0.0]]
+        });
         self.colors.extend([[1.0, 1.0, 1.0, 1.0]; 4]);
         self.indices
             .extend([0, 1, 2, 0, 2, 3].map(|index| first + index));
+    }
+
+    /// Настенный факел: основание прижато к стене, верх наклонён наружу.
+    /// `outward` — горизонтальный единичный вектор от стены.
+    fn lean_cross(&mut self, local: [i32; 3], outward: [f32; 2]) {
+        let base = [
+            local[0] as f32 + 0.5 - outward[0] * 0.34,
+            local[2] as f32 + 0.5 - outward[1] * 0.34,
+        ];
+        let top = [base[0] + outward[0] * 0.3, base[1] + outward[1] * 0.3];
+        let (low, high) = (local[1] as f32 + 0.2, local[1] as f32 + 1.0);
+        let half = 0.36;
+        for (dx, dz) in [(half, half), (half, -half)] {
+            let first = self.positions.len() as u32;
+            self.positions.extend([
+                [base[0] - dx, low, base[1] - dz],
+                [base[0] + dx, low, base[1] + dz],
+                [top[0] + dx, high, top[1] + dz],
+                [top[0] - dx, high, top[1] - dz],
+            ]);
+            self.normals.extend([[0.0, 1.0, 0.0]; 4]);
+            self.uvs
+                .extend([[0.0, 1.0], [1.0, 1.0], [1.0, 0.0], [0.0, 0.0]]);
+            self.colors.extend([[1.0, 1.0, 1.0, 1.0]; 4]);
+            self.indices
+                .extend([0, 1, 2, 0, 2, 3].map(|index| first + index));
+        }
     }
 
     /// Растение: две вертикальные плоскости крест-накрест с небольшим сдвигом,

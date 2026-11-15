@@ -53,14 +53,20 @@ pub const GRASS_TOP: u16 = 0;
 pub const GRASS_BOTTOM: u16 = 2;
 pub const WOOD_END: u16 = 8;
 
-#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Default, Deserialize, PartialEq, Eq)]
 pub struct FaceTextures {
     pub top: u16,
     pub side: u16,
     pub bottom: u16,
-    /// Optional fixed front on the negative-Z world face.
+    /// Лицевая грань; по умолчанию на отрицательной стороне Z.
     #[serde(default)]
     pub front: Option<u16>,
+    /// Ось (0 = X, 1 = Y, 2 = Z) и знак стороны, на которой лежит `front`.
+    #[serde(default)]
+    pub face: Option<(u8, bool)>,
+    /// Текстура противоположной грани (у поршня — основание).
+    #[serde(default)]
+    pub back: Option<u16>,
 }
 
 #[derive(Clone, Debug)]
@@ -91,10 +97,11 @@ impl BlockTextures {
             ));
         }
         if faces.iter().any(|f| {
-            [Some(f.top), Some(f.side), Some(f.bottom), f.front]
+            [Some(f.top), Some(f.side), Some(f.bottom), f.front, f.back]
                 .into_iter()
                 .flatten()
                 .any(|i| i as usize >= MATERIAL_COUNT)
+                || f.face.is_some_and(|(axis, _)| axis > 2)
         }) {
             return Err(format!("texture layer must be in 0..{MATERIAL_COUNT}"));
         }
@@ -103,9 +110,18 @@ impl BlockTextures {
 
     pub fn layer(&self, block: game_core::BlockId, axis: usize, positive: bool) -> u16 {
         let faces = self.0[block as usize];
-        if axis == 2 && !positive {
-            faces.front.unwrap_or(faces.side)
-        } else if axis != 1 {
+        if let Some(front) = faces.front {
+            let (front_axis, front_positive) = faces.face.unwrap_or((2, false));
+            if axis == usize::from(front_axis) {
+                if positive == front_positive {
+                    return front;
+                }
+                if let Some(back) = faces.back {
+                    return back;
+                }
+            }
+        }
+        if axis != 1 {
             faces.side
         } else if positive {
             faces.top

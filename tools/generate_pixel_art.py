@@ -1649,12 +1649,10 @@ railtile("detector_rail", "#b8bcc4", "#6e4c22", "#8a8a8a")
 
 @tile("piston_side")
 def piston_side():
+    # Без деревянной полосы: поршень лежит в любом направлении, поэтому боковая грань симметрична.
     r = rng("piston")
     image, _ = cells(r, 17, "#4a4a4a", ["#6c6c6c", "#7a7a7a", "#888888", "#969696"], 18)
-    planks_part = planks("oak_planks", OAK_WOOD, "#7a5c30", "#8f6f3d")
-    image[:9] = planks_part[:9]
-    for x in range(N):
-        put(image, x, 9, "#5e4020")
+    frame(image, "#4a4a4a", "#9a9a9a")
     return image
 
 

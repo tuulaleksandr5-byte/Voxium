@@ -64,7 +64,7 @@ pub struct ContentRegistry {
 }
 
 // Имена соответствуют стабильным сохранённым ID; новые блоки только дописываются.
-pub(crate) const BLOCK_NAMES: [&str; 301] = [
+pub(crate) const BLOCK_NAMES: [&str; 321] = [
     "foundation:air",
     "foundation:grass",
     "foundation:dirt",
@@ -366,6 +366,26 @@ pub(crate) const BLOCK_NAMES: [&str; 301] = [
     "voxium:black_bed",
     "voxium:piston_head",
     "voxium:moving_piston",
+    "voxium:dispenser_south",
+    "voxium:dispenser_west",
+    "voxium:dispenser_east",
+    "voxium:dispenser_up",
+    "voxium:dispenser_down",
+    "voxium:piston_south",
+    "voxium:piston_west",
+    "voxium:piston_east",
+    "voxium:piston_up",
+    "voxium:piston_down",
+    "voxium:sticky_piston_south",
+    "voxium:sticky_piston_west",
+    "voxium:sticky_piston_east",
+    "voxium:sticky_piston_up",
+    "voxium:sticky_piston_down",
+    "voxium:wall_torch_south",
+    "voxium:wall_torch_west",
+    "voxium:wall_torch_east",
+    "voxium:powered_rail_x",
+    "voxium:detector_rail_x",
 ];
 
 impl Default for ContentRegistry {
@@ -412,7 +432,7 @@ impl ContentRegistry {
                     .ok_or_else(|| format!("Неизвестный блок {block} у предмета {}", item.id))?
                     as crate::BlockId;
                 if matches!(block_id, 0 | 13)
-                    || crate::unlit(block_id) != block_id
+                    || crate::drop_base(block_id) != block_id
                     || (crate::is_fluid(block_id)
                         && block_id != crate::WATER
                         && block_id != crate::LAVA)
@@ -511,7 +531,7 @@ impl ContentRegistry {
     #[must_use]
     pub fn drop_for_block(&self, block: crate::BlockId) -> Option<ItemId> {
         // Горящая печь выпадает обычной печью.
-        let block = crate::unlit(block);
+        let block = crate::drop_base(block);
         let item = self.item_for_block(block)?;
         match &self.get(item)?.break_drop {
             BreakDrop::SelfItem => Some(item),
