@@ -46,6 +46,14 @@ pub struct PrimedTnt {
     pub fuse: f32,
 }
 
+/// Блок, разлетевшийся при взрыве (только для картинки).
+#[derive(Clone, Debug, PartialEq)]
+pub struct Debris {
+    pub position: [i32; 3],
+    pub block: BlockId,
+    pub center: [f32; 3],
+}
+
 /// Длина фитиля динамита, зажжённого игроком, огнём или редстоуном.
 pub const FUSE_SECONDS: f32 = 4.0;
 
@@ -151,8 +159,17 @@ fn explode(world: &mut World, center: [f32; 3]) {
                     continue;
                 }
                 // Прочные блоки (обсидиан и крепче) выдерживают взрыв.
-                if BLOCKS[usize::from(id)].hardness < 50.0 {
-                    world.set(p, AIR);
+                if BLOCKS[usize::from(id)].hardness < 50.0 && world.set(p, AIR) {
+                    let pick =
+                        (p[0].wrapping_mul(73) ^ p[1].wrapping_mul(179) ^ p[2].wrapping_mul(283))
+                            & 3;
+                    if pick == 0 && world.debris.len() < 600 {
+                        world.debris.push(Debris {
+                            position: p,
+                            block: id,
+                            center,
+                        });
+                    }
                 }
             }
         }
@@ -335,6 +352,8 @@ mod tests {
         assert_eq!(w.block([4, 70, 4]), STONE, "за радиусом цело");
         assert_eq!(w.block([2, 70, 0]), AIR);
         assert!(w.primed.is_empty());
+        assert!(!w.debris.is_empty(), "разлетающиеся блоки записаны");
+        assert!(w.debris.iter().all(|d| d.block == STONE));
         assert!(blast_damage(0.0) > 9.0 && blast_damage(3.0) < blast_damage(1.0));
         assert_eq!(blast_damage(6.0), 0.0);
     }

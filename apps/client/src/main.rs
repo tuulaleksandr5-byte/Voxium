@@ -212,6 +212,8 @@ fn save(game: &mut Game) -> bool {
     let Some(id) = game.world_id.as_ref() else {
         return true;
     };
+    // Блоки в полёте и горящий динамит перед записью возвращаются в мир.
+    game_core::nature::land_all(&mut game.world);
     match save_world(&settings::save_root(), id, &game.save_data()) {
         Ok(()) => {
             game.status = "Мир сохранён".into();

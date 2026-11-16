@@ -31,6 +31,7 @@ pub fn is_cutout_layer(layer: usize) -> bool {
         || CUTOUT8_LAYERS.contains(&layer)
         || CUTOUT9_LAYERS.contains(&layer)
         || CUTOUT10_LAYERS.contains(&layer)
+        || CUTOUT11_LAYERS.contains(&layer)
         || matches!(layer, 125 | 129 | 133 | 137 | 141)
 }
 
@@ -53,6 +54,8 @@ pub const CUTOUT8_LAYERS: std::ops::RangeInclusive<usize> = 579..=621;
 pub const CUTOUT9_LAYERS: std::ops::RangeInclusive<usize> = 719..=720;
 /// Стадии роста пшеницы, моркови, картофеля и свёклы.
 pub const CUTOUT10_LAYERS: std::ops::RangeInclusive<usize> = 722..=733;
+/// Листья бамбука и росток ламинарии.
+pub const CUTOUT11_LAYERS: std::ops::RangeInclusive<usize> = 735..=737;
 pub const PLANT2_LAYERS: std::ops::RangeInclusive<usize> = 209..=239;
 
 /// Слои растений: рисуются плоскостями, видны с обеих сторон.
@@ -68,6 +71,7 @@ pub fn is_double_sided_layer(layer: usize) -> bool {
         || CUTOUT8_LAYERS.contains(&layer)
         || CUTOUT9_LAYERS.contains(&layer)
         || CUTOUT10_LAYERS.contains(&layer)
+        || CUTOUT11_LAYERS.contains(&layer)
 }
 
 /// Слои цветного стекла.

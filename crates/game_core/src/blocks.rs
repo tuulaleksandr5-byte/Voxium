@@ -1343,6 +1343,9 @@ pub const BEETROOTS_0: BlockId = 1854;
 pub const BEETROOTS_1: BlockId = 1855;
 pub const BEETROOTS_2: BlockId = 1856;
 pub const FARMLAND_MOIST: BlockId = 1857;
+pub const BAMBOO_SMALL: BlockId = 1858;
+pub const BAMBOO_LARGE: BlockId = 1859;
+pub const KELP_SPROUT: BlockId = 1860;
 pub const PLANT2_FIRST: BlockId = 251;
 pub const PLANT2_LAST: BlockId = 280;
 
@@ -1366,7 +1369,7 @@ const fn block(
 }
 
 #[allow(clippy::large_const_arrays)]
-pub const BLOCKS: [BlockDef; 1858] = [
+pub const BLOCKS: [BlockDef; 1861] = [
     block(AIR, "Air", "air", 0.0, false, false),
     block(GRASS, "Grass", "grass", 0.6, true, true),
     block(DIRT, "Dirt", "dirt", 0.5, true, true),
@@ -14260,6 +14263,30 @@ pub const BLOCKS: [BlockDef; 1858] = [
         true,
         true,
     ),
+    block(
+        BAMBOO_SMALL,
+        "Bamboo (small leaves)",
+        "bamboo_small",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        BAMBOO_LARGE,
+        "Bamboo (large leaves)",
+        "bamboo_large",
+        1.0,
+        false,
+        false,
+    ),
+    block(
+        KELP_SPROUT,
+        "Kelp (sprout)",
+        "kelp_sprout",
+        0.05,
+        false,
+        false,
+    ),
 ];
 
 /// Растения рисуются двумя скрещёнными плоскостями и не мешают ходьбе.
@@ -14568,6 +14595,8 @@ pub fn drop_base(id: BlockId) -> BlockId {
         REDSTONE_WALL_TORCH | REDSTONE_WALL_TORCH_OFF => REDSTONE_TORCH,
         SOUL_WALL_TORCH => SOUL_TORCH,
         PISTON_HEAD => PISTON,
+        BAMBOO_SMALL | BAMBOO_LARGE => BAMBOO,
+        KELP_SPROUT => KELP,
         other => other,
     }
 }
@@ -14588,7 +14617,13 @@ pub fn is_cross(id: BlockId) -> bool {
         || crate::shape_table::is_cross(id)
         || matches!(
             id,
-            KELP | KELP_PLANT | SEA_PICKLE | BAMBOO_SAPLING | BUBBLE_COLUMN
+            KELP | KELP_PLANT
+                | SEA_PICKLE
+                | BAMBOO_SAPLING
+                | BUBBLE_COLUMN
+                | BAMBOO_SMALL
+                | BAMBOO_LARGE
+                | KELP_SPROUT
         )
         || (DEAD_TUBE_CORAL..=HORN_CORAL_FAN).contains(&id)
         || matches!(
@@ -14846,7 +14881,7 @@ mod tests {
             "Crafting Table",
             "Furnace",
         ];
-        assert_eq!(BLOCKS.len(), 1858);
+        assert_eq!(BLOCKS.len(), 1861);
         for (offset, name) in expected.iter().enumerate() {
             let id = 17 + offset;
             assert_eq!(BLOCKS[id].id as usize, id);
@@ -14857,7 +14892,7 @@ mod tests {
 
     #[test]
     fn chest_extends_registry_without_changing_foundation_ids() {
-        assert_eq!(BLOCKS.len(), 1858);
+        assert_eq!(BLOCKS.len(), 1861);
         let chest = BLOCKS.get(16).expect("сундук зарегистрирован");
         assert_eq!(chest.name, "Chest");
         assert!(is_solid(16));

@@ -392,6 +392,8 @@ pub fn controls(
                 game.fall_peak = None;
             } else if game.grounded {
                 if !was_grounded && let Some(peak) = game.fall_peak {
+                    let fell = peak - game.feet.y;
+                    trample_farmland(&mut game, fell);
                     let amount = fall_damage(peak - game.feet.y, &game.survival_config);
                     if amount > 0. {
                         player_actions.write(crate::survival_client::PlayerActionMessage(
@@ -678,5 +680,24 @@ mod tests {
         assert!(!can_stand(feet, |p| collision_block(&world, p)));
         world.insert(game_core::Chunk::generate(0, [1, 0]));
         assert!(can_stand(feet, |p| collision_block(&world, p)));
+    }
+}
+
+/// Приземление с высоты мнёт грядку под ногами: чем выше прыжок, тем вероятнее.
+fn trample_farmland(game: &mut crate::session::Game, fall: f32) {
+    if fall <= 0.5 {
+        return;
+    }
+    let cell = [
+        game.feet.x.floor() as i32,
+        (game.feet.y - 0.1).floor() as i32,
+        game.feet.z.floor() as i32,
+    ];
+    let roll = ((game.clock * 1000.0) as u64 ^ (cell[0] as u64).wrapping_mul(0x9e37_79b9))
+        .wrapping_mul(0x2545_f491_4f6c_dd1d)
+        >> 40;
+    let chance = f64::from((fall - 0.5).min(1.0));
+    if (roll % 1000) as f64 / 1000.0 < chance && game_core::nature::trample(&mut game.world, cell) {
+        game.revision += 1;
     }
 }

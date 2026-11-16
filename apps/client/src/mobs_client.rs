@@ -414,6 +414,13 @@ fn simulate(
                         && game_core::BLOCKS[usize::from(id)].hardness < 50.0
                     {
                         game.world.set(p, game_core::AIR);
+                        if (dx + dy + dz).rem_euclid(3) == 0 && game.world.debris.len() < 600 {
+                            game.world.debris.push(game_core::mechanics::Debris {
+                                position: p,
+                                block: id,
+                                center,
+                            });
+                        }
                     }
                 }
             }

@@ -1840,3 +1840,6 @@
 1855;voxium:beetroots_stage_1;Beetroots (stage 1);растение;нет;нет;0;0.05;рука, любая;—;
 1856;voxium:beetroots_stage_2;Beetroots (stage 2);растение;нет;нет;0;0.05;рука, любая;—;
 1857;voxium:farmland_moist;Farmland (moist);особая форма;да;да;0;0.6;лопата, любая;—;
+1858;voxium:bamboo_small;Bamboo (small leaves);растение;нет;нет;0;1;топор, любая;Бамбук;
+1859;voxium:bamboo_large;Bamboo (large leaves);растение;нет;нет;0;1;топор, любая;Бамбук;
+1860;voxium:kelp_sprout;Kelp (sprout);растение;нет;нет;0;0.05;рука, любая;Ламинария;

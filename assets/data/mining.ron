@@ -1848,5 +1848,8 @@
         (block: 1855, hardness: 0.05, tool: Hand, harvest_tier: 0, seconds: None),
         (block: 1856, hardness: 0.05, tool: Hand, harvest_tier: 0, seconds: None),
         (block: 1857, hardness: 0.6, tool: Shovel, harvest_tier: 0, seconds: None),
+        (block: 1858, hardness: 1.0, tool: Axe, harvest_tier: 0, seconds: None),
+        (block: 1859, hardness: 1.0, tool: Axe, harvest_tier: 0, seconds: None),
+        (block: 1860, hardness: 0.05, tool: Hand, harvest_tier: 0, seconds: None),
     ],
 )

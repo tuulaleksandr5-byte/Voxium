@@ -762,6 +762,9 @@ fn crop_stages_and_moist_farmland_mesh() {
         game_core::POTATOES_0,
         game_core::BEETROOTS_2,
         game_core::FARMLAND_MOIST,
+        game_core::BAMBOO_SMALL,
+        game_core::BAMBOO_LARGE,
+        game_core::KELP_SPROUT,
     ] {
         assert!(!single(block).is_empty(), "{block}");
     }

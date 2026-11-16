@@ -4734,6 +4734,48 @@ def farmland_moist():
     return image
 
 
+@tile("bamboo_small")
+def bamboo_small():
+    image = transparent()
+    for y in range(0, N):
+        for x in (14, 15, 16, 17):
+            put(image, x, y, "#6a9a2a" if x < 16 else "#4a7a1c")
+        if y % 9 == 0:
+            rect(image, 13, y, 6, 1, "#3a5a14")
+    for y in (4, 10):
+        for d in range(1, 7):
+            put(image, 17 + d, y + d // 2, "#5aa83a")
+            put(image, 14 - d, y + d // 2, "#5aa83a")
+    return image
+
+
+@tile("bamboo_large")
+def bamboo_large():
+    image = transparent()
+    for y in range(0, N):
+        for x in (14, 15, 16, 17):
+            put(image, x, y, "#6a9a2a" if x < 16 else "#4a7a1c")
+        if y % 9 == 0:
+            rect(image, 13, y, 6, 1, "#3a5a14")
+    for y in (2, 8, 14):
+        for d in range(1, 13):
+            for t in range(2):
+                put(image, 17 + d, y + d // 2 + t, "#4e9a30" if t else "#6ac048")
+                put(image, 14 - d, y + d // 2 + t, "#4e9a30" if t else "#6ac048")
+    return image
+
+
+@tile("kelp_sprout")
+def kelp_sprout():
+    image = transparent()
+    for x in (8, 15, 22):
+        for y in range(N - 12, N):
+            put(image, x, y, "#3a8a3a")
+            put(image, x + 1, y, "#2a6a2a")
+        rect(image, x - 1, N - 14, 4, 3, "#5aaa4a")
+    return image
+
+
 def main():
     pixel = ROOT / "assets/textures/pixel"
     tiles = {}

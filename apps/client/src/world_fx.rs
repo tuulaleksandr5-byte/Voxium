@@ -1,5 +1,9 @@
 //! Живые блоки мира: падающий песок, горящий динамит и сам взрыв.
-use crate::{session::Game, streaming::Streaming};
+use crate::{
+    block_audio::{EffectKind, EffectSound},
+    session::Game,
+    streaming::Streaming,
+};
 use bevy::prelude::*;
 use game_core::{AIR, BlockId, TNT};
 use std::collections::{HashMap, HashSet};
@@ -14,6 +18,13 @@ struct FallingVisual(u64);
 struct PrimedVisual(u64);
 #[derive(Component)]
 struct FlashOverlay;
+#[derive(Component)]
+struct DebrisPiece {
+    velocity: Vec3,
+    spin: Vec3,
+    age: f32,
+    life: f32,
+}
 #[derive(Component)]
 struct Flash {
     age: f32,
@@ -40,7 +51,13 @@ struct Cache {
 pub fn plugin(app: &mut App) {
     app.add_message::<ExplosionMessage>().add_systems(
         Update,
-        (sync_blocks, spawn_explosions, animate_particles).chain(),
+        (
+            sync_blocks,
+            spawn_debris,
+            spawn_explosions,
+            animate_particles,
+        )
+            .chain(),
     );
 }
 
@@ -98,6 +115,7 @@ fn sync_blocks(
     mut falling: Query<(Entity, &FallingVisual, &mut Transform), Without<PrimedVisual>>,
     mut primed: Query<(Entity, &PrimedVisual, &mut Transform, &Children), Without<FallingVisual>>,
     mut overlays: Query<&mut Visibility, With<FlashOverlay>>,
+    mut sounds: MessageWriter<EffectSound>,
 ) {
     let active = game.world_id.is_some();
     let mut seen = HashSet::new();
@@ -175,6 +193,10 @@ fn sync_blocks(
                 Visibility::default(),
             ))
             .id();
+        sounds.write(EffectSound {
+            kind: EffectKind::Fuse,
+            position: Vec3::from_array(tnt.position),
+        });
         spawn_block_children(&mut commands, parent, TNT, &stream, &mut meshes, &mut cache);
         let cube = cache
             .cube
@@ -204,14 +226,75 @@ fn sync_blocks(
     }
 }
 
+/// Блоки, разрушенные взрывом, разлетаются кусками и падают.
+#[allow(clippy::too_many_arguments)]
+fn spawn_debris(
+    mut commands: Commands,
+    mut game: ResMut<Game>,
+    stream: Res<Streaming>,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut cache: Local<Cache>,
+    existing: Query<(), With<DebrisPiece>>,
+) {
+    if game.world_id.is_none() {
+        game.world.debris.clear();
+        return;
+    }
+    let pending = std::mem::take(&mut game.world.debris);
+    let mut room = 160_usize.saturating_sub(existing.iter().count());
+    for piece in pending {
+        if room == 0 {
+            break;
+        }
+        room -= 1;
+        cache.counter = cache.counter.wrapping_add(1);
+        let n = cache.counter.wrapping_mul(13);
+        let at = Vec3::new(
+            piece.position[0] as f32 + 0.5,
+            piece.position[1] as f32 + 0.5,
+            piece.position[2] as f32 + 0.5,
+        );
+        let away = (at - Vec3::from_array(piece.center)).normalize_or(Vec3::Y);
+        let velocity = away * (4.0 + 5.0 * hash(n))
+            + Vec3::new(hash(n + 1) - 0.5, 0.0, hash(n + 2) - 0.5) * 3.0
+            + Vec3::Y * (3.0 + 4.0 * hash(n + 3));
+        let spin = Vec3::new(hash(n + 4) - 0.5, hash(n + 5) - 0.5, hash(n + 6) - 0.5) * 12.0;
+        let parent = commands
+            .spawn((
+                DebrisPiece {
+                    velocity,
+                    spin,
+                    age: 0.0,
+                    life: 1.3 + 0.7 * hash(n + 7),
+                },
+                Transform::from_translation(at).with_scale(Vec3::splat(0.55 + 0.4 * hash(n + 8))),
+                Visibility::default(),
+            ))
+            .id();
+        spawn_block_children(
+            &mut commands,
+            parent,
+            piece.block,
+            &stream,
+            &mut meshes,
+            &mut cache,
+        );
+    }
+}
+
 fn spawn_explosions(
     mut commands: Commands,
     mut messages: MessageReader<ExplosionMessage>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut cache: Local<Cache>,
+    mut sounds: MessageWriter<EffectSound>,
 ) {
     for ExplosionMessage(center) in messages.read() {
+        sounds.write(EffectSound {
+            kind: EffectKind::Explosion,
+            position: *center,
+        });
         let sphere = cache
             .sphere
             .get_or_insert_with(|| meshes.add(Sphere::new(1.0).mesh().ico(2).unwrap()))
@@ -291,7 +374,14 @@ fn animate_particles(
     mut commands: Commands,
     time: Res<Time<Real>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
-    mut particles: Query<(Entity, &mut Particle, &mut Transform), Without<Flash>>,
+    mut particles: Query<
+        (Entity, &mut Particle, &mut Transform),
+        (Without<Flash>, Without<DebrisPiece>),
+    >,
+    mut debris: Query<
+        (Entity, &mut DebrisPiece, &mut Transform),
+        (Without<Flash>, Without<Particle>),
+    >,
     mut flashes: Query<(
         Entity,
         &mut Flash,
@@ -318,6 +408,22 @@ fn animate_particles(
         };
         transform.scale = Vec3::splat(particle.start_scale * grow.max(0.05));
         transform.rotate_y(dt * 3.0);
+    }
+    for (entity, mut piece, mut transform) in &mut debris {
+        piece.age += dt;
+        if piece.age >= piece.life {
+            commands.entity(entity).despawn();
+            continue;
+        }
+        piece.velocity.y -= 16.0 * dt;
+        let step = piece.velocity * dt;
+        transform.translation += step;
+        let spin = piece.spin * dt;
+        transform.rotate(Quat::from_euler(EulerRot::XYZ, spin.x, spin.y, spin.z));
+        let left = piece.life - piece.age;
+        if left < 0.35 {
+            transform.scale *= (1.0 - dt * 4.0).max(0.1);
+        }
     }
     for (entity, mut flash, mut transform, material) in &mut flashes {
         flash.age += dt;

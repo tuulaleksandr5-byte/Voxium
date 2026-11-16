@@ -97,6 +97,8 @@ fn tick_mechanics(
     mut game: ResMut<Game>,
     mut actions: MessageWriter<crate::survival_client::PlayerActionMessage>,
     mut explosions: MessageWriter<crate::world_fx::ExplosionMessage>,
+    mut sounds: MessageWriter<crate::block_audio::BlockSound>,
+    mut effects: MessageWriter<crate::block_audio::EffectSound>,
     mut contact: Local<f32>,
     mut redstone_clock: Local<f32>,
 ) {
@@ -161,13 +163,45 @@ fn tick_mechanics(
             }));
         }
     }
-    // Падающие блоки и самопроизвольные разрушения.
+    // Падающие блоки: наковальня бьёт того, кто оказался под ней.
+    strike_with_anvils(&mut game, &mut actions);
     if game_core::nature::step_falling(&mut game.world, delta.min(0.1)) > 0 {
         game.revision += 1;
     }
     for event in std::mem::take(&mut game.world.nature_events) {
-        let game_core::nature::NatureEvent::Broke { position, block } = event;
-        crate::inventory_client::natural_drops(&mut game, position, block);
+        match event {
+            game_core::nature::NatureEvent::Broke { position, block } => {
+                crate::inventory_client::natural_drops(&mut game, position, block);
+            }
+            game_core::nature::NatureEvent::Landed {
+                position,
+                block,
+                fallen,
+            } => {
+                let at = Vec3::new(
+                    position[0] as f32 + 0.5,
+                    position[1] as f32 + 0.5,
+                    position[2] as f32 + 0.5,
+                );
+                if game_core::nature::is_anvil(block) {
+                    effects.write(crate::block_audio::EffectSound {
+                        kind: crate::block_audio::EffectKind::Anvil,
+                        position: at,
+                    });
+                } else if fallen > 0.5 {
+                    let material = match block {
+                        game_core::GRAVEL => game_core::GRAVEL,
+                        game_core::DRAGON_EGG => game_core::STONE,
+                        _ => game_core::SAND,
+                    };
+                    sounds.write(crate::block_audio::BlockSound {
+                        block: material,
+                        kind: crate::block_audio::SoundKind::Place,
+                        position: at,
+                    });
+                }
+            }
+        }
         game.revision += 1;
     }
     // Кактус, магма и колючий куст ранят каждые полсекунды.
@@ -285,5 +319,63 @@ mod tests {
         assert!(clock.tick >= 1);
         let game = app.world().resource::<Game>();
         assert_eq!(game.world.block([1, 61, 0]), game_core::FLOW_WATER_7);
+    }
+}
+
+/// Наковальня на лету бьёт игрока и мобов под собой: 2 урона за блок падения, до 40.
+fn strike_with_anvils(
+    game: &mut Game,
+    actions: &mut MessageWriter<crate::survival_client::PlayerActionMessage>,
+) {
+    use crate::survival_client::{PlayerAction, PlayerActionMessage};
+    let feet = game.feet;
+    let (half, height) = (0.3_f32, game.height);
+    let mut struck_mobs = Vec::new();
+    let mut player_damage = 0.0_f32;
+    for anvil in &mut game.world.falling {
+        if !game_core::nature::is_anvil(anvil.block) || anvil.struck || anvil.fallen < 1.0 {
+            continue;
+        }
+        let damage = (2.0 * (anvil.fallen - 1.0)).min(40.0);
+        let c = Vec3::from_array(anvil.position);
+        let overlaps = |min: Vec3, max: Vec3| {
+            c.x + 0.5 > min.x
+                && c.x - 0.5 < max.x
+                && c.y + 0.5 > min.y
+                && c.y - 0.5 < max.y
+                && c.z + 0.5 > min.z
+                && c.z - 0.5 < max.z
+        };
+        let mut hit = false;
+        if overlaps(
+            feet - Vec3::new(half, 0.0, half),
+            feet + Vec3::new(half, height, half),
+        ) {
+            player_damage = player_damage.max(damage);
+            hit = true;
+        }
+        for mob in game.mobs.mobs.values() {
+            let spec = mob.kind.spec();
+            let at = Vec3::from_array(mob.position);
+            if mob.dying.is_none()
+                && overlaps(
+                    at - Vec3::new(spec.half_width, 0.0, spec.half_width),
+                    at + Vec3::new(spec.half_width, spec.height, spec.half_width),
+                )
+            {
+                struck_mobs.push((mob.id, damage, c));
+                hit = true;
+            }
+        }
+        anvil.struck = hit;
+    }
+    if player_damage > 0.0 && game.game_mode == game_core::survival::GameMode::Survival {
+        actions.write(PlayerActionMessage(PlayerAction::Damage {
+            amount: player_damage,
+            source: game_core::survival::DamageSource::Contact,
+        }));
+    }
+    for (id, damage, from) in struck_mobs {
+        game.mobs.hit(id, damage, from.to_array());
     }
 }

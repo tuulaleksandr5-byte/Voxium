@@ -582,6 +582,8 @@ pub struct World {
     pub falling: Vec<crate::nature::Falling>,
     /// Зажжённый динамит с горящим фитилём.
     pub primed: Vec<crate::mechanics::PrimedTnt>,
+    /// Разрушенные взрывом блоки для анимации разлёта.
+    pub debris: Vec<crate::mechanics::Debris>,
     entity_counter: u64,
     /// Динамит, который сейчас взорвётся; его обрабатывает `mechanics::run_blasts`.
     pub blasts: Vec<[i32; 3]>,
@@ -603,6 +605,7 @@ impl World {
             nature_events: Vec::new(),
             falling: Vec::new(),
             primed: Vec::new(),
+            debris: Vec::new(),
             entity_counter: 0,
             blasts: Vec::new(),
             rs: crate::redstone::Redstone::default(),

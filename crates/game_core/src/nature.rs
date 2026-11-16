@@ -6,13 +6,14 @@
 //! вокруг игрока, как случайные тики блоков в Minecraft.
 
 use crate::{
-    AIR, ANVIL, BAMBOO, BEETROOTS, BEETROOTS_0, BEETROOTS_1, BEETROOTS_2, BlockId, CACTUS, CARROTS,
-    CARROTS_0, CARROTS_1, CARROTS_2, CHIPPED_ANVIL, CONCRETE_WHITE, DAMAGED_ANVIL, DIRT,
-    DRAGON_EGG, FARMLAND, FARMLAND_MOIST, GRASS, GRAVEL, ICE, KELP, KELP_PLANT, LARGE_FERN, MELON,
-    MELON_STEM, POPPY, POTATOES, POTATOES_0, POTATOES_1, POTATOES_2, PUMPKIN, PUMPKIN_STEM,
-    RED_SAND, SAND, SNOW_LAYER, SUGAR_CANE, SUNFLOWER, TALL_GRASS, WATER, WHEAT, WHEAT_0, WHEAT_1,
-    WHEAT_2, WHITE_CONCRETE_POWDER, World, blocks::BLOCKS, fluids::loaded, is_fire, is_fluid,
-    is_leaves, is_opaque, is_plant, is_solid, is_water,
+    AIR, ANVIL, BAMBOO, BAMBOO_LARGE, BAMBOO_SAPLING, BAMBOO_SMALL, BEETROOTS, BEETROOTS_0,
+    BEETROOTS_1, BEETROOTS_2, BlockId, CACTUS, CARROTS, CARROTS_0, CARROTS_1, CARROTS_2,
+    CHIPPED_ANVIL, CONCRETE_WHITE, DAMAGED_ANVIL, DIRT, DRAGON_EGG, FARMLAND, FARMLAND_MOIST,
+    GRASS, GRAVEL, ICE, KELP, KELP_PLANT, KELP_SPROUT, LARGE_FERN, MELON, MELON_STEM, POPPY,
+    POTATOES, POTATOES_0, POTATOES_1, POTATOES_2, PUMPKIN, PUMPKIN_STEM, RED_SAND, SAND,
+    SNOW_LAYER, SUGAR_CANE, SUNFLOWER, TALL_GRASS, TNT, WATER, WHEAT, WHEAT_0, WHEAT_1, WHEAT_2,
+    WHITE_CONCRETE_POWDER, World, blocks::BLOCKS, fluids::loaded, is_fire, is_fluid, is_leaves,
+    is_opaque, is_plant, is_solid, is_water,
 };
 use std::sync::OnceLock;
 
@@ -32,6 +33,12 @@ const MAX_FALLING: usize = 512;
 pub enum NatureEvent {
     /// Блок разрушился сам (лист опал, растение без опоры, упавший блок некуда деть).
     Broke { position: [i32; 3], block: BlockId },
+    /// Падающий блок приземлился (звук, пыль).
+    Landed {
+        position: [i32; 3],
+        block: BlockId,
+        fallen: f32,
+    },
 }
 
 /// Падающий блок: пока летит, он не часть мира.
@@ -44,6 +51,10 @@ pub struct Falling {
     pub position: [f32; 3],
     /// Скорость по вертикали, блоков в секунду (вниз — отрицательная).
     pub velocity: f32,
+    /// Сколько блоков уже пролетел: от этого зависит урон наковальни.
+    pub fallen: f32,
+    /// Наковальня уже ударила тех, кто был под ней.
+    pub struck: bool,
 }
 
 /// Следующая стадия роста культуры.
@@ -94,6 +105,16 @@ pub fn is_falling(id: BlockId) -> bool {
 }
 
 #[must_use]
+pub fn is_anvil(id: BlockId) -> bool {
+    matches!(id, ANVIL | CHIPPED_ANVIL | DAMAGED_ANVIL)
+}
+
+#[must_use]
+pub fn is_bamboo(id: BlockId) -> bool {
+    matches!(id, BAMBOO | BAMBOO_SMALL | BAMBOO_LARGE | BAMBOO_SAPLING)
+}
+
+#[must_use]
 pub fn is_concrete_powder(id: BlockId) -> bool {
     (WHITE_CONCRETE_POWDER..WHITE_CONCRETE_POWDER + 16).contains(&id)
 }
@@ -124,7 +145,7 @@ fn needs_ground(id: BlockId) -> bool {
         || (SUNFLOWER..=LARGE_FERN).contains(&id)
         || id == SUGAR_CANE
         || id == CACTUS
-        || id == BAMBOO
+        || is_bamboo(id)
 }
 
 fn hole(id: BlockId) -> bool {
@@ -227,6 +248,8 @@ fn update(world: &mut World, p: [i32; 3], tick: u64) -> bool {
                 block: id,
                 position: [p[0] as f32 + 0.5, p[1] as f32 + 0.5, p[2] as f32 + 0.5],
                 velocity: 0.0,
+                fallen: 0.0,
+                struck: false,
             });
             return true;
         }
@@ -310,8 +333,10 @@ pub fn random_tick(world: &mut World, center: [i32; 3], tick: u64, samples: usiz
             GRASS => grass(world, p, h),
             SUGAR_CANE | CACTUS => grow_column(world, p, id, h),
             FARMLAND | FARMLAND_MOIST => farmland(world, p, id),
-            BAMBOO => grow_bamboo(world, p, roll),
-            KELP => grow_kelp(world, p, roll),
+            BAMBOO | BAMBOO_SMALL | BAMBOO_LARGE | BAMBOO_SAPLING => {
+                grow_bamboo(world, p, id, roll);
+            }
+            KELP | KELP_SPROUT => grow_kelp(world, p, id, roll),
             ICE | SNOW_LAYER => melt(world, p, id, roll),
             MELON_STEM | PUMPKIN_STEM => grow_fruit(world, p, id, h, roll),
             _ => {
@@ -412,18 +437,49 @@ fn column_height(world: &World, p: [i32; 3], id: BlockId) -> i32 {
     height
 }
 
-fn grow_bamboo(world: &mut World, p: [i32; 3], roll: u32) {
+fn bamboo_stalk(world: &World, p: [i32; 3]) -> i32 {
+    let mut height = 0;
+    let mut cell = p;
+    while matches!(world.block(cell), BAMBOO | BAMBOO_SMALL | BAMBOO_LARGE) {
+        height += 1;
+        cell = below(cell);
+    }
+    height
+}
+
+/// Бамбук растёт вверх: росток даёт стебель с маленькими листьями, с высоты 3
+/// наверху большие листья, под ними маленькие, ниже голый стебель.
+fn grow_bamboo(world: &mut World, p: [i32; 3], id: BlockId, roll: u32) {
     let top = above(p);
-    if roll < 30
-        && world.block(top) == AIR
-        && loaded(world, top)
-        && column_height(world, p, BAMBOO) < 12
-    {
-        world.set(top, BAMBOO);
+    if roll >= 30 || world.block(top) != AIR || !loaded(world, top) {
+        return;
+    }
+    if id == BAMBOO_SAPLING {
+        world.set(p, BAMBOO);
+        world.set(top, BAMBOO_SMALL);
+        return;
+    }
+    let height = bamboo_stalk(world, p) + 1;
+    if height >= 12 {
+        return;
+    }
+    let tall = height + 1 >= 3;
+    world.set(top, if tall { BAMBOO_LARGE } else { BAMBOO_SMALL });
+    world.set(p, if tall { BAMBOO_SMALL } else { BAMBOO });
+    let under = below(p);
+    if matches!(world.block(under), BAMBOO_SMALL | BAMBOO_LARGE) {
+        world.set(under, BAMBOO);
     }
 }
 
-fn grow_kelp(world: &mut World, p: [i32; 3], roll: u32) {
+/// Ламинария: ростки взрослеют, а взрослая верхушка выращивает новый росток.
+fn grow_kelp(world: &mut World, p: [i32; 3], id: BlockId, roll: u32) {
+    if id == KELP_SPROUT {
+        if roll < 40 {
+            world.set(p, KELP);
+        }
+        return;
+    }
     let top = above(p);
     if roll < 25
         && world.block(top) == WATER
@@ -431,7 +487,43 @@ fn grow_kelp(world: &mut World, p: [i32; 3], roll: u32) {
         && column_height(world, p, KELP_PLANT) < 20
     {
         world.set(p, KELP_PLANT);
-        world.set(top, KELP);
+        world.set(top, KELP_SPROUT);
+    }
+}
+
+/// Вытаптывание: грядка под приземлившимся становится землёй, посадка ломается.
+pub fn trample(world: &mut World, cell: [i32; 3]) -> bool {
+    if !is_farmland(world.block(cell)) {
+        return false;
+    }
+    let up = above(cell);
+    let crop = world.block(up);
+    if is_crop(crop) || crop == MELON_STEM || crop == PUMPKIN_STEM {
+        broke(world, up, crop);
+    }
+    world.set(cell, DIRT);
+    true
+}
+
+/// Приземляет всё, что ещё в воздухе: перед сохранением мира блоки не должны пропасть.
+pub fn land_all(world: &mut World) {
+    for _ in 0..4000 {
+        if world.falling.is_empty() {
+            break;
+        }
+        step_falling(world, 0.05);
+    }
+    for f in std::mem::take(&mut world.falling) {
+        let cell = f.position.map(|v| v.floor() as i32);
+        if world.block(cell) == AIR {
+            world.set(cell, f.block);
+        }
+    }
+    for tnt in std::mem::take(&mut world.primed) {
+        let cell = tnt.position.map(|v| v.floor() as i32);
+        if world.block(cell) == AIR {
+            world.set(cell, TNT);
+        }
     }
 }
 
@@ -490,6 +582,7 @@ pub fn step_falling(world: &mut World, dt: f32) -> usize {
                 break;
             }
             f.velocity = (f.velocity - 32.0 * h).max(-55.0);
+            f.fallen += (f.position[1] - y).max(0.0);
             let block = world.block(under);
             if is_plant(block) {
                 broke(world, under, block);
@@ -497,7 +590,23 @@ pub fn step_falling(world: &mut World, dt: f32) -> usize {
                 let target = above(under);
                 let occupant = world.block(target);
                 if hole(occupant) || is_plant(occupant) {
-                    world.set(target, f.block);
+                    let mut placed = f.block;
+                    // Наковальня при ударе может треснуть, а треснувшая — разбиться.
+                    if is_anvil(placed) && hash(world.seed, f.id, cell_key(target)) % 100 < 12 {
+                        placed = match placed {
+                            ANVIL => CHIPPED_ANVIL,
+                            CHIPPED_ANVIL => DAMAGED_ANVIL,
+                            _ => AIR,
+                        };
+                    }
+                    if placed != AIR {
+                        world.set(target, placed);
+                    }
+                    world.nature_events.push(NatureEvent::Landed {
+                        position: target,
+                        block: f.block,
+                        fallen: f.fallen,
+                    });
                 } else {
                     world.nature_events.push(NatureEvent::Broke {
                         position: target,
@@ -567,7 +676,7 @@ mod tests {
         settle(&mut w);
         assert_eq!(w.block([0, GROUND + 1, 0]), SAND);
         assert_eq!(w.block([2, GROUND + 1, 0]), GRAVEL);
-        assert_eq!(w.block([4, GROUND + 1, 0]), ANVIL);
+        assert!(is_anvil(w.block([4, GROUND + 1, 0])));
         assert_eq!(w.block([0, GROUND + 5, 0]), AIR);
     }
 
@@ -803,9 +912,114 @@ mod tests {
         for step in 0..60000 {
             random_tick(&mut w, [4, GROUND, 4], step, 70);
         }
-        assert!(w.block([0, GROUND + 4, 0]) == BAMBOO, "бамбук вырос");
-        assert!(w.block([8, GROUND + 2, 8]) == KELP || w.block([8, GROUND + 2, 8]) == KELP_PLANT);
+        assert!(is_bamboo(w.block([0, GROUND + 4, 0])), "бамбук вырос");
+        assert!(matches!(
+            w.block([8, GROUND + 2, 8]),
+            KELP | KELP_PLANT | KELP_SPROUT
+        ));
         assert_eq!(w.block([12, GROUND + 1, 0]), WATER, "лёд у факела растаял");
         assert_eq!(w.block([12, GROUND + 1, 4]), ICE, "лёд без света цел");
+    }
+
+    #[test]
+    fn trampling_turns_farmland_to_dirt_and_breaks_the_crop() {
+        let mut w = world();
+        farm(&mut w, WHEAT_1);
+        assert!(trample(&mut w, [0, GROUND + 1, 0]));
+        assert_eq!(w.block([0, GROUND + 1, 0]), DIRT);
+        assert_eq!(w.block([0, GROUND + 2, 0]), AIR);
+        assert!(w.nature_events.iter().any(|e| matches!(
+            e,
+            NatureEvent::Broke { block, .. } if *block == WHEAT_1
+        )));
+        assert!(
+            !trample(&mut w, [3, GROUND + 1, 0]),
+            "не грядка — не топчется"
+        );
+    }
+
+    #[test]
+    fn anvil_remembers_its_fall_and_reports_the_landing() {
+        let mut w = world();
+        w.set([0, GROUND + 12, 0], ANVIL);
+        tick(&mut w, 0, 16);
+        for _ in 0..100 {
+            step_falling(&mut w, 0.02);
+            if w.falling.is_empty() {
+                break;
+            }
+            assert!(!w.falling[0].struck);
+        }
+        let landed = w.nature_events.iter().find_map(|e| match e {
+            NatureEvent::Landed { block, fallen, .. } => Some((*block, *fallen)),
+            _ => None,
+        });
+        let (block, fallen) = landed.expect("приземление");
+        assert_eq!(block, ANVIL);
+        assert!((fallen - 10.5).abs() < 1.0, "{fallen}");
+        assert!(is_anvil(w.block([0, GROUND + 1, 0])) || w.block([0, GROUND + 1, 0]) == AIR);
+    }
+
+    #[test]
+    fn land_all_puts_every_flying_block_and_primed_tnt_back_into_the_world() {
+        let mut w = world();
+        w.set([0, GROUND + 30, 0], SAND);
+        w.set([4, GROUND + 1, 4], TNT);
+        w.blasts.push([4, GROUND + 1, 4]);
+        crate::mechanics::run_blasts(&mut w, 4);
+        tick(&mut w, 0, 16);
+        assert_eq!((w.falling.len(), w.primed.len()), (1, 1));
+        land_all(&mut w);
+        assert!(w.falling.is_empty() && w.primed.is_empty());
+        assert_eq!(w.block([0, GROUND + 1, 0]), SAND);
+        assert_eq!(w.block([4, GROUND + 1, 4]), TNT);
+    }
+
+    #[test]
+    fn bamboo_grows_leaf_stages_from_sapling_to_tall_stalk() {
+        let mut w = world();
+        w.set([0, GROUND + 1, 0], DIRT);
+        w.set([0, GROUND + 2, 0], BAMBOO_SAPLING);
+        for step in 0..120000 {
+            random_tick(&mut w, [0, GROUND, 0], step, 70);
+            if w.block([0, GROUND + 6, 0]) != AIR {
+                break;
+            }
+        }
+        assert_eq!(
+            w.block([0, GROUND + 2, 0]),
+            BAMBOO,
+            "основание — голый стебель"
+        );
+        let top = (2..=13)
+            .map(|y| w.block([0, GROUND + y, 0]))
+            .filter(|b| is_bamboo(*b))
+            .last()
+            .unwrap();
+        assert_eq!(top, BAMBOO_LARGE);
+        let smalls = (2..=13)
+            .filter(|y| w.block([0, GROUND + y, 0]) == BAMBOO_SMALL)
+            .count();
+        assert_eq!(smalls, 1, "под большой кроной один маленький ярус");
+    }
+
+    #[test]
+    fn a_new_kelp_tip_starts_as_a_sprout_and_matures() {
+        let mut w = world();
+        w.set([8, GROUND, 8], WATER);
+        w.set([8, GROUND + 1, 8], KELP);
+        for dy in 2..=6 {
+            w.set([8, GROUND + dy, 8], WATER);
+        }
+        let mut saw_sprout = false;
+        for step in 0..120000 {
+            random_tick(&mut w, [8, GROUND, 8], step, 70);
+            saw_sprout |= (1..=6).any(|dy| w.block([8, GROUND + dy, 8]) == KELP_SPROUT);
+            if saw_sprout && w.block([8, GROUND + 3, 8]) == KELP {
+                break;
+            }
+        }
+        assert!(saw_sprout);
+        assert_eq!(w.block([8, GROUND + 1, 8]), KELP_PLANT);
     }
 }
