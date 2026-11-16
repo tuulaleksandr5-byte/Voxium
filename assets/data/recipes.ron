@@ -865,4 +865,6 @@
      inputs: [(item: "voxium:cut_copper", count: 1), None, None, (item: "voxium:cut_copper", count: 1), (item: "voxium:cut_copper", count: 1), None, (item: "voxium:cut_copper", count: 1), (item: "voxium:cut_copper", count: 1), (item: "voxium:cut_copper", count: 1)], output: (item: "voxium:cut_copper_stairs", count: 4)),
     (id: "voxium:cut_copper_slab", width: 3, height: 1,
      inputs: [(item: "voxium:cut_copper", count: 1), (item: "voxium:cut_copper", count: 1), (item: "voxium:cut_copper", count: 1)], output: (item: "voxium:cut_copper_slab", count: 6)),
+    (id: "farming:bread", width: 3, height: 1,
+     inputs: [(item: "voxium:wheat", count: 1), (item: "voxium:wheat", count: 1), (item: "voxium:wheat", count: 1)], output: (item: "voxium:bread", count: 1)),
 ]

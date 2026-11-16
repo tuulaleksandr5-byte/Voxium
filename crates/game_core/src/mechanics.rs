@@ -33,46 +33,130 @@ pub fn lever_on(id: BlockId) -> Option<bool> {
     (shape_of(id) == Some(Shape::Lever)).then(|| family_of(id).is_some_and(|(_, i, _)| i >= 4))
 }
 
-/// Выполняет не более `budget` взрывов из очереди. Возвращает центры взрывов, чтобы
-/// клиент мог нанести урон игроку и сыграть звук.
-pub fn run_blasts(world: &mut World, budget: usize) -> Vec<[i32; 3]> {
-    let mut centers = Vec::new();
-    while centers.len() < budget {
-        let Some(center) = world.blasts.pop() else {
+/// Динамит с горящим фитилём: подпрыгивает, мигает и взрывается через `fuse` секунд.
+#[derive(Clone, Debug, PartialEq)]
+pub struct PrimedTnt {
+    /// Стабильный номер для отрисовки.
+    pub id: u64,
+    /// Центр блока.
+    pub position: [f32; 3],
+    /// Вертикальная скорость, блоков в секунду.
+    pub velocity: f32,
+    /// Секунд до взрыва.
+    pub fuse: f32,
+}
+
+/// Длина фитиля динамита, зажжённого игроком, огнём или редстоуном.
+pub const FUSE_SECONDS: f32 = 4.0;
+
+/// Поджигает не более `budget` блоков динамита из очереди `world.blasts`:
+/// блок исчезает, вместо него появляется горящий динамит. Возвращает число зажжённых.
+pub fn run_blasts(world: &mut World, budget: usize) -> usize {
+    let mut lit = 0;
+    while lit < budget {
+        let Some(cell) = world.blasts.pop() else {
             break;
         };
-        if world.block(center) != TNT {
+        if world.block(cell) != TNT {
             continue;
         }
-        world.set(center, AIR);
-        for dx in -BLAST_RADIUS..=BLAST_RADIUS {
-            for dy in -BLAST_RADIUS..=BLAST_RADIUS {
-                for dz in -BLAST_RADIUS..=BLAST_RADIUS {
-                    if dx * dx + dy * dy + dz * dz > BLAST_RADIUS * BLAST_RADIUS {
-                        continue;
-                    }
-                    let p = [center[0] + dx, center[1] + dy, center[2] + dz];
-                    if !crate::fluids::loaded(world, p) {
-                        continue;
-                    }
-                    let id = world.block(p);
-                    if id == AIR || id == BEDROCK || is_fluid(id) {
-                        continue;
-                    }
-                    if id == TNT {
-                        world.blasts.push(p);
-                        continue;
-                    }
-                    // Прочные блоки (обсидиан и крепче) выдерживают взрыв.
-                    if BLOCKS[usize::from(id)].hardness < 50.0 {
-                        world.set(p, AIR);
-                    }
+        world.set(cell, AIR);
+        let id = world.next_entity_id();
+        world.primed.push(PrimedTnt {
+            id,
+            position: [
+                cell[0] as f32 + 0.5,
+                cell[1] as f32 + 0.5,
+                cell[2] as f32 + 0.5,
+            ],
+            velocity: 4.0,
+            fuse: FUSE_SECONDS,
+        });
+        lit += 1;
+    }
+    lit
+}
+
+/// Один кадр горящего динамита. Возвращает центры взрывов этого кадра.
+pub fn step_primed(world: &mut World, dt: f32) -> Vec<[f32; 3]> {
+    if world.primed.is_empty() || !dt.is_finite() || dt <= 0.0 {
+        return Vec::new();
+    }
+    let mut exploded = Vec::new();
+    let mut keep = Vec::new();
+    for mut tnt in std::mem::take(&mut world.primed) {
+        let mut remaining = dt;
+        while remaining > 0.0 {
+            let h = remaining.min(0.02);
+            remaining -= h;
+            let cell = [
+                tnt.position[0].floor() as i32,
+                tnt.position[1].floor() as i32,
+                tnt.position[2].floor() as i32,
+            ];
+            let bottom = [cell[0], (tnt.position[1] - 0.5).floor() as i32, cell[2]];
+            tnt.velocity = (tnt.velocity - 16.0 * h).max(-30.0);
+            tnt.position[1] += tnt.velocity * h;
+            if tnt.velocity <= 0.0
+                && crate::fluids::loaded(world, bottom)
+                && crate::is_solid(world.block(bottom))
+                && tnt.position[1] - 0.5 < (bottom[1] + 1) as f32
+            {
+                tnt.position[1] = bottom[1] as f32 + 1.5;
+                tnt.velocity = 0.0;
+            }
+        }
+        tnt.fuse -= dt;
+        if tnt.fuse <= 0.0 {
+            exploded.push(tnt.position);
+        } else {
+            keep.push(tnt);
+        }
+    }
+    world.primed = keep;
+    for center in &exploded {
+        explode(world, *center);
+    }
+    exploded
+}
+
+/// Разрушает шар вокруг `center`; соседний динамит загорается с коротким фитилём.
+fn explode(world: &mut World, center: [f32; 3]) {
+    let cell = center.map(|v| v.floor() as i32);
+    for dx in -BLAST_RADIUS..=BLAST_RADIUS {
+        for dy in -BLAST_RADIUS..=BLAST_RADIUS {
+            for dz in -BLAST_RADIUS..=BLAST_RADIUS {
+                if dx * dx + dy * dy + dz * dz > BLAST_RADIUS * BLAST_RADIUS {
+                    continue;
+                }
+                let p = [cell[0] + dx, cell[1] + dy, cell[2] + dz];
+                if !crate::fluids::loaded(world, p) {
+                    continue;
+                }
+                let id = world.block(p);
+                if id == AIR || id == BEDROCK || is_fluid(id) {
+                    continue;
+                }
+                if id == TNT {
+                    world.set(p, AIR);
+                    let jitter =
+                        ((p[0].wrapping_mul(31) ^ p[1].wrapping_mul(17) ^ p[2]) & 7) as f32;
+                    let id = world.next_entity_id();
+                    world.primed.push(PrimedTnt {
+                        id,
+                        position: [p[0] as f32 + 0.5, p[1] as f32 + 0.5, p[2] as f32 + 0.5],
+                        velocity: 3.0,
+                        fuse: 0.5 + jitter / 8.0,
+                    });
+                    continue;
+                }
+                // Прочные блоки (обсидиан и крепче) выдерживают взрыв.
+                if BLOCKS[usize::from(id)].hardness < 50.0 {
+                    world.set(p, AIR);
                 }
             }
         }
-        centers.push(center);
     }
-    centers
 }
 
 /// Урон игроку от взрыва на расстоянии `distance` клеток: до 10 у центра, 0 дальше
@@ -235,18 +319,22 @@ mod tests {
         w.set([2, 70, 0], TNT);
         w.set([0, 70, 2], OBSIDIAN);
         w.blasts.push([0, 70, 0]);
-        let centers = run_blasts(&mut w, 1);
-        assert_eq!(centers, vec![[0, 70, 0]]);
+        assert_eq!(run_blasts(&mut w, 8), 1);
+        // Фитиль горит: блок исчез, но взрыва ещё нет.
+        assert_eq!(w.block([0, 70, 0]), AIR);
+        assert_eq!(w.primed.len(), 1);
+        assert!(step_primed(&mut w, 1.0).is_empty());
+        assert_eq!(w.block([0, 71, 0]), STONE);
+        let mut booms = Vec::new();
+        for _ in 0..80 {
+            booms.extend(step_primed(&mut w, 0.1));
+        }
+        assert_eq!(booms.len(), 2, "второй динамит загорается от первого");
         assert_eq!(w.block([0, 71, 0]), AIR);
         assert_eq!(w.block([0, 70, 2]), OBSIDIAN);
         assert_eq!(w.block([4, 70, 4]), STONE, "за радиусом цело");
-        // Соседний динамит в зоне взрыва ждёт своей очереди.
-        assert_eq!(w.block([2, 70, 0]), TNT);
-        assert_eq!(w.blasts, vec![[2, 70, 0]]);
-        let more = run_blasts(&mut w, 8);
-        assert_eq!(more, vec![[2, 70, 0]]);
         assert_eq!(w.block([2, 70, 0]), AIR);
-        assert!(run_blasts(&mut w, 8).is_empty());
+        assert!(w.primed.is_empty());
         assert!(blast_damage(0.0) > 9.0 && blast_damage(3.0) < blast_damage(1.0));
         assert_eq!(blast_damage(6.0), 0.0);
     }

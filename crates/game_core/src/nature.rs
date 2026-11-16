@@ -6,10 +6,13 @@
 //! вокруг игрока, как случайные тики блоков в Minecraft.
 
 use crate::{
-    AIR, ANVIL, BlockId, CACTUS, CHIPPED_ANVIL, CONCRETE_WHITE, DAMAGED_ANVIL, DIRT, DRAGON_EGG,
-    GRASS, GRAVEL, LARGE_FERN, POPPY, RED_SAND, SAND, SUGAR_CANE, SUNFLOWER, TALL_GRASS,
-    WHITE_CONCRETE_POWDER, World, blocks::BLOCKS, fluids::loaded, is_fire, is_fluid, is_leaves,
-    is_opaque, is_plant, is_solid, is_water,
+    AIR, ANVIL, BAMBOO, BEETROOTS, BEETROOTS_0, BEETROOTS_1, BEETROOTS_2, BlockId, CACTUS, CARROTS,
+    CARROTS_0, CARROTS_1, CARROTS_2, CHIPPED_ANVIL, CONCRETE_WHITE, DAMAGED_ANVIL, DIRT,
+    DRAGON_EGG, FARMLAND, FARMLAND_MOIST, GRASS, GRAVEL, ICE, KELP, KELP_PLANT, LARGE_FERN, MELON,
+    MELON_STEM, POPPY, POTATOES, POTATOES_0, POTATOES_1, POTATOES_2, PUMPKIN, PUMPKIN_STEM,
+    RED_SAND, SAND, SNOW_LAYER, SUGAR_CANE, SUNFLOWER, TALL_GRASS, WATER, WHEAT, WHEAT_0, WHEAT_1,
+    WHEAT_2, WHITE_CONCRETE_POWDER, World, blocks::BLOCKS, fluids::loaded, is_fire, is_fluid,
+    is_leaves, is_opaque, is_plant, is_solid, is_water,
 };
 use std::sync::OnceLock;
 
@@ -21,6 +24,65 @@ pub const RANDOM_SAMPLES_PER_TICK: usize = 70;
 const RANDOM_RADIUS: i32 = 24;
 /// Дальность, на которой лист ещё держится за бревно (как в Minecraft).
 const LEAF_REACH: u32 = 4;
+/// Сколько блоков могут падать одновременно.
+const MAX_FALLING: usize = 512;
+
+/// Что произошло в мире само по себе: клиент превращает это в выпавшие предметы.
+#[derive(Clone, Debug, PartialEq)]
+pub enum NatureEvent {
+    /// Блок разрушился сам (лист опал, растение без опоры, упавший блок некуда деть).
+    Broke { position: [i32; 3], block: BlockId },
+}
+
+/// Падающий блок: пока летит, он не часть мира.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Falling {
+    /// Стабильный номер для отрисовки.
+    pub id: u64,
+    pub block: BlockId,
+    /// Центр блока.
+    pub position: [f32; 3],
+    /// Скорость по вертикали, блоков в секунду (вниз — отрицательная).
+    pub velocity: f32,
+}
+
+/// Следующая стадия роста культуры.
+#[must_use]
+pub fn crop_next(id: BlockId) -> Option<BlockId> {
+    Some(match id {
+        WHEAT_0 => WHEAT_1,
+        WHEAT_1 => WHEAT_2,
+        WHEAT_2 => WHEAT,
+        CARROTS_0 => CARROTS_1,
+        CARROTS_1 => CARROTS_2,
+        CARROTS_2 => CARROTS,
+        POTATOES_0 => POTATOES_1,
+        POTATOES_1 => POTATOES_2,
+        POTATOES_2 => POTATOES,
+        BEETROOTS_0 => BEETROOTS_1,
+        BEETROOTS_1 => BEETROOTS_2,
+        BEETROOTS_2 => BEETROOTS,
+        _ => return None,
+    })
+}
+
+/// Любая стадия пшеницы, моркови, картофеля или свёклы.
+#[must_use]
+pub fn is_crop(id: BlockId) -> bool {
+    crop_next(id).is_some() || is_ripe_crop(id)
+}
+
+/// Созревшая культура.
+#[must_use]
+pub fn is_ripe_crop(id: BlockId) -> bool {
+    matches!(id, WHEAT | CARROTS | POTATOES | BEETROOTS)
+}
+
+/// Грядка, на которой растут культуры.
+#[must_use]
+pub fn is_farmland(id: BlockId) -> bool {
+    id == FARMLAND || id == FARMLAND_MOIST
+}
 
 /// Блок, который падает, если под ним пусто.
 #[must_use]
@@ -60,9 +122,9 @@ pub fn is_log(id: BlockId) -> bool {
 fn needs_ground(id: BlockId) -> bool {
     (POPPY..=TALL_GRASS).contains(&id)
         || (SUNFLOWER..=LARGE_FERN).contains(&id)
-        || id == crate::WHEAT
         || id == SUGAR_CANE
         || id == CACTUS
+        || id == BAMBOO
 }
 
 fn hole(id: BlockId) -> bool {
@@ -135,14 +197,37 @@ fn leaf_supported(world: &World, start: [i32; 3]) -> bool {
     false
 }
 
+fn water_near(world: &World, p: [i32; 3]) -> bool {
+    (-4..=4).any(|dx| {
+        (-4..=4)
+            .any(|dz| (0..=1).any(|dy| is_water(world.block([p[0] + dx, p[1] + dy, p[2] + dz]))))
+    })
+}
+
+fn broke(world: &mut World, p: [i32; 3], block: BlockId) {
+    world.set(p, AIR);
+    world
+        .nature_events
+        .push(NatureEvent::Broke { position: p, block });
+}
+
 /// Обработка одной клетки. Возвращает true, если блок изменился.
 fn update(world: &mut World, p: [i32; 3], tick: u64) -> bool {
     let id = world.block(p);
     if is_falling(id) {
         let under = below(p);
-        if loaded(world, under) && (hole(world.block(under)) || is_plant(world.block(under))) {
+        if loaded(world, under)
+            && (hole(world.block(under)) || is_plant(world.block(under)))
+            && world.falling.len() < MAX_FALLING
+        {
             world.set(p, AIR);
-            world.set(under, id);
+            let entity = world.next_entity_id();
+            world.falling.push(Falling {
+                id: entity,
+                block: id,
+                position: [p[0] as f32 + 0.5, p[1] as f32 + 0.5, p[2] as f32 + 0.5],
+                velocity: 0.0,
+            });
             return true;
         }
     }
@@ -150,19 +235,29 @@ fn update(world: &mut World, p: [i32; 3], tick: u64) -> bool {
         world.set(p, CONCRETE_WHITE + (id - WHITE_CONCRETE_POWDER));
         return true;
     }
-    if needs_ground(id) {
+    if is_crop(id) {
         let under = below(p);
-        if loaded(world, under) && hole(world.block(under)) {
-            world.set(p, AIR);
+        if loaded(world, under) && !is_farmland(world.block(under)) {
+            broke(world, p, id);
             return true;
         }
+    } else if needs_ground(id) {
+        let under = below(p);
+        if loaded(world, under) && hole(world.block(under)) {
+            broke(world, p, id);
+            return true;
+        }
+    }
+    if id == FARMLAND && water_near(world, p) {
+        world.set(p, FARMLAND_MOIST);
+        return true;
     }
     if is_leaves(id)
         && world.edits.get(&p) != Some(&id)
         && hash(world.seed, tick, cell_key(p)) % 100 < 6
         && !leaf_supported(world, p)
     {
-        world.set(p, AIR);
+        broke(world, p, id);
         return true;
     }
     false
@@ -210,10 +305,23 @@ pub fn random_tick(world: &mut World, center: [i32; 3], tick: u64, samples: usiz
             continue;
         }
         let id = world.block(p);
+        let roll = ((h >> 48) % 100) as u32;
         match id {
             GRASS => grass(world, p, h),
             SUGAR_CANE | CACTUS => grow_column(world, p, id, h),
-            _ => {}
+            FARMLAND | FARMLAND_MOIST => farmland(world, p, id),
+            BAMBOO => grow_bamboo(world, p, roll),
+            KELP => grow_kelp(world, p, roll),
+            ICE | SNOW_LAYER => melt(world, p, id, roll),
+            MELON_STEM | PUMPKIN_STEM => grow_fruit(world, p, id, h, roll),
+            _ => {
+                if let Some(next) = crop_next(id) {
+                    let moist = world.block(below(p)) == FARMLAND_MOIST;
+                    if roll < if moist { 40 } else { 15 } {
+                        world.set(p, next);
+                    }
+                }
+            }
         }
     }
 }
@@ -276,6 +384,145 @@ fn grow_column(world: &mut World, p: [i32; 3], id: BlockId, h: u64) {
     world.set(top, id);
 }
 
+fn farmland(world: &mut World, p: [i32; 3], id: BlockId) {
+    let cover = world.block(above(p));
+    if is_opaque(cover) || is_solid(cover) && !is_crop(cover) {
+        world.set(p, DIRT);
+        return;
+    }
+    let wet = water_near(world, p);
+    if wet && id == FARMLAND {
+        world.set(p, FARMLAND_MOIST);
+    } else if !wet {
+        if id == FARMLAND_MOIST {
+            world.set(p, FARMLAND);
+        } else if !is_crop(cover) {
+            world.set(p, DIRT);
+        }
+    }
+}
+
+fn column_height(world: &World, p: [i32; 3], id: BlockId) -> i32 {
+    let mut height = 1;
+    let mut cell = below(p);
+    while world.block(cell) == id {
+        height += 1;
+        cell = below(cell);
+    }
+    height
+}
+
+fn grow_bamboo(world: &mut World, p: [i32; 3], roll: u32) {
+    let top = above(p);
+    if roll < 30
+        && world.block(top) == AIR
+        && loaded(world, top)
+        && column_height(world, p, BAMBOO) < 12
+    {
+        world.set(top, BAMBOO);
+    }
+}
+
+fn grow_kelp(world: &mut World, p: [i32; 3], roll: u32) {
+    let top = above(p);
+    if roll < 25
+        && world.block(top) == WATER
+        && loaded(world, top)
+        && column_height(world, p, KELP_PLANT) < 20
+    {
+        world.set(p, KELP_PLANT);
+        world.set(top, KELP);
+    }
+}
+
+fn melt(world: &mut World, p: [i32; 3], id: BlockId, roll: u32) {
+    let warm = std::iter::once([0, 0, 0])
+        .chain(NEIGHBORS)
+        .any(|d| BLOCKS[usize::from(world.block(near(p, d)))].light_emission > 11);
+    if warm && roll < 60 {
+        world.set(p, if id == ICE { WATER } else { AIR });
+    }
+}
+
+fn grow_fruit(world: &mut World, p: [i32; 3], stem: BlockId, h: u64, roll: u32) {
+    let fruit = if stem == MELON_STEM { MELON } else { PUMPKIN };
+    if roll >= 25 {
+        return;
+    }
+    let sides = [[1, 0, 0], [-1, 0, 0], [0, 0, 1], [0, 0, -1]];
+    if sides.iter().any(|d| world.block(near(p, *d)) == fruit) {
+        return;
+    }
+    let d = sides[((h >> 8) % 4) as usize];
+    let target = near(p, d);
+    let ground = world.block(below(target));
+    if loaded(world, target)
+        && world.block(target) == AIR
+        && (matches!(ground, GRASS | DIRT) || is_farmland(ground))
+    {
+        world.set(target, fruit);
+    }
+}
+
+/// Один кадр падающих блоков. Возвращает число приземлившихся.
+pub fn step_falling(world: &mut World, dt: f32) -> usize {
+    if world.falling.is_empty() || !dt.is_finite() || dt <= 0.0 {
+        return 0;
+    }
+    let mut landed = 0;
+    let items = std::mem::take(&mut world.falling);
+    let mut keep = Vec::with_capacity(items.len());
+    for mut f in items {
+        let cell = [
+            f.position[0].floor() as i32,
+            f.position[1].floor() as i32,
+            f.position[2].floor() as i32,
+        ];
+        let mut remaining = dt;
+        let mut done = false;
+        while remaining > 0.0 {
+            let h = remaining.min(0.01);
+            remaining -= h;
+            let y = f.position[1] + (f.velocity - 32.0 * h).max(-55.0) * h;
+            let bottom = (y - 0.5).floor() as i32;
+            let under = [cell[0], bottom, cell[2]];
+            if !loaded(world, under) {
+                break;
+            }
+            f.velocity = (f.velocity - 32.0 * h).max(-55.0);
+            let block = world.block(under);
+            if is_plant(block) {
+                broke(world, under, block);
+            } else if !hole(block) {
+                let target = above(under);
+                let occupant = world.block(target);
+                if hole(occupant) || is_plant(occupant) {
+                    world.set(target, f.block);
+                } else {
+                    world.nature_events.push(NatureEvent::Broke {
+                        position: target,
+                        block: f.block,
+                    });
+                }
+                landed += 1;
+                done = true;
+                break;
+            }
+            f.position[1] = y;
+            if y < -70.0 {
+                done = true;
+                break;
+            }
+        }
+        if !done {
+            keep.push(f);
+        }
+    }
+    keep.extend(std::mem::take(&mut world.falling));
+    world.falling = keep;
+    landed
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -305,8 +552,9 @@ mod tests {
     }
 
     fn settle(world: &mut World) {
-        for step in 0..60 {
+        for step in 0..120 {
             tick(world, step, 256);
+            step_falling(world, 0.05);
         }
     }
 
@@ -435,5 +683,129 @@ mod tests {
         assert_eq!(w.block([0, GROUND + 4, 0]), SUGAR_CANE);
         assert_eq!(w.block([0, GROUND + 5, 0]), AIR);
         assert_eq!(w.block([6, GROUND + 3, 0]), AIR);
+    }
+
+    #[test]
+    fn falling_blocks_accelerate_and_leave_the_world_while_in_flight() {
+        let mut w = world();
+        w.set([0, GROUND + 20, 0], SAND);
+        tick(&mut w, 0, 16);
+        assert_eq!(w.block([0, GROUND + 20, 0]), AIR);
+        assert_eq!(w.falling.len(), 1);
+        step_falling(&mut w, 0.1);
+        let early = w.falling[0].position[1];
+        step_falling(&mut w, 0.1);
+        let second_step = early - w.falling[0].position[1];
+        assert!(second_step > (GROUND as f32 + 20.5 - early), "ускоряется");
+        for _ in 0..100 {
+            step_falling(&mut w, 0.05);
+        }
+        assert!(w.falling.is_empty());
+        assert_eq!(w.block([0, GROUND + 1, 0]), SAND);
+    }
+
+    #[test]
+    fn a_falling_block_with_no_room_becomes_an_event() {
+        let mut w = world();
+        w.set([0, GROUND + 3, 0], SAND);
+        tick(&mut w, 0, 16);
+        w.set([0, GROUND + 1, 0], STONE);
+        w.set([0, GROUND + 2, 0], STONE);
+        for _ in 0..40 {
+            step_falling(&mut w, 0.05);
+        }
+        assert!(w.falling.is_empty());
+    }
+
+    #[test]
+    fn broken_plants_and_decayed_leaves_report_events() {
+        let mut w = world();
+        w.set([0, GROUND + 1, 0], DIRT);
+        w.set([0, GROUND + 2, 0], POPPY);
+        w.set([0, GROUND + 1, 0], AIR);
+        settle(&mut w);
+        assert!(w.nature_events.iter().any(|e| matches!(
+            e,
+            NatureEvent::Broke { block, .. } if *block == POPPY
+        )));
+    }
+
+    fn farm(w: &mut World, crop: BlockId) {
+        w.set([0, GROUND + 1, 0], FARMLAND);
+        w.set([0, GROUND + 2, 0], crop);
+    }
+
+    #[test]
+    fn wheat_grows_through_every_stage_on_farmland_only() {
+        let mut w = world();
+        farm(&mut w, WHEAT_0);
+        w.set([6, GROUND + 1, 0], DIRT);
+        w.set([6, GROUND + 2, 0], WHEAT_0);
+        settle(&mut w);
+        assert_eq!(
+            w.block([6, GROUND + 2, 0]),
+            AIR,
+            "на земле без грядки не растёт"
+        );
+        for step in 0..30000 {
+            random_tick(&mut w, [0, GROUND, 0], step, 70);
+            tick(&mut w, step, 64);
+        }
+        assert_eq!(w.block([0, GROUND + 2, 0]), WHEAT);
+    }
+
+    #[test]
+    fn every_crop_has_three_stages_then_the_ripe_block() {
+        for (first, ripe) in [
+            (WHEAT_0, WHEAT),
+            (CARROTS_0, CARROTS),
+            (POTATOES_0, POTATOES),
+            (BEETROOTS_0, BEETROOTS),
+        ] {
+            let mut id = first;
+            let mut stages = 0;
+            while let Some(next) = crop_next(id) {
+                id = next;
+                stages += 1;
+            }
+            assert_eq!((id, stages), (ripe, 3));
+        }
+    }
+
+    #[test]
+    fn water_moistens_farmland_and_dry_empty_farmland_turns_to_dirt() {
+        let mut w = world();
+        w.set([0, GROUND + 1, 0], FARMLAND);
+        w.set([3, GROUND + 1, 0], WATER);
+        w.nature_active.insert([0, GROUND + 1, 0]);
+        settle(&mut w);
+        assert_eq!(w.block([0, GROUND + 1, 0]), FARMLAND_MOIST);
+        w.set([10, GROUND + 1, 10], FARMLAND);
+        for step in 0..30000 {
+            random_tick(&mut w, [0, GROUND, 0], step, 70);
+        }
+        assert_eq!(w.block([10, GROUND + 1, 10]), DIRT);
+    }
+
+    #[test]
+    fn bamboo_and_kelp_grow_and_ice_melts_next_to_light() {
+        let mut w = world();
+        w.set([0, GROUND + 1, 0], DIRT);
+        w.set([0, GROUND + 2, 0], BAMBOO);
+        w.set([8, GROUND, 8], WATER);
+        w.set([8, GROUND + 1, 8], KELP);
+        w.set([8, GROUND + 2, 8], WATER);
+        w.set([8, GROUND + 3, 8], WATER);
+        w.set([8, GROUND + 4, 8], WATER);
+        w.set([12, GROUND + 1, 0], ICE);
+        w.set([13, GROUND + 1, 0], crate::TORCH);
+        w.set([12, GROUND + 1, 4], ICE);
+        for step in 0..60000 {
+            random_tick(&mut w, [4, GROUND, 4], step, 70);
+        }
+        assert!(w.block([0, GROUND + 4, 0]) == BAMBOO, "бамбук вырос");
+        assert!(w.block([8, GROUND + 2, 8]) == KELP || w.block([8, GROUND + 2, 8]) == KELP_PLANT);
+        assert_eq!(w.block([12, GROUND + 1, 0]), WATER, "лёд у факела растаял");
+        assert_eq!(w.block([12, GROUND + 1, 4]), ICE, "лёд без света цел");
     }
 }

@@ -462,18 +462,7 @@ fn process_action(game: &mut Game, action: &InventoryAction) -> Effects {
                     }
                 }
                 if game.game_mode == GameMode::Survival {
-                    if can_harvest && let Some(item) = game.content.drop_for_block(block) {
-                        // Глина рассыпается на четыре комка, остальные блоки дают один предмет.
-                        let count = if block == game_core::CLAY { 4 } else { 1 };
-                        spawn_drop(game, ItemStack::new(item, count), center, Vec3::Y * 1.5);
-                    }
-                    // Листва иногда роняет саженец своей породы.
-                    if let Some(sapling) = game_core::growth::sapling_for_leaves(block)
-                        && game_core::growth::chance(game.world.seed, *position, 11, 7)
-                        && let Some(item) = game.content.drop_for_block(sapling)
-                    {
-                        spawn_drop(game, ItemStack::new(item, 1), center, Vec3::Y * 1.5);
-                    }
+                    drop_block_items(game, *position, block, can_harvest);
                     effects.mined = true;
                 }
                 effects.sounds.push(BlockSound {
@@ -1121,6 +1110,126 @@ pub(crate) fn visible_hit(game: &Game) -> Option<game_core::interaction::RayHit>
         |position| target_block(game, position),
     )?;
     loaded_block(&game.world, hit.block).map(|_| hit)
+}
+
+/// Блок первой стадии для семян и посадочных культур.
+pub(crate) fn planting_block(id: &str) -> Option<game_core::BlockId> {
+    use game_core::*;
+    Some(match id {
+        "voxium:wheat_seeds" => WHEAT_0,
+        "voxium:beetroot_seeds" => BEETROOTS_0,
+        "voxium:carrot" => CARROTS_0,
+        "voxium:potato" => POTATOES_0,
+        "voxium:melon_seeds" => MELON_STEM,
+        "voxium:pumpkin_seeds" => PUMPKIN_STEM,
+        _ => return None,
+    })
+}
+
+/// Что сажает предмет в выбранном слоте.
+pub(crate) fn selected_planting(game: &Game) -> Option<game_core::BlockId> {
+    let stack = game.item_for_slot(game.selected)?;
+    planting_block(&game.content.get(stack.item)?.id)
+}
+
+/// Игрок целится в верх грядки.
+pub(crate) fn aimed_farmland(game: &Game) -> bool {
+    visible_hit(game).is_some_and(|hit| {
+        game_core::nature::is_farmland(game.world.block(hit.block))
+            && hit.previous == [hit.block[0], hit.block[1] + 1, hit.block[2]]
+    })
+}
+
+/// Правый клик сейчас посадит растение, а не съест предмет.
+pub(crate) fn planting_now(game: &Game) -> bool {
+    selected_planting(game).is_some() && aimed_farmland(game)
+}
+
+/// Предметы, которые даёт культура или плод; `None` — обычный блок.
+fn crop_drops(
+    block: game_core::BlockId,
+    seed: u64,
+    p: [i32; 3],
+) -> Option<Vec<(&'static str, u16)>> {
+    use game_core::*;
+    let extra = |salt: u64, max: u16, percent: u32| -> u16 {
+        (0..max)
+            .filter(|i| growth::chance(seed, p, salt + u64::from(*i), percent))
+            .count() as u16
+    };
+    Some(match block {
+        WHEAT => vec![
+            ("voxium:wheat", 1),
+            ("voxium:wheat_seeds", 1 + extra(21, 3, 57)),
+        ],
+        WHEAT_0 | WHEAT_1 | WHEAT_2 => vec![("voxium:wheat_seeds", 1)],
+        CARROTS => vec![("voxium:carrot", 1 + extra(31, 3, 57))],
+        CARROTS_0 | CARROTS_1 | CARROTS_2 => vec![("voxium:carrot", 1)],
+        POTATOES => vec![("voxium:potato", 1 + extra(41, 4, 57))],
+        POTATOES_0 | POTATOES_1 | POTATOES_2 => vec![("voxium:potato", 1)],
+        BEETROOTS => vec![
+            ("voxium:beetroot", 1),
+            ("voxium:beetroot_seeds", extra(51, 3, 57)),
+        ],
+        BEETROOTS_0 | BEETROOTS_1 | BEETROOTS_2 => vec![("voxium:beetroot_seeds", 1)],
+        MELON_STEM => vec![("voxium:melon_seeds", extra(61, 3, 30))],
+        PUMPKIN_STEM => vec![("voxium:pumpkin_seeds", extra(71, 3, 30))],
+        MELON => vec![("voxium:melon_slice", 3 + extra(81, 4, 50))],
+        _ => return None,
+    })
+}
+
+/// Выпадение предметов из блока, который разрушился сам или был сломан в выживании.
+pub(crate) fn drop_block_items(
+    game: &mut Game,
+    position: [i32; 3],
+    block: game_core::BlockId,
+    harvest: bool,
+) {
+    let center = block_center(position);
+    let seed = game.world.seed;
+    if let Some(list) = crop_drops(block, seed, position) {
+        for (name, count) in list {
+            if count > 0
+                && let Some(item) = game.content.find(name)
+            {
+                spawn_drop(game, ItemStack::new(item, count), center, Vec3::Y * 1.5);
+            }
+        }
+        return;
+    }
+    if game_core::is_leaves(block) {
+        let mut items: Vec<&str> = Vec::new();
+        if let Some(sapling) = game_core::growth::sapling_for_leaves(block)
+            && game_core::growth::chance(seed, position, 11, 5)
+            && let Some(item) = game.content.drop_for_block(sapling)
+        {
+            spawn_drop(game, ItemStack::new(item, 1), center, Vec3::Y * 1.5);
+        }
+        if game_core::growth::chance(seed, position, 12, 2) {
+            items.push("survival:stick");
+        }
+        if matches!(block, game_core::LEAVES | game_core::DARK_OAK_LEAVES)
+            && game_core::growth::chance(seed, position, 13, 1)
+        {
+            items.push("voxium:apple");
+        }
+        for name in items {
+            if let Some(item) = game.content.find(name) {
+                spawn_drop(game, ItemStack::new(item, 1), center, Vec3::Y * 1.5);
+            }
+        }
+        return;
+    }
+    if harvest && let Some(item) = game.content.drop_for_block(block) {
+        let count = if block == game_core::CLAY { 4 } else { 1 };
+        spawn_drop(game, ItemStack::new(item, count), center, Vec3::Y * 1.5);
+    }
+}
+
+/// Предметы от блока, который разрушила сама природа (опал лист, оборвалось растение).
+pub(crate) fn natural_drops(game: &mut Game, position: [i32; 3], block: game_core::BlockId) {
+    drop_block_items(game, position, block, true);
 }
 
 pub(crate) fn spawn_drop(game: &mut Game, stack: ItemStack, position: Vec3, velocity: Vec3) {

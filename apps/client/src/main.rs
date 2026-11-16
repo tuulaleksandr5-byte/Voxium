@@ -24,6 +24,7 @@ mod streaming;
 mod survival_client;
 mod tool_textures;
 mod ui;
+mod world_fx;
 
 use bevy::{
     app::AppExit,
@@ -100,6 +101,7 @@ fn main() {
     hand::plugin(&mut app);
     item_icons::plugin(&mut app);
     inventory_render::plugin(&mut app);
+    world_fx::plugin(&mut app);
     ui::plugin(&mut app);
     app.run();
 }

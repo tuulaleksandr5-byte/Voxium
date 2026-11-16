@@ -1846,4 +1846,17 @@
     (top: 720, side: 720, bottom: 720), // redstone_wall_torch_off
     (top: 720, side: 720, bottom: 720), // redstone_wall_torch_off
     (top: 720, side: 720, bottom: 720), // redstone_wall_torch_off
+    (top: 722, side: 722, bottom: 722), // wheat_stage_0
+    (top: 723, side: 723, bottom: 723), // wheat_stage_1
+    (top: 724, side: 724, bottom: 724), // wheat_stage_2
+    (top: 725, side: 725, bottom: 725), // carrots_stage_0
+    (top: 726, side: 726, bottom: 726), // carrots_stage_1
+    (top: 727, side: 727, bottom: 727), // carrots_stage_2
+    (top: 728, side: 728, bottom: 728), // potatoes_stage_0
+    (top: 729, side: 729, bottom: 729), // potatoes_stage_1
+    (top: 730, side: 730, bottom: 730), // potatoes_stage_2
+    (top: 731, side: 731, bottom: 731), // beetroots_stage_0
+    (top: 732, side: 732, bottom: 732), // beetroots_stage_1
+    (top: 733, side: 733, bottom: 733), // beetroots_stage_2
+    (top: 734, side: 2, bottom: 2), // farmland_moist
 ]

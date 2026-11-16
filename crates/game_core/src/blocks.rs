@@ -1330,6 +1330,19 @@ pub const REDSTONE_WIRE_ON: BlockId = 1838;
 pub const REDSTONE_LAMP_LIT: BlockId = 1839;
 pub const REDSTONE_TORCH_OFF: BlockId = 1840;
 pub const REDSTONE_WALL_TORCH_OFF: BlockId = 1841;
+pub const WHEAT_0: BlockId = 1845;
+pub const WHEAT_1: BlockId = 1846;
+pub const WHEAT_2: BlockId = 1847;
+pub const CARROTS_0: BlockId = 1848;
+pub const CARROTS_1: BlockId = 1849;
+pub const CARROTS_2: BlockId = 1850;
+pub const POTATOES_0: BlockId = 1851;
+pub const POTATOES_1: BlockId = 1852;
+pub const POTATOES_2: BlockId = 1853;
+pub const BEETROOTS_0: BlockId = 1854;
+pub const BEETROOTS_1: BlockId = 1855;
+pub const BEETROOTS_2: BlockId = 1856;
+pub const FARMLAND_MOIST: BlockId = 1857;
 pub const PLANT2_FIRST: BlockId = 251;
 pub const PLANT2_LAST: BlockId = 280;
 
@@ -1353,7 +1366,7 @@ const fn block(
 }
 
 #[allow(clippy::large_const_arrays)]
-pub const BLOCKS: [BlockDef; 1845] = [
+pub const BLOCKS: [BlockDef; 1858] = [
     block(AIR, "Air", "air", 0.0, false, false),
     block(GRASS, "Grass", "grass", 0.6, true, true),
     block(DIRT, "Dirt", "dirt", 0.5, true, true),
@@ -14143,6 +14156,110 @@ pub const BLOCKS: [BlockDef; 1845] = [
         false,
         false,
     ),
+    block(
+        WHEAT_0,
+        "Wheat (stage 0)",
+        "wheat_stage_0",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        WHEAT_1,
+        "Wheat (stage 1)",
+        "wheat_stage_1",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        WHEAT_2,
+        "Wheat (stage 2)",
+        "wheat_stage_2",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        CARROTS_0,
+        "Carrots (stage 0)",
+        "carrots_stage_0",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        CARROTS_1,
+        "Carrots (stage 1)",
+        "carrots_stage_1",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        CARROTS_2,
+        "Carrots (stage 2)",
+        "carrots_stage_2",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        POTATOES_0,
+        "Potatoes (stage 0)",
+        "potatoes_stage_0",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        POTATOES_1,
+        "Potatoes (stage 1)",
+        "potatoes_stage_1",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        POTATOES_2,
+        "Potatoes (stage 2)",
+        "potatoes_stage_2",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        BEETROOTS_0,
+        "Beetroots (stage 0)",
+        "beetroots_stage_0",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        BEETROOTS_1,
+        "Beetroots (stage 1)",
+        "beetroots_stage_1",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        BEETROOTS_2,
+        "Beetroots (stage 2)",
+        "beetroots_stage_2",
+        0.05,
+        false,
+        false,
+    ),
+    block(
+        FARMLAND_MOIST,
+        "Farmland (moist)",
+        "farmland_moist",
+        0.6,
+        true,
+        true,
+    ),
 ];
 
 /// Растения рисуются двумя скрещёнными плоскостями и не мешают ходьбе.
@@ -14466,6 +14583,7 @@ pub fn is_cross(id: BlockId) -> bool {
         )
         || (SUNFLOWER..=LARGE_FERN).contains(&id)
         || (TORCHFLOWER_CROP..=BEETROOTS).contains(&id)
+        || (WHEAT_0..=BEETROOTS_2).contains(&id)
         || id == STRUCTURE_VOID
         || crate::shape_table::is_cross(id)
         || matches!(
@@ -14728,7 +14846,7 @@ mod tests {
             "Crafting Table",
             "Furnace",
         ];
-        assert_eq!(BLOCKS.len(), 1845);
+        assert_eq!(BLOCKS.len(), 1858);
         for (offset, name) in expected.iter().enumerate() {
             let id = 17 + offset;
             assert_eq!(BLOCKS[id].id as usize, id);
@@ -14739,7 +14857,7 @@ mod tests {
 
     #[test]
     fn chest_extends_registry_without_changing_foundation_ids() {
-        assert_eq!(BLOCKS.len(), 1845);
+        assert_eq!(BLOCKS.len(), 1858);
         let chest = BLOCKS.get(16).expect("сундук зарегистрирован");
         assert_eq!(chest.name, "Chest");
         assert!(is_solid(16));

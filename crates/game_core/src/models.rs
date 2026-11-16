@@ -241,7 +241,7 @@ pub fn shape_of(id: BlockId) -> Option<Shape> {
         _ if in_range(id, STONE_BUTTON, 4) => Shape::Button,
         STONE_PRESSURE_PLATE => Shape::Plate,
         _ if in_range(id, OAK_PRESSURE_PLATE, 9) => Shape::Plate,
-        FARMLAND => Shape::Farmland,
+        FARMLAND | FARMLAND_MOIST => Shape::Farmland,
         SNOW_LAYER => Shape::SnowLayer,
         CACTUS => Shape::Cactus,
         CAKE => Shape::Cake,

@@ -149,6 +149,13 @@ impl Game {
         self.inventory.hotbar.get(index).and_then(Option::as_ref)
     }
     pub fn selected_block(&self) -> game_core::BlockId {
+        if let Some(planted) = crate::inventory_client::selected_planting(self) {
+            return if crate::inventory_client::aimed_farmland(self) {
+                planted
+            } else {
+                game_core::AIR
+            };
+        }
         self.item_for_slot(self.selected)
             .and_then(|s| self.content.block_for_item(s.item))
             .unwrap_or(game_core::AIR)

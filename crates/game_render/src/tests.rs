@@ -752,3 +752,17 @@ fn redstone_state_blocks_mesh() {
         assert!(!single(block).is_empty(), "{block}");
     }
 }
+
+#[test]
+fn crop_stages_and_moist_farmland_mesh() {
+    for block in [
+        game_core::WHEAT_0,
+        game_core::WHEAT_2,
+        game_core::CARROTS_1,
+        game_core::POTATOES_0,
+        game_core::BEETROOTS_2,
+        game_core::FARMLAND_MOIST,
+    ] {
+        assert!(!single(block).is_empty(), "{block}");
+    }
+}

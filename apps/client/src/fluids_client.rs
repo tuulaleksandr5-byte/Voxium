@@ -96,6 +96,7 @@ fn tick_mechanics(
     time: Res<Time<Real>>,
     mut game: ResMut<Game>,
     mut actions: MessageWriter<crate::survival_client::PlayerActionMessage>,
+    mut explosions: MessageWriter<crate::world_fx::ExplosionMessage>,
     mut contact: Local<f32>,
     mut redstone_clock: Local<f32>,
 ) {
@@ -142,18 +143,16 @@ fn tick_mechanics(
             }
         }
     }
-    // Взрывы.
-    let centers = game_core::mechanics::run_blasts(&mut game.world, 8);
+    // Взрывы: динамит сначала загорается, потом горит и только потом взрывается.
+    game_core::mechanics::run_blasts(&mut game.world, 64);
+    let centers = game_core::mechanics::step_primed(&mut game.world, delta);
     if !centers.is_empty() {
         game.revision += 1;
     }
     for center in centers {
+        explosions.write(crate::world_fx::ExplosionMessage(Vec3::from_array(center)));
         let eye = game.feet + Vec3::Y * 0.9;
-        let distance = eye.distance(Vec3::new(
-            center[0] as f32 + 0.5,
-            center[1] as f32 + 0.5,
-            center[2] as f32 + 0.5,
-        ));
+        let distance = eye.distance(Vec3::from_array(center));
         let amount = game_core::mechanics::blast_damage(distance);
         if amount > 0.0 {
             actions.write(PlayerActionMessage(PlayerAction::Damage {
@@ -161,6 +160,15 @@ fn tick_mechanics(
                 source: game_core::survival::DamageSource::Fire,
             }));
         }
+    }
+    // Падающие блоки и самопроизвольные разрушения.
+    if game_core::nature::step_falling(&mut game.world, delta.min(0.1)) > 0 {
+        game.revision += 1;
+    }
+    for event in std::mem::take(&mut game.world.nature_events) {
+        let game_core::nature::NatureEvent::Broke { position, block } = event;
+        crate::inventory_client::natural_drops(&mut game, position, block);
+        game.revision += 1;
     }
     // Кактус, магма и колючий куст ранят каждые полсекунды.
     *contact += delta;

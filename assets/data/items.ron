@@ -364,7 +364,7 @@
     (id: "voxium:oak_stairs", name: "Дубовые ступеньки", max_stack: 64, kind: Block(block: "voxium:oak_stairs")),
     (id: "voxium:redstone", name: "Редстоун", max_stack: 64, kind: Block(block: "voxium:redstone_wire")),
     (id: "voxium:deepslate_diamond_ore", name: "Алмазоносный глубинный сланец", max_stack: 64, kind: Block(block: "voxium:deepslate_diamond_ore")),
-    (id: "voxium:wheat", name: "Ростки пшеницы", max_stack: 64, kind: Block(block: "voxium:wheat")),
+    (id: "voxium:wheat", name: "Пшеница", max_stack: 64, kind: Material),
     (id: "voxium:farmland", name: "Пашня", max_stack: 64, kind: Block(block: "voxium:farmland")),
     (id: "voxium:oak_sign", name: "Дубовая табличка", max_stack: 64, kind: Block(block: "voxium:oak_sign")),
     (id: "voxium:spruce_sign", name: "Еловая табличка", max_stack: 64, kind: Block(block: "voxium:spruce_sign")),

@@ -322,7 +322,7 @@ fn combat(
         let at_container = visible_hit(&game).is_some_and(|hit| {
             crate::inventory_client::container_size(game.world.block(hit.block)).is_some()
         });
-        if !at_container || sneaking {
+        if (!at_container || sneaking) && !crate::inventory_client::planting_now(&game) {
             eat(&mut game);
         }
     }
@@ -364,6 +364,7 @@ fn simulate(
     time: Res<Time<Real>>,
     mut game: ResMut<Game>,
     mut actions: MessageWriter<PlayerActionMessage>,
+    mut fx: MessageWriter<crate::world_fx::ExplosionMessage>,
 ) {
     if game.world_id.is_none() || game.mode != Mode::Playing {
         return;
@@ -388,6 +389,7 @@ fn simulate(
         game.grounded = false;
     }
     for center in events.explosions {
+        fx.write(crate::world_fx::ExplosionMessage(Vec3::from_array(center)));
         let block = center.map(|v| v.floor() as i32);
         let distance = Vec3::from_array(center).distance(game.feet);
         let amount = game_core::mechanics::blast_damage(distance);

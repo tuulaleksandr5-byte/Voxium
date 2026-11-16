@@ -4683,6 +4683,57 @@ for _ident, _key, _cat in _ICON_SPECS:
 
 
 
+
+# ------------------------------------------------------------ crop stages and moist farmland
+
+CROP_LOOK = {
+    "wheat": ("#5a9a2a", "#7ab83a", None),
+    "carrots": ("#3a8a30", "#5aaa40", "#e8801a"),
+    "potatoes": ("#3a7a2a", "#5a9a3a", "#c8a85a"),
+    "beetroots": ("#3a7a3a", "#5a9a4a", "#7a1a3a"),
+}
+
+
+def crop_stage(key, stage):
+    leaf, light, root = CROP_LOOK[key]
+
+    def build():
+        image = transparent()
+        r = rng(f"{key}_stage_{stage}")
+        heights = (6, 12, 18)[stage]
+        for x in range(2, 31, 4):
+            h = heights + int(r.integers(0, 4))
+            for y in range(N - h, N):
+                put(image, x, y, leaf)
+                put(image, x + 1, y, light)
+            if stage >= 1:
+                for k in range(1, 3 + stage):
+                    put(image, x - k, N - h + k + 2, light)
+                    put(image, x + 2 + k, N - h + k + 1, leaf)
+            if stage == 2 and root:
+                rect(image, x - 1, N - 4, 4, 3, root)
+            if stage == 2 and key == "wheat":
+                rect(image, x, N - h, 2, 5, "#b8c84a")
+        return image
+
+    return build
+
+
+for _key in ("wheat", "carrots", "potatoes", "beetroots"):
+    for _stage in range(3):
+        TILES[f"{_key}_stage_{_stage}"] = crop_stage(_key, _stage)
+
+
+@tile("farmland_moist")
+def farmland_moist():
+    r = rng("farmland_moist")
+    image = fill(canvas(), fbm(r), ["#33200f", "#3d2813", "#473019"])
+    for y in range(2, N, 6):
+        rect(image, 0, y, N, 2, "#271709")
+    speckle(image, r, ["#4e3822"], 24)
+    return image
+
+
 def main():
     pixel = ROOT / "assets/textures/pixel"
     tiles = {}

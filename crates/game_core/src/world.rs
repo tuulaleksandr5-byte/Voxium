@@ -576,6 +576,13 @@ pub struct World {
     pub grow_active: HashSet<[i32; 3]>,
     /// Клетки для `nature::tick`: падение, опора, листва, бетон.
     pub nature_active: HashSet<[i32; 3]>,
+    /// Самопроизвольные разрушения, ждущие обработки клиентом (выпадение предметов).
+    pub nature_events: Vec<crate::nature::NatureEvent>,
+    /// Падающие блоки (песок, гравий, наковальни…).
+    pub falling: Vec<crate::nature::Falling>,
+    /// Зажжённый динамит с горящим фитилём.
+    pub primed: Vec<crate::mechanics::PrimedTnt>,
+    entity_counter: u64,
     /// Динамит, который сейчас взорвётся; его обрабатывает `mechanics::run_blasts`.
     pub blasts: Vec<[i32; 3]>,
     /// Состояние редстоуна: клетки, таймеры, события.
@@ -593,9 +600,18 @@ impl World {
             fire_active: HashSet::new(),
             grow_active: HashSet::new(),
             nature_active: HashSet::new(),
+            nature_events: Vec::new(),
+            falling: Vec::new(),
+            primed: Vec::new(),
+            entity_counter: 0,
             blasts: Vec::new(),
             rs: crate::redstone::Redstone::default(),
         }
+    }
+    /// Новый номер для падающего блока или горящего динамита.
+    pub fn next_entity_id(&mut self) -> u64 {
+        self.entity_counter += 1;
+        self.entity_counter
     }
     #[must_use]
     pub fn block(&self, position: [i32; 3]) -> BlockId {
