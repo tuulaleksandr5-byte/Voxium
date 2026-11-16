@@ -31,6 +31,17 @@ pub enum Mode {
 pub struct Game {
     pub content: ContentRegistry,
     pub recipes: RecipeBook,
+    pub smelting: game_core::smelting::SmeltingBook,
+    pub furnaces: HashMap<[i32; 3], game_core::smelting::FurnaceState>,
+    pub mobs: game_core::mobs::MobStore,
+    /// ЛКМ уже потрачена на удар по мобу: добыча ждёт отпускания кнопки.
+    pub attack_lock: bool,
+    /// Открытая вкладка творческого каталога.
+    pub catalog_tab: usize,
+    /// На сколько рядов прокручена сетка творческого меню.
+    pub catalog_scroll: usize,
+    /// Запрос во вкладке «Поиск».
+    pub catalog_search: String,
     pub mining_config: game_core::mining::MiningConfig,
     pub mining: game_core::mining::MiningState,
     pub world_mouse: crate::control_input::WorldMouseGate,
@@ -68,7 +79,7 @@ pub struct Game {
     pub chunk_grid: bool,
     pub fps: f32,
     pub height: f32,
-    pub hotbar: [u8; 9],
+    pub hotbar: [game_core::BlockId; 9],
     pub selected: usize,
     pub clock: f64,
     pub autosave: f32,
@@ -80,6 +91,13 @@ impl Default for Game {
         Self {
             content: ContentRegistry::default(),
             recipes: RecipeBook::default(),
+            smelting: Default::default(),
+            furnaces: HashMap::new(),
+            mobs: Default::default(),
+            attack_lock: false,
+            catalog_tab: 0,
+            catalog_scroll: 0,
+            catalog_search: String::new(),
             mining_config: Default::default(),
             mining: Default::default(),
             world_mouse: Default::default(),
@@ -130,7 +148,14 @@ impl Game {
     pub fn item_for_slot(&self, index: usize) -> Option<&ItemStack> {
         self.inventory.hotbar.get(index).and_then(Option::as_ref)
     }
-    pub fn selected_block(&self) -> u8 {
+    pub fn selected_block(&self) -> game_core::BlockId {
+        if let Some(planted) = crate::inventory_client::selected_planting(self) {
+            return if crate::inventory_client::aimed_farmland(self) {
+                planted
+            } else {
+                game_core::AIR
+            };
+        }
         self.item_for_slot(self.selected)
             .and_then(|s| self.content.block_for_item(s.item))
             .unwrap_or(game_core::AIR)
@@ -153,10 +178,11 @@ impl Game {
             .map(|(p, b)| {
                 (
                     *p,
-                    if *b == game_core::CHEST {
-                        game_core::AIR
-                    } else {
-                        *b
+                    // Содержимое контейнеров пока не сохраняется: сундук исчезает,
+                    // а горящая печь записывается обычной.
+                    match *b {
+                        game_core::CHEST => game_core::AIR,
+                        other => game_core::unlit(other),
                     },
                 )
             })
@@ -200,6 +226,9 @@ mod inventory_save_tests {
             game_core::ores::WorldGenerator::from_snapshot(2, Some(config.clone())).unwrap();
         let snapshot = game.save_data();
         assert_eq!(snapshot.generator_version, 2);
+        game.generator =
+            game_core::ores::WorldGenerator::from_snapshot(3, snapshot.ore_config.clone()).unwrap();
+        assert_eq!(game.save_data().generator_version, 3);
         assert_eq!(snapshot.ore_config, Some(config));
     }
 

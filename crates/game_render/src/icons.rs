@@ -67,14 +67,26 @@ pub fn bake_atlas_icons(
         .flatten()
         .any(|layer| layer as usize >= MATERIAL_COUNT)
     }) {
-        return Err("icon texture layer must be in 0..36".into());
+        return Err(format!("icon texture layer must be in 0..{MATERIAL_COUNT}"));
     }
     Ok((0..BLOCKS.len())
         .map(|block| {
             let pixels = if block == AIR as usize {
                 vec![0; (ICON_SIZE * ICON_SIZE * 4) as usize]
+            } else if game_core::is_plant(block as game_core::BlockId) {
+                // Растения показываются плоским значком, а не кубом.
+                let layer = u32::from(textures.0[block].side);
+                image::imageops::crop_imm(
+                    &atlas.rgba,
+                    (layer % 6) * TILE_SIZE,
+                    (layer / 6) * TILE_SIZE,
+                    TILE_SIZE,
+                    TILE_SIZE,
+                )
+                .to_image()
+                .into_raw()
             } else {
-                bake_cube(&atlas.rgba, textures, block as u8)
+                bake_cube(&atlas.rgba, textures, block as game_core::BlockId)
             };
             let mut image = Image::new(
                 Extent3d {
@@ -93,7 +105,7 @@ pub fn bake_atlas_icons(
         .collect())
 }
 
-fn bake_cube(atlas: &RgbaImage, textures: &BlockTextures, block: u8) -> Vec<u8> {
+fn bake_cube(atlas: &RgbaImage, textures: &BlockTextures, block: game_core::BlockId) -> Vec<u8> {
     let mut output = vec![0; (ICON_SIZE * ICON_SIZE * 4) as usize];
     for y in 0..ICON_SIZE {
         for x in 0..ICON_SIZE {
@@ -169,7 +181,7 @@ fn segment_distance_squared(point: Point, start: Point, end: Point) -> f32 {
 
 /// Return straight RGBA, filtering premultiplied alpha to avoid color bleeding
 /// from transparent source texels. Taps never enter neighboring atlas tiles.
-fn sample_tile(atlas: &RgbaImage, layer: u8, uv: Point) -> [f32; 4] {
+fn sample_tile(atlas: &RgbaImage, layer: u16, uv: Point) -> [f32; 4] {
     let x = (uv[0] * TILE_SIZE as f32 - 0.5).clamp(0., (TILE_SIZE - 1) as f32);
     let y = (uv[1] * TILE_SIZE as f32 - 0.5).clamp(0., (TILE_SIZE - 1) as f32);
     let x0 = x.floor() as u32;
@@ -230,6 +242,7 @@ mod tests {
                     side: 7,
                     bottom: 17,
                     front: None,
+                    ..FaceTextures::default()
                 }; BLOCKS.len()],
             ),
         )
@@ -257,6 +270,7 @@ mod tests {
             side: 0,
             bottom: 17,
             front: None,
+            ..FaceTextures::default()
         };
         let icons = bake_block_icons(&bytes, &textures).unwrap();
         assert_eq!(icons.len(), BLOCKS.len());
@@ -362,13 +376,16 @@ mod tests {
         );
         assert!(bake_block_icons(b"not a PNG", &BlockTextures::default()).is_err());
         let (bytes, mut textures) = fixture(255);
-        for (side, front) in [(36, None), (7, Some(36))] {
+        for (side, front) in [
+            (MATERIAL_COUNT as u16, None),
+            (7, Some(MATERIAL_COUNT as u16)),
+        ] {
             textures.0[1].side = side;
             textures.0[1].front = front;
             assert!(
                 bake_block_icons(&bytes, &textures)
                     .unwrap_err()
-                    .contains("0..36")
+                    .contains(&format!("0..{MATERIAL_COUNT}"))
             );
         }
     }

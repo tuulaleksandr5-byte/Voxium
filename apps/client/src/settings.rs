@@ -12,6 +12,8 @@ pub struct Settings {
     pub fullscreen: bool,
     pub resolution: usize,
     pub volume: f32,
+    /// Пиксельная графика 32×; `false` возвращает исходные рисованные тайлы.
+    pub pixel_textures: bool,
 }
 impl Default for Settings {
     fn default() -> Self {
@@ -22,6 +24,7 @@ impl Default for Settings {
             fullscreen: false,
             resolution: 0,
             volume: 0.8,
+            pixel_textures: true,
         }
     }
 }

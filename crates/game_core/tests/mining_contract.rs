@@ -20,7 +20,7 @@ fn supplied_txt_pins_all_72_applicable_duration_cells() {
         if parts.len() < 2 || !parts[1].contains(',') {
             continue;
         }
-        let blocks: &[u8] = match section {
+        let blocks: &[game_core::BlockId] = match section {
             1 => &[game_core::SAND, game_core::GRAVEL, game_core::SNOW],
             2 => &[
                 game_core::SANDSTONE,
@@ -81,7 +81,7 @@ fn speed_and_harvest_are_independent_and_unknown_tools_use_hand() {
         game_core::AIR,
         game_core::WATER,
         game_core::BEDROCK,
-        u8::MAX,
+        game_core::BlockId::MAX,
     ] {
         assert!(cfg.duration(id, Tool::Hand).is_none());
         assert!(!cfg.can_harvest(id, Tool::Hand));
@@ -182,7 +182,6 @@ fn fallback_defaults_cover_unlisted_blocks_with_correct_tools() {
 fn tool_recognition_whitelists_namespace_material_kind_and_catalog_type() {
     for (name, kind) in [
         ("custom:diamond_pickaxe", "Tool"),
-        ("survival:netherite_pickaxe", "Tool"),
         ("survival:diamond_pickaxe_extra", "Tool"),
         ("survival:diamond_sword", "Tool"),
         ("survival:diamond_pickaxe", "Material"),
@@ -193,4 +192,23 @@ fn tool_recognition_whitelists_namespace_material_kind_and_catalog_type() {
         .unwrap();
         assert_eq!(Tool::from_item(catalog.find(name), &catalog), Tool::Hand);
     }
+    // Незеритовые инструменты копают как алмазные.
+    let catalog = ContentRegistry::from_ron(
+        "[(id: \"survival:netherite_pickaxe\", name: \"x\", max_stack: 1, kind: Tool)]",
+    )
+    .unwrap();
+    assert_eq!(
+        Tool::from_item(catalog.find("survival:netherite_pickaxe"), &catalog),
+        Tool::from_item(
+            ContentRegistry::from_ron(
+                "[(id: \"survival:diamond_pickaxe\", name: \"x\", max_stack: 1, kind: Tool)]"
+            )
+            .unwrap()
+            .find("survival:diamond_pickaxe"),
+            &ContentRegistry::from_ron(
+                "[(id: \"survival:diamond_pickaxe\", name: \"x\", max_stack: 1, kind: Tool)]"
+            )
+            .unwrap()
+        )
+    );
 }

@@ -1,4 +1,5 @@
-// Stable block IDs; texture layers are row-major in the 6×6 internal atlas.
+// Stable block IDs; texture layers are row-major in the 6×36 internal atlas.
+// Layers 36+ are the pixel-art tiles from assets/textures/pixel.
 [
     (top: 17, side: 17, bottom: 17), // air (never meshed)
     (top: 0, side: 1, bottom: 2),    // grass
@@ -16,7 +17,7 @@
     (top: 4, side: 4, bottom: 4),    // bedrock
     (top: 14, side: 14, bottom: 14), // snow/ice
     (top: 16, side: 15, bottom: 16), // sandstone
-    (top: 10, side: 10, bottom: 10), // TODO(art): сундук, исходные доски без изменений
+    (top: 54, side: 53, bottom: 54, front: Some(52)), // chest
     (top: 19, side: 19, bottom: 19), // coal ore
     (top: 23, side: 23, bottom: 23), // iron ore
     (top: 18, side: 18, bottom: 18), // gold ore
@@ -26,4 +27,1839 @@
     (top: 22, side: 22, bottom: 22), // diamond block
     (top: 25, side: 27, bottom: 28, front: Some(26)), // crafting table
     (top: 32, side: 31, bottom: 32, front: Some(29)), // furnace, fixed negative-Z front
+    (top: 36, side: 36, bottom: 36), // bricks
+    (top: 37, side: 37, bottom: 37), // stone bricks
+    (top: 38, side: 38, bottom: 38), // mossy cobblestone
+    (top: 40, side: 39, bottom: 40), // birch log
+    (top: 41, side: 41, bottom: 41), // birch leaves
+    (top: 42, side: 42, bottom: 42), // birch planks
+    (top: 43, side: 43, bottom: 43), // clay
+    (top: 10, side: 44, bottom: 10), // bookshelf
+    (top: 45, side: 45, bottom: 45), // lamp
+    (top: 46, side: 46, bottom: 46), // ice
+    (top: 47, side: 47, bottom: 47), // obsidian
+    (top: 48, side: 48, bottom: 48), // wool
+    (top: 49, side: 49, bottom: 49), // terracotta
+    (top: 50, side: 50, bottom: 50), // smooth stone
+    (top: 51, side: 51, bottom: 51), // coal block
+    (top: 32, side: 31, bottom: 32, front: Some(30)), // lit furnace
+    (top: 56, side: 55, bottom: 56), // barrel
+    (top: 32, side: 59, bottom: 32, front: Some(57)), // smoker
+    (top: 32, side: 59, bottom: 32, front: Some(58)), // lit smoker
+    (top: 62, side: 62, bottom: 62, front: Some(60)), // blast furnace
+    (top: 62, side: 62, bottom: 62, front: Some(61)), // lit blast furnace
+    (top: 63, side: 64, bottom: 50), // stonecutter
+    (top: 67, side: 66, bottom: 67, front: Some(65)), // vault
+    (top: 68, side: 68, bottom: 68), // wool_orange
+    (top: 69, side: 69, bottom: 69), // wool_magenta
+    (top: 70, side: 70, bottom: 70), // wool_light_blue
+    (top: 71, side: 71, bottom: 71), // wool_yellow
+    (top: 72, side: 72, bottom: 72), // wool_lime
+    (top: 73, side: 73, bottom: 73), // wool_pink
+    (top: 74, side: 74, bottom: 74), // wool_gray
+    (top: 75, side: 75, bottom: 75), // wool_light_gray
+    (top: 76, side: 76, bottom: 76), // wool_cyan
+    (top: 77, side: 77, bottom: 77), // wool_purple
+    (top: 78, side: 78, bottom: 78), // wool_blue
+    (top: 79, side: 79, bottom: 79), // wool_brown
+    (top: 80, side: 80, bottom: 80), // wool_green
+    (top: 81, side: 81, bottom: 81), // wool_red
+    (top: 82, side: 82, bottom: 82), // wool_black
+    (top: 83, side: 83, bottom: 83), // concrete_white
+    (top: 84, side: 84, bottom: 84), // concrete_orange
+    (top: 85, side: 85, bottom: 85), // concrete_magenta
+    (top: 86, side: 86, bottom: 86), // concrete_light_blue
+    (top: 87, side: 87, bottom: 87), // concrete_yellow
+    (top: 88, side: 88, bottom: 88), // concrete_lime
+    (top: 89, side: 89, bottom: 89), // concrete_pink
+    (top: 90, side: 90, bottom: 90), // concrete_gray
+    (top: 91, side: 91, bottom: 91), // concrete_light_gray
+    (top: 92, side: 92, bottom: 92), // concrete_cyan
+    (top: 93, side: 93, bottom: 93), // concrete_purple
+    (top: 94, side: 94, bottom: 94), // concrete_blue
+    (top: 95, side: 95, bottom: 95), // concrete_brown
+    (top: 96, side: 96, bottom: 96), // concrete_green
+    (top: 97, side: 97, bottom: 97), // concrete_red
+    (top: 98, side: 98, bottom: 98), // concrete_black
+    (top: 99, side: 99, bottom: 99), // granite
+    (top: 100, side: 100, bottom: 100), // polished_granite
+    (top: 101, side: 101, bottom: 101), // marble
+    (top: 102, side: 102, bottom: 102), // polished_marble
+    (top: 103, side: 103, bottom: 103), // basalt
+    (top: 104, side: 104, bottom: 104), // polished_basalt
+    (top: 105, side: 105, bottom: 105), // slate
+    (top: 106, side: 106, bottom: 106), // polished_slate
+    (top: 107, side: 107, bottom: 107), // limestone
+    (top: 108, side: 108, bottom: 108), // polished_limestone
+    (top: 110, side: 109, bottom: 110), // pine_log
+    (top: 111, side: 111, bottom: 111), // pine_leaves
+    (top: 112, side: 112, bottom: 112), // pine_planks
+    (top: 113, side: 113, bottom: 113), // sandstone_bricks
+    (top: 114, side: 114, bottom: 114), // mossy_stone_bricks
+    (top: 115, side: 115, bottom: 115), // cracked_stone_bricks
+    (top: 116, side: 116, bottom: 116), // dark_bricks
+    (top: 117, side: 117, bottom: 117), // stone_tiles
+    (top: 118, side: 118, bottom: 118), // poppy
+    (top: 119, side: 119, bottom: 119), // dandelion
+    (top: 120, side: 120, bottom: 120), // cornflower
+    (top: 121, side: 121, bottom: 121), // daisy
+    (top: 122, side: 122, bottom: 122), // tall_grass
+    (top: 124, side: 123, bottom: 124), // acacia_log
+    (top: 125, side: 125, bottom: 125), // acacia_leaves
+    (top: 126, side: 126, bottom: 126), // acacia_planks
+    (top: 128, side: 127, bottom: 128), // jungle_log
+    (top: 129, side: 129, bottom: 129), // jungle_leaves
+    (top: 130, side: 130, bottom: 130), // jungle_planks
+    (top: 132, side: 131, bottom: 132), // dark_oak_log
+    (top: 133, side: 133, bottom: 133), // dark_oak_leaves
+    (top: 134, side: 134, bottom: 134), // dark_oak_planks
+    (top: 136, side: 135, bottom: 136), // mangrove_log
+    (top: 137, side: 137, bottom: 137), // mangrove_leaves
+    (top: 138, side: 138, bottom: 138), // mangrove_planks
+    (top: 140, side: 139, bottom: 140), // cherry_log
+    (top: 141, side: 141, bottom: 141), // cherry_leaves
+    (top: 142, side: 142, bottom: 142), // cherry_planks
+    (top: 143, side: 143, bottom: 143), // copper_ore
+    (top: 144, side: 144, bottom: 144), // emerald_ore
+    (top: 145, side: 145, bottom: 145), // lapis_ore
+    (top: 146, side: 146, bottom: 146), // copper_block
+    (top: 147, side: 147, bottom: 147), // emerald_block
+    (top: 148, side: 148, bottom: 148), // lapis_block
+    (top: 149, side: 149, bottom: 149), // glass_white
+    (top: 150, side: 150, bottom: 150), // glass_orange
+    (top: 151, side: 151, bottom: 151), // glass_magenta
+    (top: 152, side: 152, bottom: 152), // glass_light_blue
+    (top: 153, side: 153, bottom: 153), // glass_yellow
+    (top: 154, side: 154, bottom: 154), // glass_lime
+    (top: 155, side: 155, bottom: 155), // glass_pink
+    (top: 156, side: 156, bottom: 156), // glass_gray
+    (top: 157, side: 157, bottom: 157), // glass_light_gray
+    (top: 158, side: 158, bottom: 158), // glass_cyan
+    (top: 159, side: 159, bottom: 159), // glass_purple
+    (top: 160, side: 160, bottom: 160), // glass_blue
+    (top: 161, side: 161, bottom: 161), // glass_brown
+    (top: 162, side: 162, bottom: 162), // glass_green
+    (top: 163, side: 163, bottom: 163), // glass_red
+    (top: 164, side: 164, bottom: 164), // glass_black
+    (top: 165, side: 165, bottom: 165), // terracotta_white
+    (top: 166, side: 166, bottom: 166), // terracotta_orange
+    (top: 167, side: 167, bottom: 167), // terracotta_magenta
+    (top: 168, side: 168, bottom: 168), // terracotta_light_blue
+    (top: 169, side: 169, bottom: 169), // terracotta_yellow
+    (top: 170, side: 170, bottom: 170), // terracotta_lime
+    (top: 171, side: 171, bottom: 171), // terracotta_pink
+    (top: 172, side: 172, bottom: 172), // terracotta_gray
+    (top: 173, side: 173, bottom: 173), // terracotta_light_gray
+    (top: 174, side: 174, bottom: 174), // terracotta_cyan
+    (top: 175, side: 175, bottom: 175), // terracotta_purple
+    (top: 176, side: 176, bottom: 176), // terracotta_blue
+    (top: 177, side: 177, bottom: 177), // terracotta_brown
+    (top: 178, side: 178, bottom: 178), // terracotta_green
+    (top: 179, side: 179, bottom: 179), // terracotta_red
+    (top: 180, side: 180, bottom: 180), // terracotta_black
+    (top: 181, side: 181, bottom: 181), // sponge
+    (top: 183, side: 182, bottom: 183), // melon
+    (top: 185, side: 184, bottom: 185), // pumpkin
+    (top: 187, side: 186, bottom: 187), // hay_bale
+    (top: 189, side: 188, bottom: 189), // bone_block
+    (top: 190, side: 190, bottom: 190), // mud
+    (top: 191, side: 191, bottom: 191), // packed_mud
+    (top: 192, side: 192, bottom: 192), // mud_bricks
+    (top: 193, side: 193, bottom: 193), // moss_block
+    (top: 194, side: 195, bottom: 2), // podzol
+    (top: 196, side: 196, bottom: 196), // coarse_dirt
+    (top: 197, side: 197, bottom: 197), // red_sand
+    (top: 198, side: 198, bottom: 198), // red_sandstone
+    (top: 199, side: 199, bottom: 199), // calcite
+    (top: 200, side: 200, bottom: 200), // tuff
+    (top: 201, side: 201, bottom: 201), // amethyst_block
+    (top: 202, side: 202, bottom: 202), // quartz_block
+    (top: 10, side: 10, bottom: 10), // oak_slab
+    (top: 42, side: 42, bottom: 42), // birch_slab
+    (top: 112, side: 112, bottom: 112), // pine_slab
+    (top: 3, side: 3, bottom: 3), // stone_slab
+    (top: 11, side: 11, bottom: 11), // cobblestone_slab
+    (top: 37, side: 37, bottom: 37), // stone_brick_slab
+    (top: 50, side: 50, bottom: 50), // smooth_stone_slab
+    (top: 16, side: 15, bottom: 16), // sandstone_slab
+    (top: 36, side: 36, bottom: 36), // brick_slab
+    (top: 100, side: 100, bottom: 100), // granite_slab
+    (top: 102, side: 102, bottom: 102), // marble_slab
+    (top: 116, side: 116, bottom: 116), // dark_brick_slab
+    (top: 13, side: 13, bottom: 13), // flowing water
+    (top: 13, side: 13, bottom: 13), // flowing water
+    (top: 13, side: 13, bottom: 13), // flowing water
+    (top: 13, side: 13, bottom: 13), // flowing water
+    (top: 13, side: 13, bottom: 13), // flowing water
+    (top: 13, side: 13, bottom: 13), // flowing water
+    (top: 13, side: 13, bottom: 13), // flowing water
+    (top: 203, side: 203, bottom: 203), // lava
+    (top: 203, side: 203, bottom: 203), // lava
+    (top: 203, side: 203, bottom: 203), // lava
+    (top: 203, side: 203, bottom: 203), // lava
+    (top: 240, side: 240, bottom: 240), // diorite
+    (top: 241, side: 241, bottom: 241), // polished_diorite
+    (top: 242, side: 242, bottom: 242), // andesite
+    (top: 243, side: 243, bottom: 243), // polished_andesite
+    (top: 244, side: 244, bottom: 244), // spruce_planks
+    (top: 245, side: 245, bottom: 245), // bamboo_planks
+    (top: 246, side: 246, bottom: 246), // bamboo_mosaic
+    (top: 247, side: 247, bottom: 247), // suspicious_sand
+    (top: 248, side: 248, bottom: 248), // suspicious_gravel
+    (top: 249, side: 249, bottom: 249), // deepslate_gold_ore
+    (top: 250, side: 250, bottom: 250), // deepslate_iron_ore
+    (top: 251, side: 251, bottom: 251), // deepslate_coal_ore
+    (top: 252, side: 252, bottom: 252), // nether_gold_ore
+    (top: 253, side: 254, bottom: 253), // spruce_log
+    (top: 255, side: 256, bottom: 255), // bamboo_block
+    (top: 257, side: 258, bottom: 257), // stripped_spruce_log
+    (top: 259, side: 260, bottom: 259), // stripped_birch_log
+    (top: 261, side: 262, bottom: 261), // stripped_jungle_log
+    (top: 263, side: 264, bottom: 263), // stripped_acacia_log
+    (top: 265, side: 266, bottom: 265), // stripped_cherry_log
+    (top: 267, side: 268, bottom: 267), // stripped_dark_oak_log
+    (top: 269, side: 270, bottom: 269), // stripped_oak_log
+    (top: 271, side: 272, bottom: 271), // stripped_mangrove_log
+    (top: 273, side: 274, bottom: 273), // stripped_bamboo_block
+    (top: 7, side: 7, bottom: 7), // oak_wood
+    (top: 254, side: 254, bottom: 254), // spruce_wood
+    (top: 39, side: 39, bottom: 39), // birch_wood
+    (top: 127, side: 127, bottom: 127), // jungle_wood
+    (top: 123, side: 123, bottom: 123), // acacia_wood
+    (top: 139, side: 139, bottom: 139), // cherry_wood
+    (top: 131, side: 131, bottom: 131), // dark_oak_wood
+    (top: 135, side: 135, bottom: 135), // mangrove_wood
+    (top: 270, side: 270, bottom: 270), // stripped_oak_wood
+    (top: 258, side: 258, bottom: 258), // stripped_spruce_wood
+    (top: 260, side: 260, bottom: 260), // stripped_birch_wood
+    (top: 262, side: 262, bottom: 262), // stripped_jungle_wood
+    (top: 264, side: 264, bottom: 264), // stripped_acacia_wood
+    (top: 266, side: 266, bottom: 266), // stripped_cherry_wood
+    (top: 268, side: 268, bottom: 268), // stripped_dark_oak_wood
+    (top: 272, side: 272, bottom: 272), // stripped_mangrove_wood
+    (top: 275, side: 275, bottom: 275), // wet_sponge
+    (top: 276, side: 276, bottom: 276), // deepslate_lapis_ore
+    (top: 277, side: 277, bottom: 277, front: Some(278)), // dispenser
+    (top: 16, side: 279, bottom: 16), // chiseled_sandstone
+    (top: 16, side: 280, bottom: 16), // cut_sandstone
+    (top: 281, side: 281, bottom: 281), // note_block
+    (top: 283, side: 283, bottom: 283, front: Some(282), back: Some(284)), // sticky_piston
+    (top: 283, side: 283, bottom: 283, front: Some(285), back: Some(284)), // piston
+    (top: 286, side: 287, bottom: 286), // tnt
+    (top: 10, side: 288, bottom: 10, front: Some(289)), // chiseled_bookshelf
+    (top: 204, side: 204, bottom: 204), // mangrove_roots
+    (top: 205, side: 205, bottom: 205), // muddy_mangrove_roots
+    (top: 206, side: 206, bottom: 206), // spruce_leaves
+    (top: 207, side: 207, bottom: 207), // azalea_leaves
+    (top: 208, side: 208, bottom: 208), // flowering_azalea_leaves
+    (top: 209, side: 209, bottom: 209), // oak_sapling
+    (top: 210, side: 210, bottom: 210), // spruce_sapling
+    (top: 211, side: 211, bottom: 211), // birch_sapling
+    (top: 212, side: 212, bottom: 212), // jungle_sapling
+    (top: 213, side: 213, bottom: 213), // acacia_sapling
+    (top: 214, side: 214, bottom: 214), // cherry_sapling
+    (top: 215, side: 215, bottom: 215), // dark_oak_sapling
+    (top: 216, side: 216, bottom: 216), // mangrove_propagule
+    (top: 217, side: 217, bottom: 217), // cobweb
+    (top: 218, side: 218, bottom: 218), // grass
+    (top: 219, side: 219, bottom: 219), // fern
+    (top: 220, side: 220, bottom: 220), // dead_bush
+    (top: 221, side: 221, bottom: 221), // seagrass
+    (top: 222, side: 222, bottom: 222), // tall_seagrass
+    (top: 223, side: 223, bottom: 223), // torchflower
+    (top: 224, side: 224, bottom: 224), // blue_orchid
+    (top: 225, side: 225, bottom: 225), // allium
+    (top: 226, side: 226, bottom: 226), // azure_bluet
+    (top: 227, side: 227, bottom: 227), // red_tulip
+    (top: 228, side: 228, bottom: 228), // orange_tulip
+    (top: 229, side: 229, bottom: 229), // white_tulip
+    (top: 230, side: 230, bottom: 230), // pink_tulip
+    (top: 231, side: 231, bottom: 231), // wither_rose
+    (top: 232, side: 232, bottom: 232), // lily_of_the_valley
+    (top: 233, side: 233, bottom: 233), // brown_mushroom
+    (top: 234, side: 234, bottom: 234), // red_mushroom
+    (top: 235, side: 235, bottom: 235), // torch
+    (top: 235, side: 235, bottom: 235), // wall_torch
+    (top: 236, side: 236, bottom: 236), // fire
+    (top: 237, side: 237, bottom: 237), // soul_fire
+    (top: 238, side: 238, bottom: 238), // powered_rail
+    (top: 239, side: 239, bottom: 239), // detector_rail
+    (top: 290, side: 291, bottom: 10), // white_bed
+    (top: 292, side: 293, bottom: 10), // orange_bed
+    (top: 294, side: 295, bottom: 10), // magenta_bed
+    (top: 296, side: 297, bottom: 10), // light_blue_bed
+    (top: 298, side: 299, bottom: 10), // yellow_bed
+    (top: 300, side: 301, bottom: 10), // lime_bed
+    (top: 302, side: 303, bottom: 10), // pink_bed
+    (top: 304, side: 305, bottom: 10), // gray_bed
+    (top: 306, side: 307, bottom: 10), // light_gray_bed
+    (top: 308, side: 309, bottom: 10), // cyan_bed
+    (top: 310, side: 311, bottom: 10), // purple_bed
+    (top: 312, side: 313, bottom: 10), // blue_bed
+    (top: 314, side: 315, bottom: 10), // brown_bed
+    (top: 316, side: 317, bottom: 10), // green_bed
+    (top: 318, side: 319, bottom: 10), // red_bed
+    (top: 320, side: 321, bottom: 10), // black_bed
+    (top: 285, side: 283, bottom: 283), // piston_head
+    (top: 285, side: 285, bottom: 285), // moving_piston
+    (top: 277, side: 277, bottom: 277, front: Some(278), face: Some((2, true))), // dispenser_south
+    (top: 277, side: 277, bottom: 277, front: Some(278), face: Some((0, false))), // dispenser_west
+    (top: 277, side: 277, bottom: 277, front: Some(278), face: Some((0, true))), // dispenser_east
+    (top: 277, side: 277, bottom: 277, front: Some(278), face: Some((1, true))), // dispenser_up
+    (top: 277, side: 277, bottom: 277, front: Some(278), face: Some((1, false))), // dispenser_down
+    (top: 283, side: 283, bottom: 283, front: Some(285), face: Some((2, true)), back: Some(284)), // piston_south
+    (top: 283, side: 283, bottom: 283, front: Some(285), face: Some((0, false)), back: Some(284)), // piston_west
+    (top: 283, side: 283, bottom: 283, front: Some(285), face: Some((0, true)), back: Some(284)), // piston_east
+    (top: 283, side: 283, bottom: 283, front: Some(285), face: Some((1, true)), back: Some(284)), // piston_up
+    (top: 283, side: 283, bottom: 283, aux: Some(284)), // piston_down
+    (top: 283, side: 283, bottom: 283, front: Some(282), face: Some((2, true)), back: Some(284)), // sticky_piston_south
+    (top: 283, side: 283, bottom: 283, front: Some(282), face: Some((0, false)), back: Some(284)), // sticky_piston_west
+    (top: 283, side: 283, bottom: 283, front: Some(282), face: Some((0, true)), back: Some(284)), // sticky_piston_east
+    (top: 283, side: 283, bottom: 283, front: Some(282), face: Some((1, true)), back: Some(284)), // sticky_piston_up
+    (top: 283, side: 283, bottom: 283, aux: Some(284)), // sticky_piston_down
+    (top: 235, side: 235, bottom: 235), // wall_torch_south
+    (top: 235, side: 235, bottom: 235), // wall_torch_west
+    (top: 235, side: 235, bottom: 235), // wall_torch_east
+    (top: 238, side: 238, bottom: 238), // powered_rail_x
+    (top: 239, side: 239, bottom: 239), // detector_rail_x
+    (top: 333, side: 333, bottom: 333), // spawner
+    (top: 10, side: 10, bottom: 10), // oak_stairs
+    (top: 10, side: 10, bottom: 10), // oak_stairs_south
+    (top: 10, side: 10, bottom: 10), // oak_stairs_west
+    (top: 10, side: 10, bottom: 10), // oak_stairs_east
+    (top: 324, side: 324, bottom: 324), // redstone_wire
+    (top: 336, side: 336, bottom: 336), // deepslate_diamond_ore
+    (top: 322, side: 322, bottom: 322), // wheat
+    (top: 337, side: 2, bottom: 2), // farmland
+    (top: 10, side: 10, bottom: 10), // oak_sign
+    (top: 10, side: 10, bottom: 10), // oak_sign_south
+    (top: 10, side: 10, bottom: 10), // oak_sign_west
+    (top: 10, side: 10, bottom: 10), // oak_sign_east
+    (top: 244, side: 244, bottom: 244), // spruce_sign
+    (top: 244, side: 244, bottom: 244), // spruce_sign_south
+    (top: 244, side: 244, bottom: 244), // spruce_sign_west
+    (top: 244, side: 244, bottom: 244), // spruce_sign_east
+    (top: 42, side: 42, bottom: 42), // birch_sign
+    (top: 42, side: 42, bottom: 42), // birch_sign_south
+    (top: 42, side: 42, bottom: 42), // birch_sign_west
+    (top: 42, side: 42, bottom: 42), // birch_sign_east
+    (top: 130, side: 130, bottom: 130), // jungle_sign
+    (top: 130, side: 130, bottom: 130), // jungle_sign_south
+    (top: 130, side: 130, bottom: 130), // jungle_sign_west
+    (top: 130, side: 130, bottom: 130), // jungle_sign_east
+    (top: 126, side: 126, bottom: 126), // acacia_sign
+    (top: 126, side: 126, bottom: 126), // acacia_sign_south
+    (top: 126, side: 126, bottom: 126), // acacia_sign_west
+    (top: 126, side: 126, bottom: 126), // acacia_sign_east
+    (top: 142, side: 142, bottom: 142), // cherry_sign
+    (top: 142, side: 142, bottom: 142), // cherry_sign_south
+    (top: 142, side: 142, bottom: 142), // cherry_sign_west
+    (top: 142, side: 142, bottom: 142), // cherry_sign_east
+    (top: 134, side: 134, bottom: 134), // dark_oak_sign
+    (top: 134, side: 134, bottom: 134), // dark_oak_sign_south
+    (top: 134, side: 134, bottom: 134), // dark_oak_sign_west
+    (top: 134, side: 134, bottom: 134), // dark_oak_sign_east
+    (top: 138, side: 138, bottom: 138), // mangrove_sign
+    (top: 138, side: 138, bottom: 138), // mangrove_sign_south
+    (top: 138, side: 138, bottom: 138), // mangrove_sign_west
+    (top: 138, side: 138, bottom: 138), // mangrove_sign_east
+    (top: 245, side: 245, bottom: 245), // bamboo_sign
+    (top: 245, side: 245, bottom: 245), // bamboo_sign_south
+    (top: 245, side: 245, bottom: 245), // bamboo_sign_west
+    (top: 245, side: 245, bottom: 245), // bamboo_sign_east
+    (top: 351, side: 351, bottom: 351), // oak_door_lower_closed_north
+    (top: 351, side: 351, bottom: 351), // oak_door_lower_closed_south
+    (top: 351, side: 351, bottom: 351), // oak_door_lower_closed_west
+    (top: 351, side: 351, bottom: 351), // oak_door_lower_closed_east
+    (top: 351, side: 351, bottom: 351), // oak_door_lower_open_north
+    (top: 351, side: 351, bottom: 351), // oak_door_lower_open_south
+    (top: 351, side: 351, bottom: 351), // oak_door_lower_open_west
+    (top: 351, side: 351, bottom: 351), // oak_door_lower_open_east
+    (top: 352, side: 352, bottom: 352), // oak_door_upper_closed_north
+    (top: 352, side: 352, bottom: 352), // oak_door_upper_closed_south
+    (top: 352, side: 352, bottom: 352), // oak_door_upper_closed_west
+    (top: 352, side: 352, bottom: 352), // oak_door_upper_closed_east
+    (top: 352, side: 352, bottom: 352), // oak_door_upper_open_north
+    (top: 352, side: 352, bottom: 352), // oak_door_upper_open_south
+    (top: 352, side: 352, bottom: 352), // oak_door_upper_open_west
+    (top: 352, side: 352, bottom: 352), // oak_door_upper_open_east
+    (top: 327, side: 327, bottom: 327), // ladder
+    (top: 327, side: 327, bottom: 327), // ladder_south
+    (top: 327, side: 327, bottom: 327), // ladder_west
+    (top: 327, side: 327, bottom: 327), // ladder_east
+    (top: 328, side: 328, bottom: 328), // rail
+    (top: 328, side: 328, bottom: 328), // rail_x
+    (top: 11, side: 11, bottom: 11), // cobblestone_stairs
+    (top: 11, side: 11, bottom: 11), // cobblestone_stairs_south
+    (top: 11, side: 11, bottom: 11), // cobblestone_stairs_west
+    (top: 11, side: 11, bottom: 11), // cobblestone_stairs_east
+    (top: 10, side: 10, bottom: 10), // oak_wall_sign
+    (top: 10, side: 10, bottom: 10), // oak_wall_sign_south
+    (top: 10, side: 10, bottom: 10), // oak_wall_sign_west
+    (top: 10, side: 10, bottom: 10), // oak_wall_sign_east
+    (top: 244, side: 244, bottom: 244), // spruce_wall_sign
+    (top: 244, side: 244, bottom: 244), // spruce_wall_sign_south
+    (top: 244, side: 244, bottom: 244), // spruce_wall_sign_west
+    (top: 244, side: 244, bottom: 244), // spruce_wall_sign_east
+    (top: 42, side: 42, bottom: 42), // birch_wall_sign
+    (top: 42, side: 42, bottom: 42), // birch_wall_sign_south
+    (top: 42, side: 42, bottom: 42), // birch_wall_sign_west
+    (top: 42, side: 42, bottom: 42), // birch_wall_sign_east
+    (top: 130, side: 130, bottom: 130), // jungle_wall_sign
+    (top: 130, side: 130, bottom: 130), // jungle_wall_sign_south
+    (top: 130, side: 130, bottom: 130), // jungle_wall_sign_west
+    (top: 130, side: 130, bottom: 130), // jungle_wall_sign_east
+    (top: 126, side: 126, bottom: 126), // acacia_wall_sign
+    (top: 126, side: 126, bottom: 126), // acacia_wall_sign_south
+    (top: 126, side: 126, bottom: 126), // acacia_wall_sign_west
+    (top: 126, side: 126, bottom: 126), // acacia_wall_sign_east
+    (top: 142, side: 142, bottom: 142), // cherry_wall_sign
+    (top: 142, side: 142, bottom: 142), // cherry_wall_sign_south
+    (top: 142, side: 142, bottom: 142), // cherry_wall_sign_west
+    (top: 142, side: 142, bottom: 142), // cherry_wall_sign_east
+    (top: 134, side: 134, bottom: 134), // dark_oak_wall_sign
+    (top: 134, side: 134, bottom: 134), // dark_oak_wall_sign_south
+    (top: 134, side: 134, bottom: 134), // dark_oak_wall_sign_west
+    (top: 134, side: 134, bottom: 134), // dark_oak_wall_sign_east
+    (top: 138, side: 138, bottom: 138), // mangrove_wall_sign
+    (top: 138, side: 138, bottom: 138), // mangrove_wall_sign_south
+    (top: 138, side: 138, bottom: 138), // mangrove_wall_sign_west
+    (top: 138, side: 138, bottom: 138), // mangrove_wall_sign_east
+    (top: 245, side: 245, bottom: 245), // bamboo_wall_sign
+    (top: 245, side: 245, bottom: 245), // bamboo_wall_sign_south
+    (top: 245, side: 245, bottom: 245), // bamboo_wall_sign_west
+    (top: 245, side: 245, bottom: 245), // bamboo_wall_sign_east
+    (top: 10, side: 10, bottom: 10, aux: Some(331)), // oak_hanging_sign
+    (top: 10, side: 10, bottom: 10, aux: Some(331)), // oak_hanging_sign_z
+    (top: 244, side: 244, bottom: 244, aux: Some(331)), // spruce_hanging_sign
+    (top: 244, side: 244, bottom: 244, aux: Some(331)), // spruce_hanging_sign_z
+    (top: 42, side: 42, bottom: 42, aux: Some(331)), // birch_hanging_sign
+    (top: 42, side: 42, bottom: 42, aux: Some(331)), // birch_hanging_sign_z
+    (top: 126, side: 126, bottom: 126, aux: Some(331)), // acacia_hanging_sign
+    (top: 126, side: 126, bottom: 126, aux: Some(331)), // acacia_hanging_sign_z
+    (top: 142, side: 142, bottom: 142, aux: Some(331)), // cherry_hanging_sign
+    (top: 142, side: 142, bottom: 142, aux: Some(331)), // cherry_hanging_sign_z
+    (top: 130, side: 130, bottom: 130, aux: Some(331)), // jungle_hanging_sign
+    (top: 130, side: 130, bottom: 130, aux: Some(331)), // jungle_hanging_sign_z
+    (top: 134, side: 134, bottom: 134, aux: Some(331)), // dark_oak_hanging_sign
+    (top: 134, side: 134, bottom: 134, aux: Some(331)), // dark_oak_hanging_sign_z
+    (top: 359, side: 359, bottom: 359, aux: Some(331)), // crimson_hanging_sign
+    (top: 359, side: 359, bottom: 359, aux: Some(331)), // crimson_hanging_sign_z
+    (top: 360, side: 360, bottom: 360, aux: Some(331)), // warped_hanging_sign
+    (top: 360, side: 360, bottom: 360, aux: Some(331)), // warped_hanging_sign_z
+    (top: 138, side: 138, bottom: 138, aux: Some(331)), // mangrove_hanging_sign
+    (top: 138, side: 138, bottom: 138, aux: Some(331)), // mangrove_hanging_sign_z
+    (top: 245, side: 245, bottom: 245, aux: Some(331)), // bamboo_hanging_sign
+    (top: 245, side: 245, bottom: 245, aux: Some(331)), // bamboo_hanging_sign_z
+    (top: 10, side: 10, bottom: 10, aux: Some(331)), // oak_wall_hanging_sign
+    (top: 10, side: 10, bottom: 10, aux: Some(331)), // oak_wall_hanging_sign_z
+    (top: 244, side: 244, bottom: 244, aux: Some(331)), // spruce_wall_hanging_sign
+    (top: 244, side: 244, bottom: 244, aux: Some(331)), // spruce_wall_hanging_sign_z
+    (top: 42, side: 42, bottom: 42, aux: Some(331)), // birch_wall_hanging_sign
+    (top: 42, side: 42, bottom: 42, aux: Some(331)), // birch_wall_hanging_sign_z
+    (top: 126, side: 126, bottom: 126, aux: Some(331)), // acacia_wall_hanging_sign
+    (top: 126, side: 126, bottom: 126, aux: Some(331)), // acacia_wall_hanging_sign_z
+    (top: 142, side: 142, bottom: 142, aux: Some(331)), // cherry_wall_hanging_sign
+    (top: 142, side: 142, bottom: 142, aux: Some(331)), // cherry_wall_hanging_sign_z
+    (top: 130, side: 130, bottom: 130, aux: Some(331)), // jungle_wall_hanging_sign
+    (top: 130, side: 130, bottom: 130, aux: Some(331)), // jungle_wall_hanging_sign_z
+    (top: 134, side: 134, bottom: 134, aux: Some(331)), // dark_oak_wall_hanging_sign
+    (top: 134, side: 134, bottom: 134, aux: Some(331)), // dark_oak_wall_hanging_sign_z
+    (top: 359, side: 359, bottom: 359, aux: Some(331)), // crimson_wall_hanging_sign
+    (top: 359, side: 359, bottom: 359, aux: Some(331)), // crimson_wall_hanging_sign_z
+    (top: 360, side: 360, bottom: 360, aux: Some(331)), // warped_wall_hanging_sign
+    (top: 360, side: 360, bottom: 360, aux: Some(331)), // warped_wall_hanging_sign_z
+    (top: 138, side: 138, bottom: 138, aux: Some(331)), // mangrove_wall_hanging_sign
+    (top: 138, side: 138, bottom: 138, aux: Some(331)), // mangrove_wall_hanging_sign_z
+    (top: 245, side: 245, bottom: 245, aux: Some(331)), // bamboo_wall_hanging_sign
+    (top: 245, side: 245, bottom: 245, aux: Some(331)), // bamboo_wall_hanging_sign_z
+    (top: 361, side: 361, bottom: 361, aux: Some(11)), // lever
+    (top: 361, side: 361, bottom: 361, aux: Some(11)), // lever_off_south
+    (top: 361, side: 361, bottom: 361, aux: Some(11)), // lever_off_west
+    (top: 361, side: 361, bottom: 361, aux: Some(11)), // lever_off_east
+    (top: 361, side: 361, bottom: 361, aux: Some(11)), // lever_on_north
+    (top: 361, side: 361, bottom: 361, aux: Some(11)), // lever_on_south
+    (top: 361, side: 361, bottom: 361, aux: Some(11)), // lever_on_west
+    (top: 361, side: 361, bottom: 361, aux: Some(11)), // lever_on_east
+    (top: 3, side: 3, bottom: 3), // stone_pressure_plate
+    (top: 353, side: 353, bottom: 353), // iron_door_lower_closed_north
+    (top: 353, side: 353, bottom: 353), // iron_door_lower_closed_south
+    (top: 353, side: 353, bottom: 353), // iron_door_lower_closed_west
+    (top: 353, side: 353, bottom: 353), // iron_door_lower_closed_east
+    (top: 353, side: 353, bottom: 353), // iron_door_lower_open_north
+    (top: 353, side: 353, bottom: 353), // iron_door_lower_open_south
+    (top: 353, side: 353, bottom: 353), // iron_door_lower_open_west
+    (top: 353, side: 353, bottom: 353), // iron_door_lower_open_east
+    (top: 354, side: 354, bottom: 354), // iron_door_upper_closed_north
+    (top: 354, side: 354, bottom: 354), // iron_door_upper_closed_south
+    (top: 354, side: 354, bottom: 354), // iron_door_upper_closed_west
+    (top: 354, side: 354, bottom: 354), // iron_door_upper_closed_east
+    (top: 354, side: 354, bottom: 354), // iron_door_upper_open_north
+    (top: 354, side: 354, bottom: 354), // iron_door_upper_open_south
+    (top: 354, side: 354, bottom: 354), // iron_door_upper_open_west
+    (top: 354, side: 354, bottom: 354), // iron_door_upper_open_east
+    (top: 10, side: 10, bottom: 10), // oak_pressure_plate
+    (top: 244, side: 244, bottom: 244), // spruce_pressure_plate
+    (top: 42, side: 42, bottom: 42), // birch_pressure_plate
+    (top: 130, side: 130, bottom: 130), // jungle_pressure_plate
+    (top: 126, side: 126, bottom: 126), // acacia_pressure_plate
+    (top: 142, side: 142, bottom: 142), // cherry_pressure_plate
+    (top: 134, side: 134, bottom: 134), // dark_oak_pressure_plate
+    (top: 138, side: 138, bottom: 138), // mangrove_pressure_plate
+    (top: 245, side: 245, bottom: 245), // bamboo_pressure_plate
+    (top: 334, side: 334, bottom: 334), // redstone_ore
+    (top: 335, side: 335, bottom: 335), // deepslate_redstone_ore
+    (top: 325, side: 325, bottom: 325), // redstone_torch
+    (top: 325, side: 325, bottom: 325), // redstone_wall_torch
+    (top: 325, side: 325, bottom: 325), // redstone_wall_torch_south
+    (top: 325, side: 325, bottom: 325), // redstone_wall_torch_west
+    (top: 325, side: 325, bottom: 325), // redstone_wall_torch_east
+    (top: 3, side: 3, bottom: 3), // stone_button
+    (top: 3, side: 3, bottom: 3), // stone_button_south
+    (top: 3, side: 3, bottom: 3), // stone_button_west
+    (top: 3, side: 3, bottom: 3), // stone_button_east
+    (top: 14, side: 14, bottom: 14), // snow_layer
+    (top: 339, side: 338, bottom: 339), // cactus
+    (top: 323, side: 323, bottom: 323), // sugar_cane
+    (top: 341, side: 340, bottom: 340), // jukebox
+    (top: 10, side: 10, bottom: 10), // oak_fence
+    (top: 342, side: 342, bottom: 342), // netherrack
+    (top: 343, side: 343, bottom: 343), // soul_sand
+    (top: 344, side: 344, bottom: 344), // soul_soil
+    (top: 326, side: 326, bottom: 326), // soul_torch
+    (top: 326, side: 326, bottom: 326), // soul_wall_torch
+    (top: 326, side: 326, bottom: 326), // soul_wall_torch_south
+    (top: 326, side: 326, bottom: 326), // soul_wall_torch_west
+    (top: 326, side: 326, bottom: 326), // soul_wall_torch_east
+    (top: 345, side: 345, bottom: 345), // glowstone
+    (top: 329, side: 329, bottom: 329), // nether_portal
+    (top: 329, side: 329, bottom: 329), // nether_portal_z
+    (top: 185, side: 184, bottom: 185, front: Some(346), face: Some((2, false))), // carved_pumpkin
+    (top: 185, side: 184, bottom: 185, front: Some(346), face: Some((2, true))), // carved_pumpkin_south
+    (top: 185, side: 184, bottom: 185, front: Some(346), face: Some((0, false))), // carved_pumpkin_west
+    (top: 185, side: 184, bottom: 185, front: Some(346), face: Some((0, true))), // carved_pumpkin_east
+    (top: 185, side: 184, bottom: 185, front: Some(347), face: Some((2, false))), // jack_o_lantern
+    (top: 185, side: 184, bottom: 185, front: Some(347), face: Some((2, true))), // jack_o_lantern_south
+    (top: 185, side: 184, bottom: 185, front: Some(347), face: Some((0, false))), // jack_o_lantern_west
+    (top: 185, side: 184, bottom: 185, front: Some(347), face: Some((0, true))), // jack_o_lantern_east
+    (top: 348, side: 349, bottom: 349), // cake
+    (top: 350, side: 3, bottom: 3, aux: Some(325)), // repeater
+    (top: 350, side: 3, bottom: 3, aux: Some(325)), // repeater_south
+    (top: 350, side: 3, bottom: 3, aux: Some(325)), // repeater_west
+    (top: 350, side: 3, bottom: 3, aux: Some(325)), // repeater_east
+    (top: 362, side: 362, bottom: 362), // oak_trapdoor
+    (top: 362, side: 362, bottom: 362), // oak_trapdoor_open_north
+    (top: 362, side: 362, bottom: 362), // oak_trapdoor_open_south
+    (top: 362, side: 362, bottom: 362), // oak_trapdoor_open_west
+    (top: 362, side: 362, bottom: 362), // oak_trapdoor_open_east
+    (top: 363, side: 363, bottom: 363), // spruce_trapdoor
+    (top: 363, side: 363, bottom: 363), // spruce_trapdoor_open_north
+    (top: 363, side: 363, bottom: 363), // spruce_trapdoor_open_south
+    (top: 363, side: 363, bottom: 363), // spruce_trapdoor_open_west
+    (top: 363, side: 363, bottom: 363), // spruce_trapdoor_open_east
+    (top: 364, side: 364, bottom: 364), // birch_trapdoor
+    (top: 364, side: 364, bottom: 364), // birch_trapdoor_open_north
+    (top: 364, side: 364, bottom: 364), // birch_trapdoor_open_south
+    (top: 364, side: 364, bottom: 364), // birch_trapdoor_open_west
+    (top: 364, side: 364, bottom: 364), // birch_trapdoor_open_east
+    (top: 365, side: 365, bottom: 365), // jungle_trapdoor
+    (top: 365, side: 365, bottom: 365), // jungle_trapdoor_open_north
+    (top: 365, side: 365, bottom: 365), // jungle_trapdoor_open_south
+    (top: 365, side: 365, bottom: 365), // jungle_trapdoor_open_west
+    (top: 365, side: 365, bottom: 365), // jungle_trapdoor_open_east
+    (top: 366, side: 366, bottom: 366), // acacia_trapdoor
+    (top: 366, side: 366, bottom: 366), // acacia_trapdoor_open_north
+    (top: 366, side: 366, bottom: 366), // acacia_trapdoor_open_south
+    (top: 366, side: 366, bottom: 366), // acacia_trapdoor_open_west
+    (top: 366, side: 366, bottom: 366), // acacia_trapdoor_open_east
+    (top: 367, side: 367, bottom: 367), // cherry_trapdoor
+    (top: 367, side: 367, bottom: 367), // cherry_trapdoor_open_north
+    (top: 367, side: 367, bottom: 367), // cherry_trapdoor_open_south
+    (top: 367, side: 367, bottom: 367), // cherry_trapdoor_open_west
+    (top: 367, side: 367, bottom: 367), // cherry_trapdoor_open_east
+    (top: 368, side: 368, bottom: 368), // dark_oak_trapdoor
+    (top: 368, side: 368, bottom: 368), // dark_oak_trapdoor_open_north
+    (top: 368, side: 368, bottom: 368), // dark_oak_trapdoor_open_south
+    (top: 368, side: 368, bottom: 368), // dark_oak_trapdoor_open_west
+    (top: 368, side: 368, bottom: 368), // dark_oak_trapdoor_open_east
+    (top: 369, side: 369, bottom: 369), // mangrove_trapdoor
+    (top: 369, side: 369, bottom: 369), // mangrove_trapdoor_open_north
+    (top: 369, side: 369, bottom: 369), // mangrove_trapdoor_open_south
+    (top: 369, side: 369, bottom: 369), // mangrove_trapdoor_open_west
+    (top: 369, side: 369, bottom: 369), // mangrove_trapdoor_open_east
+    (top: 370, side: 370, bottom: 370), // bamboo_trapdoor
+    (top: 370, side: 370, bottom: 370), // bamboo_trapdoor_open_north
+    (top: 370, side: 370, bottom: 370), // bamboo_trapdoor_open_south
+    (top: 370, side: 370, bottom: 370), // bamboo_trapdoor_open_west
+    (top: 370, side: 370, bottom: 370), // bamboo_trapdoor_open_east
+    (top: 355, side: 355, bottom: 355), // chiseled_stone_bricks
+    (top: 3, side: 3, bottom: 3), // infested_stone
+    (top: 11, side: 11, bottom: 11), // infested_cobblestone
+    (top: 37, side: 37, bottom: 37), // infested_stone_bricks
+    (top: 114, side: 114, bottom: 114), // infested_mossy_stone_bricks
+    (top: 115, side: 115, bottom: 115), // infested_cracked_stone_bricks
+    (top: 355, side: 355, bottom: 355), // infested_chiseled_stone_bricks
+    (top: 356, side: 356, bottom: 356), // brown_mushroom_block
+    (top: 357, side: 357, bottom: 357), // red_mushroom_block
+    (top: 358, side: 358, bottom: 358), // mushroom_stem
+    (top: 330, side: 330, bottom: 330), // iron_bars
+    (top: 331, side: 331, bottom: 331), // chain
+    (top: 332, side: 332, bottom: 332), // glass_pane
+    (top: 381, side: 381, bottom: 381), // attached_pumpkin_stem
+    (top: 382, side: 382, bottom: 382), // attached_melon_stem
+    (top: 379, side: 379, bottom: 379), // pumpkin_stem
+    (top: 380, side: 380, bottom: 380), // melon_stem
+    (top: 371, side: 371, bottom: 371), // vine
+    (top: 372, side: 372, bottom: 372), // glow_lichen
+    (top: 10, side: 10, bottom: 10), // oak_fence_gate
+    (top: 10, side: 10, bottom: 10), // oak_fence_gate_closed_south
+    (top: 10, side: 10, bottom: 10), // oak_fence_gate_closed_west
+    (top: 10, side: 10, bottom: 10), // oak_fence_gate_closed_east
+    (top: 10, side: 10, bottom: 10), // oak_fence_gate_open_north
+    (top: 10, side: 10, bottom: 10), // oak_fence_gate_open_south
+    (top: 10, side: 10, bottom: 10), // oak_fence_gate_open_west
+    (top: 10, side: 10, bottom: 10), // oak_fence_gate_open_east
+    (top: 36, side: 36, bottom: 36), // brick_stairs
+    (top: 36, side: 36, bottom: 36), // brick_stairs_south
+    (top: 36, side: 36, bottom: 36), // brick_stairs_west
+    (top: 36, side: 36, bottom: 36), // brick_stairs_east
+    (top: 37, side: 37, bottom: 37), // stone_brick_stairs
+    (top: 37, side: 37, bottom: 37), // stone_brick_stairs_south
+    (top: 37, side: 37, bottom: 37), // stone_brick_stairs_west
+    (top: 37, side: 37, bottom: 37), // stone_brick_stairs_east
+    (top: 192, side: 192, bottom: 192), // mud_brick_stairs
+    (top: 192, side: 192, bottom: 192), // mud_brick_stairs_south
+    (top: 192, side: 192, bottom: 192), // mud_brick_stairs_west
+    (top: 192, side: 192, bottom: 192), // mud_brick_stairs_east
+    (top: 384, side: 385, bottom: 2), // mycelium
+    (top: 373, side: 373, bottom: 373), // lily_pad
+    (top: 386, side: 386, bottom: 386), // nether_bricks
+    (top: 386, side: 386, bottom: 386), // nether_brick_fence
+    (top: 386, side: 386, bottom: 386), // nether_brick_stairs
+    (top: 386, side: 386, bottom: 386), // nether_brick_stairs_south
+    (top: 386, side: 386, bottom: 386), // nether_brick_stairs_west
+    (top: 386, side: 386, bottom: 386), // nether_brick_stairs_east
+    (top: 374, side: 374, bottom: 374), // nether_wart
+    (top: 387, side: 388, bottom: 388), // enchanting_table
+    (top: 383, side: 383, bottom: 383), // brewing_stand
+    (top: 390, side: 389, bottom: 389), // cauldron
+    (top: 390, side: 389, bottom: 389, aux: Some(13)), // water_cauldron
+    (top: 390, side: 389, bottom: 389, aux: Some(203)), // lava_cauldron
+    (top: 390, side: 389, bottom: 389, aux: Some(391)), // powder_snow_cauldron
+    (top: 392, side: 392, bottom: 392), // end_portal
+    (top: 393, side: 394, bottom: 394), // end_portal_frame
+    (top: 395, side: 395, bottom: 395), // end_stone
+    (top: 396, side: 396, bottom: 396), // dragon_egg
+    (top: 397, side: 397, bottom: 397), // redstone_lamp
+    (top: 375, side: 375, bottom: 375), // cocoa
+    (top: 16, side: 15, bottom: 16), // sandstone_stairs
+    (top: 16, side: 15, bottom: 16), // sandstone_stairs_south
+    (top: 16, side: 15, bottom: 16), // sandstone_stairs_west
+    (top: 16, side: 15, bottom: 16), // sandstone_stairs_east
+    (top: 398, side: 398, bottom: 398), // deepslate_emerald_ore
+    (top: 399, side: 399, bottom: 399), // ender_chest
+    (top: 400, side: 400, bottom: 400), // tripwire_hook
+    (top: 400, side: 400, bottom: 400), // tripwire_hook_south
+    (top: 400, side: 400, bottom: 400), // tripwire_hook_west
+    (top: 400, side: 400, bottom: 400), // tripwire_hook_east
+    (top: 376, side: 376, bottom: 376), // tripwire
+    (top: 244, side: 244, bottom: 244), // spruce_stairs
+    (top: 244, side: 244, bottom: 244), // spruce_stairs_south
+    (top: 244, side: 244, bottom: 244), // spruce_stairs_west
+    (top: 244, side: 244, bottom: 244), // spruce_stairs_east
+    (top: 42, side: 42, bottom: 42), // birch_stairs
+    (top: 42, side: 42, bottom: 42), // birch_stairs_south
+    (top: 42, side: 42, bottom: 42), // birch_stairs_west
+    (top: 42, side: 42, bottom: 42), // birch_stairs_east
+    (top: 130, side: 130, bottom: 130), // jungle_stairs
+    (top: 130, side: 130, bottom: 130), // jungle_stairs_south
+    (top: 130, side: 130, bottom: 130), // jungle_stairs_west
+    (top: 130, side: 130, bottom: 130), // jungle_stairs_east
+    (top: 401, side: 401, bottom: 401), // command_block
+    (top: 402, side: 402, bottom: 402), // beacon
+    (top: 11, side: 11, bottom: 11), // cobblestone_wall
+    (top: 38, side: 38, bottom: 38), // mossy_cobblestone_wall
+    (top: 403, side: 403, bottom: 403), // flower_pot
+    (top: 403, side: 403, bottom: 403, aux: Some(223)), // potted_torchflower
+    (top: 403, side: 403, bottom: 403, aux: Some(209)), // potted_oak_sapling
+    (top: 403, side: 403, bottom: 403, aux: Some(210)), // potted_spruce_sapling
+    (top: 403, side: 403, bottom: 403, aux: Some(211)), // potted_birch_sapling
+    (top: 403, side: 403, bottom: 403, aux: Some(212)), // potted_jungle_sapling
+    (top: 403, side: 403, bottom: 403, aux: Some(213)), // potted_acacia_sapling
+    (top: 403, side: 403, bottom: 403, aux: Some(214)), // potted_cherry_sapling
+    (top: 403, side: 403, bottom: 403, aux: Some(215)), // potted_dark_oak_sapling
+    (top: 403, side: 403, bottom: 403, aux: Some(216)), // potted_mangrove_propagule
+    (top: 403, side: 403, bottom: 403, aux: Some(219)), // potted_fern
+    (top: 403, side: 403, bottom: 403, aux: Some(119)), // potted_dandelion
+    (top: 403, side: 403, bottom: 403, aux: Some(118)), // potted_poppy
+    (top: 403, side: 403, bottom: 403, aux: Some(224)), // potted_blue_orchid
+    (top: 403, side: 403, bottom: 403, aux: Some(225)), // potted_allium
+    (top: 403, side: 403, bottom: 403, aux: Some(226)), // potted_azure_bluet
+    (top: 403, side: 403, bottom: 403, aux: Some(227)), // potted_red_tulip
+    (top: 403, side: 403, bottom: 403, aux: Some(228)), // potted_orange_tulip
+    (top: 403, side: 403, bottom: 403, aux: Some(229)), // potted_white_tulip
+    (top: 403, side: 403, bottom: 403, aux: Some(230)), // potted_pink_tulip
+    (top: 403, side: 403, bottom: 403, aux: Some(121)), // potted_oxeye_daisy
+    (top: 403, side: 403, bottom: 403, aux: Some(120)), // potted_cornflower
+    (top: 403, side: 403, bottom: 403, aux: Some(232)), // potted_lily_of_the_valley
+    (top: 403, side: 403, bottom: 403, aux: Some(231)), // potted_wither_rose
+    (top: 403, side: 403, bottom: 403, aux: Some(234)), // potted_red_mushroom
+    (top: 403, side: 403, bottom: 403, aux: Some(233)), // potted_brown_mushroom
+    (top: 403, side: 403, bottom: 403, aux: Some(220)), // potted_dead_bush
+    (top: 403, side: 403, bottom: 403, aux: Some(338)), // potted_cactus
+    (top: 377, side: 377, bottom: 377), // carrots
+    (top: 378, side: 378, bottom: 378), // potatoes
+    (top: 10, side: 10, bottom: 10), // oak_button
+    (top: 10, side: 10, bottom: 10), // oak_button_south
+    (top: 10, side: 10, bottom: 10), // oak_button_west
+    (top: 10, side: 10, bottom: 10), // oak_button_east
+    (top: 244, side: 244, bottom: 244), // spruce_button
+    (top: 244, side: 244, bottom: 244), // spruce_button_south
+    (top: 244, side: 244, bottom: 244), // spruce_button_west
+    (top: 244, side: 244, bottom: 244), // spruce_button_east
+    (top: 42, side: 42, bottom: 42), // birch_button
+    (top: 42, side: 42, bottom: 42), // birch_button_south
+    (top: 42, side: 42, bottom: 42), // birch_button_west
+    (top: 42, side: 42, bottom: 42), // birch_button_east
+    (top: 130, side: 130, bottom: 130), // jungle_button
+    (top: 130, side: 130, bottom: 130), // jungle_button_south
+    (top: 130, side: 130, bottom: 130), // jungle_button_west
+    (top: 130, side: 130, bottom: 130), // jungle_button_east
+    (top: 126, side: 126, bottom: 126), // acacia_button
+    (top: 126, side: 126, bottom: 126), // acacia_button_south
+    (top: 126, side: 126, bottom: 126), // acacia_button_west
+    (top: 126, side: 126, bottom: 126), // acacia_button_east
+    (top: 142, side: 142, bottom: 142), // cherry_button
+    (top: 142, side: 142, bottom: 142), // cherry_button_south
+    (top: 142, side: 142, bottom: 142), // cherry_button_west
+    (top: 142, side: 142, bottom: 142), // cherry_button_east
+    (top: 134, side: 134, bottom: 134), // dark_oak_button
+    (top: 134, side: 134, bottom: 134), // dark_oak_button_south
+    (top: 134, side: 134, bottom: 134), // dark_oak_button_west
+    (top: 134, side: 134, bottom: 134), // dark_oak_button_east
+    (top: 138, side: 138, bottom: 138), // mangrove_button
+    (top: 138, side: 138, bottom: 138), // mangrove_button_south
+    (top: 138, side: 138, bottom: 138), // mangrove_button_west
+    (top: 138, side: 138, bottom: 138), // mangrove_button_east
+    (top: 245, side: 245, bottom: 245), // bamboo_button
+    (top: 245, side: 245, bottom: 245), // bamboo_button_south
+    (top: 245, side: 245, bottom: 245), // bamboo_button_west
+    (top: 245, side: 245, bottom: 245), // bamboo_button_east
+    (top: 412, side: 412, bottom: 412), // skeleton_skull
+    (top: 412, side: 412, bottom: 412), // skeleton_wall_skull
+    (top: 412, side: 412, bottom: 412), // skeleton_wall_skull_south
+    (top: 412, side: 412, bottom: 412), // skeleton_wall_skull_west
+    (top: 412, side: 412, bottom: 412), // skeleton_wall_skull_east
+    (top: 413, side: 413, bottom: 413), // wither_skeleton_skull
+    (top: 413, side: 413, bottom: 413), // wither_skeleton_wall_skull
+    (top: 413, side: 413, bottom: 413), // wither_skeleton_wall_skull_south
+    (top: 413, side: 413, bottom: 413), // wither_skeleton_wall_skull_west
+    (top: 413, side: 413, bottom: 413), // wither_skeleton_wall_skull_east
+    (top: 414, side: 414, bottom: 414), // zombie_head
+    (top: 414, side: 414, bottom: 414), // zombie_wall_head
+    (top: 414, side: 414, bottom: 414), // zombie_wall_head_south
+    (top: 414, side: 414, bottom: 414), // zombie_wall_head_west
+    (top: 414, side: 414, bottom: 414), // zombie_wall_head_east
+    (top: 415, side: 415, bottom: 415), // player_head
+    (top: 415, side: 415, bottom: 415), // player_wall_head
+    (top: 415, side: 415, bottom: 415), // player_wall_head_south
+    (top: 415, side: 415, bottom: 415), // player_wall_head_west
+    (top: 415, side: 415, bottom: 415), // player_wall_head_east
+    (top: 416, side: 416, bottom: 416), // creeper_head
+    (top: 416, side: 416, bottom: 416), // creeper_wall_head
+    (top: 416, side: 416, bottom: 416), // creeper_wall_head_south
+    (top: 416, side: 416, bottom: 416), // creeper_wall_head_west
+    (top: 416, side: 416, bottom: 416), // creeper_wall_head_east
+    (top: 417, side: 417, bottom: 417), // dragon_head
+    (top: 417, side: 417, bottom: 417), // dragon_wall_head
+    (top: 417, side: 417, bottom: 417), // dragon_wall_head_south
+    (top: 417, side: 417, bottom: 417), // dragon_wall_head_west
+    (top: 417, side: 417, bottom: 417), // dragon_wall_head_east
+    (top: 418, side: 418, bottom: 418), // piglin_head
+    (top: 418, side: 418, bottom: 418), // piglin_wall_head
+    (top: 418, side: 418, bottom: 418), // piglin_wall_head_south
+    (top: 418, side: 418, bottom: 418), // piglin_wall_head_west
+    (top: 418, side: 418, bottom: 418), // piglin_wall_head_east
+    (top: 406, side: 406, bottom: 406), // anvil
+    (top: 406, side: 406, bottom: 406), // anvil_z
+    (top: 406, side: 406, bottom: 406), // chipped_anvil
+    (top: 406, side: 406, bottom: 406), // chipped_anvil_z
+    (top: 406, side: 406, bottom: 406), // damaged_anvil
+    (top: 406, side: 406, bottom: 406), // damaged_anvil_z
+    (top: 53, side: 53, bottom: 53), // trapped_chest
+    (top: 21, side: 21, bottom: 21), // light_weighted_pressure_plate
+    (top: 24, side: 24, bottom: 24), // heavy_weighted_pressure_plate
+    (top: 411, side: 3, bottom: 3, aux: Some(411)), // comparator
+    (top: 411, side: 3, bottom: 3, aux: Some(411)), // comparator_south
+    (top: 411, side: 3, bottom: 3, aux: Some(411)), // comparator_west
+    (top: 411, side: 3, bottom: 3, aux: Some(411)), // comparator_east
+    (top: 404, side: 405, bottom: 405), // daylight_detector
+    (top: 410, side: 410, bottom: 410), // redstone_block
+    (top: 408, side: 408, bottom: 408), // nether_quartz_ore
+    (top: 407, side: 407, bottom: 407), // hopper
+    (top: 409, side: 409, bottom: 409), // chiseled_quartz_block
+    (top: 427, side: 428, bottom: 427), // quartz_pillar
+    (top: 202, side: 202, bottom: 202), // quartz_stairs
+    (top: 202, side: 202, bottom: 202), // quartz_stairs_south
+    (top: 202, side: 202, bottom: 202), // quartz_stairs_west
+    (top: 202, side: 202, bottom: 202), // quartz_stairs_east
+    (top: 419, side: 419, bottom: 419), // activator_rail
+    (top: 419, side: 419, bottom: 419), // activator_rail_x
+    (top: 277, side: 277, bottom: 277, front: Some(429)), // dropper
+    (top: 277, side: 277, bottom: 277, front: Some(429), face: Some((2, true))), // dropper_south
+    (top: 277, side: 277, bottom: 277, front: Some(429), face: Some((0, false))), // dropper_west
+    (top: 277, side: 277, bottom: 277, front: Some(429), face: Some((0, true))), // dropper_east
+    (top: 277, side: 277, bottom: 277, front: Some(429), face: Some((1, true))), // dropper_up
+    (top: 277, side: 277, bottom: 277, front: Some(429), face: Some((1, false))), // dropper_down
+    (top: 149, side: 149, bottom: 149), // white_stained_glass_pane
+    (top: 150, side: 150, bottom: 150), // orange_stained_glass_pane
+    (top: 151, side: 151, bottom: 151), // magenta_stained_glass_pane
+    (top: 152, side: 152, bottom: 152), // light_blue_stained_glass_pane
+    (top: 153, side: 153, bottom: 153), // yellow_stained_glass_pane
+    (top: 154, side: 154, bottom: 154), // lime_stained_glass_pane
+    (top: 155, side: 155, bottom: 155), // pink_stained_glass_pane
+    (top: 156, side: 156, bottom: 156), // gray_stained_glass_pane
+    (top: 157, side: 157, bottom: 157), // light_gray_stained_glass_pane
+    (top: 158, side: 158, bottom: 158), // cyan_stained_glass_pane
+    (top: 159, side: 159, bottom: 159), // purple_stained_glass_pane
+    (top: 160, side: 160, bottom: 160), // blue_stained_glass_pane
+    (top: 161, side: 161, bottom: 161), // brown_stained_glass_pane
+    (top: 162, side: 162, bottom: 162), // green_stained_glass_pane
+    (top: 163, side: 163, bottom: 163), // red_stained_glass_pane
+    (top: 164, side: 164, bottom: 164), // black_stained_glass_pane
+    (top: 126, side: 126, bottom: 126), // acacia_stairs
+    (top: 126, side: 126, bottom: 126), // acacia_stairs_south
+    (top: 126, side: 126, bottom: 126), // acacia_stairs_west
+    (top: 126, side: 126, bottom: 126), // acacia_stairs_east
+    (top: 142, side: 142, bottom: 142), // cherry_stairs
+    (top: 142, side: 142, bottom: 142), // cherry_stairs_south
+    (top: 142, side: 142, bottom: 142), // cherry_stairs_west
+    (top: 142, side: 142, bottom: 142), // cherry_stairs_east
+    (top: 134, side: 134, bottom: 134), // dark_oak_stairs
+    (top: 134, side: 134, bottom: 134), // dark_oak_stairs_south
+    (top: 134, side: 134, bottom: 134), // dark_oak_stairs_west
+    (top: 134, side: 134, bottom: 134), // dark_oak_stairs_east
+    (top: 138, side: 138, bottom: 138), // mangrove_stairs
+    (top: 138, side: 138, bottom: 138), // mangrove_stairs_south
+    (top: 138, side: 138, bottom: 138), // mangrove_stairs_west
+    (top: 138, side: 138, bottom: 138), // mangrove_stairs_east
+    (top: 245, side: 245, bottom: 245), // bamboo_stairs
+    (top: 245, side: 245, bottom: 245), // bamboo_stairs_south
+    (top: 245, side: 245, bottom: 245), // bamboo_stairs_west
+    (top: 245, side: 245, bottom: 245), // bamboo_stairs_east
+    (top: 246, side: 246, bottom: 246), // bamboo_mosaic_stairs
+    (top: 246, side: 246, bottom: 246), // bamboo_mosaic_stairs_south
+    (top: 246, side: 246, bottom: 246), // bamboo_mosaic_stairs_west
+    (top: 246, side: 246, bottom: 246), // bamboo_mosaic_stairs_east
+    (top: 430, side: 430, bottom: 430), // slime_block
+    (top: 420, side: 420, bottom: 420), // barrier
+    (top: 421, side: 421, bottom: 421), // light
+    (top: 431, side: 431, bottom: 431), // iron_trapdoor
+    (top: 431, side: 431, bottom: 431), // iron_trapdoor_open_north
+    (top: 431, side: 431, bottom: 431), // iron_trapdoor_open_south
+    (top: 431, side: 431, bottom: 431), // iron_trapdoor_open_west
+    (top: 431, side: 431, bottom: 431), // iron_trapdoor_open_east
+    (top: 432, side: 432, bottom: 432), // prismarine
+    (top: 433, side: 433, bottom: 433), // prismarine_bricks
+    (top: 434, side: 434, bottom: 434), // dark_prismarine
+    (top: 432, side: 432, bottom: 432), // prismarine_stairs
+    (top: 432, side: 432, bottom: 432), // prismarine_stairs_south
+    (top: 432, side: 432, bottom: 432), // prismarine_stairs_west
+    (top: 432, side: 432, bottom: 432), // prismarine_stairs_east
+    (top: 433, side: 433, bottom: 433), // prismarine_brick_stairs
+    (top: 433, side: 433, bottom: 433), // prismarine_brick_stairs_south
+    (top: 433, side: 433, bottom: 433), // prismarine_brick_stairs_west
+    (top: 433, side: 433, bottom: 433), // prismarine_brick_stairs_east
+    (top: 434, side: 434, bottom: 434), // dark_prismarine_stairs
+    (top: 434, side: 434, bottom: 434), // dark_prismarine_stairs_south
+    (top: 434, side: 434, bottom: 434), // dark_prismarine_stairs_west
+    (top: 434, side: 434, bottom: 434), // dark_prismarine_stairs_east
+    (top: 432, side: 432, bottom: 432), // prismarine_slab
+    (top: 433, side: 433, bottom: 433), // prismarine_brick_slab
+    (top: 434, side: 434, bottom: 434), // dark_prismarine_slab
+    (top: 435, side: 435, bottom: 435), // sea_lantern
+    (top: 48, side: 48, bottom: 48), // white_carpet
+    (top: 68, side: 68, bottom: 68), // orange_carpet
+    (top: 69, side: 69, bottom: 69), // magenta_carpet
+    (top: 70, side: 70, bottom: 70), // light_blue_carpet
+    (top: 71, side: 71, bottom: 71), // yellow_carpet
+    (top: 72, side: 72, bottom: 72), // lime_carpet
+    (top: 73, side: 73, bottom: 73), // pink_carpet
+    (top: 74, side: 74, bottom: 74), // gray_carpet
+    (top: 75, side: 75, bottom: 75), // light_gray_carpet
+    (top: 76, side: 76, bottom: 76), // cyan_carpet
+    (top: 77, side: 77, bottom: 77), // purple_carpet
+    (top: 78, side: 78, bottom: 78), // blue_carpet
+    (top: 79, side: 79, bottom: 79), // brown_carpet
+    (top: 80, side: 80, bottom: 80), // green_carpet
+    (top: 81, side: 81, bottom: 81), // red_carpet
+    (top: 82, side: 82, bottom: 82), // black_carpet
+    (top: 436, side: 436, bottom: 436), // packed_ice
+    (top: 422, side: 422, bottom: 422), // sunflower
+    (top: 423, side: 423, bottom: 423), // lilac
+    (top: 424, side: 424, bottom: 424), // rose_bush
+    (top: 425, side: 425, bottom: 425), // peony
+    (top: 426, side: 426, bottom: 426), // large_fern
+    (top: 48, side: 48, bottom: 48, aux: Some(10)), // white_banner
+    (top: 48, side: 48, bottom: 48, aux: Some(10)), // white_banner_south
+    (top: 48, side: 48, bottom: 48, aux: Some(10)), // white_banner_west
+    (top: 48, side: 48, bottom: 48, aux: Some(10)), // white_banner_east
+    (top: 68, side: 68, bottom: 68, aux: Some(10)), // orange_banner
+    (top: 68, side: 68, bottom: 68, aux: Some(10)), // orange_banner_south
+    (top: 68, side: 68, bottom: 68, aux: Some(10)), // orange_banner_west
+    (top: 68, side: 68, bottom: 68, aux: Some(10)), // orange_banner_east
+    (top: 69, side: 69, bottom: 69, aux: Some(10)), // magenta_banner
+    (top: 69, side: 69, bottom: 69, aux: Some(10)), // magenta_banner_south
+    (top: 69, side: 69, bottom: 69, aux: Some(10)), // magenta_banner_west
+    (top: 69, side: 69, bottom: 69, aux: Some(10)), // magenta_banner_east
+    (top: 70, side: 70, bottom: 70, aux: Some(10)), // light_blue_banner
+    (top: 70, side: 70, bottom: 70, aux: Some(10)), // light_blue_banner_south
+    (top: 70, side: 70, bottom: 70, aux: Some(10)), // light_blue_banner_west
+    (top: 70, side: 70, bottom: 70, aux: Some(10)), // light_blue_banner_east
+    (top: 71, side: 71, bottom: 71, aux: Some(10)), // yellow_banner
+    (top: 71, side: 71, bottom: 71, aux: Some(10)), // yellow_banner_south
+    (top: 71, side: 71, bottom: 71, aux: Some(10)), // yellow_banner_west
+    (top: 71, side: 71, bottom: 71, aux: Some(10)), // yellow_banner_east
+    (top: 72, side: 72, bottom: 72, aux: Some(10)), // lime_banner
+    (top: 72, side: 72, bottom: 72, aux: Some(10)), // lime_banner_south
+    (top: 72, side: 72, bottom: 72, aux: Some(10)), // lime_banner_west
+    (top: 72, side: 72, bottom: 72, aux: Some(10)), // lime_banner_east
+    (top: 73, side: 73, bottom: 73, aux: Some(10)), // pink_banner
+    (top: 73, side: 73, bottom: 73, aux: Some(10)), // pink_banner_south
+    (top: 73, side: 73, bottom: 73, aux: Some(10)), // pink_banner_west
+    (top: 73, side: 73, bottom: 73, aux: Some(10)), // pink_banner_east
+    (top: 74, side: 74, bottom: 74, aux: Some(10)), // gray_banner
+    (top: 74, side: 74, bottom: 74, aux: Some(10)), // gray_banner_south
+    (top: 74, side: 74, bottom: 74, aux: Some(10)), // gray_banner_west
+    (top: 74, side: 74, bottom: 74, aux: Some(10)), // gray_banner_east
+    (top: 75, side: 75, bottom: 75, aux: Some(10)), // light_gray_banner
+    (top: 75, side: 75, bottom: 75, aux: Some(10)), // light_gray_banner_south
+    (top: 75, side: 75, bottom: 75, aux: Some(10)), // light_gray_banner_west
+    (top: 75, side: 75, bottom: 75, aux: Some(10)), // light_gray_banner_east
+    (top: 76, side: 76, bottom: 76, aux: Some(10)), // cyan_banner
+    (top: 76, side: 76, bottom: 76, aux: Some(10)), // cyan_banner_south
+    (top: 76, side: 76, bottom: 76, aux: Some(10)), // cyan_banner_west
+    (top: 76, side: 76, bottom: 76, aux: Some(10)), // cyan_banner_east
+    (top: 77, side: 77, bottom: 77, aux: Some(10)), // purple_banner
+    (top: 77, side: 77, bottom: 77, aux: Some(10)), // purple_banner_south
+    (top: 77, side: 77, bottom: 77, aux: Some(10)), // purple_banner_west
+    (top: 77, side: 77, bottom: 77, aux: Some(10)), // purple_banner_east
+    (top: 78, side: 78, bottom: 78, aux: Some(10)), // blue_banner
+    (top: 78, side: 78, bottom: 78, aux: Some(10)), // blue_banner_south
+    (top: 78, side: 78, bottom: 78, aux: Some(10)), // blue_banner_west
+    (top: 78, side: 78, bottom: 78, aux: Some(10)), // blue_banner_east
+    (top: 79, side: 79, bottom: 79, aux: Some(10)), // brown_banner
+    (top: 79, side: 79, bottom: 79, aux: Some(10)), // brown_banner_south
+    (top: 79, side: 79, bottom: 79, aux: Some(10)), // brown_banner_west
+    (top: 79, side: 79, bottom: 79, aux: Some(10)), // brown_banner_east
+    (top: 80, side: 80, bottom: 80, aux: Some(10)), // green_banner
+    (top: 80, side: 80, bottom: 80, aux: Some(10)), // green_banner_south
+    (top: 80, side: 80, bottom: 80, aux: Some(10)), // green_banner_west
+    (top: 80, side: 80, bottom: 80, aux: Some(10)), // green_banner_east
+    (top: 81, side: 81, bottom: 81, aux: Some(10)), // red_banner
+    (top: 81, side: 81, bottom: 81, aux: Some(10)), // red_banner_south
+    (top: 81, side: 81, bottom: 81, aux: Some(10)), // red_banner_west
+    (top: 81, side: 81, bottom: 81, aux: Some(10)), // red_banner_east
+    (top: 82, side: 82, bottom: 82, aux: Some(10)), // black_banner
+    (top: 82, side: 82, bottom: 82, aux: Some(10)), // black_banner_south
+    (top: 82, side: 82, bottom: 82, aux: Some(10)), // black_banner_west
+    (top: 82, side: 82, bottom: 82, aux: Some(10)), // black_banner_east
+    (top: 48, side: 48, bottom: 48, aux: Some(10)), // white_wall_banner
+    (top: 48, side: 48, bottom: 48, aux: Some(10)), // white_wall_banner_south
+    (top: 48, side: 48, bottom: 48, aux: Some(10)), // white_wall_banner_west
+    (top: 48, side: 48, bottom: 48, aux: Some(10)), // white_wall_banner_east
+    (top: 68, side: 68, bottom: 68, aux: Some(10)), // orange_wall_banner
+    (top: 68, side: 68, bottom: 68, aux: Some(10)), // orange_wall_banner_south
+    (top: 68, side: 68, bottom: 68, aux: Some(10)), // orange_wall_banner_west
+    (top: 68, side: 68, bottom: 68, aux: Some(10)), // orange_wall_banner_east
+    (top: 69, side: 69, bottom: 69, aux: Some(10)), // magenta_wall_banner
+    (top: 69, side: 69, bottom: 69, aux: Some(10)), // magenta_wall_banner_south
+    (top: 69, side: 69, bottom: 69, aux: Some(10)), // magenta_wall_banner_west
+    (top: 69, side: 69, bottom: 69, aux: Some(10)), // magenta_wall_banner_east
+    (top: 70, side: 70, bottom: 70, aux: Some(10)), // light_blue_wall_banner
+    (top: 70, side: 70, bottom: 70, aux: Some(10)), // light_blue_wall_banner_south
+    (top: 70, side: 70, bottom: 70, aux: Some(10)), // light_blue_wall_banner_west
+    (top: 70, side: 70, bottom: 70, aux: Some(10)), // light_blue_wall_banner_east
+    (top: 71, side: 71, bottom: 71, aux: Some(10)), // yellow_wall_banner
+    (top: 71, side: 71, bottom: 71, aux: Some(10)), // yellow_wall_banner_south
+    (top: 71, side: 71, bottom: 71, aux: Some(10)), // yellow_wall_banner_west
+    (top: 71, side: 71, bottom: 71, aux: Some(10)), // yellow_wall_banner_east
+    (top: 72, side: 72, bottom: 72, aux: Some(10)), // lime_wall_banner
+    (top: 72, side: 72, bottom: 72, aux: Some(10)), // lime_wall_banner_south
+    (top: 72, side: 72, bottom: 72, aux: Some(10)), // lime_wall_banner_west
+    (top: 72, side: 72, bottom: 72, aux: Some(10)), // lime_wall_banner_east
+    (top: 73, side: 73, bottom: 73, aux: Some(10)), // pink_wall_banner
+    (top: 73, side: 73, bottom: 73, aux: Some(10)), // pink_wall_banner_south
+    (top: 73, side: 73, bottom: 73, aux: Some(10)), // pink_wall_banner_west
+    (top: 73, side: 73, bottom: 73, aux: Some(10)), // pink_wall_banner_east
+    (top: 74, side: 74, bottom: 74, aux: Some(10)), // gray_wall_banner
+    (top: 74, side: 74, bottom: 74, aux: Some(10)), // gray_wall_banner_south
+    (top: 74, side: 74, bottom: 74, aux: Some(10)), // gray_wall_banner_west
+    (top: 74, side: 74, bottom: 74, aux: Some(10)), // gray_wall_banner_east
+    (top: 75, side: 75, bottom: 75, aux: Some(10)), // light_gray_wall_banner
+    (top: 75, side: 75, bottom: 75, aux: Some(10)), // light_gray_wall_banner_south
+    (top: 75, side: 75, bottom: 75, aux: Some(10)), // light_gray_wall_banner_west
+    (top: 75, side: 75, bottom: 75, aux: Some(10)), // light_gray_wall_banner_east
+    (top: 76, side: 76, bottom: 76, aux: Some(10)), // cyan_wall_banner
+    (top: 76, side: 76, bottom: 76, aux: Some(10)), // cyan_wall_banner_south
+    (top: 76, side: 76, bottom: 76, aux: Some(10)), // cyan_wall_banner_west
+    (top: 76, side: 76, bottom: 76, aux: Some(10)), // cyan_wall_banner_east
+    (top: 77, side: 77, bottom: 77, aux: Some(10)), // purple_wall_banner
+    (top: 77, side: 77, bottom: 77, aux: Some(10)), // purple_wall_banner_south
+    (top: 77, side: 77, bottom: 77, aux: Some(10)), // purple_wall_banner_west
+    (top: 77, side: 77, bottom: 77, aux: Some(10)), // purple_wall_banner_east
+    (top: 78, side: 78, bottom: 78, aux: Some(10)), // blue_wall_banner
+    (top: 78, side: 78, bottom: 78, aux: Some(10)), // blue_wall_banner_south
+    (top: 78, side: 78, bottom: 78, aux: Some(10)), // blue_wall_banner_west
+    (top: 78, side: 78, bottom: 78, aux: Some(10)), // blue_wall_banner_east
+    (top: 79, side: 79, bottom: 79, aux: Some(10)), // brown_wall_banner
+    (top: 79, side: 79, bottom: 79, aux: Some(10)), // brown_wall_banner_south
+    (top: 79, side: 79, bottom: 79, aux: Some(10)), // brown_wall_banner_west
+    (top: 79, side: 79, bottom: 79, aux: Some(10)), // brown_wall_banner_east
+    (top: 80, side: 80, bottom: 80, aux: Some(10)), // green_wall_banner
+    (top: 80, side: 80, bottom: 80, aux: Some(10)), // green_wall_banner_south
+    (top: 80, side: 80, bottom: 80, aux: Some(10)), // green_wall_banner_west
+    (top: 80, side: 80, bottom: 80, aux: Some(10)), // green_wall_banner_east
+    (top: 81, side: 81, bottom: 81, aux: Some(10)), // red_wall_banner
+    (top: 81, side: 81, bottom: 81, aux: Some(10)), // red_wall_banner_south
+    (top: 81, side: 81, bottom: 81, aux: Some(10)), // red_wall_banner_west
+    (top: 81, side: 81, bottom: 81, aux: Some(10)), // red_wall_banner_east
+    (top: 82, side: 82, bottom: 82, aux: Some(10)), // black_wall_banner
+    (top: 82, side: 82, bottom: 82, aux: Some(10)), // black_wall_banner_south
+    (top: 82, side: 82, bottom: 82, aux: Some(10)), // black_wall_banner_west
+    (top: 82, side: 82, bottom: 82, aux: Some(10)), // black_wall_banner_east
+    (top: 437, side: 437, bottom: 437), // chiseled_red_sandstone
+    (top: 438, side: 438, bottom: 438), // cut_red_sandstone
+    (top: 198, side: 198, bottom: 198), // red_sandstone_stairs
+    (top: 198, side: 198, bottom: 198), // red_sandstone_stairs_south
+    (top: 198, side: 198, bottom: 198), // red_sandstone_stairs_west
+    (top: 198, side: 198, bottom: 198), // red_sandstone_stairs_east
+    (top: 244, side: 244, bottom: 244), // spruce_slab
+    (top: 130, side: 130, bottom: 130), // jungle_slab
+    (top: 126, side: 126, bottom: 126), // acacia_slab
+    (top: 142, side: 142, bottom: 142), // cherry_slab
+    (top: 134, side: 134, bottom: 134), // dark_oak_slab
+    (top: 138, side: 138, bottom: 138), // mangrove_slab
+    (top: 245, side: 245, bottom: 245), // bamboo_slab
+    (top: 246, side: 246, bottom: 246), // bamboo_mosaic_slab
+    (top: 16, side: 280, bottom: 16), // cut_sandstone_slab
+    (top: 10, side: 10, bottom: 10), // petrified_oak_slab
+    (top: 192, side: 192, bottom: 192), // mud_brick_slab
+    (top: 386, side: 386, bottom: 386), // nether_brick_slab
+    (top: 202, side: 202, bottom: 202), // quartz_slab
+    (top: 198, side: 198, bottom: 198), // red_sandstone_slab
+    (top: 438, side: 438, bottom: 438), // cut_red_sandstone_slab
+    (top: 460, side: 460, bottom: 460), // purpur_slab
+    (top: 16, side: 16, bottom: 16), // smooth_sandstone
+    (top: 202, side: 202, bottom: 202), // smooth_quartz
+    (top: 198, side: 198, bottom: 198), // smooth_red_sandstone
+    (top: 244, side: 244, bottom: 244), // spruce_fence_gate
+    (top: 244, side: 244, bottom: 244), // spruce_fence_gate_closed_south
+    (top: 244, side: 244, bottom: 244), // spruce_fence_gate_closed_west
+    (top: 244, side: 244, bottom: 244), // spruce_fence_gate_closed_east
+    (top: 244, side: 244, bottom: 244), // spruce_fence_gate_open_north
+    (top: 244, side: 244, bottom: 244), // spruce_fence_gate_open_south
+    (top: 244, side: 244, bottom: 244), // spruce_fence_gate_open_west
+    (top: 244, side: 244, bottom: 244), // spruce_fence_gate_open_east
+    (top: 42, side: 42, bottom: 42), // birch_fence_gate
+    (top: 42, side: 42, bottom: 42), // birch_fence_gate_closed_south
+    (top: 42, side: 42, bottom: 42), // birch_fence_gate_closed_west
+    (top: 42, side: 42, bottom: 42), // birch_fence_gate_closed_east
+    (top: 42, side: 42, bottom: 42), // birch_fence_gate_open_north
+    (top: 42, side: 42, bottom: 42), // birch_fence_gate_open_south
+    (top: 42, side: 42, bottom: 42), // birch_fence_gate_open_west
+    (top: 42, side: 42, bottom: 42), // birch_fence_gate_open_east
+    (top: 130, side: 130, bottom: 130), // jungle_fence_gate
+    (top: 130, side: 130, bottom: 130), // jungle_fence_gate_closed_south
+    (top: 130, side: 130, bottom: 130), // jungle_fence_gate_closed_west
+    (top: 130, side: 130, bottom: 130), // jungle_fence_gate_closed_east
+    (top: 130, side: 130, bottom: 130), // jungle_fence_gate_open_north
+    (top: 130, side: 130, bottom: 130), // jungle_fence_gate_open_south
+    (top: 130, side: 130, bottom: 130), // jungle_fence_gate_open_west
+    (top: 130, side: 130, bottom: 130), // jungle_fence_gate_open_east
+    (top: 126, side: 126, bottom: 126), // acacia_fence_gate
+    (top: 126, side: 126, bottom: 126), // acacia_fence_gate_closed_south
+    (top: 126, side: 126, bottom: 126), // acacia_fence_gate_closed_west
+    (top: 126, side: 126, bottom: 126), // acacia_fence_gate_closed_east
+    (top: 126, side: 126, bottom: 126), // acacia_fence_gate_open_north
+    (top: 126, side: 126, bottom: 126), // acacia_fence_gate_open_south
+    (top: 126, side: 126, bottom: 126), // acacia_fence_gate_open_west
+    (top: 126, side: 126, bottom: 126), // acacia_fence_gate_open_east
+    (top: 142, side: 142, bottom: 142), // cherry_fence_gate
+    (top: 142, side: 142, bottom: 142), // cherry_fence_gate_closed_south
+    (top: 142, side: 142, bottom: 142), // cherry_fence_gate_closed_west
+    (top: 142, side: 142, bottom: 142), // cherry_fence_gate_closed_east
+    (top: 142, side: 142, bottom: 142), // cherry_fence_gate_open_north
+    (top: 142, side: 142, bottom: 142), // cherry_fence_gate_open_south
+    (top: 142, side: 142, bottom: 142), // cherry_fence_gate_open_west
+    (top: 142, side: 142, bottom: 142), // cherry_fence_gate_open_east
+    (top: 134, side: 134, bottom: 134), // dark_oak_fence_gate
+    (top: 134, side: 134, bottom: 134), // dark_oak_fence_gate_closed_south
+    (top: 134, side: 134, bottom: 134), // dark_oak_fence_gate_closed_west
+    (top: 134, side: 134, bottom: 134), // dark_oak_fence_gate_closed_east
+    (top: 134, side: 134, bottom: 134), // dark_oak_fence_gate_open_north
+    (top: 134, side: 134, bottom: 134), // dark_oak_fence_gate_open_south
+    (top: 134, side: 134, bottom: 134), // dark_oak_fence_gate_open_west
+    (top: 134, side: 134, bottom: 134), // dark_oak_fence_gate_open_east
+    (top: 138, side: 138, bottom: 138), // mangrove_fence_gate
+    (top: 138, side: 138, bottom: 138), // mangrove_fence_gate_closed_south
+    (top: 138, side: 138, bottom: 138), // mangrove_fence_gate_closed_west
+    (top: 138, side: 138, bottom: 138), // mangrove_fence_gate_closed_east
+    (top: 138, side: 138, bottom: 138), // mangrove_fence_gate_open_north
+    (top: 138, side: 138, bottom: 138), // mangrove_fence_gate_open_south
+    (top: 138, side: 138, bottom: 138), // mangrove_fence_gate_open_west
+    (top: 138, side: 138, bottom: 138), // mangrove_fence_gate_open_east
+    (top: 245, side: 245, bottom: 245), // bamboo_fence_gate
+    (top: 245, side: 245, bottom: 245), // bamboo_fence_gate_closed_south
+    (top: 245, side: 245, bottom: 245), // bamboo_fence_gate_closed_west
+    (top: 245, side: 245, bottom: 245), // bamboo_fence_gate_closed_east
+    (top: 245, side: 245, bottom: 245), // bamboo_fence_gate_open_north
+    (top: 245, side: 245, bottom: 245), // bamboo_fence_gate_open_south
+    (top: 245, side: 245, bottom: 245), // bamboo_fence_gate_open_west
+    (top: 245, side: 245, bottom: 245), // bamboo_fence_gate_open_east
+    (top: 244, side: 244, bottom: 244), // spruce_fence
+    (top: 42, side: 42, bottom: 42), // birch_fence
+    (top: 130, side: 130, bottom: 130), // jungle_fence
+    (top: 126, side: 126, bottom: 126), // acacia_fence
+    (top: 142, side: 142, bottom: 142), // cherry_fence
+    (top: 134, side: 134, bottom: 134), // dark_oak_fence
+    (top: 138, side: 138, bottom: 138), // mangrove_fence
+    (top: 245, side: 245, bottom: 245), // bamboo_fence
+    (top: 445, side: 445, bottom: 445), // spruce_door
+    (top: 445, side: 445, bottom: 445), // spruce_door_lower_closed_south
+    (top: 445, side: 445, bottom: 445), // spruce_door_lower_closed_west
+    (top: 445, side: 445, bottom: 445), // spruce_door_lower_closed_east
+    (top: 445, side: 445, bottom: 445), // spruce_door_lower_open_north
+    (top: 445, side: 445, bottom: 445), // spruce_door_lower_open_south
+    (top: 445, side: 445, bottom: 445), // spruce_door_lower_open_west
+    (top: 445, side: 445, bottom: 445), // spruce_door_lower_open_east
+    (top: 444, side: 444, bottom: 444), // spruce_door_upper_closed_north
+    (top: 444, side: 444, bottom: 444), // spruce_door_upper_closed_south
+    (top: 444, side: 444, bottom: 444), // spruce_door_upper_closed_west
+    (top: 444, side: 444, bottom: 444), // spruce_door_upper_closed_east
+    (top: 444, side: 444, bottom: 444), // spruce_door_upper_open_north
+    (top: 444, side: 444, bottom: 444), // spruce_door_upper_open_south
+    (top: 444, side: 444, bottom: 444), // spruce_door_upper_open_west
+    (top: 444, side: 444, bottom: 444), // spruce_door_upper_open_east
+    (top: 447, side: 447, bottom: 447), // birch_door
+    (top: 447, side: 447, bottom: 447), // birch_door_lower_closed_south
+    (top: 447, side: 447, bottom: 447), // birch_door_lower_closed_west
+    (top: 447, side: 447, bottom: 447), // birch_door_lower_closed_east
+    (top: 447, side: 447, bottom: 447), // birch_door_lower_open_north
+    (top: 447, side: 447, bottom: 447), // birch_door_lower_open_south
+    (top: 447, side: 447, bottom: 447), // birch_door_lower_open_west
+    (top: 447, side: 447, bottom: 447), // birch_door_lower_open_east
+    (top: 446, side: 446, bottom: 446), // birch_door_upper_closed_north
+    (top: 446, side: 446, bottom: 446), // birch_door_upper_closed_south
+    (top: 446, side: 446, bottom: 446), // birch_door_upper_closed_west
+    (top: 446, side: 446, bottom: 446), // birch_door_upper_closed_east
+    (top: 446, side: 446, bottom: 446), // birch_door_upper_open_north
+    (top: 446, side: 446, bottom: 446), // birch_door_upper_open_south
+    (top: 446, side: 446, bottom: 446), // birch_door_upper_open_west
+    (top: 446, side: 446, bottom: 446), // birch_door_upper_open_east
+    (top: 449, side: 449, bottom: 449), // jungle_door
+    (top: 449, side: 449, bottom: 449), // jungle_door_lower_closed_south
+    (top: 449, side: 449, bottom: 449), // jungle_door_lower_closed_west
+    (top: 449, side: 449, bottom: 449), // jungle_door_lower_closed_east
+    (top: 449, side: 449, bottom: 449), // jungle_door_lower_open_north
+    (top: 449, side: 449, bottom: 449), // jungle_door_lower_open_south
+    (top: 449, side: 449, bottom: 449), // jungle_door_lower_open_west
+    (top: 449, side: 449, bottom: 449), // jungle_door_lower_open_east
+    (top: 448, side: 448, bottom: 448), // jungle_door_upper_closed_north
+    (top: 448, side: 448, bottom: 448), // jungle_door_upper_closed_south
+    (top: 448, side: 448, bottom: 448), // jungle_door_upper_closed_west
+    (top: 448, side: 448, bottom: 448), // jungle_door_upper_closed_east
+    (top: 448, side: 448, bottom: 448), // jungle_door_upper_open_north
+    (top: 448, side: 448, bottom: 448), // jungle_door_upper_open_south
+    (top: 448, side: 448, bottom: 448), // jungle_door_upper_open_west
+    (top: 448, side: 448, bottom: 448), // jungle_door_upper_open_east
+    (top: 451, side: 451, bottom: 451), // acacia_door
+    (top: 451, side: 451, bottom: 451), // acacia_door_lower_closed_south
+    (top: 451, side: 451, bottom: 451), // acacia_door_lower_closed_west
+    (top: 451, side: 451, bottom: 451), // acacia_door_lower_closed_east
+    (top: 451, side: 451, bottom: 451), // acacia_door_lower_open_north
+    (top: 451, side: 451, bottom: 451), // acacia_door_lower_open_south
+    (top: 451, side: 451, bottom: 451), // acacia_door_lower_open_west
+    (top: 451, side: 451, bottom: 451), // acacia_door_lower_open_east
+    (top: 450, side: 450, bottom: 450), // acacia_door_upper_closed_north
+    (top: 450, side: 450, bottom: 450), // acacia_door_upper_closed_south
+    (top: 450, side: 450, bottom: 450), // acacia_door_upper_closed_west
+    (top: 450, side: 450, bottom: 450), // acacia_door_upper_closed_east
+    (top: 450, side: 450, bottom: 450), // acacia_door_upper_open_north
+    (top: 450, side: 450, bottom: 450), // acacia_door_upper_open_south
+    (top: 450, side: 450, bottom: 450), // acacia_door_upper_open_west
+    (top: 450, side: 450, bottom: 450), // acacia_door_upper_open_east
+    (top: 453, side: 453, bottom: 453), // cherry_door
+    (top: 453, side: 453, bottom: 453), // cherry_door_lower_closed_south
+    (top: 453, side: 453, bottom: 453), // cherry_door_lower_closed_west
+    (top: 453, side: 453, bottom: 453), // cherry_door_lower_closed_east
+    (top: 453, side: 453, bottom: 453), // cherry_door_lower_open_north
+    (top: 453, side: 453, bottom: 453), // cherry_door_lower_open_south
+    (top: 453, side: 453, bottom: 453), // cherry_door_lower_open_west
+    (top: 453, side: 453, bottom: 453), // cherry_door_lower_open_east
+    (top: 452, side: 452, bottom: 452), // cherry_door_upper_closed_north
+    (top: 452, side: 452, bottom: 452), // cherry_door_upper_closed_south
+    (top: 452, side: 452, bottom: 452), // cherry_door_upper_closed_west
+    (top: 452, side: 452, bottom: 452), // cherry_door_upper_closed_east
+    (top: 452, side: 452, bottom: 452), // cherry_door_upper_open_north
+    (top: 452, side: 452, bottom: 452), // cherry_door_upper_open_south
+    (top: 452, side: 452, bottom: 452), // cherry_door_upper_open_west
+    (top: 452, side: 452, bottom: 452), // cherry_door_upper_open_east
+    (top: 455, side: 455, bottom: 455), // dark_oak_door
+    (top: 455, side: 455, bottom: 455), // dark_oak_door_lower_closed_south
+    (top: 455, side: 455, bottom: 455), // dark_oak_door_lower_closed_west
+    (top: 455, side: 455, bottom: 455), // dark_oak_door_lower_closed_east
+    (top: 455, side: 455, bottom: 455), // dark_oak_door_lower_open_north
+    (top: 455, side: 455, bottom: 455), // dark_oak_door_lower_open_south
+    (top: 455, side: 455, bottom: 455), // dark_oak_door_lower_open_west
+    (top: 455, side: 455, bottom: 455), // dark_oak_door_lower_open_east
+    (top: 454, side: 454, bottom: 454), // dark_oak_door_upper_closed_north
+    (top: 454, side: 454, bottom: 454), // dark_oak_door_upper_closed_south
+    (top: 454, side: 454, bottom: 454), // dark_oak_door_upper_closed_west
+    (top: 454, side: 454, bottom: 454), // dark_oak_door_upper_closed_east
+    (top: 454, side: 454, bottom: 454), // dark_oak_door_upper_open_north
+    (top: 454, side: 454, bottom: 454), // dark_oak_door_upper_open_south
+    (top: 454, side: 454, bottom: 454), // dark_oak_door_upper_open_west
+    (top: 454, side: 454, bottom: 454), // dark_oak_door_upper_open_east
+    (top: 457, side: 457, bottom: 457), // mangrove_door
+    (top: 457, side: 457, bottom: 457), // mangrove_door_lower_closed_south
+    (top: 457, side: 457, bottom: 457), // mangrove_door_lower_closed_west
+    (top: 457, side: 457, bottom: 457), // mangrove_door_lower_closed_east
+    (top: 457, side: 457, bottom: 457), // mangrove_door_lower_open_north
+    (top: 457, side: 457, bottom: 457), // mangrove_door_lower_open_south
+    (top: 457, side: 457, bottom: 457), // mangrove_door_lower_open_west
+    (top: 457, side: 457, bottom: 457), // mangrove_door_lower_open_east
+    (top: 456, side: 456, bottom: 456), // mangrove_door_upper_closed_north
+    (top: 456, side: 456, bottom: 456), // mangrove_door_upper_closed_south
+    (top: 456, side: 456, bottom: 456), // mangrove_door_upper_closed_west
+    (top: 456, side: 456, bottom: 456), // mangrove_door_upper_closed_east
+    (top: 456, side: 456, bottom: 456), // mangrove_door_upper_open_north
+    (top: 456, side: 456, bottom: 456), // mangrove_door_upper_open_south
+    (top: 456, side: 456, bottom: 456), // mangrove_door_upper_open_west
+    (top: 456, side: 456, bottom: 456), // mangrove_door_upper_open_east
+    (top: 459, side: 459, bottom: 459), // bamboo_door
+    (top: 459, side: 459, bottom: 459), // bamboo_door_lower_closed_south
+    (top: 459, side: 459, bottom: 459), // bamboo_door_lower_closed_west
+    (top: 459, side: 459, bottom: 459), // bamboo_door_lower_closed_east
+    (top: 459, side: 459, bottom: 459), // bamboo_door_lower_open_north
+    (top: 459, side: 459, bottom: 459), // bamboo_door_lower_open_south
+    (top: 459, side: 459, bottom: 459), // bamboo_door_lower_open_west
+    (top: 459, side: 459, bottom: 459), // bamboo_door_lower_open_east
+    (top: 458, side: 458, bottom: 458), // bamboo_door_upper_closed_north
+    (top: 458, side: 458, bottom: 458), // bamboo_door_upper_closed_south
+    (top: 458, side: 458, bottom: 458), // bamboo_door_upper_closed_west
+    (top: 458, side: 458, bottom: 458), // bamboo_door_upper_closed_east
+    (top: 458, side: 458, bottom: 458), // bamboo_door_upper_open_north
+    (top: 458, side: 458, bottom: 458), // bamboo_door_upper_open_south
+    (top: 458, side: 458, bottom: 458), // bamboo_door_upper_open_west
+    (top: 458, side: 458, bottom: 458), // bamboo_door_upper_open_east
+    (top: 464, side: 464, bottom: 464), // end_rod
+    (top: 465, side: 465, bottom: 465), // chorus_plant
+    (top: 466, side: 466, bottom: 466), // chorus_flower
+    (top: 460, side: 460, bottom: 460), // purpur_block
+    (top: 461, side: 462, bottom: 461), // purpur_pillar
+    (top: 460, side: 460, bottom: 460), // purpur_stairs
+    (top: 460, side: 460, bottom: 460), // purpur_stairs_south
+    (top: 460, side: 460, bottom: 460), // purpur_stairs_west
+    (top: 460, side: 460, bottom: 460), // purpur_stairs_east
+    (top: 463, side: 463, bottom: 463), // end_stone_bricks
+    (top: 439, side: 439, bottom: 439), // torchflower_crop
+    (top: 440, side: 440, bottom: 440), // pitcher_crop
+    (top: 441, side: 441, bottom: 441), // pitcher_plant
+    (top: 442, side: 442, bottom: 442), // beetroots
+    (top: 467, side: 2, bottom: 2), // dirt_path
+    (top: 392, side: 392, bottom: 392), // end_gateway
+    (top: 468, side: 468, bottom: 468), // repeating_command_block
+    (top: 469, side: 469, bottom: 469), // chain_command_block
+    (top: 46, side: 46, bottom: 46), // frosted_ice
+    (top: 470, side: 470, bottom: 470), // magma_block
+    (top: 471, side: 471, bottom: 471), // nether_wart_block
+    (top: 472, side: 472, bottom: 472), // red_nether_bricks
+    (top: 443, side: 443, bottom: 443), // structure_void
+    (top: 11, side: 11, bottom: 11, front: Some(473)), // observer
+    (top: 11, side: 11, bottom: 11, front: Some(473), face: Some((2, true))), // observer_south
+    (top: 11, side: 11, bottom: 11, front: Some(473), face: Some((0, false))), // observer_west
+    (top: 11, side: 11, bottom: 11, front: Some(473), face: Some((0, true))), // observer_east
+    (top: 11, side: 11, bottom: 11, front: Some(473), face: Some((1, true))), // observer_up
+    (top: 11, side: 11, bottom: 11, front: Some(473), face: Some((1, false))), // observer_down
+    (top: 474, side: 474, bottom: 474), // shulker_box
+    (top: 475, side: 475, bottom: 475), // white_shulker_box
+    (top: 476, side: 476, bottom: 476), // orange_shulker_box
+    (top: 477, side: 477, bottom: 477), // magenta_shulker_box
+    (top: 478, side: 478, bottom: 478), // light_blue_shulker_box
+    (top: 479, side: 479, bottom: 479), // yellow_shulker_box
+    (top: 480, side: 480, bottom: 480), // lime_shulker_box
+    (top: 481, side: 481, bottom: 481), // pink_shulker_box
+    (top: 482, side: 482, bottom: 482), // gray_shulker_box
+    (top: 483, side: 483, bottom: 483), // light_gray_shulker_box
+    (top: 484, side: 484, bottom: 484), // cyan_shulker_box
+    (top: 485, side: 485, bottom: 485), // purple_shulker_box
+    (top: 486, side: 486, bottom: 486), // blue_shulker_box
+    (top: 487, side: 487, bottom: 487), // brown_shulker_box
+    (top: 488, side: 488, bottom: 488), // green_shulker_box
+    (top: 489, side: 489, bottom: 489), // red_shulker_box
+    (top: 490, side: 490, bottom: 490), // black_shulker_box
+    (top: 491, side: 491, bottom: 491), // white_glazed_terracotta
+    (top: 492, side: 492, bottom: 492), // orange_glazed_terracotta
+    (top: 493, side: 493, bottom: 493), // magenta_glazed_terracotta
+    (top: 494, side: 494, bottom: 494), // light_blue_glazed_terracotta
+    (top: 495, side: 495, bottom: 495), // yellow_glazed_terracotta
+    (top: 496, side: 496, bottom: 496), // lime_glazed_terracotta
+    (top: 497, side: 497, bottom: 497), // pink_glazed_terracotta
+    (top: 498, side: 498, bottom: 498), // gray_glazed_terracotta
+    (top: 499, side: 499, bottom: 499), // light_gray_glazed_terracotta
+    (top: 500, side: 500, bottom: 500), // cyan_glazed_terracotta
+    (top: 501, side: 501, bottom: 501), // purple_glazed_terracotta
+    (top: 502, side: 502, bottom: 502), // blue_glazed_terracotta
+    (top: 503, side: 503, bottom: 503), // brown_glazed_terracotta
+    (top: 504, side: 504, bottom: 504), // green_glazed_terracotta
+    (top: 505, side: 505, bottom: 505), // red_glazed_terracotta
+    (top: 506, side: 506, bottom: 506), // black_glazed_terracotta
+    (top: 507, side: 507, bottom: 507), // white_concrete_powder
+    (top: 508, side: 508, bottom: 508), // orange_concrete_powder
+    (top: 509, side: 509, bottom: 509), // magenta_concrete_powder
+    (top: 510, side: 510, bottom: 510), // light_blue_concrete_powder
+    (top: 511, side: 511, bottom: 511), // yellow_concrete_powder
+    (top: 512, side: 512, bottom: 512), // lime_concrete_powder
+    (top: 513, side: 513, bottom: 513), // pink_concrete_powder
+    (top: 514, side: 514, bottom: 514), // gray_concrete_powder
+    (top: 515, side: 515, bottom: 515), // light_gray_concrete_powder
+    (top: 516, side: 516, bottom: 516), // cyan_concrete_powder
+    (top: 517, side: 517, bottom: 517), // purple_concrete_powder
+    (top: 518, side: 518, bottom: 518), // blue_concrete_powder
+    (top: 519, side: 519, bottom: 519), // brown_concrete_powder
+    (top: 520, side: 520, bottom: 520), // green_concrete_powder
+    (top: 521, side: 521, bottom: 521), // red_concrete_powder
+    (top: 522, side: 522, bottom: 522), // black_concrete_powder
+    (top: 543, side: 543, bottom: 543), // kelp
+    (top: 544, side: 544, bottom: 544), // kelp_plant
+    (top: 559, side: 559, bottom: 559), // dried_kelp_block
+    (top: 560, side: 560, bottom: 560), // turtle_egg
+    (top: 561, side: 561, bottom: 561), // sniffer_egg
+    (top: 549, side: 549, bottom: 549), // dead_tube_coral_block
+    (top: 550, side: 550, bottom: 550), // dead_brain_coral_block
+    (top: 551, side: 551, bottom: 551), // dead_bubble_coral_block
+    (top: 552, side: 552, bottom: 552), // dead_fire_coral_block
+    (top: 553, side: 553, bottom: 553), // dead_horn_coral_block
+    (top: 554, side: 554, bottom: 554), // tube_coral_block
+    (top: 555, side: 555, bottom: 555), // brain_coral_block
+    (top: 556, side: 556, bottom: 556), // bubble_coral_block
+    (top: 557, side: 557, bottom: 557), // fire_coral_block
+    (top: 558, side: 558, bottom: 558), // horn_coral_block
+    (top: 523, side: 523, bottom: 523), // dead_tube_coral
+    (top: 524, side: 524, bottom: 524), // dead_brain_coral
+    (top: 525, side: 525, bottom: 525), // dead_bubble_coral
+    (top: 526, side: 526, bottom: 526), // dead_fire_coral
+    (top: 527, side: 527, bottom: 527), // dead_horn_coral
+    (top: 528, side: 528, bottom: 528), // tube_coral
+    (top: 529, side: 529, bottom: 529), // brain_coral
+    (top: 530, side: 530, bottom: 530), // bubble_coral
+    (top: 531, side: 531, bottom: 531), // fire_coral
+    (top: 532, side: 532, bottom: 532), // horn_coral
+    (top: 533, side: 533, bottom: 533), // dead_tube_coral_fan
+    (top: 534, side: 534, bottom: 534), // dead_brain_coral_fan
+    (top: 535, side: 535, bottom: 535), // dead_bubble_coral_fan
+    (top: 536, side: 536, bottom: 536), // dead_fire_coral_fan
+    (top: 537, side: 537, bottom: 537), // dead_horn_coral_fan
+    (top: 538, side: 538, bottom: 538), // tube_coral_fan
+    (top: 539, side: 539, bottom: 539), // brain_coral_fan
+    (top: 540, side: 540, bottom: 540), // bubble_coral_fan
+    (top: 541, side: 541, bottom: 541), // fire_coral_fan
+    (top: 542, side: 542, bottom: 542), // horn_coral_fan
+    (top: 533, side: 533, bottom: 533), // dead_tube_coral_wall_fan
+    (top: 533, side: 533, bottom: 533), // dead_tube_coral_wall_fan_south
+    (top: 533, side: 533, bottom: 533), // dead_tube_coral_wall_fan_west
+    (top: 533, side: 533, bottom: 533), // dead_tube_coral_wall_fan_east
+    (top: 534, side: 534, bottom: 534), // dead_brain_coral_wall_fan
+    (top: 534, side: 534, bottom: 534), // dead_brain_coral_wall_fan_south
+    (top: 534, side: 534, bottom: 534), // dead_brain_coral_wall_fan_west
+    (top: 534, side: 534, bottom: 534), // dead_brain_coral_wall_fan_east
+    (top: 535, side: 535, bottom: 535), // dead_bubble_coral_wall_fan
+    (top: 535, side: 535, bottom: 535), // dead_bubble_coral_wall_fan_south
+    (top: 535, side: 535, bottom: 535), // dead_bubble_coral_wall_fan_west
+    (top: 535, side: 535, bottom: 535), // dead_bubble_coral_wall_fan_east
+    (top: 536, side: 536, bottom: 536), // dead_fire_coral_wall_fan
+    (top: 536, side: 536, bottom: 536), // dead_fire_coral_wall_fan_south
+    (top: 536, side: 536, bottom: 536), // dead_fire_coral_wall_fan_west
+    (top: 536, side: 536, bottom: 536), // dead_fire_coral_wall_fan_east
+    (top: 537, side: 537, bottom: 537), // dead_horn_coral_wall_fan
+    (top: 537, side: 537, bottom: 537), // dead_horn_coral_wall_fan_south
+    (top: 537, side: 537, bottom: 537), // dead_horn_coral_wall_fan_west
+    (top: 537, side: 537, bottom: 537), // dead_horn_coral_wall_fan_east
+    (top: 538, side: 538, bottom: 538), // tube_coral_wall_fan
+    (top: 538, side: 538, bottom: 538), // tube_coral_wall_fan_south
+    (top: 538, side: 538, bottom: 538), // tube_coral_wall_fan_west
+    (top: 538, side: 538, bottom: 538), // tube_coral_wall_fan_east
+    (top: 539, side: 539, bottom: 539), // brain_coral_wall_fan
+    (top: 539, side: 539, bottom: 539), // brain_coral_wall_fan_south
+    (top: 539, side: 539, bottom: 539), // brain_coral_wall_fan_west
+    (top: 539, side: 539, bottom: 539), // brain_coral_wall_fan_east
+    (top: 540, side: 540, bottom: 540), // bubble_coral_wall_fan
+    (top: 540, side: 540, bottom: 540), // bubble_coral_wall_fan_south
+    (top: 540, side: 540, bottom: 540), // bubble_coral_wall_fan_west
+    (top: 540, side: 540, bottom: 540), // bubble_coral_wall_fan_east
+    (top: 541, side: 541, bottom: 541), // fire_coral_wall_fan
+    (top: 541, side: 541, bottom: 541), // fire_coral_wall_fan_south
+    (top: 541, side: 541, bottom: 541), // fire_coral_wall_fan_west
+    (top: 541, side: 541, bottom: 541), // fire_coral_wall_fan_east
+    (top: 542, side: 542, bottom: 542), // horn_coral_wall_fan
+    (top: 542, side: 542, bottom: 542), // horn_coral_wall_fan_south
+    (top: 542, side: 542, bottom: 542), // horn_coral_wall_fan_west
+    (top: 542, side: 542, bottom: 542), // horn_coral_wall_fan_east
+    (top: 545, side: 545, bottom: 545), // sea_pickle
+    (top: 562, side: 562, bottom: 562), // blue_ice
+    (top: 563, side: 563, bottom: 563), // conduit
+    (top: 546, side: 546, bottom: 546), // bamboo_sapling
+    (top: 564, side: 564, bottom: 564), // bamboo
+    (top: 403, side: 403, bottom: 403, aux: Some(546)), // potted_bamboo
+    (top: 547, side: 547, bottom: 547), // void_air
+    (top: 547, side: 547, bottom: 547), // cave_air
+    (top: 547, side: 547, bottom: 547), // bubble_column
+    (top: 100, side: 100, bottom: 100), // polished_granite_stairs
+    (top: 100, side: 100, bottom: 100), // polished_granite_stairs_south
+    (top: 100, side: 100, bottom: 100), // polished_granite_stairs_west
+    (top: 100, side: 100, bottom: 100), // polished_granite_stairs_east
+    (top: 198, side: 198, bottom: 198), // smooth_red_sandstone_stairs
+    (top: 198, side: 198, bottom: 198), // smooth_red_sandstone_stairs_south
+    (top: 198, side: 198, bottom: 198), // smooth_red_sandstone_stairs_west
+    (top: 198, side: 198, bottom: 198), // smooth_red_sandstone_stairs_east
+    (top: 114, side: 114, bottom: 114), // mossy_stone_brick_stairs
+    (top: 114, side: 114, bottom: 114), // mossy_stone_brick_stairs_south
+    (top: 114, side: 114, bottom: 114), // mossy_stone_brick_stairs_west
+    (top: 114, side: 114, bottom: 114), // mossy_stone_brick_stairs_east
+    (top: 241, side: 241, bottom: 241), // polished_diorite_stairs
+    (top: 241, side: 241, bottom: 241), // polished_diorite_stairs_south
+    (top: 241, side: 241, bottom: 241), // polished_diorite_stairs_west
+    (top: 241, side: 241, bottom: 241), // polished_diorite_stairs_east
+    (top: 38, side: 38, bottom: 38), // mossy_cobblestone_stairs
+    (top: 38, side: 38, bottom: 38), // mossy_cobblestone_stairs_south
+    (top: 38, side: 38, bottom: 38), // mossy_cobblestone_stairs_west
+    (top: 38, side: 38, bottom: 38), // mossy_cobblestone_stairs_east
+    (top: 463, side: 463, bottom: 463), // end_stone_brick_stairs
+    (top: 463, side: 463, bottom: 463), // end_stone_brick_stairs_south
+    (top: 463, side: 463, bottom: 463), // end_stone_brick_stairs_west
+    (top: 463, side: 463, bottom: 463), // end_stone_brick_stairs_east
+    (top: 3, side: 3, bottom: 3), // stone_stairs
+    (top: 3, side: 3, bottom: 3), // stone_stairs_south
+    (top: 3, side: 3, bottom: 3), // stone_stairs_west
+    (top: 3, side: 3, bottom: 3), // stone_stairs_east
+    (top: 16, side: 16, bottom: 16), // smooth_sandstone_stairs
+    (top: 16, side: 16, bottom: 16), // smooth_sandstone_stairs_south
+    (top: 16, side: 16, bottom: 16), // smooth_sandstone_stairs_west
+    (top: 16, side: 16, bottom: 16), // smooth_sandstone_stairs_east
+    (top: 202, side: 202, bottom: 202), // smooth_quartz_stairs
+    (top: 202, side: 202, bottom: 202), // smooth_quartz_stairs_south
+    (top: 202, side: 202, bottom: 202), // smooth_quartz_stairs_west
+    (top: 202, side: 202, bottom: 202), // smooth_quartz_stairs_east
+    (top: 99, side: 99, bottom: 99), // granite_stairs
+    (top: 99, side: 99, bottom: 99), // granite_stairs_south
+    (top: 99, side: 99, bottom: 99), // granite_stairs_west
+    (top: 99, side: 99, bottom: 99), // granite_stairs_east
+    (top: 242, side: 242, bottom: 242), // andesite_stairs
+    (top: 242, side: 242, bottom: 242), // andesite_stairs_south
+    (top: 242, side: 242, bottom: 242), // andesite_stairs_west
+    (top: 242, side: 242, bottom: 242), // andesite_stairs_east
+    (top: 472, side: 472, bottom: 472), // red_nether_brick_stairs
+    (top: 472, side: 472, bottom: 472), // red_nether_brick_stairs_south
+    (top: 472, side: 472, bottom: 472), // red_nether_brick_stairs_west
+    (top: 472, side: 472, bottom: 472), // red_nether_brick_stairs_east
+    (top: 243, side: 243, bottom: 243), // polished_andesite_stairs
+    (top: 243, side: 243, bottom: 243), // polished_andesite_stairs_south
+    (top: 243, side: 243, bottom: 243), // polished_andesite_stairs_west
+    (top: 243, side: 243, bottom: 243), // polished_andesite_stairs_east
+    (top: 240, side: 240, bottom: 240), // diorite_stairs
+    (top: 240, side: 240, bottom: 240), // diorite_stairs_south
+    (top: 240, side: 240, bottom: 240), // diorite_stairs_west
+    (top: 240, side: 240, bottom: 240), // diorite_stairs_east
+    (top: 100, side: 100, bottom: 100), // polished_granite_slab
+    (top: 198, side: 198, bottom: 198), // smooth_red_sandstone_slab
+    (top: 114, side: 114, bottom: 114), // mossy_stone_brick_slab
+    (top: 241, side: 241, bottom: 241), // polished_diorite_slab
+    (top: 38, side: 38, bottom: 38), // mossy_cobblestone_slab
+    (top: 463, side: 463, bottom: 463), // end_stone_brick_slab
+    (top: 16, side: 16, bottom: 16), // smooth_sandstone_slab
+    (top: 202, side: 202, bottom: 202), // smooth_quartz_slab
+    (top: 242, side: 242, bottom: 242), // andesite_slab
+    (top: 472, side: 472, bottom: 472), // red_nether_brick_slab
+    (top: 243, side: 243, bottom: 243), // polished_andesite_slab
+    (top: 240, side: 240, bottom: 240), // diorite_slab
+    (top: 36, side: 36, bottom: 36), // brick_wall
+    (top: 432, side: 432, bottom: 432), // prismarine_wall
+    (top: 198, side: 198, bottom: 198), // red_sandstone_wall
+    (top: 114, side: 114, bottom: 114), // mossy_stone_brick_wall
+    (top: 99, side: 99, bottom: 99), // granite_wall
+    (top: 37, side: 37, bottom: 37), // stone_brick_wall
+    (top: 192, side: 192, bottom: 192), // mud_brick_wall
+    (top: 386, side: 386, bottom: 386), // nether_brick_wall
+    (top: 242, side: 242, bottom: 242), // andesite_wall
+    (top: 472, side: 472, bottom: 472), // red_nether_brick_wall
+    (top: 16, side: 16, bottom: 16), // sandstone_wall
+    (top: 463, side: 463, bottom: 463), // end_stone_brick_wall
+    (top: 240, side: 240, bottom: 240), // diorite_wall
+    (top: 548, side: 548, bottom: 548), // scaffolding
+    (top: 565, side: 566, bottom: 10), // loom
+    (top: 567, side: 568, bottom: 10), // cartography_table
+    (top: 569, side: 570, bottom: 10), // fletching_table
+    (top: 571, side: 571, bottom: 571), // grindstone
+    (top: 572, side: 572, bottom: 572), // lectern
+    (top: 573, side: 574, bottom: 10), // smithing_table
+    (top: 575, side: 575, bottom: 575), // bell
+    (top: 576, side: 576, bottom: 576), // lantern
+    (top: 577, side: 577, bottom: 577), // soul_lantern
+    (top: 578, side: 578, bottom: 578), // campfire
+    (top: 645, side: 645, bottom: 645), // soul_campfire
+    (top: 580, side: 580, bottom: 580), // sweet_berry_bush
+    (top: 623, side: 622, bottom: 623), // warped_stem
+    (top: 625, side: 624, bottom: 625), // stripped_warped_stem
+    (top: 626, side: 626, bottom: 626), // warped_hyphae
+    (top: 627, side: 627, bottom: 627), // stripped_warped_hyphae
+    (top: 628, side: 629, bottom: 342), // warped_nylium
+    (top: 585, side: 585, bottom: 585), // warped_fungus
+    (top: 644, side: 644, bottom: 644), // warped_wart_block
+    (top: 586, side: 586, bottom: 586), // warped_roots
+    (top: 579, side: 579, bottom: 579), // nether_sprouts
+    (top: 634, side: 633, bottom: 634), // crimson_stem
+    (top: 636, side: 635, bottom: 636), // stripped_crimson_stem
+    (top: 637, side: 637, bottom: 637), // crimson_hyphae
+    (top: 638, side: 638, bottom: 638), // stripped_crimson_hyphae
+    (top: 639, side: 640, bottom: 342), // crimson_nylium
+    (top: 587, side: 587, bottom: 587), // crimson_fungus
+    (top: 646, side: 646, bottom: 646), // shroomlight
+    (top: 581, side: 581, bottom: 581), // weeping_vines
+    (top: 582, side: 582, bottom: 582), // weeping_vines_plant
+    (top: 583, side: 583, bottom: 583), // twisting_vines
+    (top: 584, side: 584, bottom: 584), // twisting_vines_plant
+    (top: 588, side: 588, bottom: 588), // crimson_roots
+    (top: 359, side: 359, bottom: 359), // crimson_planks
+    (top: 360, side: 360, bottom: 360), // warped_planks
+    (top: 359, side: 359, bottom: 359), // crimson_slab
+    (top: 360, side: 360, bottom: 360), // warped_slab
+    (top: 359, side: 359, bottom: 359), // crimson_pressure_plate
+    (top: 360, side: 360, bottom: 360), // warped_pressure_plate
+    (top: 359, side: 359, bottom: 359), // crimson_fence
+    (top: 360, side: 360, bottom: 360), // warped_fence
+    (top: 643, side: 643, bottom: 643), // crimson_trapdoor
+    (top: 643, side: 643, bottom: 643), // crimson_trapdoor_open_north
+    (top: 643, side: 643, bottom: 643), // crimson_trapdoor_open_south
+    (top: 643, side: 643, bottom: 643), // crimson_trapdoor_open_west
+    (top: 643, side: 643, bottom: 643), // crimson_trapdoor_open_east
+    (top: 632, side: 632, bottom: 632), // warped_trapdoor
+    (top: 632, side: 632, bottom: 632), // warped_trapdoor_open_north
+    (top: 632, side: 632, bottom: 632), // warped_trapdoor_open_south
+    (top: 632, side: 632, bottom: 632), // warped_trapdoor_open_west
+    (top: 632, side: 632, bottom: 632), // warped_trapdoor_open_east
+    (top: 359, side: 359, bottom: 359), // crimson_fence_gate
+    (top: 359, side: 359, bottom: 359), // crimson_fence_gate_closed_south
+    (top: 359, side: 359, bottom: 359), // crimson_fence_gate_closed_west
+    (top: 359, side: 359, bottom: 359), // crimson_fence_gate_closed_east
+    (top: 359, side: 359, bottom: 359), // crimson_fence_gate_open_north
+    (top: 359, side: 359, bottom: 359), // crimson_fence_gate_open_south
+    (top: 359, side: 359, bottom: 359), // crimson_fence_gate_open_west
+    (top: 359, side: 359, bottom: 359), // crimson_fence_gate_open_east
+    (top: 360, side: 360, bottom: 360), // warped_fence_gate
+    (top: 360, side: 360, bottom: 360), // warped_fence_gate_closed_south
+    (top: 360, side: 360, bottom: 360), // warped_fence_gate_closed_west
+    (top: 360, side: 360, bottom: 360), // warped_fence_gate_closed_east
+    (top: 360, side: 360, bottom: 360), // warped_fence_gate_open_north
+    (top: 360, side: 360, bottom: 360), // warped_fence_gate_open_south
+    (top: 360, side: 360, bottom: 360), // warped_fence_gate_open_west
+    (top: 360, side: 360, bottom: 360), // warped_fence_gate_open_east
+    (top: 359, side: 359, bottom: 359), // crimson_stairs
+    (top: 359, side: 359, bottom: 359), // crimson_stairs_south
+    (top: 359, side: 359, bottom: 359), // crimson_stairs_west
+    (top: 359, side: 359, bottom: 359), // crimson_stairs_east
+    (top: 360, side: 360, bottom: 360), // warped_stairs
+    (top: 360, side: 360, bottom: 360), // warped_stairs_south
+    (top: 360, side: 360, bottom: 360), // warped_stairs_west
+    (top: 360, side: 360, bottom: 360), // warped_stairs_east
+    (top: 359, side: 359, bottom: 359), // crimson_button
+    (top: 359, side: 359, bottom: 359), // crimson_button_south
+    (top: 359, side: 359, bottom: 359), // crimson_button_west
+    (top: 359, side: 359, bottom: 359), // crimson_button_east
+    (top: 360, side: 360, bottom: 360), // warped_button
+    (top: 360, side: 360, bottom: 360), // warped_button_south
+    (top: 360, side: 360, bottom: 360), // warped_button_west
+    (top: 360, side: 360, bottom: 360), // warped_button_east
+    (top: 642, side: 642, bottom: 642), // crimson_door
+    (top: 642, side: 642, bottom: 642), // crimson_door_lower_closed_south
+    (top: 642, side: 642, bottom: 642), // crimson_door_lower_closed_west
+    (top: 642, side: 642, bottom: 642), // crimson_door_lower_closed_east
+    (top: 642, side: 642, bottom: 642), // crimson_door_lower_open_north
+    (top: 642, side: 642, bottom: 642), // crimson_door_lower_open_south
+    (top: 642, side: 642, bottom: 642), // crimson_door_lower_open_west
+    (top: 642, side: 642, bottom: 642), // crimson_door_lower_open_east
+    (top: 641, side: 641, bottom: 641), // crimson_door_upper_closed_north
+    (top: 641, side: 641, bottom: 641), // crimson_door_upper_closed_south
+    (top: 641, side: 641, bottom: 641), // crimson_door_upper_closed_west
+    (top: 641, side: 641, bottom: 641), // crimson_door_upper_closed_east
+    (top: 641, side: 641, bottom: 641), // crimson_door_upper_open_north
+    (top: 641, side: 641, bottom: 641), // crimson_door_upper_open_south
+    (top: 641, side: 641, bottom: 641), // crimson_door_upper_open_west
+    (top: 641, side: 641, bottom: 641), // crimson_door_upper_open_east
+    (top: 631, side: 631, bottom: 631), // warped_door
+    (top: 631, side: 631, bottom: 631), // warped_door_lower_closed_south
+    (top: 631, side: 631, bottom: 631), // warped_door_lower_closed_west
+    (top: 631, side: 631, bottom: 631), // warped_door_lower_closed_east
+    (top: 631, side: 631, bottom: 631), // warped_door_lower_open_north
+    (top: 631, side: 631, bottom: 631), // warped_door_lower_open_south
+    (top: 631, side: 631, bottom: 631), // warped_door_lower_open_west
+    (top: 631, side: 631, bottom: 631), // warped_door_lower_open_east
+    (top: 630, side: 630, bottom: 630), // warped_door_upper_closed_north
+    (top: 630, side: 630, bottom: 630), // warped_door_upper_closed_south
+    (top: 630, side: 630, bottom: 630), // warped_door_upper_closed_west
+    (top: 630, side: 630, bottom: 630), // warped_door_upper_closed_east
+    (top: 630, side: 630, bottom: 630), // warped_door_upper_open_north
+    (top: 630, side: 630, bottom: 630), // warped_door_upper_open_south
+    (top: 630, side: 630, bottom: 630), // warped_door_upper_open_west
+    (top: 630, side: 630, bottom: 630), // warped_door_upper_open_east
+    (top: 359, side: 359, bottom: 359), // crimson_sign
+    (top: 359, side: 359, bottom: 359), // crimson_sign_south
+    (top: 359, side: 359, bottom: 359), // crimson_sign_west
+    (top: 359, side: 359, bottom: 359), // crimson_sign_east
+    (top: 360, side: 360, bottom: 360), // warped_sign
+    (top: 360, side: 360, bottom: 360), // warped_sign_south
+    (top: 360, side: 360, bottom: 360), // warped_sign_west
+    (top: 360, side: 360, bottom: 360), // warped_sign_east
+    (top: 359, side: 359, bottom: 359), // crimson_wall_sign
+    (top: 359, side: 359, bottom: 359), // crimson_wall_sign_south
+    (top: 359, side: 359, bottom: 359), // crimson_wall_sign_west
+    (top: 359, side: 359, bottom: 359), // crimson_wall_sign_east
+    (top: 360, side: 360, bottom: 360), // warped_wall_sign
+    (top: 360, side: 360, bottom: 360), // warped_wall_sign_south
+    (top: 360, side: 360, bottom: 360), // warped_wall_sign_west
+    (top: 360, side: 360, bottom: 360), // warped_wall_sign_east
+    (top: 647, side: 647, bottom: 647), // structure_block
+    (top: 648, side: 648, bottom: 648), // jigsaw
+    (top: 675, side: 676, bottom: 676), // composter
+    (top: 664, side: 664, bottom: 664), // target
+    (top: 671, side: 672, bottom: 671), // bee_nest
+    (top: 673, side: 674, bottom: 673), // beehive
+    (top: 649, side: 649, bottom: 649), // honey_block
+    (top: 650, side: 650, bottom: 650), // honeycomb_block
+    (top: 651, side: 651, bottom: 651), // netherite_block
+    (top: 667, side: 668, bottom: 667), // ancient_debris
+    (top: 652, side: 652, bottom: 652), // crying_obsidian
+    (top: 669, side: 670, bottom: 669), // respawn_anchor
+    (top: 403, side: 403, bottom: 403, aux: Some(587)), // potted_crimson_fungus
+    (top: 403, side: 403, bottom: 403, aux: Some(585)), // potted_warped_fungus
+    (top: 403, side: 403, bottom: 403, aux: Some(588)), // potted_crimson_roots
+    (top: 403, side: 403, bottom: 403, aux: Some(586)), // potted_warped_roots
+    (top: 665, side: 666, bottom: 665), // lodestone
+    (top: 678, side: 677, bottom: 678), // blackstone
+    (top: 677, side: 677, bottom: 677), // blackstone_stairs
+    (top: 677, side: 677, bottom: 677), // blackstone_stairs_south
+    (top: 677, side: 677, bottom: 677), // blackstone_stairs_west
+    (top: 677, side: 677, bottom: 677), // blackstone_stairs_east
+    (top: 677, side: 677, bottom: 677), // blackstone_wall
+    (top: 677, side: 677, bottom: 677), // blackstone_slab
+    (top: 679, side: 679, bottom: 679), // polished_blackstone
+    (top: 692, side: 692, bottom: 692), // polished_blackstone_bricks
+    (top: 693, side: 693, bottom: 693), // cracked_polished_blackstone_bricks
+    (top: 694, side: 694, bottom: 694), // chiseled_polished_blackstone
+    (top: 692, side: 692, bottom: 692), // polished_blackstone_brick_slab
+    (top: 692, side: 692, bottom: 692), // polished_blackstone_brick_stairs
+    (top: 692, side: 692, bottom: 692), // polished_blackstone_brick_stairs_south
+    (top: 692, side: 692, bottom: 692), // polished_blackstone_brick_stairs_west
+    (top: 692, side: 692, bottom: 692), // polished_blackstone_brick_stairs_east
+    (top: 692, side: 692, bottom: 692), // polished_blackstone_brick_wall
+    (top: 680, side: 680, bottom: 680), // gilded_blackstone
+    (top: 679, side: 679, bottom: 679), // polished_blackstone_stairs
+    (top: 679, side: 679, bottom: 679), // polished_blackstone_stairs_south
+    (top: 679, side: 679, bottom: 679), // polished_blackstone_stairs_west
+    (top: 679, side: 679, bottom: 679), // polished_blackstone_stairs_east
+    (top: 679, side: 679, bottom: 679), // polished_blackstone_slab
+    (top: 679, side: 679, bottom: 679), // polished_blackstone_pressure_plate
+    (top: 679, side: 679, bottom: 679), // polished_blackstone_button
+    (top: 679, side: 679, bottom: 679), // polished_blackstone_button_south
+    (top: 679, side: 679, bottom: 679), // polished_blackstone_button_west
+    (top: 679, side: 679, bottom: 679), // polished_blackstone_button_east
+    (top: 679, side: 679, bottom: 679), // polished_blackstone_wall
+    (top: 695, side: 695, bottom: 695), // chiseled_nether_bricks
+    (top: 696, side: 696, bottom: 696), // cracked_nether_bricks
+    (top: 681, side: 681, bottom: 681), // quartz_bricks
+    (top: 605, side: 605, bottom: 605), // candle
+    (top: 606, side: 606, bottom: 606), // white_candle
+    (top: 607, side: 607, bottom: 607), // orange_candle
+    (top: 608, side: 608, bottom: 608), // magenta_candle
+    (top: 609, side: 609, bottom: 609), // light_blue_candle
+    (top: 610, side: 610, bottom: 610), // yellow_candle
+    (top: 611, side: 611, bottom: 611), // lime_candle
+    (top: 612, side: 612, bottom: 612), // pink_candle
+    (top: 613, side: 613, bottom: 613), // gray_candle
+    (top: 614, side: 614, bottom: 614), // light_gray_candle
+    (top: 615, side: 615, bottom: 615), // cyan_candle
+    (top: 616, side: 616, bottom: 616), // purple_candle
+    (top: 617, side: 617, bottom: 617), // blue_candle
+    (top: 618, side: 618, bottom: 618), // brown_candle
+    (top: 619, side: 619, bottom: 619), // green_candle
+    (top: 620, side: 620, bottom: 620), // red_candle
+    (top: 621, side: 621, bottom: 621), // black_candle
+    (top: 348, side: 349, bottom: 349, aux: Some(605)), // candle_cake
+    (top: 348, side: 349, bottom: 349, aux: Some(606)), // white_candle_cake
+    (top: 348, side: 349, bottom: 349, aux: Some(607)), // orange_candle_cake
+    (top: 348, side: 349, bottom: 349, aux: Some(608)), // magenta_candle_cake
+    (top: 348, side: 349, bottom: 349, aux: Some(609)), // light_blue_candle_cake
+    (top: 348, side: 349, bottom: 349, aux: Some(610)), // yellow_candle_cake
+    (top: 348, side: 349, bottom: 349, aux: Some(611)), // lime_candle_cake
+    (top: 348, side: 349, bottom: 349, aux: Some(612)), // pink_candle_cake
+    (top: 348, side: 349, bottom: 349, aux: Some(613)), // gray_candle_cake
+    (top: 348, side: 349, bottom: 349, aux: Some(614)), // light_gray_candle_cake
+    (top: 348, side: 349, bottom: 349, aux: Some(615)), // cyan_candle_cake
+    (top: 348, side: 349, bottom: 349, aux: Some(616)), // purple_candle_cake
+    (top: 348, side: 349, bottom: 349, aux: Some(617)), // blue_candle_cake
+    (top: 348, side: 349, bottom: 349, aux: Some(618)), // brown_candle_cake
+    (top: 348, side: 349, bottom: 349, aux: Some(619)), // green_candle_cake
+    (top: 348, side: 349, bottom: 349, aux: Some(620)), // red_candle_cake
+    (top: 348, side: 349, bottom: 349, aux: Some(621)), // black_candle_cake
+    (top: 658, side: 658, bottom: 658), // budding_amethyst
+    (top: 589, side: 589, bottom: 589), // amethyst_cluster
+    (top: 590, side: 590, bottom: 590), // large_amethyst_bud
+    (top: 591, side: 591, bottom: 591), // medium_amethyst_bud
+    (top: 592, side: 592, bottom: 592), // small_amethyst_bud
+    (top: 654, side: 654, bottom: 654), // tinted_glass
+    (top: 14, side: 14, bottom: 14), // powder_snow
+    (top: 683, side: 684, bottom: 684), // sculk_sensor
+    (top: 685, side: 684, bottom: 684), // calibrated_sculk_sensor
+    (top: 655, side: 655, bottom: 655), // sculk
+    (top: 593, side: 593, bottom: 593), // sculk_vein
+    (top: 686, side: 687, bottom: 687), // sculk_catalyst
+    (top: 688, side: 689, bottom: 689), // sculk_shrieker
+    (top: 706, side: 706, bottom: 706), // oxidized_copper
+    (top: 705, side: 705, bottom: 705), // weathered_copper
+    (top: 704, side: 704, bottom: 704), // exposed_copper
+    (top: 711, side: 711, bottom: 711), // deepslate_copper_ore
+    (top: 709, side: 709, bottom: 709), // oxidized_cut_copper
+    (top: 708, side: 708, bottom: 708), // weathered_cut_copper
+    (top: 707, side: 707, bottom: 707), // exposed_cut_copper
+    (top: 710, side: 710, bottom: 710), // cut_copper
+    (top: 709, side: 709, bottom: 709), // oxidized_cut_copper_stairs
+    (top: 709, side: 709, bottom: 709), // oxidized_cut_copper_stairs_south
+    (top: 709, side: 709, bottom: 709), // oxidized_cut_copper_stairs_west
+    (top: 709, side: 709, bottom: 709), // oxidized_cut_copper_stairs_east
+    (top: 708, side: 708, bottom: 708), // weathered_cut_copper_stairs
+    (top: 708, side: 708, bottom: 708), // weathered_cut_copper_stairs_south
+    (top: 708, side: 708, bottom: 708), // weathered_cut_copper_stairs_west
+    (top: 708, side: 708, bottom: 708), // weathered_cut_copper_stairs_east
+    (top: 707, side: 707, bottom: 707), // exposed_cut_copper_stairs
+    (top: 707, side: 707, bottom: 707), // exposed_cut_copper_stairs_south
+    (top: 707, side: 707, bottom: 707), // exposed_cut_copper_stairs_west
+    (top: 707, side: 707, bottom: 707), // exposed_cut_copper_stairs_east
+    (top: 710, side: 710, bottom: 710), // cut_copper_stairs
+    (top: 710, side: 710, bottom: 710), // cut_copper_stairs_south
+    (top: 710, side: 710, bottom: 710), // cut_copper_stairs_west
+    (top: 710, side: 710, bottom: 710), // cut_copper_stairs_east
+    (top: 709, side: 709, bottom: 709), // oxidized_cut_copper_slab
+    (top: 708, side: 708, bottom: 708), // weathered_cut_copper_slab
+    (top: 707, side: 707, bottom: 707), // exposed_cut_copper_slab
+    (top: 710, side: 710, bottom: 710), // cut_copper_slab
+    (top: 146, side: 146, bottom: 146), // waxed_copper_block
+    (top: 705, side: 705, bottom: 705), // waxed_weathered_copper
+    (top: 704, side: 704, bottom: 704), // waxed_exposed_copper
+    (top: 706, side: 706, bottom: 706), // waxed_oxidized_copper
+    (top: 709, side: 709, bottom: 709), // waxed_oxidized_cut_copper
+    (top: 708, side: 708, bottom: 708), // waxed_weathered_cut_copper
+    (top: 707, side: 707, bottom: 707), // waxed_exposed_cut_copper
+    (top: 710, side: 710, bottom: 710), // waxed_cut_copper
+    (top: 709, side: 709, bottom: 709), // waxed_oxidized_cut_copper_stairs
+    (top: 709, side: 709, bottom: 709), // waxed_oxidized_cut_copper_stairs_south
+    (top: 709, side: 709, bottom: 709), // waxed_oxidized_cut_copper_stairs_west
+    (top: 709, side: 709, bottom: 709), // waxed_oxidized_cut_copper_stairs_east
+    (top: 708, side: 708, bottom: 708), // waxed_weathered_cut_copper_stairs
+    (top: 708, side: 708, bottom: 708), // waxed_weathered_cut_copper_stairs_south
+    (top: 708, side: 708, bottom: 708), // waxed_weathered_cut_copper_stairs_west
+    (top: 708, side: 708, bottom: 708), // waxed_weathered_cut_copper_stairs_east
+    (top: 707, side: 707, bottom: 707), // waxed_exposed_cut_copper_stairs
+    (top: 707, side: 707, bottom: 707), // waxed_exposed_cut_copper_stairs_south
+    (top: 707, side: 707, bottom: 707), // waxed_exposed_cut_copper_stairs_west
+    (top: 707, side: 707, bottom: 707), // waxed_exposed_cut_copper_stairs_east
+    (top: 710, side: 710, bottom: 710), // waxed_cut_copper_stairs
+    (top: 710, side: 710, bottom: 710), // waxed_cut_copper_stairs_south
+    (top: 710, side: 710, bottom: 710), // waxed_cut_copper_stairs_west
+    (top: 710, side: 710, bottom: 710), // waxed_cut_copper_stairs_east
+    (top: 709, side: 709, bottom: 709), // waxed_oxidized_cut_copper_slab
+    (top: 708, side: 708, bottom: 708), // waxed_weathered_cut_copper_slab
+    (top: 707, side: 707, bottom: 707), // waxed_exposed_cut_copper_slab
+    (top: 710, side: 710, bottom: 710), // waxed_cut_copper_slab
+    (top: 691, side: 691, bottom: 691), // lightning_rod
+    (top: 594, side: 594, bottom: 594), // pointed_dripstone
+    (top: 657, side: 657, bottom: 657), // dripstone_block
+    (top: 595, side: 595, bottom: 595), // cave_vines
+    (top: 596, side: 596, bottom: 596), // cave_vines_plant
+    (top: 597, side: 597, bottom: 597), // spore_blossom
+    (top: 598, side: 598, bottom: 598), // azalea
+    (top: 599, side: 599, bottom: 599), // flowering_azalea
+    (top: 682, side: 682, bottom: 682), // moss_carpet
+    (top: 600, side: 600, bottom: 600), // pink_petals
+    (top: 712, side: 712, bottom: 712), // big_dripleaf
+    (top: 601, side: 601, bottom: 601), // big_dripleaf_stem
+    (top: 602, side: 602, bottom: 602), // small_dripleaf
+    (top: 603, side: 603, bottom: 603), // hanging_roots
+    (top: 653, side: 653, bottom: 653), // rooted_dirt
+    (top: 697, side: 697, bottom: 697), // cobbled_deepslate
+    (top: 697, side: 697, bottom: 697), // cobbled_deepslate_stairs
+    (top: 697, side: 697, bottom: 697), // cobbled_deepslate_stairs_south
+    (top: 697, side: 697, bottom: 697), // cobbled_deepslate_stairs_west
+    (top: 697, side: 697, bottom: 697), // cobbled_deepslate_stairs_east
+    (top: 697, side: 697, bottom: 697), // cobbled_deepslate_slab
+    (top: 697, side: 697, bottom: 697), // cobbled_deepslate_wall
+    (top: 698, side: 698, bottom: 698), // polished_deepslate
+    (top: 698, side: 698, bottom: 698), // polished_deepslate_stairs
+    (top: 698, side: 698, bottom: 698), // polished_deepslate_stairs_south
+    (top: 698, side: 698, bottom: 698), // polished_deepslate_stairs_west
+    (top: 698, side: 698, bottom: 698), // polished_deepslate_stairs_east
+    (top: 698, side: 698, bottom: 698), // polished_deepslate_slab
+    (top: 698, side: 698, bottom: 698), // polished_deepslate_wall
+    (top: 699, side: 699, bottom: 699), // deepslate_tiles
+    (top: 699, side: 699, bottom: 699), // deepslate_tile_stairs
+    (top: 699, side: 699, bottom: 699), // deepslate_tile_stairs_south
+    (top: 699, side: 699, bottom: 699), // deepslate_tile_stairs_west
+    (top: 699, side: 699, bottom: 699), // deepslate_tile_stairs_east
+    (top: 699, side: 699, bottom: 699), // deepslate_tile_slab
+    (top: 699, side: 699, bottom: 699), // deepslate_tile_wall
+    (top: 700, side: 700, bottom: 700), // deepslate_bricks
+    (top: 700, side: 700, bottom: 700), // deepslate_brick_stairs
+    (top: 700, side: 700, bottom: 700), // deepslate_brick_stairs_south
+    (top: 700, side: 700, bottom: 700), // deepslate_brick_stairs_west
+    (top: 700, side: 700, bottom: 700), // deepslate_brick_stairs_east
+    (top: 700, side: 700, bottom: 700), // deepslate_brick_slab
+    (top: 700, side: 700, bottom: 700), // deepslate_brick_wall
+    (top: 701, side: 701, bottom: 701), // chiseled_deepslate
+    (top: 702, side: 702, bottom: 702), // cracked_deepslate_bricks
+    (top: 703, side: 703, bottom: 703), // cracked_deepslate_tiles
+    (top: 4, side: 4, bottom: 4), // infested_deepslate
+    (top: 656, side: 656, bottom: 656), // smooth_basalt
+    (top: 659, side: 659, bottom: 659), // raw_iron_block
+    (top: 660, side: 660, bottom: 660), // raw_copper_block
+    (top: 661, side: 661, bottom: 661), // raw_gold_block
+    (top: 403, side: 403, bottom: 403, aux: Some(598)), // potted_azalea_bush
+    (top: 403, side: 403, bottom: 403, aux: Some(599)), // potted_flowering_azalea_bush
+    (top: 713, side: 714, bottom: 713), // ochre_froglight
+    (top: 715, side: 716, bottom: 715), // verdant_froglight
+    (top: 717, side: 718, bottom: 717), // pearlescent_froglight
+    (top: 604, side: 604, bottom: 604), // frogspawn
+    (top: 662, side: 663, bottom: 662), // reinforced_deepslate
+    (top: 690, side: 690, bottom: 690), // decorated_pot
+    (top: 719, side: 719, bottom: 719), // redstone_wire_on
+    (top: 721, side: 721, bottom: 721), // redstone_lamp_lit
+    (top: 720, side: 720, bottom: 720), // redstone_torch_off
+    (top: 720, side: 720, bottom: 720), // redstone_wall_torch_off
+    (top: 720, side: 720, bottom: 720), // redstone_wall_torch_off
+    (top: 720, side: 720, bottom: 720), // redstone_wall_torch_off
+    (top: 720, side: 720, bottom: 720), // redstone_wall_torch_off
+    (top: 722, side: 722, bottom: 722), // wheat_stage_0
+    (top: 723, side: 723, bottom: 723), // wheat_stage_1
+    (top: 724, side: 724, bottom: 724), // wheat_stage_2
+    (top: 725, side: 725, bottom: 725), // carrots_stage_0
+    (top: 726, side: 726, bottom: 726), // carrots_stage_1
+    (top: 727, side: 727, bottom: 727), // carrots_stage_2
+    (top: 728, side: 728, bottom: 728), // potatoes_stage_0
+    (top: 729, side: 729, bottom: 729), // potatoes_stage_1
+    (top: 730, side: 730, bottom: 730), // potatoes_stage_2
+    (top: 731, side: 731, bottom: 731), // beetroots_stage_0
+    (top: 732, side: 732, bottom: 732), // beetroots_stage_1
+    (top: 733, side: 733, bottom: 733), // beetroots_stage_2
+    (top: 734, side: 2, bottom: 2), // farmland_moist
+    (top: 735, side: 735, bottom: 735), // bamboo_small
+    (top: 736, side: 736, bottom: 736), // bamboo_large
+    (top: 737, side: 737, bottom: 737), // kelp_sprout
 ]

@@ -39,9 +39,150 @@ impl SoundKind {
 /// Emit after a successful interaction. `position` is the world-space block center.
 #[derive(Message, Clone, Copy, Debug)]
 pub struct BlockSound {
-    pub block: u8,
+    pub block: game_core::BlockId,
     pub kind: SoundKind,
     pub position: Vec3,
+}
+
+/// Звуки событий, не привязанных к материалу блока (синтезируются при запуске).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum EffectKind {
+    Fuse,
+    Explosion,
+    Anvil,
+}
+
+#[derive(Message, Clone, Copy, Debug)]
+pub struct EffectSound {
+    pub kind: EffectKind,
+    pub position: Vec3,
+}
+
+#[derive(Resource)]
+struct EffectClips {
+    fuse: Handle<BlockClip>,
+    explosion: Handle<BlockClip>,
+    anvil: Handle<BlockClip>,
+}
+
+const EFFECT_RATE: u32 = 22_050;
+
+fn noise_source(seed: u64) -> impl FnMut() -> f32 {
+    let mut x = seed | 1;
+    move || {
+        x ^= x << 13;
+        x ^= x >> 7;
+        x ^= x << 17;
+        ((x >> 40) as f32 / (1_u64 << 24) as f32) * 2.0 - 1.0
+    }
+}
+
+/// Шипение и потрескивание горящего фитиля (3,9 с).
+fn synth_fuse() -> Vec<f32> {
+    let mut noise = noise_source(0xF05E);
+    let mut last = 0.0_f32;
+    (0..(EFFECT_RATE as f32 * 3.9) as usize)
+        .map(|i| {
+            let t = i as f32 / EFFECT_RATE as f32;
+            let white = noise();
+            // Разность соседних отсчётов оставляет высокие частоты: шипение.
+            let hiss = (white - last) * 0.5;
+            last = white;
+            let crackle = if white > 0.985 { noise() * 1.6 } else { 0.0 };
+            let envelope = (0.22 + 0.06 * (t * 23.0).sin()) * (1.0 - 0.5 * (t / 3.9));
+            (hiss * envelope + crackle * 0.35).clamp(-1.0, 1.0)
+        })
+        .collect()
+}
+
+/// Низкий гул с резким началом (1,8 с).
+fn synth_explosion() -> Vec<f32> {
+    let mut noise = noise_source(0xB00B);
+    let mut low = 0.0_f32;
+    (0..(EFFECT_RATE as f32 * 1.8) as usize)
+        .map(|i| {
+            let t = i as f32 / EFFECT_RATE as f32;
+            let white = noise();
+            let cutoff = 0.02 + 0.25 * (-t * 4.0).exp();
+            low += (white - low) * cutoff;
+            let rumble = (t * 2.0 * std::f32::consts::PI * (60.0 - 20.0 * t)).sin();
+            let body = (low * 2.8 + rumble * 0.6) * (-t * 2.4).exp();
+            let click = white * (-t * 90.0).exp();
+            (body * 0.8 + click * 0.6).clamp(-1.0, 1.0)
+        })
+        .collect()
+}
+
+/// Металлический звон (0,7 с).
+fn synth_anvil() -> Vec<f32> {
+    let mut noise = noise_source(0xA117);
+    (0..(EFFECT_RATE as f32 * 0.7) as usize)
+        .map(|i| {
+            let t = i as f32 / EFFECT_RATE as f32;
+            let tau = 2.0 * std::f32::consts::PI;
+            let ring = (t * tau * 520.0).sin() * 0.5
+                + (t * tau * 1130.0).sin() * 0.3
+                + (t * tau * 1790.0).sin() * 0.2;
+            let hit = noise() * (-t * 120.0).exp();
+            (ring * (-t * 9.0).exp() * 0.7 + hit * 0.6).clamp(-1.0, 1.0)
+        })
+        .collect()
+}
+
+fn clip(samples: Vec<f32>) -> BlockClip {
+    BlockClip(SamplesBuffer::new(
+        std::num::NonZero::new(1).expect("один канал"),
+        std::num::NonZero::new(EFFECT_RATE).expect("частота"),
+        samples,
+    ))
+}
+
+fn load_effects(mut commands: Commands, mut assets: ResMut<Assets<BlockClip>>) {
+    commands.insert_resource(EffectClips {
+        fuse: assets.add(clip(synth_fuse())),
+        explosion: assets.add(clip(synth_explosion())),
+        anvil: assets.add(clip(synth_anvil())),
+    });
+}
+
+fn play_effects(
+    mut commands: Commands,
+    mut events: MessageReader<EffectSound>,
+    clips: Option<Res<EffectClips>>,
+    listener: Query<&GlobalTransform, With<SpatialListener>>,
+    active: Query<(), With<SoundLifetime>>,
+) {
+    let listener = listener.iter().next().map(GlobalTransform::translation);
+    let mut remaining = 64_usize.saturating_sub(active.iter().count()).min(8);
+    for event in events.read() {
+        let (Some(clips), Some(listener)) = (clips.as_ref(), listener) else {
+            continue;
+        };
+        if !event.position.is_finite() || remaining == 0 {
+            continue;
+        }
+        let (handle, range, level, seconds) = match event.kind {
+            EffectKind::Fuse => (&clips.fuse, 24.0, 0.55, 4.0),
+            EffectKind::Explosion => (&clips.explosion, 80.0, 1.0, 2.0),
+            EffectKind::Anvil => (&clips.anvil, 32.0, 0.8, 1.0),
+        };
+        let distance = event.position.distance(listener);
+        if distance > range {
+            continue;
+        }
+        let attenuation = 1.0 / (1.0 + (distance / (range / 4.0)).powi(2));
+        commands.spawn((
+            AudioPlayer(handle.clone()),
+            PlaybackSettings::DESPAWN
+                .with_spatial(true)
+                .with_spatial_scale(SpatialScale::new(0.08))
+                .with_volume(Volume::Linear(level * attenuation))
+                .with_duration(Duration::from_secs_f32(seconds)),
+            Transform::from_translation(event.position),
+            SoundLifetime(Timer::from_seconds(seconds + 0.2, TimerMode::Once)),
+        ));
+        remaining -= 1;
+    }
 }
 
 pub struct BlockAudioPlugin;
@@ -50,9 +191,13 @@ impl Plugin for BlockAudioPlugin {
     fn build(&self, app: &mut App) {
         app.add_audio_source::<BlockClip>()
             .add_message::<BlockSound>()
+            .add_message::<EffectSound>()
             .init_resource::<SoundRandom>()
-            .add_systems(Startup, load_library)
-            .add_systems(Update, (expire_emitters, play_block_sounds).chain());
+            .add_systems(Startup, (load_library, load_effects))
+            .add_systems(
+                Update,
+                (expire_emitters, play_block_sounds, play_effects).chain(),
+            );
     }
 }
 
@@ -354,7 +499,7 @@ fn expire_emitters(
 }
 
 // Original families occupy IDs 1…15; appended blocks reuse their material Foley.
-fn sound_family(block: u8) -> Option<usize> {
+fn sound_family(block: game_core::BlockId) -> Option<usize> {
     use game_core::*;
     let material = match block {
         CHEST | CRAFTING_TABLE => PLANKS,
@@ -423,6 +568,21 @@ mod tests {
     use super::*;
 
     #[test]
+    fn synthesized_effects_are_finite_audible_and_within_range() {
+        for (samples, seconds) in [
+            (synth_fuse(), 3.9),
+            (synth_explosion(), 1.8),
+            (synth_anvil(), 0.7),
+        ] {
+            assert!(samples.iter().all(|v| v.is_finite() && v.abs() <= 1.0));
+            let peak = samples.iter().fold(0.0_f32, |a, v| a.max(v.abs()));
+            assert!(peak > 0.1, "{peak}");
+            let length = samples.len() as f32 / EFFECT_RATE as f32;
+            assert!((length - seconds).abs() < 0.01);
+        }
+    }
+
+    #[test]
     fn stable_blocks_route_to_original_material_families() {
         use game_core::*;
         for block in 1..=15 {
@@ -445,7 +605,7 @@ mod tests {
         }
         assert_eq!(sound_family(AIR), None);
         assert_eq!(sound_family(26), None);
-        assert_eq!(sound_family(u8::MAX), None);
+        assert_eq!(sound_family(game_core::BlockId::MAX), None);
     }
 
     #[test]

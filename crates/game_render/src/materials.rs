@@ -1,4 +1,4 @@
-use crate::{BlockAtlas, MATERIAL_COUNT};
+use crate::{BlockAtlas, GLASS_LAYER, LAMP_LAYER, LAVA_LAYER, MATERIAL_COUNT, WATER_LAYER};
 use bevy::{
     asset::{RenderAssetUsages, embedded_asset},
     image::{ImageAddressMode, ImageFilterMode, ImageSampler, ImageSamplerDescriptor},
@@ -13,7 +13,8 @@ use bevy::{
 
 pub const TEXTURE_SIZE: u32 = 128;
 const ATLAS_WIDTH: u32 = TEXTURE_SIZE * 6;
-const ATLAS_HEIGHT: u32 = TEXTURE_SIZE * 6;
+const ATLAS_HEIGHT: u32 = TEXTURE_SIZE * crate::ATLAS_ROWS;
+const LEGACY_EXPANDED_HEIGHT: u32 = TEXTURE_SIZE * 6;
 
 pub type VoxelMaterial = ExtendedMaterial<StandardMaterial, TileArray>;
 
@@ -58,8 +59,16 @@ pub fn atlas_array(rgba: &[u8]) -> Result<Image, String> {
             .expect("legacy RGBA length checked");
         return atlas_array(BlockAtlas::from_legacy_rgba(&source)?.rgba.as_raw());
     }
+    // The previous internal 6×6 layout stays valid: missing rows are transparent.
+    if rgba.len() == (ATLAS_WIDTH * LEGACY_EXPANDED_HEIGHT * 4) as usize {
+        let mut padded = rgba.to_vec();
+        padded.resize((ATLAS_WIDTH * ATLAS_HEIGHT * 4) as usize, 0);
+        return atlas_array(&padded);
+    }
     if rgba.len() != (ATLAS_WIDTH * ATLAS_HEIGHT * 4) as usize {
-        return Err("atlas RGBA byte count does not match 768×384 or 768×768".into());
+        return Err(format!(
+            "atlas RGBA byte count does not match 768×384 or 768×{ATLAS_HEIGHT}"
+        ));
     }
     let mut data = Vec::new();
     for layer in 0..MATERIAL_COUNT {
@@ -168,6 +177,9 @@ pub fn create_materials_from_atlas(
     materials: &mut Assets<VoxelMaterial>,
     atlas: &BlockAtlas,
 ) -> Result<Vec<Handle<VoxelMaterial>>, String> {
+    // Пиксельный набор хранится увеличенным 4× без сглаживания, поэтому общий
+    // линейный сэмплер с анизотропией ×8 сохраняет крупные пиксели чёткими:
+    // WebGPU запрещает Nearest вместе с анизотропной фильтрацией.
     let array = atlas_array(atlas.rgba.as_raw())?;
     let data = array.data.as_ref().expect("initialized texture array");
     let layer_stride = data.len() / MATERIAL_COUNT;
@@ -190,18 +202,38 @@ pub fn create_materials_from_atlas(
                         1.,
                         match layer {
                             _ if has_alpha[layer] => 1.,
-                            12 => 0.35,
-                            13 => 0.65,
+                            GLASS_LAYER => 0.35,
+                            WATER_LAYER => 0.65,
                             _ => 1.,
                         },
                     ),
-                    perceptual_roughness: if matches!(layer, 12 | 13) { 0.28 } else { 0.92 },
+                    perceptual_roughness: if crate::is_blend_layer(layer) {
+                        0.28
+                    } else {
+                        0.92
+                    },
                     reflectance: 0.12,
+                    // Свечение не зависит от экспозиции камеры, поэтому значения порядка единицы.
+                    // Лампа светится сама: её видно ночью и в пещерах.
+                    emissive: if layer == LAMP_LAYER {
+                        LinearRgba::rgb(0.45, 0.32, 0.12)
+                    } else if layer == LAVA_LAYER {
+                        LinearRgba::rgb(0.55, 0.22, 0.04)
+                    } else {
+                        LinearRgba::BLACK
+                    },
                     alpha_mode: match layer {
-                        12 | 13 => AlphaMode::Blend,
-                        9 => AlphaMode::Mask(0.45),
+                        layer if crate::is_blend_layer(layer) => AlphaMode::Blend,
+                        layer if crate::is_cutout_layer(layer) => AlphaMode::Mask(0.45),
                         _ => AlphaMode::Opaque,
                     },
+                    // Растения — скрещённые плоскости, их видно с обеих сторон.
+                    cull_mode: if crate::is_double_sided_layer(layer) {
+                        None
+                    } else {
+                        Some(bevy::render::render_resource::Face::Back)
+                    },
+                    double_sided: crate::is_double_sided_layer(layer),
                     ..default()
                 },
                 extension: TileArray {
@@ -224,7 +256,7 @@ mod tests {
             for x in 0..ATLAS_WIDTH as usize {
                 let layer = (y / 128) * 6 + x / 128;
                 rgba[(y * ATLAS_WIDTH as usize + x) * 4..][..4].copy_from_slice(&[
-                    layer as u8 * 7,
+                    layer as u8,
                     30,
                     90,
                     255,
@@ -243,7 +275,7 @@ mod tests {
                     .as_chunks::<4>()
                     .0
                     .iter()
-                    .all(|p| *p == [layer as u8 * 7, 30, 90, 255])
+                    .all(|p| *p == [layer as u8, 30, 90, 255])
             );
         }
         assert!(atlas_array(&[]).is_err());
@@ -324,5 +356,28 @@ mod tests {
             materials.get(&handles[13]).unwrap().base.base_color.alpha(),
             0.65
         );
+    }
+
+    #[test]
+    fn cutout_layers_are_alpha_masked_and_only_plants_are_double_sided() {
+        let atlas = BlockAtlas::pixel().unwrap();
+        let mut images = Assets::default();
+        let mut materials = Assets::default();
+        let handles = create_materials_from_atlas(&mut images, &mut materials, &atlas).unwrap();
+        for (layer, handle) in handles.iter().enumerate() {
+            let base = &materials.get(handle).unwrap().base;
+            let cutout = crate::is_cutout_layer(layer);
+            assert_eq!(
+                matches!(base.alpha_mode, AlphaMode::Mask(_)),
+                cutout,
+                "layer {layer}"
+            );
+            assert_eq!(
+                base.cull_mode.is_none(),
+                crate::is_double_sided_layer(layer),
+                "layer {layer}"
+            );
+        }
+        assert!(crate::PLANT_LAYERS.clone().all(crate::is_cutout_layer));
     }
 }
