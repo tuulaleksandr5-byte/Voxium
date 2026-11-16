@@ -31,7 +31,42 @@ impl Default for RecipeBook {
         .expect("встроенные рецепты проверены тестами")
     }
 }
+/// Рецепт верстака для просмотра: предметы уже найдены в каталоге.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct RecipeView {
+    pub width: usize,
+    pub height: usize,
+    pub inputs: Vec<Option<(crate::content::ItemId, u16)>>,
+    pub output: (crate::content::ItemId, u16),
+}
+
 impl RecipeBook {
+    /// Все рецепты в виде, удобном для показа игроку.
+    #[must_use]
+    pub fn views(&self, catalog: &ContentRegistry) -> Vec<RecipeView> {
+        self.recipes
+            .iter()
+            .filter_map(|recipe| {
+                let inputs = recipe
+                    .inputs
+                    .iter()
+                    .map(|cell| match cell {
+                        Some(counted) => catalog
+                            .find(&counted.item)
+                            .map(|id| Some((id, counted.count))),
+                        None => Some(None),
+                    })
+                    .collect::<Option<Vec<_>>>()?;
+                Some(RecipeView {
+                    width: recipe.width,
+                    height: recipe.height,
+                    inputs,
+                    output: (catalog.find(&recipe.output.item)?, recipe.output.count),
+                })
+            })
+            .collect()
+    }
+
     /// Validate before replacing a live book; item names survive registry reloads.
     pub fn from_ron(source: &str, catalog: &ContentRegistry) -> Result<Self, String> {
         let recipes: Vec<Recipe> = ron::Options::default()

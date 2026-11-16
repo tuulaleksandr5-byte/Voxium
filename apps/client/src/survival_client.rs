@@ -29,6 +29,8 @@ pub enum PlayerAction {
         source: DamageSource,
     },
     MinedBlock,
+    /// Консоль: показать координаты могил.
+    Graves,
     /// Консоль: создать моба перед игроком.
     Summon(game_core::mobs::MobKind),
     /// Консоль: поставить блок со сдвигом от клетки игрока.
@@ -227,6 +229,26 @@ pub fn apply_actions(
                 &cfg,
             ),
             PlayerAction::MinedBlock => game.vitals.exhaust(cfg.mining_exhaustion, mode, &cfg),
+            PlayerAction::Graves => {
+                let mut cells: Vec<_> = game
+                    .containers
+                    .keys()
+                    .filter(|cell| game.world.block(**cell) == game_core::GRAVE)
+                    .copied()
+                    .collect();
+                cells.sort_unstable();
+                console.feedback = if cells.is_empty() {
+                    "Могил нет".to_string()
+                } else {
+                    let list: Vec<_> = cells
+                        .iter()
+                        .map(|c| format!("{} {} {}", c[0], c[1], c[2]))
+                        .collect();
+                    format!("Могилы: {}", list.join("; "))
+                };
+                game.status.clone_from(&console.feedback);
+                game.ui_dirty = true;
+            }
             PlayerAction::Summon(kind) => {
                 let forward = Quat::from_rotation_y(game.yaw) * Vec3::NEG_Z;
                 let position = game.feet + forward * 3.0 + Vec3::Y * 0.5;

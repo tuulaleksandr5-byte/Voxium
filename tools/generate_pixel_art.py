@@ -4776,6 +4776,28 @@ def kelp_sprout():
     return image
 
 
+@tile("grave_top")
+def grave_top():
+    r = rng("grave_top")
+    image = fill(canvas(), fbm(r), ["#6e6e72", "#7a7a80", "#86868c"])
+    speckle(image, r, ["#4a6a3a", "#5a7a46"], 40)
+    border(image, "#55555a", 2)
+    return image
+
+
+@tile("grave_side")
+def grave_side():
+    r = rng("grave_side")
+    image = fill(canvas(), fbm(r), ["#6a6a70", "#76767c", "#828288"])
+    speckle(image, r, ["#4a6a3a"], 26)
+    rect(image, 14, 6, 4, 18, "#3a3a40")
+    rect(image, 9, 11, 14, 4, "#3a3a40")
+    rect(image, 15, 7, 2, 16, "#58585e")
+    rect(image, 10, 12, 12, 2, "#58585e")
+    border(image, "#55555a", 1)
+    return image
+
+
 def main():
     pixel = ROOT / "assets/textures/pixel"
     tiles = {}

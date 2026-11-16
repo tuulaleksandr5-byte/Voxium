@@ -23,6 +23,7 @@ pub mod models;
 pub mod nature;
 pub mod ores;
 pub mod persistence;
+pub mod recipe_view;
 pub mod redstone;
 mod shape_table;
 pub mod smelting;

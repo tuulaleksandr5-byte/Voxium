@@ -37,6 +37,8 @@ pub struct Game {
     /// ЛКМ уже потрачена на удар по мобу: добыча ждёт отпускания кнопки.
     pub attack_lock: bool,
     /// Открытая вкладка творческого каталога.
+    /// Открытый обзор рецептов: предмет, «где используется», страница.
+    pub recipe_view: Option<(game_core::content::ItemId, bool, usize)>,
     pub catalog_tab: usize,
     /// На сколько рядов прокручена сетка творческого меню.
     pub catalog_scroll: usize,
@@ -95,6 +97,7 @@ impl Default for Game {
             furnaces: HashMap::new(),
             mobs: Default::default(),
             attack_lock: false,
+            recipe_view: None,
             catalog_tab: 0,
             catalog_scroll: 0,
             catalog_search: String::new(),
@@ -203,6 +206,7 @@ impl Game {
             pitch: self.pitch,
             time: self.clock,
             edits,
+            graves: crate::inventory_client::graves_to_save(self),
         }
     }
 }

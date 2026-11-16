@@ -430,7 +430,7 @@ mod tests {
                 || flowing
                 || crate::unlit(id) != id
                 || matches!(id, crate::REDSTONE_WALL_TORCH_OFF)
-                || (crate::WHEAT_0..=crate::KELP_SPROUT).contains(&id)
+                || (crate::WHEAT_0..=crate::GRAVE).contains(&id)
             {
                 continue;
             }

@@ -1843,3 +1843,4 @@
 1858;voxium:bamboo_small;Bamboo (small leaves);растение;нет;нет;0;1;топор, любая;Бамбук;
 1859;voxium:bamboo_large;Bamboo (large leaves);растение;нет;нет;0;1;топор, любая;Бамбук;
 1860;voxium:kelp_sprout;Kelp (sprout);растение;нет;нет;0;0.05;рука, любая;Ламинария;
+1861;voxium:grave;Grave;куб;да;да;0;2;кирка, любая;—;

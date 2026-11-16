@@ -2,7 +2,7 @@ use game_core::BLOCKS;
 use serde::Deserialize;
 
 /// Слои 0…35 — исходный атлас 6×6, слои 36…215 — дополнительные пиксельные тайлы.
-pub const MATERIAL_COUNT: usize = 738;
+pub const MATERIAL_COUNT: usize = 744;
 /// Строк в атласе: по шесть слоёв в строке.
 pub const ATLAS_ROWS: u32 = (MATERIAL_COUNT / 6) as u32;
 /// Слой листвы дуба в исходном атласе.

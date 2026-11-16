@@ -465,6 +465,10 @@ pub fn controls(
                     Some(InventoryAction::OpenContainer {
                         position: hit.block,
                     })
+                } else if game.world.block(hit.block) == game_core::GRAVE {
+                    Some(InventoryAction::OpenGrave {
+                        position: hit.block,
+                    })
                 } else if crate::inventory_client::special_item(&game).is_some() {
                     Some(InventoryAction::UseItem {
                         target: hit.block,

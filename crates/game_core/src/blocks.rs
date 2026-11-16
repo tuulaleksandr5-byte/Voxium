@@ -1346,6 +1346,7 @@ pub const FARMLAND_MOIST: BlockId = 1857;
 pub const BAMBOO_SMALL: BlockId = 1858;
 pub const BAMBOO_LARGE: BlockId = 1859;
 pub const KELP_SPROUT: BlockId = 1860;
+pub const GRAVE: BlockId = 1861;
 pub const PLANT2_FIRST: BlockId = 251;
 pub const PLANT2_LAST: BlockId = 280;
 
@@ -1369,7 +1370,7 @@ const fn block(
 }
 
 #[allow(clippy::large_const_arrays)]
-pub const BLOCKS: [BlockDef; 1861] = [
+pub const BLOCKS: [BlockDef; 1862] = [
     block(AIR, "Air", "air", 0.0, false, false),
     block(GRASS, "Grass", "grass", 0.6, true, true),
     block(DIRT, "Dirt", "dirt", 0.5, true, true),
@@ -14287,6 +14288,7 @@ pub const BLOCKS: [BlockDef; 1861] = [
         false,
         false,
     ),
+    block(GRAVE, "Grave", "grave", 2.0, true, true),
 ];
 
 /// Растения рисуются двумя скрещёнными плоскостями и не мешают ходьбе.
@@ -14881,7 +14883,7 @@ mod tests {
             "Crafting Table",
             "Furnace",
         ];
-        assert_eq!(BLOCKS.len(), 1861);
+        assert_eq!(BLOCKS.len(), 1862);
         for (offset, name) in expected.iter().enumerate() {
             let id = 17 + offset;
             assert_eq!(BLOCKS[id].id as usize, id);
@@ -14892,7 +14894,7 @@ mod tests {
 
     #[test]
     fn chest_extends_registry_without_changing_foundation_ids() {
-        assert_eq!(BLOCKS.len(), 1861);
+        assert_eq!(BLOCKS.len(), 1862);
         let chest = BLOCKS.get(16).expect("сундук зарегистрирован");
         assert_eq!(chest.name, "Chest");
         assert!(is_solid(16));

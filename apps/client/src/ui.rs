@@ -1,6 +1,7 @@
 //! Native Bevy menus and the in-game overlay. Screen changes are handled by the client.
 mod inventory;
 mod presentation;
+mod recipes;
 use crate::{
     console::ConsoleState,
     graphics_assets::BlockIcons,
@@ -75,6 +76,7 @@ fn setup_font(mut fonts: ResMut<Assets<Font>>) {
 pub fn plugin(app: &mut App) {
     presentation::plugin(app);
     inventory::plugin(app);
+    recipes::plugin(app);
     app.add_systems(Startup, setup_font);
     app.init_resource::<UiIntent>().add_systems(
         Update,

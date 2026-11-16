@@ -122,6 +122,12 @@ pub fn parse_command(text: &str) -> Result<PlayerAction, String> {
             };
             Ok(PlayerAction::SetRule(rule, value))
         }
+        Some("/graves") => {
+            if arguments.next().is_some() {
+                return Err("Использование: /graves".into());
+            }
+            Ok(PlayerAction::Graves)
+        }
         Some("/summon") => {
             let (Some(name), None) = (arguments.next(), arguments.next()) else {
                 return Err(

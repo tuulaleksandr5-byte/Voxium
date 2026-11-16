@@ -1862,4 +1862,5 @@
     (top: 735, side: 735, bottom: 735), // bamboo_small
     (top: 736, side: 736, bottom: 736), // bamboo_large
     (top: 737, side: 737, bottom: 737), // kelp_sprout
+    (top: 738, side: 739, bottom: 738), // grave
 ]

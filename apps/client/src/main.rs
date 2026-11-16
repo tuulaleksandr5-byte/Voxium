@@ -243,6 +243,7 @@ fn open(
     game.world.edits = data.edits.into_iter().collect();
     game.world_id = Some(id);
     inventory_client::reset_session(game, false);
+    inventory_client::restore_graves(game, &data.graves);
     game.name_input = data.name;
     game.feet = Vec3::from_array(data.player);
     game.velocity = Vec3::ZERO;
@@ -356,6 +357,7 @@ fn actions(
                     pitch: -0.15,
                     time: 240.,
                     edits: Vec::new(),
+                    graves: Vec::new(),
                 };
                 match save_world(&settings::save_root(), &id, &data) {
                     Ok(()) => {

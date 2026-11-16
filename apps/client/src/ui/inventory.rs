@@ -11,9 +11,9 @@ use game_core::{
 };
 
 #[derive(Component)]
-struct InventorySlot(SlotRef);
+pub(super) struct InventorySlot(pub(super) SlotRef);
 #[derive(Component)]
-struct CatalogItem(ItemId);
+pub(super) struct CatalogItem(pub(super) ItemId);
 #[derive(Component)]
 struct CraftResult;
 #[derive(Component)]
@@ -186,7 +186,7 @@ fn craft_preview(game: &Game) -> Option<ItemStack> {
     }
 }
 
-fn stack_at(game: &Game, slot: SlotRef) -> Option<&ItemStack> {
+pub(super) fn stack_at(game: &Game, slot: SlotRef) -> Option<&ItemStack> {
     match slot {
         SlotRef::Container(index) => game
             .open_container

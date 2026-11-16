@@ -45,6 +45,10 @@ pub enum InventoryAction {
     OpenContainer {
         position: [i32; 3],
     },
+    /// ПКМ по могиле: забрать все вещи обратно.
+    OpenGrave {
+        position: [i32; 3],
+    },
     /// ПКМ по кровати: точка возрождения; ночью — пропустить её.
     Sleep {
         position: [i32; 3],
@@ -273,6 +277,42 @@ pub fn close_inventory(game: &mut Game) {
     game.ui_dirty = true;
 }
 
+/// Вещи игрока по слотам: хотбар, рюкзак, броня, сетка, вторая рука, курсор.
+fn inventory_layout(inventory: &Inventory) -> Vec<Option<ItemStack>> {
+    inventory
+        .hotbar
+        .iter()
+        .chain(&inventory.main)
+        .chain(&inventory.armor)
+        .chain(&inventory.crafting)
+        .chain(std::iter::once(&inventory.offhand))
+        .chain(std::iter::once(&inventory.cursor))
+        .cloned()
+        .collect()
+}
+
+/// Ближайшая свободная клетка для могилы.
+fn grave_cell(game: &Game) -> Option<[i32; 3]> {
+    let base = [
+        game.feet.x.floor() as i32,
+        game.feet.y.floor() as i32,
+        game.feet.z.floor() as i32,
+    ];
+    let free = |cell: [i32; 3]| {
+        loaded_block(&game.world, cell).is_some_and(|block| {
+            block == AIR || game_core::is_plant(block) || game_core::is_fluid(block)
+        })
+    };
+    (0..=3)
+        .flat_map(|dy| {
+            [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]]
+                .into_iter()
+                .map(move |[dx, dz]| [dx, dy, dz])
+        })
+        .map(|d| [base[0] + d[0], base[1] + d[1], base[2] + d[2]])
+        .find(|cell| free(*cell) && game_core::valid_world_height(cell[1]))
+}
+
 pub fn on_death(game: &mut Game) {
     game.mining.reset();
     game.world_mouse.disarm();
@@ -280,12 +320,109 @@ pub fn on_death(game: &mut Game) {
         game.inventory.cursor = game.inventory.close_cursor(&game.content);
         game.inventory.crafting = game.inventory.close_crafting(&game.content);
     } else {
-        for stack in game.inventory.drain_all() {
-            spawn_drop(game, stack, game.feet + Vec3::Y * 0.6, Vec3::Y * 1.5);
+        let layout = inventory_layout(&game.inventory);
+        let stacks = game.inventory.drain_all();
+        if !stacks.is_empty() {
+            match grave_cell(game) {
+                Some(cell) if game.world.set(cell, game_core::GRAVE) => {
+                    game.containers.insert(cell, Container { slots: layout });
+                    game.status = format!(
+                        "Могила: {} {} {} — вещи ждут там (ПКМ — забрать)",
+                        cell[0], cell[1], cell[2]
+                    );
+                    game.revision += 1;
+                }
+                _ => {
+                    for stack in stacks {
+                        spawn_drop(game, stack, game.feet + Vec3::Y * 0.6, Vec3::Y * 1.5);
+                    }
+                }
+            }
         }
     }
     game.open_container = None;
     sync_hotbar(game);
+    game.ui_dirty = true;
+}
+
+/// Могилы мира в виде для сохранения.
+pub fn graves_to_save(game: &Game) -> Vec<game_core::persistence::Grave> {
+    let mut graves: Vec<_> = game
+        .containers
+        .iter()
+        .filter(|(position, _)| game.world.block(**position) == game_core::GRAVE)
+        .map(|(position, container)| game_core::persistence::Grave {
+            position: *position,
+            slots: container
+                .slots
+                .iter()
+                .map(|slot| {
+                    slot.as_ref().and_then(|stack| {
+                        game.content
+                            .get(stack.item)
+                            .map(|definition| (definition.id.clone(), stack.count))
+                    })
+                })
+                .collect(),
+        })
+        .collect();
+    graves.sort_by_key(|grave| grave.position);
+    graves
+}
+
+/// Восстанавливает содержимое могил из сохранения.
+pub fn restore_graves(game: &mut Game, graves: &[game_core::persistence::Grave]) {
+    for grave in graves {
+        let slots = grave
+            .slots
+            .iter()
+            .map(|slot| {
+                slot.as_ref().and_then(|(name, count)| {
+                    game.content
+                        .find(name)
+                        .map(|item| ItemStack::new(item, *count))
+                })
+            })
+            .collect();
+        game.containers.insert(grave.position, Container { slots });
+    }
+}
+
+/// Возвращает вещи из могилы на прежние места; что не поместилось — рядом на землю.
+fn open_grave(game: &mut Game, position: [i32; 3]) {
+    let Some(container) = game.containers.remove(&position) else {
+        game.world.set(position, AIR);
+        return;
+    };
+    let center = block_center(position);
+    let mut leftovers = Vec::new();
+    for (index, stack) in container.slots.into_iter().enumerate() {
+        let Some(stack) = stack else {
+            continue;
+        };
+        let inventory = &mut game.inventory;
+        let target = match index {
+            0..=8 => inventory.hotbar.get_mut(index),
+            9..=35 => inventory.main.get_mut(index - 9),
+            36..=39 => inventory.armor.get_mut(index - 36),
+            40..=43 => inventory.crafting.get_mut(index - 40),
+            44 => Some(&mut inventory.offhand),
+            _ => None,
+        };
+        match target {
+            Some(slot) if slot.is_none() => *slot = Some(stack),
+            _ => leftovers.push(stack),
+        }
+    }
+    for stack in leftovers {
+        if let Some(rest) = game.inventory.insert(stack, &game.content) {
+            spawn_drop(game, rest, center + Vec3::Y * 0.5, Vec3::Y * 1.5);
+        }
+    }
+    game.world.set(position, AIR);
+    game.status = "Вы забрали вещи из могилы".into();
+    sync_hotbar(game);
+    game.revision += 1;
     game.ui_dirty = true;
 }
 
@@ -536,6 +673,15 @@ fn process_action(game: &mut Game, action: &InventoryAction) -> Effects {
                 });
                 game.revision += 1;
                 game.ui_dirty = true;
+            }
+        }
+        InventoryAction::OpenGrave { position }
+            if game.mode == Mode::Playing && game.world_mouse.allowed() =>
+        {
+            if visible_hit(game).is_some_and(|hit| hit.block == *position)
+                && game.world.block(*position) == game_core::GRAVE
+            {
+                open_grave(game, *position);
             }
         }
         InventoryAction::Sleep { position }
@@ -2951,5 +3097,72 @@ mod tests {
             game.content.drop_for_block(game_core::WALL_TORCH),
             Some(torch)
         );
+    }
+
+    #[test]
+    fn death_leaves_a_grave_that_returns_every_item_to_its_old_slot_and_survives_saving() {
+        let mut game = world();
+        equip(&mut game, "foundation:oak_log");
+        game.inventory.hotbar[3] = Some(ItemStack::new(
+            game.content.find("voxium:apple").unwrap(),
+            5,
+        ));
+        game.inventory.main[4] = Some(ItemStack::new(
+            game.content.find("foundation:oak_planks").unwrap(),
+            9,
+        ));
+        game.inventory.offhand = Some(ItemStack::new(
+            game.content.find("voxium:apple").unwrap(),
+            2,
+        ));
+        let before = inventory_layout(&game.inventory);
+        on_death(&mut game);
+        assert!(game.inventory.drain_all().is_empty());
+        assert!(game.drops.entities.is_empty());
+        let (cell, _) = game
+            .containers
+            .iter()
+            .find(|(cell, _)| game.world.block(**cell) == game_core::GRAVE)
+            .map(|(c, x)| (*c, x.clone()))
+            .expect("могила");
+        assert!(game.status.starts_with("Могила"));
+        // Сохранение и загрузка не теряют вещи.
+        let saved = graves_to_save(&game);
+        assert_eq!(saved.len(), 1);
+        game.containers.clear();
+        restore_graves(&mut game, &saved);
+        assert!(game.containers.contains_key(&cell));
+        // Новый предмет в тех же руках: вещи из могилы не затирают его.
+        game.inventory.hotbar[0] = Some(ItemStack::new(
+            game.content.find("foundation:sand").unwrap(),
+            1,
+        ));
+        game.world_mouse.update(true, false, false);
+        open_grave(&mut game, cell);
+        assert_eq!(game.world.block(cell), AIR);
+        assert!(game.containers.is_empty());
+        let after = inventory_layout(&game.inventory);
+        assert_eq!(after[3], before[3]);
+        assert_eq!(after[9 + 4], before[9 + 4]);
+        assert_eq!(after[44], before[44]);
+        let log = game.content.find("foundation:oak_log").unwrap();
+        let found = game
+            .inventory
+            .hotbar
+            .iter()
+            .chain(&game.inventory.main)
+            .flatten()
+            .any(|stack| stack.item == log);
+        assert!(found || game.drops.entities.values().any(|d| d.stack.item == log));
+    }
+
+    #[test]
+    fn keep_inventory_makes_no_grave() {
+        let mut game = world();
+        equip(&mut game, "foundation:oak_log");
+        game.game_rules.keep_inventory = true;
+        on_death(&mut game);
+        assert!(game.containers.is_empty());
+        assert!(game.inventory.hotbar[0].is_some());
     }
 }

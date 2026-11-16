@@ -765,6 +765,7 @@ fn crop_stages_and_moist_farmland_mesh() {
         game_core::BAMBOO_SMALL,
         game_core::BAMBOO_LARGE,
         game_core::KELP_SPROUT,
+        game_core::GRAVE,
     ] {
         assert!(!single(block).is_empty(), "{block}");
     }

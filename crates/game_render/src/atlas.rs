@@ -60,7 +60,7 @@ macro_rules! pixel_tile {
 }
 /// Пиксельные тайлы новых блоков: слои 36…54 в обоих стилях графики.
 #[allow(clippy::large_const_arrays)]
-const EXTRA_TILES: [(&str, &[u8]); 702] = [
+const EXTRA_TILES: [(&str, &[u8]); 704] = [
     pixel_tile!("bricks"),
     pixel_tile!("stone_bricks"),
     pixel_tile!("mossy_cobblestone"),
@@ -763,6 +763,8 @@ const EXTRA_TILES: [(&str, &[u8]); 702] = [
     pixel_tile!("bamboo_small"),
     pixel_tile!("bamboo_large"),
     pixel_tile!("kelp_sprout"),
+    pixel_tile!("grave_top"),
+    pixel_tile!("grave_side"),
 ];
 /// Пиксельные версии семнадцати исходных тайлов (слои 0…16).
 const PIXEL_SOURCE_TILES: [(&str, &[u8]); 17] = [

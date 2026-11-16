@@ -136,6 +136,14 @@ impl SmeltingBook {
             fuels,
         })
     }
+    /// Все пары «что плавится → что получится», по возрастанию ID.
+    #[must_use]
+    pub fn pairs(&self) -> Vec<(ItemId, ItemId)> {
+        let mut pairs: Vec<_> = self.recipes.iter().map(|(a, b)| (*a, *b)).collect();
+        pairs.sort_unstable();
+        pairs
+    }
+
     #[must_use]
     pub fn result(&self, input: ItemId) -> Option<ItemId> {
         self.recipes.get(&input).copied()
