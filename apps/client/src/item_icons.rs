@@ -51,7 +51,8 @@ fn cache_icons(
                 depth_or_array_layers: 1,
             },
             TextureDimension::D2,
-            crate::tool_textures::pixels(&definition.id)
+            pack_pixels(&definition.id)
+                .or_else(|| crate::tool_textures::pixels(&definition.id))
                 .or_else(|| crate::item_textures::pixels(&definition.id))
                 .or_else(|| crate::pixel_icons::pixels(&definition.id))
                 .unwrap_or_else(|| placeholder_pixels(&definition.id, &definition.kind)),
@@ -66,6 +67,19 @@ fn cache_icons(
         game.ui_dirty = true;
     }
 }
+/// Dedicated egg art has priority over Faithful and the original item atlas.
+fn pack_pixels(id: &str) -> Option<Vec<u8>> {
+    let name = id.split_once(':')?.1;
+    let directory = if name.ends_with("_spawn_egg") {
+        "eggs"
+    } else {
+        "items"
+    };
+    let bytes = crate::pack_assets::file(&format!("{directory}/{name}.png"))?;
+    let rgba = image::load_from_memory(bytes).ok()?.into_rgba8();
+    Some(image::imageops::resize(&rgba, 128, 128, image::imageops::FilterType::Nearest).into_raw())
+}
+
 fn placeholder_pixels(id: &str, kind: &ItemKind) -> Vec<u8> {
     let mut pixels = vec![0; 32 * 32 * 4];
     for y in 3_i32..29 {

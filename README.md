@@ -1,5 +1,7 @@
 # Voxel Sandbox Rust
 
+**Пользовательские ресурс-паки:** модели собак, домашних животных, скелетов, монстров и двух боссов, рисунки яиц, Faithful 32× и кириллица, GUI Colourful Containers и начальное меню VOXIUM. [Состав, запуск и ограничения](docs/USER_RESOURCE_PACKS.md). Старые Windows ZIP этого обновления не содержат.
+
 Нативная 3D-песочница на **Rust 1.99.1 + Bevy 0.20.1**, edition 2024.
 
 [Скачать игру alpha.4 и все файлы проекта — ZIP (71 МБ)](https://github.com/tuulaleksandr5-byte/Voxium/raw/8d0d668b9f64c3adda2b66071207b0819a33ab82/VoxelSandbox-alpha.4-All-Files.zip)
