@@ -1,0 +1,9 @@
+{
+  "pack": {
+    "pack_format": 15,
+    "min_format": 15,
+    "max_format": 88,
+    "supported_formats": [15, 88],
+    "description": "§6Mob icons instead of eggs\n§8|§7 1.16-26.2_r1"
+  }
+}

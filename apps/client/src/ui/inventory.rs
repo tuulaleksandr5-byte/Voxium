@@ -10,6 +10,8 @@ use game_core::{
     items::ItemStack,
 };
 
+mod packed;
+
 #[derive(Component)]
 struct InventorySlot(SlotRef);
 #[derive(Component)]
@@ -212,7 +214,7 @@ fn slot(
     blocks: &BlockIcons,
     reference: SlotRef,
     empty_name: &str,
-) {
+) -> Entity {
     let stack = stack_at(game, reference);
     let selected = matches!(reference, SlotRef::Hotbar(index) if index == game.selected);
     let child = node(
@@ -252,6 +254,17 @@ fn slot(
         }),
         BorderColor::all(if selected { AMBER } else { LINE }),
     ));
+    let chest = matches!(reference, SlotRef::Container(_))
+        && matches!(
+            crate::inventory_client::open_block(game),
+            Some(
+                game_core::CHEST
+                    | game_core::TRAPPED_CHEST
+                    | game_core::ENDER_CHEST
+                    | game_core::BARREL
+            )
+        );
+    super::pack_art::slot(commands, child, chest);
     if let Some(stack) = stack {
         let icon = commands
             .spawn((
@@ -284,6 +297,7 @@ fn slot(
             ..default()
         });
     }
+    child
 }
 
 fn crafting(
@@ -744,6 +758,7 @@ fn creative_grid(
                 BorderColor::all(LINE),
                 NoPanelScroll,
             ));
+            super::pack_art::slot(commands, child, false);
             if let Some(id) = list.get(index).copied() {
                 commands.entity(child).insert((
                     Button,
@@ -897,6 +912,7 @@ pub(super) fn menu(
         BackgroundColor(Color::srgba(0.10, 0.045, 0.16, 0.98)),
         BorderColor::all(AMBER),
     ));
+    super::pack_art::frame(commands, panel);
     let open = crate::inventory_client::open_block(game);
     let title = match open {
         Some(game_core::CHEST) => "Сундук",
@@ -921,6 +937,12 @@ pub(super) fn menu(
         12.,
         MUTED,
     );
+    if (game.game_mode == GameMode::Survival || open.is_some())
+        && packed::menu(commands, panel, game, icons, blocks)
+    {
+        menu_footer(commands, panel);
+        return;
+    }
     // В творческом режиме без открытого блока меню как в оригинале: вкладки сверху и
     // снизу, сетка 9×5, ряд быстрого доступа; «Инвентарь выживания» — обычный экран.
     let creative_menu = game.game_mode == GameMode::Creative && game.open_container.is_none();

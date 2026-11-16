@@ -1,5 +1,6 @@
 //! Native Bevy menus and the in-game overlay. Screen changes are handled by the client.
 mod inventory;
+mod pack_art;
 mod presentation;
 use crate::{
     console::ConsoleState,
@@ -68,11 +69,14 @@ fn setup_font(mut fonts: ResMut<Assets<Font>>) {
     fonts
         .insert(
             UI_FONT.id(),
-            Font::from_bytes(include_bytes!("../assets/fonts/DejaVuSansMono.ttf").to_vec()),
+            Font::from_bytes(
+                include_bytes!("../../../assets/resource_packs/faithful.ttf").to_vec(),
+            ),
         )
         .expect("insert UI font");
 }
 pub fn plugin(app: &mut App) {
+    pack_art::plugin(app);
     presentation::plugin(app);
     inventory::plugin(app);
     app.add_systems(Startup, setup_font);
@@ -584,7 +588,7 @@ fn main_menu(commands: &mut Commands, root: Entity, game: &Game) {
             width: percent(89),
             max_width: px(1320),
             align_items: AlignItems::Center,
-            justify_content: JustifyContent::FlexStart,
+            justify_content: JustifyContent::FlexEnd,
             ..default()
         },
         Color::NONE,
@@ -593,36 +597,24 @@ fn main_menu(commands: &mut Commands, root: Entity, game: &Game) {
         commands,
         frame,
         Node {
-            width: px(450),
+            width: px(430),
             max_width: percent(100),
             max_height: Val::Vh(90.),
             flex_direction: FlexDirection::Column,
-            row_gap: px(14),
+            row_gap: px(12),
+            padding: UiRect::all(px(28)),
+            overflow: Overflow::scroll_y(),
             ..default()
         },
         Color::NONE,
     );
-    let mark = row(commands, hero, 5.);
-    for (height, color) in [
-        (20., TEAL),
-        (34., AMBER),
-        (26., Color::srgb(0.50, 0.64, 0.47)),
-    ] {
-        node(
-            commands,
-            mark,
-            Node {
-                width: px(22),
-                height: px(height),
-                align_self: AlignSelf::End,
-                ..default()
-            },
-            color,
-        );
-    }
-    label(commands, hero, "VOXEL SANDBOX", 18., TEAL);
-    label(commands, hero, "Маленькие блоки.\nБольшой мир.", 40., TEXT);
-    label(commands, hero, "Исследуй. Строй. Создавай своё.", 16., TEXT);
+    commands
+        .entity(hero)
+        .insert((ScrollArea, ScrollPosition::default(), Hovered::default()));
+    pack_art::frame(commands, hero);
+    label(commands, hero, "VOXIUM", 52., TEXT);
+    label(commands, hero, "Приключение начинается здесь", 17., AMBER);
+    label(commands, hero, "Исследуй мир. Построй свой дом.", 14., TEXT);
     node(
         commands,
         hero,
@@ -632,13 +624,13 @@ fn main_menu(commands: &mut Commands, root: Entity, game: &Game) {
         },
         Color::NONE,
     );
-    button(
+    let play = button(
         commands,
         hero,
         if game.world_id.is_some() {
-            "Продолжить игру  →"
+            "Продолжить игру"
         } else {
-            "Играть  →"
+            "Создать мир"
         },
         if game.world_id.is_some() {
             Action::Resume
@@ -647,19 +639,17 @@ fn main_menu(commands: &mut Commands, root: Entity, game: &Game) {
         },
         Tone::Primary,
     );
-    button(commands, hero, "Создать мир", Action::New, Tone::Normal);
-    button(
-        commands,
-        hero,
-        "Загрузить мир",
-        Action::LoadMenu,
-        Tone::Normal,
-    );
-    let bottom = row(commands, hero, 12.);
-    let settings = button(commands, bottom, "Настройки", Action::Settings, Tone::Quiet);
-    presentation::fit_button(commands, settings, percent(48.));
-    let quit = button(commands, bottom, "Выход", Action::Exit, Tone::Quiet);
-    presentation::fit_button(commands, quit, percent(48.));
+    pack_art::button_icon(commands, play, false, 0);
+    if game.world_id.is_some() {
+        let new = button(commands, hero, "Новый мир", Action::New, Tone::Normal);
+        pack_art::button_icon(commands, new, true, 3);
+    }
+    let load = button(commands, hero, "Мои миры", Action::LoadMenu, Tone::Normal);
+    pack_art::button_icon(commands, load, false, 0);
+    let settings = button(commands, hero, "Настройки", Action::Settings, Tone::Normal);
+    pack_art::button_icon(commands, settings, false, 3);
+    let quit = button(commands, hero, "Выйти из игры", Action::Exit, Tone::Quiet);
+    pack_art::button_icon(commands, quit, false, 4);
     status(commands, hero, game);
     let footer = node(
         commands,
@@ -675,7 +665,7 @@ fn main_menu(commands: &mut Commands, root: Entity, game: &Game) {
     label(
         commands,
         footer,
-        "Каждый мир начинается с одного блока.",
+        "VOXIUM · Ваш мир. Ваши правила.",
         12.,
         MUTED,
     );
@@ -1001,7 +991,7 @@ fn settings_menu(commands: &mut Commands, panel: Entity, game: &Game) {
         panel,
         "Графика блоков",
         if settings.pixel_textures {
-            "Пиксельная 32×  ↻"
+            "Faithful 32×  ↻"
         } else {
             "Рисованная  ↻"
         }

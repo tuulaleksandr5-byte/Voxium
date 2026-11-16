@@ -823,6 +823,14 @@ pub struct BlockAtlas {
 }
 
 impl BlockAtlas {
+    /// Load a complete native atlas without replacing its imported layers.
+    pub fn from_full_png(bytes: &[u8]) -> Result<Self, String> {
+        Ok(Self {
+            rgba: decode_png(bytes, (ATLAS_WIDTH, ATLAS_HEIGHT), "full atlas")?,
+            pixelated: true,
+        })
+    }
+
     /// Decode an original 768×384 PNG with six columns and three rows.
     pub fn from_png(bytes: &[u8]) -> Result<Self, String> {
         Self::from_legacy_rgba(&decode_png(bytes, (ATLAS_WIDTH, SOURCE_HEIGHT), "atlas")?)

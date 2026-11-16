@@ -91,7 +91,9 @@ const ORIGINAL_TILES: [&[u8]; 17] = [
 /// Пиксельный набор полностью встроен; рисованный читает исходные PNG и замены.
 pub fn load_atlas_for(pixel: bool) -> Result<game_render::BlockAtlas, String> {
     if pixel {
-        game_render::BlockAtlas::pixel()
+        game_render::BlockAtlas::from_full_png(include_bytes!(
+            "../../../assets/resource_packs/faithful_atlas.png"
+        ))
     } else {
         load_atlas()
     }

@@ -31,6 +31,9 @@ use std::{
 
 const REACH: f32 = 3.6;
 
+#[path = "mob_packs.rs"]
+mod packs;
+
 #[derive(Deserialize)]
 struct PartDef {
     name: String,
@@ -61,6 +64,8 @@ enum Role {
     Wing(f32),
     /// Лапа паука: сторона и номер от головы.
     SpiderLeg(f32, usize),
+    /// Imported spider bones already include their resting fan angles.
+    PackSpiderLeg(f32, usize),
     Fixed,
 }
 
@@ -93,7 +98,9 @@ struct PartModel {
     parent: Option<usize>,
     /// Точка вращения в блоках относительно родителя (или ступней модели).
     pivot: Vec3,
-    mesh: Handle<Mesh>,
+    rotation: Quat,
+    scale: Vec3,
+    mesh: Option<Handle<Mesh>>,
 }
 struct MobModel {
     parts: Vec<PartModel>,
@@ -103,7 +110,7 @@ struct MobModel {
 }
 
 #[derive(Resource, Default)]
-struct MobAssets(HashMap<MobKind, MobModel>);
+struct MobAssets(HashMap<MobKind, Vec<MobModel>>);
 
 struct MobVisual {
     root: Entity,
@@ -200,19 +207,25 @@ fn load_assets(
                     role: role(&part.name),
                     parent,
                     pivot: pivot / 16.0,
-                    mesh: meshes.add(part_mesh(part, definition.texture)),
+                    rotation: Quat::IDENTITY,
+                    scale: Vec3::ONE,
+                    mesh: Some(meshes.add(part_mesh(part, definition.texture))),
                 }
             })
             .collect();
         assets.0.insert(
             kind,
-            MobModel {
+            vec![MobModel {
                 parts,
                 material: material(Color::WHITE, &mut materials),
                 hurt: material(Color::srgb(1.0, 0.38, 0.34), &mut materials),
                 scale: mob_scale(kind, definition),
-            },
+            }],
         );
+    }
+    match packs::load(&mut meshes, &mut images, &mut materials) {
+        Ok(models) => assets.0.extend(models),
+        Err(error) => error!("Пользовательские модели недоступны: {error}"),
     }
 }
 
@@ -494,6 +507,19 @@ fn pose(mob: &Mob, role: Role, gait: f32) -> (Quat, Vec3) {
     };
     match (kind, role) {
         (_, Role::Fixed) => (Quat::IDENTITY, Vec3::ZERO),
+        (_, Role::PackSpiderLeg(side, index)) => {
+            let group = if (index % 2 == 0) == (side > 0.0) {
+                1.0
+            } else {
+                -1.0
+            };
+            let swing = phase.sin() * group * 0.25 * gait;
+            let lift = (phase.cos() * group).max(0.0) * 0.25 * gait;
+            (
+                Quat::from_rotation_y(side * swing) * Quat::from_rotation_z(side * lift),
+                Vec3::ZERO,
+            )
+        }
         (MobKind::Spider, Role::SpiderLeg(side, index)) => {
             let fan = [0.62, 0.22, -0.2, -0.6][index.min(3)];
             let group = if (index % 2 == 0) == (side > 0.0) {
@@ -674,9 +700,10 @@ fn sync(
     }
     let dt = time.delta_secs().min(0.1);
     for mob in game.mobs.mobs.values() {
-        let Some(model) = assets.0.get(&mob.kind) else {
+        let Some(variants) = assets.0.get(&mob.kind) else {
             continue;
         };
+        let model = &variants[(mob.id.wrapping_sub(1) as usize) % variants.len()];
         let visual = visuals.0.entry(mob.id).or_insert_with(|| {
             let root = commands
                 .spawn((root_transform(mob, model.scale, 0.0), Visibility::default()))
@@ -685,13 +712,17 @@ fn sync(
                 .parts
                 .iter()
                 .map(|part| {
-                    commands
-                        .spawn((
-                            Mesh3d(part.mesh.clone()),
-                            MeshMaterial3d(model.material.clone()),
-                            Transform::from_translation(part.pivot),
-                        ))
-                        .id()
+                    let mut entity = commands.spawn((
+                        Transform::from_translation(part.pivot)
+                            .with_rotation(part.rotation)
+                            .with_scale(part.scale),
+                        Visibility::default(),
+                    ));
+                    if let Some(mesh) = &part.mesh {
+                        entity
+                            .insert((Mesh3d(mesh.clone()), MeshMaterial3d(model.material.clone())));
+                    }
+                    entity.id()
                 })
                 .collect();
             for (index, part) in model.parts.iter().enumerate() {
@@ -728,7 +759,7 @@ fn sync(
         for (part, entity) in model.parts.iter().zip(&visual.parts) {
             if let Ok(mut transform) = transforms.get_mut(*entity) {
                 let (rotation, offset) = pose(mob, part.role, visual.gait);
-                transform.rotation = rotation;
+                transform.rotation = part.rotation * rotation;
                 transform.translation = part.pivot + offset;
             }
         }

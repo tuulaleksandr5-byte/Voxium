@@ -70,7 +70,7 @@ pub(super) fn background(commands: &mut Commands, parent: Entity) {
             top: px(0),
             ..default()
         },
-        Color::srgba(0.0, 0.025, 0.025, 0.15),
+        Color::srgba(0.025, 0.015, 0.05, 0.43),
     );
     commands
         .entity(shade)

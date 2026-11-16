@@ -16,6 +16,7 @@ mod item_textures;
 mod mining_client;
 mod mob_skins;
 mod mobs_client;
+mod pack_assets;
 mod pixel_icons;
 mod player;
 mod session;
