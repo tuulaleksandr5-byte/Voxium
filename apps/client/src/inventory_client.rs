@@ -1651,6 +1651,14 @@ mod tests {
         assert!(game.world.set([8, 101, 5], game_core::STONE));
         game
     }
+    fn grave_total(game: &Game) -> u32 {
+        game.containers
+            .iter()
+            .filter(|(cell, _)| game.world.block(**cell) == game_core::GRAVE)
+            .flat_map(|(_, c)| c.slots.iter().flatten())
+            .map(|stack| u32::from(stack.count))
+            .sum()
+    }
     fn equip(game: &mut Game, name: &str) {
         game.inventory.hotbar[game.selected] =
             Some(ItemStack::new(game.content.find(name).unwrap(), 1));
@@ -1723,7 +1731,8 @@ mod tests {
         game.inventory.crafting[1] = Some(stack(&game, game_core::STONE, 3));
         on_death(&mut game);
         on_death(&mut game);
-        assert_eq!(total_drops(&game), 3);
+        assert_eq!(total_drops(&game), 0);
+        assert_eq!(grave_total(&game), 3, "вещи лежат в могиле");
         assert!(game.inventory.drain_all().is_empty());
         reset_session(&mut game, false);
         fill(&mut game);
@@ -2320,7 +2329,13 @@ mod tests {
         game.inventory.armor[0] = Some(ItemStack::new(helmet, 1));
         on_death(&mut game);
         on_death(&mut game);
-        assert_eq!(total_drops(&game), 7);
+        assert_eq!(total_drops(&game), 0);
+        assert_eq!(
+            grave_total(&game),
+            7,
+            "курсор и вся экипировка — в одной могиле"
+        );
+        assert_eq!(game.containers.len(), 1);
         assert!(game.inventory.drain_all().is_empty());
     }
 
