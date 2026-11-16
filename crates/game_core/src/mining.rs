@@ -1,6 +1,6 @@
 //! Время разрушения и право на дроп вычисляются независимо.
 use crate::{
-    AIR, BEDROCK, BLOCKS, WATER,
+    AIR, BEDROCK, BLOCKS,
     content::{ContentRegistry, ItemId, ItemKind},
 };
 use serde::Deserialize;
@@ -32,6 +32,12 @@ impl Tool {
         };
         let Some((material, kind)) = name.split_once('_') else {
             return Self::Hand;
+        };
+        // Незеритовые инструменты копают как алмазные.
+        let material = if material == "netherite" {
+            "diamond"
+        } else {
+            material
         };
         let Some(material) = ["wooden", "stone", "iron", "diamond", "golden"]
             .iter()
@@ -71,7 +77,7 @@ impl Tool {
 #[derive(Clone, Debug, PartialEq, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct MiningRule {
-    block: u8,
+    block: crate::BlockId,
     hardness: f32,
     tool: ToolKind,
     harvest_tier: u8,
@@ -105,7 +111,8 @@ impl MiningConfig {
         for rule in &config.rules {
             let id = usize::from(rule.block);
             if id >= BLOCKS.len()
-                || matches!(rule.block, AIR | WATER | BEDROCK)
+                || matches!(rule.block, AIR | BEDROCK)
+                || crate::is_fluid(rule.block)
                 || seen[id]
                 || !valid(rule.hardness)
                 || rule.harvest_tier > 4
@@ -115,10 +122,9 @@ impl MiningConfig {
             }
             seen[id] = true;
         }
-        if BLOCKS
-            .iter()
-            .any(|b| !matches!(b.id, AIR | WATER | BEDROCK) && !seen[usize::from(b.id)])
-        {
+        if BLOCKS.iter().any(|b| {
+            !matches!(b.id, AIR | BEDROCK) && !crate::is_fluid(b.id) && !seen[usize::from(b.id)]
+        }) {
             return Err("Отсутствует правило добычи блока".into());
         }
         for rule in &config.rules {
@@ -135,14 +141,19 @@ impl MiningConfig {
         }
         Ok(config)
     }
-    fn rule(&self, block: u8) -> Option<&MiningRule> {
+    /// Нужный инструмент и минимальный уровень для добычи блока.
+    #[must_use]
+    pub fn rule_info(&self, block: crate::BlockId) -> Option<(ToolKind, u8)> {
+        self.rule(block).map(|rule| (rule.tool, rule.harvest_tier))
+    }
+    fn rule(&self, block: crate::BlockId) -> Option<&MiningRule> {
         self.rules.iter().find(|r| r.block == block)
     }
-    pub fn can_harvest(&self, block: u8, tool: Tool) -> bool {
+    pub fn can_harvest(&self, block: crate::BlockId, tool: Tool) -> bool {
         self.rule(block)
             .is_some_and(|r| r.harvest_tier == 0 || tool.tier(r.tool) >= r.harvest_tier)
     }
-    pub fn duration(&self, block: u8, tool: Tool) -> Option<f32> {
+    pub fn duration(&self, block: crate::BlockId, tool: Tool) -> Option<f32> {
         let rule = self.rule(block)?;
         let column = tool.column(rule.tool);
         if let Some(seconds) = rule.seconds {
@@ -165,7 +176,7 @@ impl MiningConfig {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct MiningTarget {
     pub position: [i32; 3],
-    pub block: u8,
+    pub block: crate::BlockId,
     pub item: Option<ItemId>,
     pub slot: usize,
 }

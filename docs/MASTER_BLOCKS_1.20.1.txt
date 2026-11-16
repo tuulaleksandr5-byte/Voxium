@@ -1,0 +1,1007 @@
+Все блоки — версия 1.20.1
+Количество: 1003
+Формат: № | Название | ID
+
+0000 | Воздух | air
+0001 | Камень | stone
+0002 | Гранит | granite
+0003 | Полированный гранит | polished_granite
+0004 | Диорит | diorite
+0005 | Полированный диорит | polished_diorite
+0006 | Андезит | andesite
+0007 | Полированный андезит | polished_andesite
+0008 | Дёрн | grass_block
+0009 | Земля | dirt
+0010 | Каменистая земля | coarse_dirt
+0011 | Подзол | podzol
+0012 | Булыжник | cobblestone
+0013 | Дубовые доски | oak_planks
+0014 | Еловые доски | spruce_planks
+0015 | Берёзовые доски | birch_planks
+0016 | Доски из тропического дерева | jungle_planks
+0017 | Акациевые доски | acacia_planks
+0018 | Вишнёвые доски | cherry_planks
+0019 | Доски из тёмного дуба | dark_oak_planks
+0020 | Мангровые доски | mangrove_planks
+0021 | Бамбуковые доски | bamboo_planks
+0022 | Бамбуковая мозаика | bamboo_mosaic
+0023 | Саженец дуба | oak_sapling
+0024 | Саженец ели | spruce_sapling
+0025 | Саженец берёзы | birch_sapling
+0026 | Саженец тропического дерева | jungle_sapling
+0027 | Саженец акации | acacia_sapling
+0028 | Саженец вишни | cherry_sapling
+0029 | Саженец тёмного дуба | dark_oak_sapling
+0030 | Мангровый отросток | mangrove_propagule
+0031 | Бедрок | bedrock
+0032 | Вода | water
+0033 | Лава | lava
+0034 | Песок | sand
+0035 | Подозрительный песок | suspicious_sand
+0036 | Красный песок | red_sand
+0037 | Гравий | gravel
+0038 | Подозрительный гравий | suspicious_gravel
+0039 | Золотая руда | gold_ore
+0040 | Золотоносный глубинный сланец | deepslate_gold_ore
+0041 | Железная руда | iron_ore
+0042 | Железоносный глубинный сланец | deepslate_iron_ore
+0043 | Угольная руда | coal_ore
+0044 | Угленосный глубинный сланец | deepslate_coal_ore
+0045 | Незерская золотая руда | nether_gold_ore
+0046 | Дубовое бревно | oak_log
+0047 | Еловое бревно | spruce_log
+0048 | Берёзовое бревно | birch_log
+0049 | Бревно тропического дерева | jungle_log
+0050 | Акациевое бревно | acacia_log
+0051 | Вишнёвое бревно | cherry_log
+0052 | Бревно тёмного дуба | dark_oak_log
+0053 | Мангровое бревно | mangrove_log
+0054 | Мангровые корни | mangrove_roots
+0055 | Грязные мангровые корни | muddy_mangrove_roots
+0056 | Блок бамбука | bamboo_block
+0057 | Обтёсанное еловое бревно | stripped_spruce_log
+0058 | Обтёсанное берёзовое бревно | stripped_birch_log
+0059 | Обтёсанное бревно тропического дерева | stripped_jungle_log
+0060 | Обтёсанное акациевое бревно | stripped_acacia_log
+0061 | Обтёсанное вишнёвое бревно | stripped_cherry_log
+0062 | Обтёсанное бревно тёмного дуба | stripped_dark_oak_log
+0063 | Обтёсанное дубовое бревно | stripped_oak_log
+0064 | Обтёсанное мангровое бревно | stripped_mangrove_log
+0065 | Блок обтёсанного бамбука | stripped_bamboo_block
+0066 | Дуб | oak_wood
+0067 | Ель | spruce_wood
+0068 | Берёза | birch_wood
+0069 | Тропическое дерево | jungle_wood
+0070 | Акация | acacia_wood
+0071 | Вишня | cherry_wood
+0072 | Тёмный дуб | dark_oak_wood
+0073 | Мангровое дерево | mangrove_wood
+0074 | Обтёсанная дубовая древесина | stripped_oak_wood
+0075 | Обтёсанная еловая древесина | stripped_spruce_wood
+0076 | Обтёсанная берёзовая древесина | stripped_birch_wood
+0077 | Обтёсанная тропическая древесина | stripped_jungle_wood
+0078 | Обтёсанная акациевая древесина | stripped_acacia_wood
+0079 | Обтёсанная вишнёвая древесина | stripped_cherry_wood
+0080 | Обтёсанная древесина тёмного дуба | stripped_dark_oak_wood
+0081 | Обтёсанная мангровая древесина | stripped_mangrove_wood
+0082 | Дубовые листья | oak_leaves
+0083 | Хвоя | spruce_leaves
+0084 | Берёзовые листья | birch_leaves
+0085 | Листья тропического дерева | jungle_leaves
+0086 | Листья акации | acacia_leaves
+0087 | Вишнёвые листья | cherry_leaves
+0088 | Листья тёмного дуба | dark_oak_leaves
+0089 | Мангровые листья | mangrove_leaves
+0090 | Листья азалии | azalea_leaves
+0091 | Листья цветущей азалии | flowering_azalea_leaves
+0092 | Губка | sponge
+0093 | Мокрая губка | wet_sponge
+0094 | Стекло | glass
+0095 | Лазуритовая руда | lapis_ore
+0096 | Лазуритоносный глубинный сланец | deepslate_lapis_ore
+0097 | Лазуритовый блок | lapis_block
+0098 | Раздатчик | dispenser
+0099 | Песчаник | sandstone
+0100 | Резной песчаник | chiseled_sandstone
+0101 | Пиленый песчаник | cut_sandstone
+0102 | Нотный блок | note_block
+0103 | Белая кровать | white_bed
+0104 | Оранжевая кровать | orange_bed
+0105 | Пурпурная кровать | magenta_bed
+0106 | Голубая кровать | light_blue_bed
+0107 | Жёлтая кровать | yellow_bed
+0108 | Лаймовая кровать | lime_bed
+0109 | Розовая кровать | pink_bed
+0110 | Серая кровать | gray_bed
+0111 | Светло-серая кровать | light_gray_bed
+0112 | Бирюзовая кровать | cyan_bed
+0113 | Фиолетовая кровать | purple_bed
+0114 | Синяя кровать | blue_bed
+0115 | Коричневая кровать | brown_bed
+0116 | Зелёная кровать | green_bed
+0117 | Красная кровать | red_bed
+0118 | Чёрная кровать | black_bed
+0119 | Энергорельсы | powered_rail
+0120 | Рельсы с датчиком | detector_rail
+0121 | Липкий поршень | sticky_piston
+0122 | Паутина | cobweb
+0123 | Трава | grass
+0124 | Папоротник | fern
+0125 | Мёртвый куст | dead_bush
+0126 | Морская трава | seagrass
+0127 | Высокая морская трава | tall_seagrass
+0128 | Поршень | piston
+0129 | Головка поршня | piston_head
+0130 | Белая шерсть | white_wool
+0131 | Оранжевая шерсть | orange_wool
+0132 | Пурпурная шерсть | magenta_wool
+0133 | Голубая шерсть | light_blue_wool
+0134 | Жёлтая шерсть | yellow_wool
+0135 | Лаймовая шерсть | lime_wool
+0136 | Розовая шерсть | pink_wool
+0137 | Серая шерсть | gray_wool
+0138 | Светло-серая шерсть | light_gray_wool
+0139 | Бирюзовая шерсть | cyan_wool
+0140 | Фиолетовая шерсть | purple_wool
+0141 | Синяя шерсть | blue_wool
+0142 | Коричневая шерсть | brown_wool
+0143 | Зелёная шерсть | green_wool
+0144 | Красная шерсть | red_wool
+0145 | Чёрная шерсть | black_wool
+0146 | Движущийся поршень | moving_piston
+0147 | Одуванчик | dandelion
+0148 | Факельник | torchflower
+0149 | Мак | poppy
+0150 | Синяя орхидея | blue_orchid
+0151 | Лук-батун | allium
+0152 | Хаустония серая | azure_bluet
+0153 | Красный тюльпан | red_tulip
+0154 | Оранжевый тюльпан | orange_tulip
+0155 | Белый тюльпан | white_tulip
+0156 | Розовый тюльпан | pink_tulip
+0157 | Ромашка | oxeye_daisy
+0158 | Синий василёк | cornflower
+0159 | Роза визера | wither_rose
+0160 | Ландыш | lily_of_the_valley
+0161 | Коричневый гриб | brown_mushroom
+0162 | Красный гриб | red_mushroom
+0163 | Золотой блок | gold_block
+0164 | Железный блок | iron_block
+0165 | Кирпичи | bricks
+0166 | Динамит | tnt
+0167 | Книжная полка | bookshelf
+0168 | Резная книжная полка | chiseled_bookshelf
+0169 | Замшелый булыжник | mossy_cobblestone
+0170 | Обсидиан | obsidian
+0171 | Факел | torch
+0172 | Настенный факел | wall_torch
+0173 | Огонь | fire
+0174 | Огонь душ | soul_fire
+0175 | Рассадник монстров | spawner
+0176 | Дубовые ступеньки | oak_stairs
+0177 | Сундук | chest
+0178 | Редстоуновый провод | redstone_wire
+0179 | Алмазная руда | diamond_ore
+0180 | Алмазоносный глубинный сланец | deepslate_diamond_ore
+0181 | Алмазный блок | diamond_block
+0182 | Верстак | crafting_table
+0183 | Ростки пшеницы | wheat
+0184 | Пашня | farmland
+0185 | Печь | furnace
+0186 | Дубовая табличка | oak_sign
+0187 | Еловая табличка | spruce_sign
+0188 | Берёзовая табличка | birch_sign
+0189 | Акациевая табличка | acacia_sign
+0190 | Вишнёвая табличка | cherry_sign
+0191 | Табличка из тропического дерева | jungle_sign
+0192 | Табличка из тёмного дуба | dark_oak_sign
+0193 | Мангровая табличка | mangrove_sign
+0194 | Бамбуковая табличка | bamboo_sign
+0195 | Дубовая дверь | oak_door
+0196 | Лестница | ladder
+0197 | Рельсы | rail
+0198 | Булыжные ступеньки | cobblestone_stairs
+0199 | Дубовая настенная табличка | oak_wall_sign
+0200 | Еловая настенная табличка | spruce_wall_sign
+0201 | Берёзовая настенная табличка | birch_wall_sign
+0202 | Акациевая настенная табличка | acacia_wall_sign
+0203 | Вишнёвая настенная табличка | cherry_wall_sign
+0204 | Настенная табличка из тропического дерева | jungle_wall_sign
+0205 | Настенная табличка из тёмного дуба | dark_oak_wall_sign
+0206 | Мангровая настенная табличка | mangrove_wall_sign
+0207 | Бамбуковая настенная табличка | bamboo_wall_sign
+0208 | Дубовая подвесная табличка | oak_hanging_sign
+0209 | Еловая подвесная табличка | spruce_hanging_sign
+0210 | Берёзовая подвесная табличка | birch_hanging_sign
+0211 | Акациевая подвесная табличка | acacia_hanging_sign
+0212 | Вишнёвая подвесная табличка | cherry_hanging_sign
+0213 | Подвесная табличка из тропического дерева | jungle_hanging_sign
+0214 | Подвесная табличка из тёмного дуба | dark_oak_hanging_sign
+0215 | Багровая подвесная табличка | crimson_hanging_sign
+0216 | Искажённая подвесная табличка | warped_hanging_sign
+0217 | Мангровая подвесная табличка | mangrove_hanging_sign
+0218 | Бамбуковая подвесная табличка | bamboo_hanging_sign
+0219 | Дубовая настенная подвесная табличка | oak_wall_hanging_sign
+0220 | Еловая настенная подвесная табличка | spruce_wall_hanging_sign
+0221 | Берёзовая настенная подвесная табличка | birch_wall_hanging_sign
+0222 | Акациевая настенная подвесная табличка | acacia_wall_hanging_sign
+0223 | Вишнёвая настенная подвесная табличка | cherry_wall_hanging_sign
+0224 | Настенная подвесная табличка из тропического дерева | jungle_wall_hanging_sign
+0225 | Настенная подвесная табличка из тёмного дуба | dark_oak_wall_hanging_sign
+0226 | Мангровая настенная подвесная табличка | mangrove_wall_hanging_sign
+0227 | Багровая настенная подвесная табличка | crimson_wall_hanging_sign
+0228 | Искажённая настенная подвесная табличка | warped_wall_hanging_sign
+0229 | Бамбуковая настенная подвесная табличка | bamboo_wall_hanging_sign
+0230 | Рычаг | lever
+0231 | Каменная нажимная плита | stone_pressure_plate
+0232 | Железная дверь | iron_door
+0233 | Дубовая нажимная плита | oak_pressure_plate
+0234 | Еловая нажимная плита | spruce_pressure_plate
+0235 | Берёзовая нажимная плита | birch_pressure_plate
+0236 | Нажимная плита из тропического дерева | jungle_pressure_plate
+0237 | Акациевая нажимная плита | acacia_pressure_plate
+0238 | Вишнёвая нажимная плита | cherry_pressure_plate
+0239 | Нажимная плита из тёмного дуба | dark_oak_pressure_plate
+0240 | Мангровая нажимная плита | mangrove_pressure_plate
+0241 | Бамбуковая нажимная плита | bamboo_pressure_plate
+0242 | Редстоуновая руда | redstone_ore
+0243 | Редстоуноносный глубинный сланец | deepslate_redstone_ore
+0244 | Редстоуновый факел | redstone_torch
+0245 | Настенный редстоуновый факел | redstone_wall_torch
+0246 | Каменная кнопка | stone_button
+0247 | Снег | snow
+0248 | Лёд | ice
+0249 | Блок снега | snow_block
+0250 | Кактус | cactus
+0251 | Глина | clay
+0252 | Сахарный тростник | sugar_cane
+0253 | Проигрыватель | jukebox
+0254 | Дубовый забор | oak_fence
+0255 | Тыква | pumpkin
+0256 | Незерак | netherrack
+0257 | Песок душ | soul_sand
+0258 | Почва душ | soul_soil
+0259 | Базальт | basalt
+0260 | Полированный базальт | polished_basalt
+0261 | Факел душ | soul_torch
+0262 | Настенный факел душ | soul_wall_torch
+0263 | Светокамень | glowstone
+0264 | Портал в Незер | nether_portal
+0265 | Вырезанная тыква | carved_pumpkin
+0266 | Светильник Джека | jack_o_lantern
+0267 | Торт | cake
+0268 | Редстоуновый повторитель | repeater
+0269 | Белое стекло | white_stained_glass
+0270 | Оранжевое стекло | orange_stained_glass
+0271 | Пурпурное стекло | magenta_stained_glass
+0272 | Голубое стекло | light_blue_stained_glass
+0273 | Жёлтое стекло | yellow_stained_glass
+0274 | Лаймовое стекло | lime_stained_glass
+0275 | Розовое стекло | pink_stained_glass
+0276 | Серое стекло | gray_stained_glass
+0277 | Светло-серое стекло | light_gray_stained_glass
+0278 | Бирюзовое стекло | cyan_stained_glass
+0279 | Фиолетовое стекло | purple_stained_glass
+0280 | Синее стекло | blue_stained_glass
+0281 | Коричневое стекло | brown_stained_glass
+0282 | Зелёное стекло | green_stained_glass
+0283 | Красное стекло | red_stained_glass
+0284 | Чёрное стекло | black_stained_glass
+0285 | Дубовый люк | oak_trapdoor
+0286 | Еловый люк | spruce_trapdoor
+0287 | Берёзовый люк | birch_trapdoor
+0288 | Люк из тропического дерева | jungle_trapdoor
+0289 | Акациевый люк | acacia_trapdoor
+0290 | Вишнёвый люк | cherry_trapdoor
+0291 | Люк из тёмного дуба | dark_oak_trapdoor
+0292 | Мангровый люк | mangrove_trapdoor
+0293 | Бамбуковый люк | bamboo_trapdoor
+0294 | Каменные кирпичи | stone_bricks
+0295 | Замшелые каменные кирпичи | mossy_stone_bricks
+0296 | Потрескавшиеся каменные кирпичи | cracked_stone_bricks
+0297 | Резные каменные кирпичи | chiseled_stone_bricks
+0298 | Плотная грязь | packed_mud
+0299 | Саманные кирпичи | mud_bricks
+0300 | Заражённый камень | infested_stone
+0301 | Заражённый булыжник | infested_cobblestone
+0302 | Заражённые каменные кирпичи | infested_stone_bricks
+0303 | Заражённые замшелые каменные кирпичи | infested_mossy_stone_bricks
+0304 | Заражённые потрескавшиеся каменные кирпичи | infested_cracked_stone_bricks
+0305 | Заражённые резные каменные кирпичи | infested_chiseled_stone_bricks
+0306 | Блок коричневого гриба | brown_mushroom_block
+0307 | Блок красного гриба | red_mushroom_block
+0308 | Ножка гриба | mushroom_stem
+0309 | Железные прутья | iron_bars
+0310 | Цепь | chain
+0311 | Стеклянная панель | glass_pane
+0312 | Арбуз | melon
+0313 | Прикреплённый стебель тыквы | attached_pumpkin_stem
+0314 | Прикреплённый стебель арбуза | attached_melon_stem
+0315 | Стебель тыквы | pumpkin_stem
+0316 | Стебель арбуза | melon_stem
+0317 | Лианы | vine
+0318 | Светящийся лишайник | glow_lichen
+0319 | Дубовая калитка | oak_fence_gate
+0320 | Кирпичные ступеньки | brick_stairs
+0321 | Ступеньки из каменного кирпича | stone_brick_stairs
+0322 | Саманные ступеньки | mud_brick_stairs
+0323 | Мицелий | mycelium
+0324 | Кувшинка | lily_pad
+0325 | Незерские кирпичи | nether_bricks
+0326 | Забор из незерского кирпича | nether_brick_fence
+0327 | Ступеньки из незерского кирпича | nether_brick_stairs
+0328 | Незерский нарост | nether_wart
+0329 | Чародейский стол | enchanting_table
+0330 | Зельеварка | brewing_stand
+0331 | Котёл | cauldron
+0332 | Котёл с водой | water_cauldron
+0333 | Котёл с лавой | lava_cauldron
+0334 | Котёл с рыхлым снегом | powder_snow_cauldron
+0335 | Портал в Энд | end_portal
+0336 | Рамка портала в Энд | end_portal_frame
+0337 | Эндерняк | end_stone
+0338 | Яйцо дракона | dragon_egg
+0339 | Редстоуновый фонарь | redstone_lamp
+0340 | Какао | cocoa
+0341 | Песчаниковые ступеньки | sandstone_stairs
+0342 | Изумрудная руда | emerald_ore
+0343 | Изумрудоносный глубинный сланец | deepslate_emerald_ore
+0344 | Эндер-сундук | ender_chest
+0345 | Крюк | tripwire_hook
+0346 | Растяжка | tripwire
+0347 | Изумрудный блок | emerald_block
+0348 | Еловые ступеньки | spruce_stairs
+0349 | Берёзовые ступеньки | birch_stairs
+0350 | Ступеньки из тропического дерева | jungle_stairs
+0351 | Командный блок | command_block
+0352 | Маяк | beacon
+0353 | Булыжная ограда | cobblestone_wall
+0354 | Замшелая булыжная ограда | mossy_cobblestone_wall
+0355 | Цветочный горшок | flower_pot
+0356 | Факельник в горшке | potted_torchflower
+0357 | Саженец дуба в горшке | potted_oak_sapling
+0358 | Саженец ели в горшке | potted_spruce_sapling
+0359 | Саженец берёзы в горшке | potted_birch_sapling
+0360 | Саженец тропического дерева в горшке | potted_jungle_sapling
+0361 | Саженец акации в горшке | potted_acacia_sapling
+0362 | Саженец вишни в горшке | potted_cherry_sapling
+0363 | Саженец тёмного дуба в горшке | potted_dark_oak_sapling
+0364 | Мангровый отросток в горшке | potted_mangrove_propagule
+0365 | Папоротник в горшке | potted_fern
+0366 | Одуванчик в горшке | potted_dandelion
+0367 | Мак в горшке | potted_poppy
+0368 | Синяя орхидея в горшке | potted_blue_orchid
+0369 | Лук-батун в горшке | potted_allium
+0370 | Хаустония серая в горшке | potted_azure_bluet
+0371 | Красный тюльпан в горшке | potted_red_tulip
+0372 | Оранжевый тюльпан в горшке | potted_orange_tulip
+0373 | Белый тюльпан в горшке | potted_white_tulip
+0374 | Розовый тюльпан в горшке | potted_pink_tulip
+0375 | Ромашка в горшке | potted_oxeye_daisy
+0376 | Синий василёк в горшке | potted_cornflower
+0377 | Ландыш в горшке | potted_lily_of_the_valley
+0378 | Роза визера в горшке | potted_wither_rose
+0379 | Красный гриб в горшке | potted_red_mushroom
+0380 | Коричневый гриб в горшке | potted_brown_mushroom
+0381 | Мёртвый куст в горшке | potted_dead_bush
+0382 | Кактус в горшке | potted_cactus
+0383 | Морковь | carrots
+0384 | Картофель | potatoes
+0385 | Дубовая кнопка | oak_button
+0386 | Еловая кнопка | spruce_button
+0387 | Берёзовая кнопка | birch_button
+0388 | Кнопка из тропического дерева | jungle_button
+0389 | Акациевая кнопка | acacia_button
+0390 | Вишнёвая кнопка | cherry_button
+0391 | Кнопка из тёмного дуба | dark_oak_button
+0392 | Мангровая кнопка | mangrove_button
+0393 | Бамбуковая кнопка | bamboo_button
+0394 | Череп | skeleton_skull
+0395 | Настенный череп | skeleton_wall_skull
+0396 | Череп визер-скелета | wither_skeleton_skull
+0397 | Настенный череп визер-скелета | wither_skeleton_wall_skull
+0398 | Голова зомби | zombie_head
+0399 | Настенная голова зомби | zombie_wall_head
+0400 | Голова игрока | player_head
+0401 | Настенная голова игрока | player_wall_head
+0402 | Голова крипера | creeper_head
+0403 | Настенная голова крипера | creeper_wall_head
+0404 | Голова дракона | dragon_head
+0405 | Настенная голова дракона | dragon_wall_head
+0406 | Голова пиглина | piglin_head
+0407 | Настенная голова пиглина | piglin_wall_head
+0408 | Наковальня | anvil
+0409 | Повреждённая наковальня | chipped_anvil
+0410 | Разбитая наковальня | damaged_anvil
+0411 | Сундук-ловушка | trapped_chest
+0412 | Весовая пластина | light_weighted_pressure_plate
+0413 | Большегрузная весовая пластина | heavy_weighted_pressure_plate
+0414 | Редстоуновый компаратор | comparator
+0415 | Датчик дневного света | daylight_detector
+0416 | Редстоуновый блок | redstone_block
+0417 | Незер-кварцевая руда | nether_quartz_ore
+0418 | Воронка | hopper
+0419 | Кварцевый блок | quartz_block
+0420 | Резной кварцевый блок | chiseled_quartz_block
+0421 | Кварцевая колонна | quartz_pillar
+0422 | Кварцевые ступеньки | quartz_stairs
+0423 | Активирующие рельсы | activator_rail
+0424 | Выбрасыватель | dropper
+0425 | Белая керамика | white_terracotta
+0426 | Оранжевая керамика | orange_terracotta
+0427 | Пурпурная керамика | magenta_terracotta
+0428 | Голубая керамика | light_blue_terracotta
+0429 | Жёлтая керамика | yellow_terracotta
+0430 | Лаймовая керамика | lime_terracotta
+0431 | Розовая керамика | pink_terracotta
+0432 | Серая керамика | gray_terracotta
+0433 | Светло-серая керамика | light_gray_terracotta
+0434 | Бирюзовая керамика | cyan_terracotta
+0435 | Фиолетовая керамика | purple_terracotta
+0436 | Синяя керамика | blue_terracotta
+0437 | Коричневая керамика | brown_terracotta
+0438 | Зелёная керамика | green_terracotta
+0439 | Красная керамика | red_terracotta
+0440 | Чёрная керамика | black_terracotta
+0441 | Белая стеклянная панель | white_stained_glass_pane
+0442 | Оранжевая стеклянная панель | orange_stained_glass_pane
+0443 | Пурпурная стеклянная панель | magenta_stained_glass_pane
+0444 | Голубая стеклянная панель | light_blue_stained_glass_pane
+0445 | Жёлтая стеклянная панель | yellow_stained_glass_pane
+0446 | Лаймовая стеклянная панель | lime_stained_glass_pane
+0447 | Розовая стеклянная панель | pink_stained_glass_pane
+0448 | Серая стеклянная панель | gray_stained_glass_pane
+0449 | Светло-серая стеклянная панель | light_gray_stained_glass_pane
+0450 | Бирюзовая стеклянная панель | cyan_stained_glass_pane
+0451 | Фиолетовая стеклянная панель | purple_stained_glass_pane
+0452 | Синяя стеклянная панель | blue_stained_glass_pane
+0453 | Коричневая стеклянная панель | brown_stained_glass_pane
+0454 | Зелёная стеклянная панель | green_stained_glass_pane
+0455 | Красная стеклянная панель | red_stained_glass_pane
+0456 | Чёрная стеклянная панель | black_stained_glass_pane
+0457 | Акациевые ступеньки | acacia_stairs
+0458 | Вишнёвые ступеньки | cherry_stairs
+0459 | Ступеньки из тёмного дуба | dark_oak_stairs
+0460 | Мангровые ступеньки | mangrove_stairs
+0461 | Бамбуковые ступеньки | bamboo_stairs
+0462 | Ступеньки из бамбуковой мозаики | bamboo_mosaic_stairs
+0463 | Блок слизи | slime_block
+0464 | Барьер | barrier
+0465 | Свет | light
+0466 | Железный люк | iron_trapdoor
+0467 | Призмарин | prismarine
+0468 | Призмариновые кирпичи | prismarine_bricks
+0469 | Тёмный призмарин | dark_prismarine
+0470 | Призмариновые ступеньки | prismarine_stairs
+0471 | Ступеньки из призмаринового кирпича | prismarine_brick_stairs
+0472 | Ступеньки из тёмного призмарина | dark_prismarine_stairs
+0473 | Призмариновая плита | prismarine_slab
+0474 | Плита из призмаринового кирпича | prismarine_brick_slab
+0475 | Плита из тёмного призмарина | dark_prismarine_slab
+0476 | Морской фонарь | sea_lantern
+0477 | Сноп сена | hay_block
+0478 | Белый ковёр | white_carpet
+0479 | Оранжевый ковёр | orange_carpet
+0480 | Пурпурный ковёр | magenta_carpet
+0481 | Голубой ковёр | light_blue_carpet
+0482 | Жёлтый ковёр | yellow_carpet
+0483 | Лаймовый ковёр | lime_carpet
+0484 | Розовый ковёр | pink_carpet
+0485 | Серый ковёр | gray_carpet
+0486 | Светло-серый ковёр | light_gray_carpet
+0487 | Бирюзовый ковёр | cyan_carpet
+0488 | Фиолетовый ковёр | purple_carpet
+0489 | Синий ковёр | blue_carpet
+0490 | Коричневый ковёр | brown_carpet
+0491 | Зелёный ковёр | green_carpet
+0492 | Красный ковёр | red_carpet
+0493 | Чёрный ковёр | black_carpet
+0494 | Терракота | terracotta
+0495 | Угольный блок | coal_block
+0496 | Плотный лёд | packed_ice
+0497 | Подсолнух | sunflower
+0498 | Сирень | lilac
+0499 | Розовый куст | rose_bush
+0500 | Пион | peony
+0501 | Высокая трава | tall_grass
+0502 | Раскидистый папоротник | large_fern
+0503 | Белый флаг | white_banner
+0504 | Оранжевый флаг | orange_banner
+0505 | Пурпурный флаг | magenta_banner
+0506 | Голубой флаг | light_blue_banner
+0507 | Жёлтый флаг | yellow_banner
+0508 | Лаймовый флаг | lime_banner
+0509 | Розовый флаг | pink_banner
+0510 | Серый флаг | gray_banner
+0511 | Светло-серый флаг | light_gray_banner
+0512 | Бирюзовый флаг | cyan_banner
+0513 | Фиолетовый флаг | purple_banner
+0514 | Синий флаг | blue_banner
+0515 | Коричневый флаг | brown_banner
+0516 | Зелёный флаг | green_banner
+0517 | Красный флаг | red_banner
+0518 | Чёрный флаг | black_banner
+0519 | Белый флаг | white_wall_banner
+0520 | Оранжевый флаг | orange_wall_banner
+0521 | Пурпурный флаг | magenta_wall_banner
+0522 | Голубой флаг | light_blue_wall_banner
+0523 | Жёлтый флаг | yellow_wall_banner
+0524 | Лаймовый флаг | lime_wall_banner
+0525 | Розовый флаг | pink_wall_banner
+0526 | Серый флаг | gray_wall_banner
+0527 | Светло-серый флаг | light_gray_wall_banner
+0528 | Бирюзовый флаг | cyan_wall_banner
+0529 | Фиолетовый флаг | purple_wall_banner
+0530 | Синий флаг | blue_wall_banner
+0531 | Коричневый флаг | brown_wall_banner
+0532 | Зелёный флаг | green_wall_banner
+0533 | Красный флаг | red_wall_banner
+0534 | Чёрный флаг | black_wall_banner
+0535 | Красный песчаник | red_sandstone
+0536 | Резной красный песчаник | chiseled_red_sandstone
+0537 | Пиленый красный песчаник | cut_red_sandstone
+0538 | Ступеньки из красного песчаника | red_sandstone_stairs
+0539 | Дубовая плита | oak_slab
+0540 | Еловая плита | spruce_slab
+0541 | Берёзовая плита | birch_slab
+0542 | Плита из тропического дерева | jungle_slab
+0543 | Акациевая плита | acacia_slab
+0544 | Вишнёвая плита | cherry_slab
+0545 | Плита из тёмного дуба | dark_oak_slab
+0546 | Мангровая плита | mangrove_slab
+0547 | Бамбуковая плита | bamboo_slab
+0548 | Плита из бамбуковой мозаики | bamboo_mosaic_slab
+0549 | Каменная плита | stone_slab
+0550 | Плита из гладкого камня | smooth_stone_slab
+0551 | Песчаниковая плита | sandstone_slab
+0552 | Плита из пиленого песчаника | cut_sandstone_slab
+0553 | Окаменевшая дубовая плита | petrified_oak_slab
+0554 | Булыжная плита | cobblestone_slab
+0555 | Кирпичная плита | brick_slab
+0556 | Плита из каменного кирпича | stone_brick_slab
+0557 | Саманная плита | mud_brick_slab
+0558 | Плита из незерского кирпича | nether_brick_slab
+0559 | Кварцевая плита | quartz_slab
+0560 | Плита из красного песчаника | red_sandstone_slab
+0561 | Плита из пиленого красного песчаника | cut_red_sandstone_slab
+0562 | Пурпуровая плита | purpur_slab
+0563 | Гладкий камень | smooth_stone
+0564 | Гладкий песчаник | smooth_sandstone
+0565 | Гладкий кварц | smooth_quartz
+0566 | Гладкий красный песчаник | smooth_red_sandstone
+0567 | Еловая калитка | spruce_fence_gate
+0568 | Берёзовая калитка | birch_fence_gate
+0569 | Калитка из тропического дерева | jungle_fence_gate
+0570 | Акациевая калитка | acacia_fence_gate
+0571 | Вишнёвая калитка | cherry_fence_gate
+0572 | Калитка из тёмного дуба | dark_oak_fence_gate
+0573 | Мангровая калитка | mangrove_fence_gate
+0574 | Бамбуковая калитка | bamboo_fence_gate
+0575 | Еловый забор | spruce_fence
+0576 | Берёзовый забор | birch_fence
+0577 | Забор из тропического дерева | jungle_fence
+0578 | Акациевый забор | acacia_fence
+0579 | Вишнёвый забор | cherry_fence
+0580 | Забор из тёмного дуба | dark_oak_fence
+0581 | Мангровый забор | mangrove_fence
+0582 | Бамбуковый забор | bamboo_fence
+0583 | Еловая дверь | spruce_door
+0584 | Берёзовая дверь | birch_door
+0585 | Дверь из тропического дерева | jungle_door
+0586 | Акациевая дверь | acacia_door
+0587 | Вишнёвая дверь | cherry_door
+0588 | Дверь из тёмного дуба | dark_oak_door
+0589 | Мангровая дверь | mangrove_door
+0590 | Бамбуковая дверь | bamboo_door
+0591 | Стержень Энда | end_rod
+0592 | Хорус | chorus_plant
+0593 | Цветок хоруса | chorus_flower
+0594 | Пурпур | purpur_block
+0595 | Пурпуровый пилон | purpur_pillar
+0596 | Пурпуровые ступеньки | purpur_stairs
+0597 | Эндерняковые кирпичи | end_stone_bricks
+0598 | Росток факельника | torchflower_crop
+0599 | Росток кувшинницы | pitcher_crop
+0600 | Кувшинница | pitcher_plant
+0601 | Свёкла | beetroots
+0602 | Тропинка | dirt_path
+0603 | Врата Энда | end_gateway
+0604 | Повторяющий командный блок | repeating_command_block
+0605 | Последовательный командный блок | chain_command_block
+0606 | Талый лёд | frosted_ice
+0607 | Магма | magma_block
+0608 | Блок незерского нароста | nether_wart_block
+0609 | Красные незерские кирпичи | red_nether_bricks
+0610 | Костный блок | bone_block
+0611 | Пустой блок | structure_void
+0612 | Наблюдатель | observer
+0613 | Шалкеровый ящик | shulker_box
+0614 | Белый шалкеровый ящик | white_shulker_box
+0615 | Оранжевый шалкеровый ящик | orange_shulker_box
+0616 | Пурпурный шалкеровый ящик | magenta_shulker_box
+0617 | Голубой шалкеровый ящик | light_blue_shulker_box
+0618 | Жёлтый шалкеровый ящик | yellow_shulker_box
+0619 | Лаймовый шалкеровый ящик | lime_shulker_box
+0620 | Розовый шалкеровый ящик | pink_shulker_box
+0621 | Серый шалкеровый ящик | gray_shulker_box
+0622 | Светло-серый шалкеровый ящик | light_gray_shulker_box
+0623 | Бирюзовый шалкеровый ящик | cyan_shulker_box
+0624 | Фиолетовый шалкеровый ящик | purple_shulker_box
+0625 | Синий шалкеровый ящик | blue_shulker_box
+0626 | Коричневый шалкеровый ящик | brown_shulker_box
+0627 | Зелёный шалкеровый ящик | green_shulker_box
+0628 | Красный шалкеровый ящик | red_shulker_box
+0629 | Чёрный шалкеровый ящик | black_shulker_box
+0630 | Белая глазурованная керамика | white_glazed_terracotta
+0631 | Оранжевая глазурованная керамика | orange_glazed_terracotta
+0632 | Пурпурная глазурованная керамика | magenta_glazed_terracotta
+0633 | Голубая глазурованная керамика | light_blue_glazed_terracotta
+0634 | Жёлтая глазурованная керамика | yellow_glazed_terracotta
+0635 | Лаймовая глазурованная керамика | lime_glazed_terracotta
+0636 | Розовая глазурованная керамика | pink_glazed_terracotta
+0637 | Серая глазурованная керамика | gray_glazed_terracotta
+0638 | Светло-серая глазурованная керамика | light_gray_glazed_terracotta
+0639 | Бирюзовая глазурованная керамика | cyan_glazed_terracotta
+0640 | Фиолетовая глазурованная керамика | purple_glazed_terracotta
+0641 | Синяя глазурованная керамика | blue_glazed_terracotta
+0642 | Коричневая глазурованная керамика | brown_glazed_terracotta
+0643 | Зелёная глазурованная керамика | green_glazed_terracotta
+0644 | Красная глазурованная керамика | red_glazed_terracotta
+0645 | Чёрная глазурованная керамика | black_glazed_terracotta
+0646 | Белый бетон | white_concrete
+0647 | Оранжевый бетон | orange_concrete
+0648 | Пурпурный бетон | magenta_concrete
+0649 | Голубой бетон | light_blue_concrete
+0650 | Жёлтый бетон | yellow_concrete
+0651 | Лаймовый бетон | lime_concrete
+0652 | Розовый бетон | pink_concrete
+0653 | Серый бетон | gray_concrete
+0654 | Светло-серый бетон | light_gray_concrete
+0655 | Бирюзовый бетон | cyan_concrete
+0656 | Фиолетовый бетон | purple_concrete
+0657 | Синий бетон | blue_concrete
+0658 | Коричневый бетон | brown_concrete
+0659 | Зелёный бетон | green_concrete
+0660 | Красный бетон | red_concrete
+0661 | Чёрный бетон | black_concrete
+0662 | Белый сухой бетон | white_concrete_powder
+0663 | Оранжевый сухой бетон | orange_concrete_powder
+0664 | Пурпурный сухой бетон | magenta_concrete_powder
+0665 | Голубой сухой бетон | light_blue_concrete_powder
+0666 | Жёлтый сухой бетон | yellow_concrete_powder
+0667 | Лаймовый сухой бетон | lime_concrete_powder
+0668 | Розовый сухой бетон | pink_concrete_powder
+0669 | Серый сухой бетон | gray_concrete_powder
+0670 | Светло-серый сухой бетон | light_gray_concrete_powder
+0671 | Бирюзовый сухой бетон | cyan_concrete_powder
+0672 | Фиолетовый сухой бетон | purple_concrete_powder
+0673 | Синий сухой бетон | blue_concrete_powder
+0674 | Коричневый сухой бетон | brown_concrete_powder
+0675 | Зелёный сухой бетон | green_concrete_powder
+0676 | Красный сухой бетон | red_concrete_powder
+0677 | Чёрный сухой бетон | black_concrete_powder
+0678 | Ламинария | kelp
+0679 | Стебель ламинарии | kelp_plant
+0680 | Блок сушёной ламинарии | dried_kelp_block
+0681 | Черепашье яйцо | turtle_egg
+0682 | Яйцо нюхача | sniffer_egg
+0683 | Блок мёртвого трубчатого коралла | dead_tube_coral_block
+0684 | Блок мёртвого коралла-мозговика | dead_brain_coral_block
+0685 | Блок мёртвого пузырчатого коралла | dead_bubble_coral_block
+0686 | Блок мёртвого огненного коралла | dead_fire_coral_block
+0687 | Блок мёртвого рогового коралла | dead_horn_coral_block
+0688 | Блок трубчатого коралла | tube_coral_block
+0689 | Блок коралла-мозговика | brain_coral_block
+0690 | Блок пузырчатого коралла | bubble_coral_block
+0691 | Блок огненного коралла | fire_coral_block
+0692 | Блок рогового коралла | horn_coral_block
+0693 | Мёртвый трубчатый коралл | dead_tube_coral
+0694 | Мёртвый коралл-мозговик | dead_brain_coral
+0695 | Мёртвый пузырчатый коралл | dead_bubble_coral
+0696 | Мёртвый огненный коралл | dead_fire_coral
+0697 | Мёртвый роговый коралл | dead_horn_coral
+0698 | Трубчатый коралл | tube_coral
+0699 | Коралл-мозговик | brain_coral
+0700 | Пузырчатый коралл | bubble_coral
+0701 | Огненный коралл | fire_coral
+0702 | Роговой коралл | horn_coral
+0703 | Мёртвый веерный трубчатый коралл | dead_tube_coral_fan
+0704 | Мёртвый веерный коралл-мозговик | dead_brain_coral_fan
+0705 | Мёртвый веерный пузырчатый коралл | dead_bubble_coral_fan
+0706 | Мёртвый веерный огненный коралл | dead_fire_coral_fan
+0707 | Мёртвый веерный роговый коралл | dead_horn_coral_fan
+0708 | Веерный трубчатый коралл | tube_coral_fan
+0709 | Веерный коралл-мозговик | brain_coral_fan
+0710 | Веерный пузырчатый коралл | bubble_coral_fan
+0711 | Веерный огненный коралл | fire_coral_fan
+0712 | Веерный роговый коралл | horn_coral_fan
+0713 | Мёртвый горизонтальный веерный трубчатый коралл | dead_tube_coral_wall_fan
+0714 | Мёртвый горизонтальный веерный коралл-мозговик | dead_brain_coral_wall_fan
+0715 | Мёртвый горизонтальный веерный пузырчатый коралл | dead_bubble_coral_wall_fan
+0716 | Мёртвый горизонтальный веерный огненный коралл | dead_fire_coral_wall_fan
+0717 | Мёртвый горизонтальный веерный роговый коралл | dead_horn_coral_wall_fan
+0718 | Горизонтальный веерный трубчатый коралл | tube_coral_wall_fan
+0719 | Горизонтальный веерный коралл-мозговик | brain_coral_wall_fan
+0720 | Горизонтальный веерный пузырчатый коралл | bubble_coral_wall_fan
+0721 | Горизонтальный веерный огненный коралл | fire_coral_wall_fan
+0722 | Горизонтальный веерный роговый коралл | horn_coral_wall_fan
+0723 | Морской огурец | sea_pickle
+0724 | Синий лёд | blue_ice
+0725 | Морской источник | conduit
+0726 | Побег бамбука | bamboo_sapling
+0727 | Бамбук | bamboo
+0728 | Бамбук в горшке | potted_bamboo
+0729 | Вакуум | void_air
+0730 | Пещерный воздух | cave_air
+0731 | Колонна пузырей | bubble_column
+0732 | Ступеньки из полированного гранита | polished_granite_stairs
+0733 | Ступеньки из гладкого красного песчаника | smooth_red_sandstone_stairs
+0734 | Ступеньки из замшелого каменного кирпича | mossy_stone_brick_stairs
+0735 | Ступеньки из полированного диорита | polished_diorite_stairs
+0736 | Замшелые булыжные ступеньки | mossy_cobblestone_stairs
+0737 | Ступеньки из эндернякового кирпича | end_stone_brick_stairs
+0738 | Каменные ступеньки | stone_stairs
+0739 | Ступеньки из гладкого песчаника | smooth_sandstone_stairs
+0740 | Ступеньки из гладкого кварца | smooth_quartz_stairs
+0741 | Гранитные ступеньки | granite_stairs
+0742 | Андезитовые ступеньки | andesite_stairs
+0743 | Ступеньки из красного незерского кирпича | red_nether_brick_stairs
+0744 | Ступеньки из полированного андезита | polished_andesite_stairs
+0745 | Диоритовые ступеньки | diorite_stairs
+0746 | Плита из полированного гранита | polished_granite_slab
+0747 | Плита из гладкого красного песчаника | smooth_red_sandstone_slab
+0748 | Плита из замшелого каменного кирпича | mossy_stone_brick_slab
+0749 | Плита из полированного диорита | polished_diorite_slab
+0750 | Замшелая булыжная плита | mossy_cobblestone_slab
+0751 | Плита из эндернякового кирпича | end_stone_brick_slab
+0752 | Плита из гладкого песчаника | smooth_sandstone_slab
+0753 | Плита из гладкого кварца | smooth_quartz_slab
+0754 | Гранитная плита | granite_slab
+0755 | Андезитовая плита | andesite_slab
+0756 | Плита из красного незерского кирпича | red_nether_brick_slab
+0757 | Плита из полированного андезита | polished_andesite_slab
+0758 | Диоритовая плита | diorite_slab
+0759 | Кирпичная ограда | brick_wall
+0760 | Призмариновая ограда | prismarine_wall
+0761 | Ограда из красного песчаника | red_sandstone_wall
+0762 | Ограда из замшелого каменного кирпича | mossy_stone_brick_wall
+0763 | Гранитная ограда | granite_wall
+0764 | Ограда из каменного кирпича | stone_brick_wall
+0765 | Саманная ограда | mud_brick_wall
+0766 | Ограда из незерского кирпича | nether_brick_wall
+0767 | Андезитовая ограда | andesite_wall
+0768 | Ограда из красного незерского кирпича | red_nether_brick_wall
+0769 | Песчаниковая ограда | sandstone_wall
+0770 | Ограда из эндернякового кирпича | end_stone_brick_wall
+0771 | Диоритовая ограда | diorite_wall
+0772 | Подмостки | scaffolding
+0773 | Ткацкий станок | loom
+0774 | Бочка | barrel
+0775 | Коптильня | smoker
+0776 | Плавильная печь | blast_furnace
+0777 | Стол картографа | cartography_table
+0778 | Стол лучника | fletching_table
+0779 | Точило | grindstone
+0780 | Кафедра | lectern
+0781 | Стол кузнеца | smithing_table
+0782 | Камнерез | stonecutter
+0783 | Колокол | bell
+0784 | Фонарь | lantern
+0785 | Фонарь душ | soul_lantern
+0786 | Костёр | campfire
+0787 | Костёр душ | soul_campfire
+0788 | Куст сладких ягод | sweet_berry_bush
+0789 | Искажённый стебель | warped_stem
+0790 | Очищенный искажённый стебель | stripped_warped_stem
+0791 | Искажённые гифы | warped_hyphae
+0792 | Очищенные искажённые гифы | stripped_warped_hyphae
+0793 | Искажённый нилий | warped_nylium
+0794 | Искажённый гриб | warped_fungus
+0795 | Блок искажённого нароста | warped_wart_block
+0796 | Искажённые корни | warped_roots
+0797 | Незерские ростки | nether_sprouts
+0798 | Багровый стебель | crimson_stem
+0799 | Очищенный багровый стебель | stripped_crimson_stem
+0800 | Багровые гифы | crimson_hyphae
+0801 | Очищенные багровые гифы | stripped_crimson_hyphae
+0802 | Багровый нилий | crimson_nylium
+0803 | Багровый гриб | crimson_fungus
+0804 | Грибосвет | shroomlight
+0805 | Плакучая лоза | weeping_vines
+0806 | Стебель плакучей лозы | weeping_vines_plant
+0807 | Вьющаяся лоза | twisting_vines
+0808 | Стебель вьющейся лозы | twisting_vines_plant
+0809 | Багровые корни | crimson_roots
+0810 | Багровые доски | crimson_planks
+0811 | Искажённые доски | warped_planks
+0812 | Багровая плита | crimson_slab
+0813 | Искажённая плита | warped_slab
+0814 | Багровая нажимная плита | crimson_pressure_plate
+0815 | Искажённая нажимная плита | warped_pressure_plate
+0816 | Багровый забор | crimson_fence
+0817 | Искажённый забор | warped_fence
+0818 | Багровый люк | crimson_trapdoor
+0819 | Искажённый люк | warped_trapdoor
+0820 | Багровая калитка | crimson_fence_gate
+0821 | Искажённая калитка | warped_fence_gate
+0822 | Багровые ступеньки | crimson_stairs
+0823 | Искажённые ступеньки | warped_stairs
+0824 | Багровая кнопка | crimson_button
+0825 | Искажённая кнопка | warped_button
+0826 | Багровая дверь | crimson_door
+0827 | Искажённая дверь | warped_door
+0828 | Багровая табличка | crimson_sign
+0829 | Искажённая табличка | warped_sign
+0830 | Багровая настенная табличка | crimson_wall_sign
+0831 | Искажённая настенная табличка | warped_wall_sign
+0832 | Блок-конструктор | structure_block
+0833 | Пазл | jigsaw
+0834 | Компостница | composter
+0835 | Мишень | target
+0836 | Пчелиное гнездо | bee_nest
+0837 | Улей | beehive
+0838 | Блок мёда | honey_block
+0839 | Блок пчелиных сот | honeycomb_block
+0840 | Незеритовый блок | netherite_block
+0841 | Древние обломки | ancient_debris
+0842 | Плачущий обсидиан | crying_obsidian
+0843 | Якорь возрождения | respawn_anchor
+0844 | Багровый гриб в горшке | potted_crimson_fungus
+0845 | Искажённый гриб в горшке | potted_warped_fungus
+0846 | Багровые корни в горшке | potted_crimson_roots
+0847 | Искажённые корни в горшке | potted_warped_roots
+0848 | Магнетит | lodestone
+0849 | Чернит | blackstone
+0850 | Чернитные ступеньки | blackstone_stairs
+0851 | Чернитная ограда | blackstone_wall
+0852 | Чернитная плита | blackstone_slab
+0853 | Полированный чернит | polished_blackstone
+0854 | Полированно-чернитные кирпичи | polished_blackstone_bricks
+0855 | Потрескавшиеся полированно-чернитные кирпичи | cracked_polished_blackstone_bricks
+0856 | Резной полированный чернит | chiseled_polished_blackstone
+0857 | Плита из полированно-чернитного кирпича | polished_blackstone_brick_slab
+0858 | Ступеньки из полированно-чернитного кирпича | polished_blackstone_brick_stairs
+0859 | Ограда из полированно-чернитного кирпича | polished_blackstone_brick_wall
+0860 | Золочёный чернит | gilded_blackstone
+0861 | Ступеньки из полированного чернита | polished_blackstone_stairs
+0862 | Плита из полированного чернита | polished_blackstone_slab
+0863 | Нажимная плита из полированного чернита | polished_blackstone_pressure_plate
+0864 | Кнопка из полированного чернита | polished_blackstone_button
+0865 | Ограда из полированного чернита | polished_blackstone_wall
+0866 | Резные незерские кирпичи | chiseled_nether_bricks
+0867 | Потрескавшиеся незерские кирпичи | cracked_nether_bricks
+0868 | Кварцевые кирпичи | quartz_bricks
+0869 | Свеча | candle
+0870 | Белая свеча | white_candle
+0871 | Оранжевая свеча | orange_candle
+0872 | Пурпурная свеча | magenta_candle
+0873 | Голубая свеча | light_blue_candle
+0874 | Жёлтая свеча | yellow_candle
+0875 | Лаймовая свеча | lime_candle
+0876 | Розовая свеча | pink_candle
+0877 | Серая свеча | gray_candle
+0878 | Светло-серая свеча | light_gray_candle
+0879 | Бирюзовая свеча | cyan_candle
+0880 | Фиолетовая свеча | purple_candle
+0881 | Синяя свеча | blue_candle
+0882 | Коричневая свеча | brown_candle
+0883 | Зелёная свеча | green_candle
+0884 | Красная свеча | red_candle
+0885 | Чёрная свеча | black_candle
+0886 | Торт со свечой | candle_cake
+0887 | Торт с белой свечой | white_candle_cake
+0888 | Торт с оранжевой свечой | orange_candle_cake
+0889 | Торт с пурпурной свечой | magenta_candle_cake
+0890 | Торт с голубой свечой | light_blue_candle_cake
+0891 | Торт с жёлтой свечой | yellow_candle_cake
+0892 | Торт с лаймовой свечой | lime_candle_cake
+0893 | Торт с розовой свечой | pink_candle_cake
+0894 | Торт с серой свечой | gray_candle_cake
+0895 | Торт со светло-серой свечой | light_gray_candle_cake
+0896 | Торт с бирюзовой свечой | cyan_candle_cake
+0897 | Торт с фиолетовой свечой | purple_candle_cake
+0898 | Торт с синей свечой | blue_candle_cake
+0899 | Торт с коричневой свечой | brown_candle_cake
+0900 | Торт с зелёной свечой | green_candle_cake
+0901 | Торт с красной свечой | red_candle_cake
+0902 | Торт с чёрной свечой | black_candle_cake
+0903 | Аметистовый блок | amethyst_block
+0904 | Цветущий аметист | budding_amethyst
+0905 | Аметистовая друза | amethyst_cluster
+0906 | Большой аметистовый бутон | large_amethyst_bud
+0907 | Средний аметистовый бутон | medium_amethyst_bud
+0908 | Малый аметистовый бутон | small_amethyst_bud
+0909 | Туф | tuff
+0910 | Кальцит | calcite
+0911 | Тонированное стекло | tinted_glass
+0912 | Рыхлый снег | powder_snow
+0913 | Скалк-сенсор | sculk_sensor
+0914 | Откалиброванный скалк-сенсор | calibrated_sculk_sensor
+0915 | Скалк | sculk
+0916 | Скалковая жила | sculk_vein
+0917 | Скалковый катализатор | sculk_catalyst
+0918 | Скалковый крикун | sculk_shrieker
+0919 | Окисленный медный блок | oxidized_copper
+0920 | Состаренный медный блок | weathered_copper
+0921 | Потемневший медный блок | exposed_copper
+0922 | Медный блок | copper_block
+0923 | Медная руда | copper_ore
+0924 | Меденосный глубинный сланец | deepslate_copper_ore
+0925 | Окисленный резной медный блок | oxidized_cut_copper
+0926 | Состаренный резной медный блок | weathered_cut_copper
+0927 | Потемневший резной медный блок | exposed_cut_copper
+0928 | Резной медный блок | cut_copper
+0929 | Окисленные резные медные ступеньки | oxidized_cut_copper_stairs
+0930 | Состаренные резные медные ступеньки | weathered_cut_copper_stairs
+0931 | Потемневшие резные медные ступеньки | exposed_cut_copper_stairs
+0932 | Резные медные ступеньки | cut_copper_stairs
+0933 | Окисленная резная медная плита | oxidized_cut_copper_slab
+0934 | Состаренная резная медная плита | weathered_cut_copper_slab
+0935 | Потемневшая резная медная плита | exposed_cut_copper_slab
+0936 | Резная медная плита | cut_copper_slab
+0937 | Вощёный медный блок | waxed_copper_block
+0938 | Вощёный состаренный медный блок | waxed_weathered_copper
+0939 | Вощёный потемневший медный блок | waxed_exposed_copper
+0940 | Вощёный окисленный медный блок | waxed_oxidized_copper
+0941 | Вощёный окисленный резной медный блок | waxed_oxidized_cut_copper
+0942 | Вощёный состаренный резной медный блок | waxed_weathered_cut_copper
+0943 | Вощёный потемневший резной медный блок | waxed_exposed_cut_copper
+0944 | Вощёный резной медный блок | waxed_cut_copper
+0945 | Вощёные окисленные резные медные ступеньки | waxed_oxidized_cut_copper_stairs
+0946 | Вощёные состаренные резные медные ступеньки | waxed_weathered_cut_copper_stairs
+0947 | Вощёные потемневшие резные медные ступеньки | waxed_exposed_cut_copper_stairs
+0948 | Вощёные резные медные ступеньки | waxed_cut_copper_stairs
+0949 | Вощёная окисленная резная медная плита | waxed_oxidized_cut_copper_slab
+0950 | Вощёная состаренная резная медная плита | waxed_weathered_cut_copper_slab
+0951 | Вощёная потемневшая резная медная плита | waxed_exposed_cut_copper_slab
+0952 | Вощёная резная медная плита | waxed_cut_copper_slab
+0953 | Громоотвод | lightning_rod
+0954 | Капельник | pointed_dripstone
+0955 | Натёчный камень | dripstone_block
+0956 | Пещерная лоза | cave_vines
+0957 | Стебель пещерной лозы | cave_vines_plant
+0958 | Спороцвет | spore_blossom
+0959 | Азалия | azalea
+0960 | Цветущая азалия | flowering_azalea
+0961 | Моховой ковёр | moss_carpet
+0962 | Розовые лепестки | pink_petals
+0963 | Блок мха | moss_block
+0964 | Большая бросянка | big_dripleaf
+0965 | Стебель большой бросянки | big_dripleaf_stem
+0966 | Маленькая бросянка | small_dripleaf
+0967 | Свисающие корни | hanging_roots
+0968 | Корнистая земля | rooted_dirt
+0969 | Грязь | mud
+0970 | Глубинный сланец | deepslate
+0971 | Колотый глубинный сланец | cobbled_deepslate
+0972 | Ступеньки из колотого глубинного сланца | cobbled_deepslate_stairs
+0973 | Плита из колотого глубинного сланца | cobbled_deepslate_slab
+0974 | Ограда из колотого глубинного сланца | cobbled_deepslate_wall
+0975 | Полированный глубинный сланец | polished_deepslate
+0976 | Ступеньки из полированного глубинного сланца | polished_deepslate_stairs
+0977 | Плита из полированного глубинного сланца | polished_deepslate_slab
+0978 | Ограда из полированного глубинного сланца | polished_deepslate_wall
+0979 | Глубинносланцевый плитняк | deepslate_tiles
+0980 | Ступеньки из глубинносланцевого плитняка | deepslate_tile_stairs
+0981 | Плита из глубинносланцевого плитняка | deepslate_tile_slab
+0982 | Ограда из глубинносланцевого плитняка | deepslate_tile_wall
+0983 | Глубинносланцевые кирпичи | deepslate_bricks
+0984 | Ступеньки из глубинносланцевого кирпича | deepslate_brick_stairs
+0985 | Плита из глубинносланцевого кирпича | deepslate_brick_slab
+0986 | Ограда из глубинносланцевого кирпича | deepslate_brick_wall
+0987 | Резной глубинный сланец | chiseled_deepslate
+0988 | Потрескавшиеся глубинносланцевые кирпичи | cracked_deepslate_bricks
+0989 | Потрескавшийся глубинносланцевый плитняк | cracked_deepslate_tiles
+0990 | Заражённый глубинный сланец | infested_deepslate
+0991 | Гладкий базальт | smooth_basalt
+0992 | Блок рудного железа | raw_iron_block
+0993 | Блок рудной меди | raw_copper_block
+0994 | Блок рудного золота | raw_gold_block
+0995 | Азалия в горшке | potted_azalea_bush
+0996 | Цветущая азалия в горшке | potted_flowering_azalea_bush
+0997 | Охристая квампа | ochre_froglight
+0998 | Малахитовая квампа | verdant_froglight
+0999 | Перламутровая квампа | pearlescent_froglight
+1000 | Лягушачья икра | frogspawn
+1001 | Укреплённый глубинный сланец | reinforced_deepslate
+1002 | Узорчатая ваза | decorated_pot

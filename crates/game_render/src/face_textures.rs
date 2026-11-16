@@ -1,19 +1,112 @@
 use game_core::BLOCKS;
 use serde::Deserialize;
 
-pub const MATERIAL_COUNT: usize = 36;
-pub const GRASS_TOP: u8 = 0;
-pub const GRASS_BOTTOM: u8 = 2;
-pub const WOOD_END: u8 = 8;
+/// Слои 0…35 — исходный атлас 6×6, слои 36…215 — дополнительные пиксельные тайлы.
+pub const MATERIAL_COUNT: usize = 744;
+/// Строк в атласе: по шесть слоёв в строке.
+pub const ATLAS_ROWS: u32 = (MATERIAL_COUNT / 6) as u32;
+/// Слой листвы дуба в исходном атласе.
+pub const OAK_LEAVES_LAYER: usize = 9;
+pub const GLASS_LAYER: usize = 12;
+pub const WATER_LAYER: usize = 13;
+pub const BIRCH_LEAVES_LAYER: usize = 41;
+pub const PINE_LEAVES_LAYER: usize = 111;
+/// Слои растений: первый и последний.
+pub const PLANT_LAYERS: std::ops::RangeInclusive<usize> = 118..=122;
 
-#[derive(Clone, Copy, Debug, Deserialize, PartialEq, Eq)]
+/// Слой с вырезанными текселями: листва (обычные кубы) и растения.
+#[must_use]
+pub fn is_cutout_layer(layer: usize) -> bool {
+    matches!(
+        layer,
+        OAK_LEAVES_LAYER | BIRCH_LEAVES_LAYER | PINE_LEAVES_LAYER
+    ) || PLANT_LAYERS.contains(&layer)
+        || LEAF2_LAYERS.contains(&layer)
+        || PLANT2_LAYERS.contains(&layer)
+        || CUTOUT3_LAYERS.contains(&layer)
+        || CUTOUT4_LAYERS.contains(&layer)
+        || CUTOUT5_LAYERS.contains(&layer)
+        || CUTOUT6_LAYERS.contains(&layer)
+        || CUTOUT7_LAYERS.contains(&layer)
+        || CUTOUT8_LAYERS.contains(&layer)
+        || CUTOUT9_LAYERS.contains(&layer)
+        || CUTOUT10_LAYERS.contains(&layer)
+        || CUTOUT11_LAYERS.contains(&layer)
+        || matches!(layer, 125 | 129 | 133 | 137 | 141)
+}
+
+/// Листва и корни этой партии: кубы с вырезанной по альфе текстурой.
+pub const LEAF2_LAYERS: std::ops::RangeInclusive<usize> = 204..=208;
+/// Растения, факелы, огонь и рельсы этой партии.
+/// Растения, лестницы, рельсы, цепи и прутья части 2.
+pub const CUTOUT3_LAYERS: std::ops::RangeInclusive<usize> = 322..=332;
+/// Растения, лианы, стебли и растяжка части 3.
+pub const CUTOUT4_LAYERS: std::ops::RangeInclusive<usize> = 371..=383;
+/// Рельсы, барьер, свет и высокие цветы части 4.
+pub const CUTOUT5_LAYERS: std::ops::RangeInclusive<usize> = 419..=426;
+/// Ростки, кувшинница и пустой блок части 5.
+pub const CUTOUT6_LAYERS: std::ops::RangeInclusive<usize> = 439..=443;
+/// Кораллы, ламинария, пузыри и подмостки части 6.
+pub const CUTOUT7_LAYERS: std::ops::RangeInclusive<usize> = 523..=548;
+/// Растения нижнего мира, аметисты, лозы, свечи частей 7–8.
+pub const CUTOUT8_LAYERS: std::ops::RangeInclusive<usize> = 579..=621;
+/// Выключенный факел и включённый провод редстоуна.
+pub const CUTOUT9_LAYERS: std::ops::RangeInclusive<usize> = 719..=720;
+/// Стадии роста пшеницы, моркови, картофеля и свёклы.
+pub const CUTOUT10_LAYERS: std::ops::RangeInclusive<usize> = 722..=733;
+/// Листья бамбука и росток ламинарии.
+pub const CUTOUT11_LAYERS: std::ops::RangeInclusive<usize> = 735..=737;
+pub const PLANT2_LAYERS: std::ops::RangeInclusive<usize> = 209..=239;
+
+/// Слои растений: рисуются плоскостями, видны с обеих сторон.
+#[must_use]
+pub fn is_double_sided_layer(layer: usize) -> bool {
+    PLANT_LAYERS.contains(&layer)
+        || PLANT2_LAYERS.contains(&layer)
+        || CUTOUT3_LAYERS.contains(&layer)
+        || CUTOUT4_LAYERS.contains(&layer)
+        || CUTOUT5_LAYERS.contains(&layer)
+        || CUTOUT6_LAYERS.contains(&layer)
+        || CUTOUT7_LAYERS.contains(&layer)
+        || CUTOUT8_LAYERS.contains(&layer)
+        || CUTOUT9_LAYERS.contains(&layer)
+        || CUTOUT10_LAYERS.contains(&layer)
+        || CUTOUT11_LAYERS.contains(&layer)
+}
+
+/// Слои цветного стекла.
+pub const STAINED_GLASS_LAYERS: std::ops::RangeInclusive<usize> = 149..=164;
+
+/// Полупрозрачный слой: стекло, вода, лёд.
+#[must_use]
+pub fn is_blend_layer(layer: usize) -> bool {
+    matches!(layer, GLASS_LAYER | WATER_LAYER | ICE_LAYER) || STAINED_GLASS_LAYERS.contains(&layer)
+}
+/// Слой лавы: светится и не бывает прозрачным.
+pub const LAVA_LAYER: usize = 203;
+pub const LAMP_LAYER: usize = 45;
+pub const ICE_LAYER: usize = 46;
+pub const GRASS_TOP: u16 = 0;
+pub const GRASS_BOTTOM: u16 = 2;
+pub const WOOD_END: u16 = 8;
+
+#[derive(Clone, Copy, Debug, Default, Deserialize, PartialEq, Eq)]
 pub struct FaceTextures {
-    pub top: u8,
-    pub side: u8,
-    pub bottom: u8,
-    /// Optional fixed front on the negative-Z world face.
+    pub top: u16,
+    pub side: u16,
+    pub bottom: u16,
+    /// Лицевая грань; по умолчанию на отрицательной стороне Z.
     #[serde(default)]
-    pub front: Option<u8>,
+    pub front: Option<u16>,
+    /// Ось (0 = X, 1 = Y, 2 = Z) и знак стороны, на которой лежит `front`.
+    #[serde(default)]
+    pub face: Option<(u8, bool)>,
+    /// Текстура противоположной грани (у поршня — основание).
+    #[serde(default)]
+    pub back: Option<u16>,
+    /// Дополнительный тайл формы: цепи подвесных табличек, ручка рычага, факел повторителя.
+    #[serde(default)]
+    pub aux: Option<u16>,
 }
 
 #[derive(Clone, Debug)]
@@ -44,21 +137,38 @@ impl BlockTextures {
             ));
         }
         if faces.iter().any(|f| {
-            [Some(f.top), Some(f.side), Some(f.bottom), f.front]
-                .into_iter()
-                .flatten()
-                .any(|i| i as usize >= MATERIAL_COUNT)
+            [
+                Some(f.top),
+                Some(f.side),
+                Some(f.bottom),
+                f.front,
+                f.back,
+                f.aux,
+            ]
+            .into_iter()
+            .flatten()
+            .any(|i| i as usize >= MATERIAL_COUNT)
+                || f.face.is_some_and(|(axis, _)| axis > 2)
         }) {
-            return Err("texture layer must be in 0..36".into());
+            return Err(format!("texture layer must be in 0..{MATERIAL_COUNT}"));
         }
         Ok(Self(faces.try_into().expect("length checked")))
     }
 
-    pub fn layer(&self, block: u8, axis: usize, positive: bool) -> u8 {
+    pub fn layer(&self, block: game_core::BlockId, axis: usize, positive: bool) -> u16 {
         let faces = self.0[block as usize];
-        if axis == 2 && !positive {
-            faces.front.unwrap_or(faces.side)
-        } else if axis != 1 {
+        if let Some(front) = faces.front {
+            let (front_axis, front_positive) = faces.face.unwrap_or((2, false));
+            if axis == usize::from(front_axis) {
+                if positive == front_positive {
+                    return front;
+                }
+                if let Some(back) = faces.back {
+                    return back;
+                }
+            }
+        }
+        if axis != 1 {
             faces.side
         } else if positive {
             faces.top
@@ -141,9 +251,11 @@ mod tests {
     #[test]
     fn rejects_missing_blocks_and_out_of_range_layers() {
         assert!(BlockTextures::from_ron("[]").is_err());
-        let source = include_str!("../../../assets/blocks.ron").replace("top: 0", "top: 36");
+        let source = include_str!("../../../assets/blocks.ron")
+            .replace("top: 0", &format!("top: {MATERIAL_COUNT}"));
         assert!(BlockTextures::from_ron(&source).is_err());
-        let source = include_str!("../../../assets/blocks.ron").replace("Some(26)", "Some(36)");
+        let source = include_str!("../../../assets/blocks.ron")
+            .replace("Some(26)", &format!("Some({MATERIAL_COUNT})"));
         assert!(BlockTextures::from_ron(&source).is_err());
     }
 }

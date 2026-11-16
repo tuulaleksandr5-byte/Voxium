@@ -122,8 +122,49 @@ pub fn parse_command(text: &str) -> Result<PlayerAction, String> {
             };
             Ok(PlayerAction::SetRule(rule, value))
         }
+        Some("/graves") => {
+            if arguments.next().is_some() {
+                return Err("Использование: /graves".into());
+            }
+            Ok(PlayerAction::Graves)
+        }
+        Some("/summon") => {
+            let (Some(name), None) = (arguments.next(), arguments.next()) else {
+                return Err(
+                    "Использование: /summon <имя моба>, например cow, zombie, creeper, horse"
+                        .into(),
+                );
+            };
+            game_core::mobs::MobKind::ALL
+                .into_iter()
+                .find(|kind| kind.spec().id == name)
+                .map(PlayerAction::Summon)
+                .ok_or_else(|| format!("Неизвестный моб: {name}"))
+        }
+        Some("/setblock") => {
+            let numbers: Vec<_> = arguments.by_ref().take(3).collect();
+            let name = arguments.next();
+            let parsed: Option<Vec<i32>> = numbers.iter().map(|n| n.parse().ok()).collect();
+            let (Some(parsed), Some(name), None) = (parsed, name, arguments.next()) else {
+                return Err("Использование: /setblock dx dy dz имя_блока".into());
+            };
+            if parsed.len() != 3 {
+                return Err("Использование: /setblock dx dy dz имя_блока".into());
+            }
+            game_core::content::block_by_name(name)
+                .map(|block| PlayerAction::SetBlock {
+                    offset: [parsed[0], parsed[1], parsed[2]],
+                    block,
+                })
+                .ok_or_else(|| format!("Неизвестный блок: {name}"))
+        }
+        Some("/time") => match (arguments.next(), arguments.next()) {
+            (Some("day"), None) => Ok(PlayerAction::SetDay(true)),
+            (Some("night"), None) => Ok(PlayerAction::SetDay(false)),
+            _ => Err("Использование: /time day|night".into()),
+        },
         Some(command) => Err(format!("Неизвестная команда: {command}")),
-        None => Err("Введите команду /gamemode или /gamerule".into()),
+        None => Err("Введите команду: /gamemode, /gamerule, /summon или /time".into()),
     }
 }
 
@@ -315,5 +356,32 @@ mod tests {
         let console = app.world().resource::<ConsoleState>();
         assert_eq!(console.input.chars().count(), 255);
         assert!(console.input.ends_with('я'));
+    }
+
+    #[test]
+    fn parses_summon_for_every_mob_and_time_of_day() {
+        for kind in game_core::mobs::MobKind::ALL {
+            let command = format!("/summon {}", kind.spec().id);
+            assert!(
+                matches!(parse_command(&command), Ok(PlayerAction::Summon(found)) if found == kind)
+            );
+        }
+        assert!(matches!(
+            parse_command("/time day"),
+            Ok(PlayerAction::SetDay(true))
+        ));
+        assert!(matches!(
+            parse_command("/time night"),
+            Ok(PlayerAction::SetDay(false))
+        ));
+        for invalid in [
+            "/summon",
+            "/summon dragon",
+            "/summon cow extra",
+            "/time",
+            "/time noon",
+        ] {
+            assert!(parse_command(invalid).is_err(), "{invalid}");
+        }
     }
 }

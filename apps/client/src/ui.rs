@@ -1,6 +1,7 @@
 //! Native Bevy menus and the in-game overlay. Screen changes are handled by the client.
 mod inventory;
 mod presentation;
+mod recipes;
 use crate::{
     console::ConsoleState,
     graphics_assets::BlockIcons,
@@ -32,11 +33,20 @@ pub enum Action {
     Exit,
     Settings,
     Back,
-    SelectSlot(usize),
     CycleDistance,
     ToggleVsync,
     ToggleFullscreen,
     CycleResolution,
+    ToggleTextures,
+    CatalogTab(usize),
+    /// Прокрутить сетку творческого меню на столько рядов.
+    ScrollCatalog(i32),
+    /// Дописать в поиск.
+    SearchInput(String),
+    SearchBackspace,
+    TrashCursor,
+    /// Камнерез: вырезать выбранный вариант.
+    Stonecut(game_core::content::ItemId),
     FocusName,
     FocusSeed,
     RandomSeed,
@@ -44,6 +54,12 @@ pub enum Action {
     Respawn,
     CommitSettings,
 }
+
+pub const CATALOG_TAB_COUNT: usize = game_core::creative::Tab::ALL.len();
+
+/// Узел, над которым колесо мыши прокручивает сетку, а не панель.
+#[derive(Component)]
+pub(crate) struct NoPanelScroll;
 
 #[derive(Resource, Default)]
 pub struct UiIntent(pub Vec<Action>);
@@ -60,6 +76,7 @@ fn setup_font(mut fonts: ResMut<Assets<Font>>) {
 pub fn plugin(app: &mut App) {
     presentation::plugin(app);
     inventory::plugin(app);
+    recipes::plugin(app);
     app.add_systems(Startup, setup_font);
     app.init_resource::<UiIntent>().add_systems(
         Update,
@@ -374,7 +391,12 @@ fn edit_world_form(
 fn scroll_panels(
     mut wheel: MessageReader<MouseWheel>,
     mut panels: Query<(&Hovered, &mut ScrollPosition, &ComputedNode), With<ScrollArea>>,
+    grid: Query<&Hovered, With<NoPanelScroll>>,
 ) {
+    if grid.iter().any(Hovered::get) {
+        wheel.clear();
+        return;
+    }
     let delta: f32 = wheel
         .read()
         .map(|event| {
@@ -976,6 +998,18 @@ fn settings_menu(commands: &mut Commands, panel: Entity, game: &Game) {
         ["1280 × 720  ↻", "1600 × 900  ↻", "1920 × 1080  ↻"][settings.resolution].into(),
         Action::CycleResolution,
     );
+    settings_row(
+        commands,
+        panel,
+        "Графика блоков",
+        if settings.pixel_textures {
+            "Пиксельная 32×  ↻"
+        } else {
+            "Рисованная  ↻"
+        }
+        .into(),
+        Action::ToggleTextures,
+    );
     presentation::section(commands, panel, "УПРАВЛЕНИЕ");
     presentation::range(
         commands,
@@ -1322,7 +1356,7 @@ fn update_vitals(
         return;
     }
     let eye = game.feet + Vec3::Y * (game.height - 0.15);
-    let underwater = game.world.block(eye.floor().as_ivec3().to_array()) == game_core::WATER;
+    let underwater = game_core::is_water(game.world.block(eye.floor().as_ivec3().to_array()));
     for (vital, mut node) in &mut nodes {
         match *vital {
             VitalNode::Fill(kind, index) => {

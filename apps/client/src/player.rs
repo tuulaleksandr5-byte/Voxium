@@ -13,6 +13,7 @@ use bevy::{
 };
 use game_core::{
     BEDROCK, World,
+    fluids::{BodyFluid, body_fluid, flow_direction},
     interaction::{can_stand, move_player, raycast},
     survival::{DamageSource, GameMode, fall_damage},
     valid_world_height,
@@ -235,7 +236,7 @@ pub fn controls(
         let sprint = keys.pressed(KeyCode::ControlLeft)
             || keys.pressed(KeyCode::ControlRight)
             || auto_sprint;
-        let speed = if game.flying {
+        let speed: f32 = if game.flying {
             if sprint { 20. } else { 10. }
         } else if game.height < 1.8 {
             2.2
@@ -244,15 +245,82 @@ pub fn controls(
         } else {
             4.8
         };
+        // Песок душ, мёд, колючий куст и рыхлый снег замедляют.
+        let speed = if game.flying {
+            speed
+        } else {
+            let cell = [
+                game.feet.x.floor() as i32,
+                (game.feet.y + 0.05).floor() as i32,
+                game.feet.z.floor() as i32,
+            ];
+            let slow = game_core::mechanics::movement_factor(game.world.block(cell)).min(
+                game_core::mechanics::movement_factor(game.world.block([
+                    cell[0],
+                    cell[1] - 1,
+                    cell[2],
+                ])),
+            );
+            speed * slow
+        };
+        let fluid = if game.flying {
+            BodyFluid::default()
+        } else {
+            body_fluid(game.feet.to_array(), game.height, |p| {
+                collision_block(&game.world, p)
+            })
+        };
+        // Паутина вязнет, как мёд: движение и прыжки почти невозможны.
+        let web = !game.flying
+            && game_core::interaction::body_touches(
+                game.feet.to_array(),
+                game.height,
+                |p| collision_block(&game.world, p),
+                |id| id == game_core::COBWEB,
+            );
+        // Лестница: тело цепляется за неё и ползёт вверх по пробелу.
+        let ladder = !game.flying
+            && game_core::interaction::body_touches(
+                game.feet.to_array(),
+                game.height,
+                |p| collision_block(&game.world, p),
+                game_core::mechanics::climbable,
+            );
+        // В воде и лаве ходьба замедляется, течение сносит тело.
+        let speed = if ladder { speed.min(2.4) } else { speed };
+        let speed = if web {
+            speed * 0.25
+        } else if fluid.lava {
+            1.5
+        } else if fluid.water {
+            if sprint { 4.4 } else { 3.0 }
+        } else {
+            speed
+        };
         let horizontal = rotation * movement.normalize_or_zero() * speed;
         game.velocity.x = horizontal.x;
         game.velocity.z = horizontal.z;
+        if fluid.water {
+            let cell = [
+                game.feet.x.floor() as i32,
+                (game.feet.y + 0.05).floor() as i32,
+                game.feet.z.floor() as i32,
+            ];
+            let flow = flow_direction(cell, |p| collision_block(&game.world, p));
+            game.velocity.x += flow[0] * 1.8;
+            game.velocity.z += flow[1] * 1.8;
+        }
         let chunk = [
             (game.feet.x.floor() as i32).div_euclid(16),
             (game.feet.z.floor() as i32).div_euclid(16),
         ];
         if game.world.chunks.contains_key(&chunk) {
-            if !game.flying && keys.just_pressed(KeyCode::Space) && game.grounded {
+            if !game.flying
+                && keys.just_pressed(KeyCode::Space)
+                && game.grounded
+                && !fluid.any()
+                && !web
+            {
                 game.velocity.y = 8.0;
                 player_actions.write(crate::survival_client::PlayerActionMessage(
                     crate::survival_client::PlayerAction::Jump { sprinting: sprint },
@@ -264,6 +332,34 @@ pub fn controls(
                         keys.pressed(KeyCode::ShiftLeft) || keys.pressed(KeyCode::ShiftRight),
                     )) as f32
                     * speed;
+            } else if fluid.lava {
+                // Лава вязкая: тело медленно тонет, пробка вверх по пробелу.
+                let target = if keys.pressed(KeyCode::Space) {
+                    1.6
+                } else {
+                    -1.2
+                };
+                game.velocity.y += (target - game.velocity.y) * (6.0 * dt).min(1.0);
+            } else if fluid.water {
+                let target = if keys.pressed(KeyCode::Space) {
+                    // Голова над водой: пробел выталкивает на берег.
+                    if fluid.head { 3.6 } else { 6.5 }
+                } else if crouch {
+                    -3.5
+                } else {
+                    -1.6
+                };
+                game.velocity.y += (target - game.velocity.y) * (5.0 * dt).min(1.0);
+            } else if ladder {
+                game.velocity.y = if keys.pressed(KeyCode::Space) || movement.length() > 0.1 {
+                    3.5
+                } else if crouch {
+                    0.0
+                } else {
+                    -2.0
+                };
+            } else if web {
+                game.velocity.y = (game.velocity.y - 6.0 * dt).clamp(-1.0, 1.0);
             } else {
                 game.velocity.y = (game.velocity.y - 24.0 * dt).max(-45.0);
             }
@@ -288,11 +384,16 @@ pub fn controls(
             },
         ));
         if game.game_mode == GameMode::Survival {
-            let wet = game.world.block(game.feet.floor().as_ivec3().to_array()) == game_core::WATER;
+            let wet = body_fluid(game.feet.to_array(), game.height, |p| {
+                collision_block(&game.world, p)
+            })
+            .any();
             if wet {
                 game.fall_peak = None;
             } else if game.grounded {
                 if !was_grounded && let Some(peak) = game.fall_peak {
+                    let fell = peak - game.feet.y;
+                    trample_farmland(&mut game, fell);
                     let amount = fall_damage(peak - game.feet.y, &game.survival_config);
                     if amount > 0. {
                         player_actions.write(crate::survival_client::PlayerActionMessage(
@@ -337,7 +438,7 @@ pub fn controls(
         let eye = game.feet + Vec3::Y * (game.height - 0.15);
         let look = rotation * Quat::from_rotation_x(game.pitch);
         if let Some(hit) = raycast(eye.to_array(), (look * Vec3::NEG_Z).to_array(), 6.0, |p| {
-            game.world.block(p)
+            crate::inventory_client::target_block(&game, p)
         }) {
             gizmos.cube(
                 Transform::from_translation(
@@ -348,6 +449,7 @@ pub fn controls(
             );
             use crate::inventory_client::{InventoryAction, InventoryActionMessage};
             if world_mouse
+                && !game.attack_lock
                 && game.game_mode == GameMode::Creative
                 && mouse.just_pressed(MouseButton::Left)
             {
@@ -356,15 +458,102 @@ pub fn controls(
                 }));
             }
             if world_mouse && mouse.just_pressed(MouseButton::Right) {
-                let action = if game.world.block(hit.block) == game_core::CHEST
+                let action = if crate::inventory_client::container_size(game.world.block(hit.block))
+                    .is_some()
                     && !(keys.pressed(KeyCode::ShiftLeft) || keys.pressed(KeyCode::ShiftRight))
                 {
                     Some(InventoryAction::OpenContainer {
                         position: hit.block,
                     })
+                } else if game.world.block(hit.block) == game_core::GRAVE {
+                    Some(InventoryAction::OpenGrave {
+                        position: hit.block,
+                    })
+                } else if crate::inventory_client::special_item(&game).is_some() {
+                    Some(InventoryAction::UseItem {
+                        target: hit.block,
+                        previous: hit.previous,
+                    })
+                } else if game_core::models::shape_of(game.world.block(hit.block))
+                    == Some(game_core::models::Shape::Repeater)
+                {
+                    Some(InventoryAction::Delay {
+                        position: hit.block,
+                    })
+                } else if game_core::models::shape_of(game.world.block(hit.block))
+                    == Some(game_core::models::Shape::Button)
+                {
+                    Some(InventoryAction::Press {
+                        position: hit.block,
+                    })
+                } else if game.world.block(hit.block) == game_core::FLOWER_POT
+                    && game_core::mechanics::potted_for(game.selected_block()).is_some()
+                {
+                    Some(InventoryAction::Pot {
+                        position: hit.block,
+                    })
+                } else if matches!(
+                    game.world.block(hit.block),
+                    game_core::CAULDRON | game_core::WATER_CAULDRON | game_core::LAVA_CAULDRON
+                ) && crate::inventory_client::bucket_kind(&game).is_some()
+                {
+                    Some(InventoryAction::Cauldron {
+                        position: hit.block,
+                    })
+                } else if game_core::models::toggled(
+                    game.world.block(hit.block),
+                    game_core::Facing::North,
+                )
+                .is_some()
+                    && !(keys.pressed(KeyCode::ShiftLeft) || keys.pressed(KeyCode::ShiftRight))
+                {
+                    Some(InventoryAction::Toggle {
+                        position: hit.block,
+                    })
+                } else if matches!(
+                    game.world.block(hit.block),
+                    game_core::GRASS | game_core::DIRT
+                ) && matches!(
+                    crate::mining_client::chosen_tool(&game),
+                    game_core::mining::Tool::Equipped {
+                        kind: game_core::mining::ToolKind::Hoe,
+                        ..
+                    }
+                ) {
+                    Some(InventoryAction::Till {
+                        position: hit.block,
+                    })
+                } else if game_core::is_bed(game.world.block(hit.block))
+                    && !(keys.pressed(KeyCode::ShiftLeft) || keys.pressed(KeyCode::ShiftRight))
+                {
+                    Some(InventoryAction::Sleep {
+                        position: hit.block,
+                    })
+                } else if game_core::stripped_variant(game.world.block(hit.block)).is_some()
+                    && matches!(
+                        crate::mining_client::chosen_tool(&game),
+                        game_core::mining::Tool::Equipped {
+                            kind: game_core::mining::ToolKind::Axe,
+                            ..
+                        }
+                    )
+                {
+                    Some(InventoryAction::Strip {
+                        position: hit.block,
+                    })
+                } else if crate::inventory_client::bucket_kind(&game).is_some() {
+                    Some(InventoryAction::UseBucket {
+                        target: hit.block,
+                        previous: hit.previous,
+                    })
                 } else if game.selected_block() != game_core::AIR {
+                    // Блок ставится на место растения, а не рядом с ним.
                     Some(InventoryAction::Place {
-                        position: hit.previous,
+                        position: if game_core::is_plant(game.world.block(hit.block)) {
+                            hit.block
+                        } else {
+                            hit.previous
+                        },
                     })
                 } else {
                     None
@@ -377,11 +566,9 @@ pub fn controls(
     }
     if captured {
         // Добыча использует всё реальное время, а не ограниченный dt движения.
-        if let Some(position) = crate::mining_client::advance(
-            &mut game,
-            mouse.pressed(MouseButton::Left),
-            time.delta_secs(),
-        ) {
+        let mining = mouse.pressed(MouseButton::Left) && !game.attack_lock;
+        if let Some(position) = crate::mining_client::advance(&mut game, mining, time.delta_secs())
+        {
             inventory_actions.write(crate::inventory_client::InventoryActionMessage(
                 crate::inventory_client::InventoryAction::Break { position },
             ));
@@ -439,7 +626,7 @@ pub fn sky(
 }
 
 // Unknown terrain is solid for movement and standing, including adjacent chunks.
-fn collision_block(world: &World, p: [i32; 3]) -> u8 {
+fn collision_block(world: &World, p: [i32; 3]) -> game_core::BlockId {
     if valid_world_height(p[1])
         && !world
             .chunks
@@ -483,6 +670,25 @@ fn draw_chunk_grid(feet: Vec3, gizmos: &mut Gizmos) {
                 color,
             );
         }
+    }
+}
+
+/// Приземление с высоты мнёт грядку под ногами: чем выше прыжок, тем вероятнее.
+fn trample_farmland(game: &mut crate::session::Game, fall: f32) {
+    if fall <= 0.5 {
+        return;
+    }
+    let cell = [
+        game.feet.x.floor() as i32,
+        (game.feet.y - 0.1).floor() as i32,
+        game.feet.z.floor() as i32,
+    ];
+    let roll = ((game.clock * 1000.0) as u64 ^ (cell[0] as u64).wrapping_mul(0x9e37_79b9))
+        .wrapping_mul(0x2545_f491_4f6c_dd1d)
+        >> 40;
+    let chance = f64::from((fall - 0.5).min(1.0));
+    if (roll % 1000) as f64 / 1000.0 < chance && game_core::nature::trample(&mut game.world, cell) {
+        game.revision += 1;
     }
 }
 

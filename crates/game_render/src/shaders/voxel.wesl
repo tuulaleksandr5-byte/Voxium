@@ -14,6 +14,8 @@ fn fragment(in: VertexOutput, @builtin(front_facing) is_front: bool) -> Fragment
     // Never fract(): discontinuities would select incorrect mip levels at repeats.
     let texel = textureSample(tile_array, tile_sampler, in.uv, i32(tile_layer));
     pbr.material.base_color *= texel;
+    // Свечение (лава, лампа) повторяет рисунок текстуры, а не заливает блок одним цветом.
+    pbr.material.emissive = vec4<f32>(pbr.material.emissive.rgb * texel.rgb, pbr.material.emissive.a);
     pbr.material.base_color = alpha_discard(pbr.material.flags, pbr.material.alpha_cutoff, pbr.material.base_color);
     var out: FragmentOutput;
     out.color = apply_pbr_lighting(pbr);

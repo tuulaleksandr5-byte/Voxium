@@ -6,7 +6,7 @@ use bevy::{
 use game_core::{AIR, Chunk, valid_world_height};
 use std::collections::{HashMap, HashSet};
 
-type MeshResult = Vec<(u8, Mesh)>;
+type MeshResult = Vec<(u16, Mesh)>;
 #[derive(Resource, Default)]
 pub struct Streaming {
     generation: Vec<([i32; 2], Task<Chunk>)>,
@@ -141,7 +141,7 @@ pub fn stream_world(
                         ),
                     ))
                     .id();
-                if matches!(id, 12 | 13) {
+                if game_render::is_blend_layer(usize::from(id)) {
                     commands.entity(entity).insert(bevy::light::NotShadowCaster);
                 }
                 tiles.push((entity, handle));

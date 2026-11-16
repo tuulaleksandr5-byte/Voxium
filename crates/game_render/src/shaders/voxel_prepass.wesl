@@ -7,7 +7,8 @@ import bevy_pbr::render::pbr_prepass_functions::calculate_motion_vector;
 
 fn discard_leaf(in: prepass_io::VertexOutput) {
     let texel = textureSample(tile_array, tile_sampler, in.uv, i32(tile_layer));
-    if tile_layer == 9u && texel.a < 0.45 { discard; }
+    // Только листва содержит почти прозрачные тексели среди непрозрачных материалов.
+    if texel.a < 0.45 { discard; }
 }
 
 @if(PREPASS_FRAGMENT)

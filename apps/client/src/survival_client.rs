@@ -5,7 +5,9 @@ use crate::{
 };
 use bevy::prelude::*;
 use game_core::{
-    AIR, WATER, WORLD_MAX_Y, WORLD_MIN_Y, is_solid,
+    AIR, WORLD_MAX_Y, WORLD_MIN_Y,
+    fluids::body_fluid,
+    is_solid,
     survival::{DamageSource, Environment, GameMode, GameRule, StateEvent, SurvivalConfig},
 };
 use std::{path::PathBuf, time::SystemTime};
@@ -15,10 +17,29 @@ pub enum PlayerAction {
     SetMode(GameMode),
     SetRule(GameRule, bool),
     Respawn,
-    Travel { meters: f32, sprinting: bool },
-    Jump { sprinting: bool },
-    Damage { amount: f32, source: DamageSource },
+    Travel {
+        meters: f32,
+        sprinting: bool,
+    },
+    Jump {
+        sprinting: bool,
+    },
+    Damage {
+        amount: f32,
+        source: DamageSource,
+    },
     MinedBlock,
+    /// Консоль: показать координаты могил.
+    Graves,
+    /// Консоль: создать моба перед игроком.
+    Summon(game_core::mobs::MobKind),
+    /// Консоль: поставить блок со сдвигом от клетки игрока.
+    SetBlock {
+        offset: [i32; 3],
+        block: game_core::BlockId,
+    },
+    /// Консоль: перевести часы на полдень (`true`) или полночь.
+    SetDay(bool),
 }
 #[derive(Message)]
 pub struct PlayerActionMessage(pub PlayerAction);
@@ -103,6 +124,7 @@ fn publish(
                     DamageSource::Void => "граница мира",
                     DamageSource::Lava => "лава",
                     DamageSource::Fire => "огонь",
+                    DamageSource::Contact => "колючки и ожоги",
                     DamageSource::Mob => "атака",
                 }
             );
@@ -207,6 +229,62 @@ pub fn apply_actions(
                 &cfg,
             ),
             PlayerAction::MinedBlock => game.vitals.exhaust(cfg.mining_exhaustion, mode, &cfg),
+            PlayerAction::Graves => {
+                let mut cells: Vec<_> = game
+                    .containers
+                    .keys()
+                    .filter(|cell| game.world.block(**cell) == game_core::GRAVE)
+                    .copied()
+                    .collect();
+                cells.sort_unstable();
+                console.feedback = if cells.is_empty() {
+                    "Могил нет".to_string()
+                } else {
+                    let list: Vec<_> = cells
+                        .iter()
+                        .map(|c| format!("{} {} {}", c[0], c[1], c[2]))
+                        .collect();
+                    format!("Могилы: {}", list.join("; "))
+                };
+                game.status.clone_from(&console.feedback);
+                game.ui_dirty = true;
+            }
+            PlayerAction::Summon(kind) => {
+                let forward = Quat::from_rotation_y(game.yaw) * Vec3::NEG_Z;
+                let position = game.feet + forward * 3.0 + Vec3::Y * 0.5;
+                game.mobs.spawn(kind, position.to_array());
+                console.feedback = format!("Появился моб: {}", kind.spec().name);
+                game.status.clone_from(&console.feedback);
+                game.ui_dirty = true;
+            }
+            PlayerAction::SetBlock { offset, block } => {
+                let cell = [
+                    game.feet.x.floor() as i32 + offset[0],
+                    game.feet.y.floor() as i32 + offset[1],
+                    game.feet.z.floor() as i32 + offset[2],
+                ];
+                console.feedback = if game.world.set(cell, block) {
+                    game.revision += 1;
+                    format!("Блок поставлен: {cell:?}")
+                } else {
+                    "Нельзя поставить блок здесь".into()
+                };
+                game.status.clone_from(&console.feedback);
+                game.ui_dirty = true;
+            }
+            PlayerAction::SetDay(day) => {
+                // Сутки длятся 1200 секунд: 300 — полдень, 900 — полночь.
+                let start = (game.clock / 1200.0).floor() * 1200.0;
+                game.clock = start + if day { 300.0 } else { 900.0 };
+                console.feedback = if day {
+                    "Время: день"
+                } else {
+                    "Время: ночь"
+                }
+                .into();
+                game.status.clone_from(&console.feedback);
+                game.ui_dirty = true;
+            }
             PlayerAction::Damage { amount, source } => {
                 let events = game.vitals.damage(amount, source, mode, &cfg);
                 publish(&mut game, events, &mut changed);
@@ -249,12 +327,16 @@ pub fn simulate(
         game.feet = safe_spawn(&game);
         game.pending_respawn = false;
     }
-    let eye = game.feet + Vec3::Y * (game.height - 0.15);
+    let body = body_fluid(game.feet.to_array(), game.height, |p| game.world.block(p));
     let environment = Environment {
-        underwater: game.world.block(eye.floor().as_ivec3().to_array()) == WATER,
-        // Блоки лавы/огня появятся на этапе 4; их урон уже проверяется в ядре.
-        in_lava: false,
-        in_fire: false,
+        underwater: body.head,
+        in_lava: body.lava,
+        in_fire: game_core::interaction::body_touches(
+            game.feet.to_array(),
+            game.height,
+            |p| game.world.block(p),
+            |id| game_core::is_fire(id) || game_core::mechanics::is_campfire_flame(id),
+        ),
         out_of_world: game.feet.y < (WORLD_MIN_Y - 16) as f32
             || game.feet.y > (WORLD_MAX_Y + 16) as f32,
     };

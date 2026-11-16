@@ -13,7 +13,7 @@ pub const SECTION_VOLUME: usize = 16 * 16 * 16;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Section {
-    pub blocks: Box<[u8; SECTION_VOLUME]>,
+    pub blocks: Box<[BlockId; SECTION_VOLUME]>,
 }
 impl Default for Section {
     fn default() -> Self {
@@ -25,13 +25,14 @@ impl Default for Section {
 impl Section {
     /// Section-local x/y/z, each in 0..16. Invalid coordinates read as air.
     #[must_use]
-    pub fn block(&self, local: [u8; 3]) -> u8 {
+    pub fn block(&self, local: [u8; 3]) -> BlockId {
         if local.iter().any(|&n| n >= 16) {
             return AIR;
         }
         self.blocks[Self::index(local)]
     }
-    pub fn set(&mut self, local: [u8; 3], id: u8) {
+    pub fn set(&mut self, local: [u8; 3], id: BlockId) {
+        let id = crate::canonical(id);
         if local.iter().all(|&n| n < 16) && usize::from(id) < BLOCKS.len() {
             self.blocks[Self::index(local)] = id;
         }
@@ -107,7 +108,7 @@ impl Chunk {
     }
     /// Read using world block coordinates. Other columns and heights are air.
     #[must_use]
-    pub fn block(&self, position: [i32; 3]) -> u8 {
+    pub fn block(&self, position: [i32; 3]) -> BlockId {
         if !valid_world_height(position[1])
             || [
                 section_coordinate(position[0]),
@@ -120,7 +121,7 @@ impl Chunk {
             .get(&section_coordinate(position[1]))
             .map_or(AIR, |section| section.block(position.map(local_coordinate)))
     }
-    pub(crate) fn write(&mut self, position: [i32; 3], id: u8) {
+    pub(crate) fn write(&mut self, position: [i32; 3], id: BlockId) {
         let sy = section_coordinate(position[1]);
         if id == AIR {
             if let Some(section) = self.sections.get_mut(&sy) {
@@ -134,6 +135,399 @@ impl Chunk {
                 .entry(sy)
                 .or_default()
                 .set(position.map(local_coordinate), id);
+        }
+    }
+    /// Дополнения генератора 3: берёзы, глина на мелководье и обсидиан у дна.
+    /// Каждая замена — чистая функция seed и координат, поэтому результат не
+    /// зависит от порядка загрузки чанков.
+    pub(crate) fn decorate_v3(&mut self, seed: u64) {
+        let min_x = i64::from(self.position[0]) * 16;
+        let min_z = i64::from(self.position[1]) * 16;
+        if self.sections.is_empty() {
+            return;
+        }
+        for gx in (min_x - 2).div_euclid(5)..=(min_x + 17).div_euclid(5) {
+            for gz in (min_z - 2).div_euclid(5)..=(min_z + 17).div_euclid(5) {
+                let Some(tree) = tree_at_cell(seed, gx, gz) else {
+                    continue;
+                };
+                if !coordinate_hash(seed ^ 0xB12C, gx, gz).is_multiple_of(3) {
+                    continue;
+                }
+                let top = tree.ground + tree.height;
+                for dy in -1_i32..=1 {
+                    let radius: i32 = if dy == 1 { 1 } else { 2 };
+                    for dx in -radius..=radius {
+                        for dz in -radius..=radius {
+                            let (Some(x), Some(z)) =
+                                (tree.x.checked_add(dx), tree.z.checked_add(dz))
+                            else {
+                                continue;
+                            };
+                            let p = [x, top + dy, z];
+                            if self.block(p) == LEAVES {
+                                self.write(p, BIRCH_LEAVES);
+                            }
+                        }
+                    }
+                }
+                for y in tree.ground + 1..=top {
+                    let p = [tree.x, y, tree.z];
+                    if self.block(p) == WOOD {
+                        self.write(p, BIRCH_LOG);
+                    }
+                }
+            }
+        }
+        for x in min_x as i32..=(min_x + 15) as i32 {
+            for z in min_z as i32..=(min_z + 15) as i32 {
+                let (fx, fz) = (f64::from(x), f64::from(z));
+                let height = terrain_column(seed, x, z).height;
+                if (SEA_LEVEL - 6..SEA_LEVEL).contains(&height)
+                    && noise(seed ^ 0xC1A7, fx / 9.0, fz / 9.0) > 0.42
+                {
+                    for y in height - 1..=height {
+                        if matches!(self.block([x, y, z]), SAND | GRAVEL) {
+                            self.write([x, y, z], CLAY);
+                        }
+                    }
+                }
+                let glass = noise(seed ^ 0x0B51, fx / 7.0, fz / 7.0);
+                if glass > 0.58 {
+                    let top = if glass > 0.72 { 2 } else { 1 };
+                    for y in WORLD_MIN_Y + 1..=WORLD_MIN_Y + top {
+                        if self.block([x, y, z]) == DEEP_STONE {
+                            self.write([x, y, z], OBSIDIAN);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    /// Дополнения генератора 4: сосны, линзы пород камня, цветы и трава.
+    /// Как и в генераторе 3, каждая замена зависит только от seed и координат.
+    pub(crate) fn decorate_v4(&mut self, seed: u64) {
+        let min_x = i64::from(self.position[0]) * 16;
+        let min_z = i64::from(self.position[1]) * 16;
+        if self.sections.is_empty() {
+            return;
+        }
+        for gx in (min_x - 2).div_euclid(5)..=(min_x + 17).div_euclid(5) {
+            for gz in (min_z - 2).div_euclid(5)..=(min_z + 17).div_euclid(5) {
+                let Some(tree) = tree_at_cell(seed, gx, gz) else {
+                    continue;
+                };
+                if !coordinate_hash(seed ^ 0x9193, gx, gz).is_multiple_of(3) {
+                    continue;
+                }
+                let top = tree.ground + tree.height;
+                for dy in -1_i32..=1 {
+                    for dx in -2_i32..=2 {
+                        for dz in -2_i32..=2 {
+                            let (Some(x), Some(z)) =
+                                (tree.x.checked_add(dx), tree.z.checked_add(dz))
+                            else {
+                                continue;
+                            };
+                            let p = [x, top + dy, z];
+                            if self.block(p) == LEAVES {
+                                self.write(p, PINE_LEAVES);
+                            }
+                        }
+                    }
+                }
+                for y in tree.ground + 1..=top {
+                    let p = [tree.x, y, tree.z];
+                    if self.block(p) == WOOD {
+                        self.write(p, PINE_LOG);
+                    }
+                }
+            }
+        }
+        // (порода, заменяемый камень, центр пласта, разброс центра).
+        let rocks = [
+            (LIMESTONE, STONE, 52.0, 16.0),
+            (GRANITE, STONE, 30.0, 20.0),
+            (MARBLE, STONE, 12.0, 14.0),
+            (SLATE, STONE, -2.0, 8.0),
+            (BASALT, DEEP_STONE, -36.0, 14.0),
+        ];
+        for x in min_x as i32..=(min_x + 15) as i32 {
+            for z in min_z as i32..=(min_z + 15) as i32 {
+                let (fx, fz) = (f64::from(x), f64::from(z));
+                let height = terrain_column(seed, x, z).height;
+                for (index, (rock, host, center, spread)) in rocks.into_iter().enumerate() {
+                    let salt = 0x60C0 + index as u64 * 0x101;
+                    let strength = noise(seed ^ salt, fx / 21.0, fz / 21.0);
+                    if strength < 0.45 {
+                        continue;
+                    }
+                    let middle = center + noise(seed ^ (salt + 7), fx / 37.0, fz / 37.0) * spread;
+                    let thickness = (strength - 0.45) * 22.0;
+                    let low = (middle - thickness).floor() as i32;
+                    let high = (middle + thickness).ceil() as i32;
+                    for y in low.max(WORLD_MIN_Y + 3)..=high.min(height - 5) {
+                        if self.block([x, y, z]) == host {
+                            self.write([x, y, z], rock);
+                        }
+                    }
+                }
+                if self.block([x, height, z]) != GRASS
+                    || height >= WORLD_MAX_Y
+                    || self.block([x, height + 1, z]) != AIR
+                {
+                    continue;
+                }
+                let roll = coordinate_hash(seed ^ 0xF10A, i64::from(x), i64::from(z)) % 100;
+                let meadow = noise(seed ^ 0xF10B, fx / 14.0, fz / 14.0);
+                let plant = if roll < 3 || (meadow > 0.35 && roll < 14) {
+                    // Поляны одного цветка: вид задаёт крупный шум.
+                    let kind = noise(seed ^ 0xF10C, fx / 60.0, fz / 60.0);
+                    Some(if kind < -0.3 {
+                        POPPY
+                    } else if kind < 0.0 {
+                        DANDELION
+                    } else if kind < 0.3 {
+                        CORNFLOWER
+                    } else {
+                        DAISY
+                    })
+                } else if roll < 30 {
+                    Some(TALL_GRASS)
+                } else {
+                    None
+                };
+                if let Some(plant) = plant {
+                    self.write([x, height + 1, z], plant);
+                }
+            }
+        }
+    }
+    /// Дополнения генератора 5: ещё пять пород деревьев, медь, лазурит и
+    /// изумруды, красный песок в пустынях, редкие тыквы и арбузы.
+    pub(crate) fn decorate_v5(&mut self, seed: u64) {
+        let min_x = i64::from(self.position[0]) * 16;
+        let min_z = i64::from(self.position[1]) * 16;
+        if self.sections.is_empty() {
+            return;
+        }
+        for gx in (min_x - 2).div_euclid(5)..=(min_x + 17).div_euclid(5) {
+            for gz in (min_z - 2).div_euclid(5)..=(min_z + 17).div_euclid(5) {
+                let Some(tree) = tree_at_cell(seed, gx, gz) else {
+                    continue;
+                };
+                let (log, leaves) = match coordinate_hash(seed ^ 0x7A15, gx, gz) % 8 {
+                    0 => (CHERRY_LOG, CHERRY_LEAVES),
+                    1 => (ACACIA_LOG, ACACIA_LEAVES),
+                    2 => (DARK_OAK_LOG, DARK_OAK_LEAVES),
+                    3 => (JUNGLE_LOG, JUNGLE_LEAVES),
+                    4 => (MANGROVE_LOG, MANGROVE_LEAVES),
+                    _ => continue,
+                };
+                let top = tree.ground + tree.height;
+                for dy in -1_i32..=1 {
+                    for dx in -2_i32..=2 {
+                        for dz in -2_i32..=2 {
+                            let (Some(x), Some(z)) =
+                                (tree.x.checked_add(dx), tree.z.checked_add(dz))
+                            else {
+                                continue;
+                            };
+                            let p = [x, top + dy, z];
+                            if self.block(p) == LEAVES {
+                                self.write(p, leaves);
+                            }
+                        }
+                    }
+                }
+                for y in tree.ground + 1..=top {
+                    let p = [tree.x, y, tree.z];
+                    if self.block(p) == WOOD {
+                        self.write(p, log);
+                    }
+                }
+            }
+        }
+        // (руда, нижняя и верхняя высота, порог местности, редкость гнезда).
+        let ores = [
+            (COPPER_ORE, 0, 96, 0.1, 9_u64),
+            (LAPIS_ORE, -48, 30, 0.3, 14),
+            (EMERALD_ORE, -16, 110, 0.45, 20),
+        ];
+        for x in min_x as i32..=(min_x + 15) as i32 {
+            for z in min_z as i32..=(min_z + 15) as i32 {
+                let (fx, fz) = (f64::from(x), f64::from(z));
+                let column = terrain_column(seed, x, z);
+                let height = column.height;
+                for (index, (ore, low, high, threshold, rarity)) in ores.into_iter().enumerate() {
+                    let salt = 0x0E50 + index as u64 * 0x77;
+                    if noise(seed ^ salt, fx / 26.0, fz / 26.0) < threshold {
+                        continue;
+                    }
+                    for y in low.max(WORLD_MIN_Y + 2)..=high.min(height - 5) {
+                        // Гнездо 2×2×2: общий жребий на ячейку и отдельный на блок.
+                        let nest = mix(coordinate_hash(
+                            seed ^ salt,
+                            i64::from(x >> 1),
+                            i64::from(z >> 1),
+                        ) ^ (i64::from(y >> 1) as u64)
+                            .wrapping_mul(0x9e37_79b9_7f4a_7c15));
+                        if !nest.is_multiple_of(rarity * 8) {
+                            continue;
+                        }
+                        let own = mix(nest
+                            ^ ((x & 1) as u64) << 1
+                            ^ ((z & 1) as u64) << 2
+                            ^ (y & 1) as u64);
+                        if !own.is_multiple_of(3)
+                            && matches!(self.block([x, y, z]), STONE | DEEP_STONE)
+                        {
+                            self.write([x, y, z], ore);
+                        }
+                    }
+                }
+                if column.biome == Biome::Desert
+                    && noise(seed ^ 0x5ED5, fx / 48.0, fz / 48.0) > 0.25
+                {
+                    for y in height - 2..=height {
+                        if self.block([x, y, z]) == SAND {
+                            self.write([x, y, z], RED_SAND);
+                        }
+                    }
+                }
+                if self.block([x, height, z]) == GRASS
+                    && height < WORLD_MAX_Y
+                    && self.block([x, height + 1, z]) == AIR
+                {
+                    match coordinate_hash(seed ^ 0x9A70, i64::from(x), i64::from(z)) % 1500 {
+                        0..=2 => self.write([x, height + 1, z], PUMPKIN),
+                        3..=5 => self.write([x, height + 1, z], MELON),
+                        _ => {}
+                    }
+                }
+            }
+        }
+    }
+    /// Дополнения генератора 6: глубинные руды, диорит и андезит, ели, новые цветы,
+    /// грибы и сухие кусты. Как и раньше, всё зависит только от seed и координат.
+    pub(crate) fn decorate_v6(&mut self, seed: u64) {
+        let min_x = i64::from(self.position[0]) * 16;
+        let min_z = i64::from(self.position[1]) * 16;
+        if self.sections.is_empty() {
+            return;
+        }
+        for gx in (min_x - 2).div_euclid(5)..=(min_x + 17).div_euclid(5) {
+            for gz in (min_z - 2).div_euclid(5)..=(min_z + 17).div_euclid(5) {
+                let Some(tree) = tree_at_cell(seed, gx, gz) else {
+                    continue;
+                };
+                if !coordinate_hash(seed ^ 0x5A5A, gx, gz).is_multiple_of(6) {
+                    continue;
+                }
+                let top = tree.ground + tree.height;
+                for dy in -1_i32..=1 {
+                    for dx in -2_i32..=2 {
+                        for dz in -2_i32..=2 {
+                            let (Some(x), Some(z)) =
+                                (tree.x.checked_add(dx), tree.z.checked_add(dz))
+                            else {
+                                continue;
+                            };
+                            let p = [x, top + dy, z];
+                            if self.block(p) == LEAVES {
+                                self.write(p, SPRUCE_LEAVES);
+                            }
+                        }
+                    }
+                }
+                for y in tree.ground + 1..=top {
+                    let p = [tree.x, y, tree.z];
+                    if self.block(p) == WOOD {
+                        self.write(p, SPRUCE_LOG);
+                    }
+                }
+            }
+        }
+        let rocks = [
+            (DIORITE, 0x71_u64, 44.0, 18.0),
+            (ANDESITE, 0x72, 22.0, 18.0),
+        ];
+        for x in min_x as i32..=(min_x + 15) as i32 {
+            for z in min_z as i32..=(min_z + 15) as i32 {
+                let (fx, fz) = (f64::from(x), f64::from(z));
+                let column = terrain_column(seed, x, z);
+                let height = column.height;
+                for (rock, salt, center, spread) in rocks {
+                    let strength = noise(seed ^ (0x6D00 + salt), fx / 23.0, fz / 23.0);
+                    if strength < 0.46 {
+                        continue;
+                    }
+                    let middle =
+                        center + noise(seed ^ (0x6D80 + salt), fx / 35.0, fz / 35.0) * spread;
+                    let thickness = (strength - 0.46) * 20.0;
+                    let low = (middle - thickness).floor() as i32;
+                    let high = (middle + thickness).ceil() as i32;
+                    for y in low.max(WORLD_MIN_Y + 3)..=high.min(height - 5) {
+                        if self.block([x, y, z]) == STONE {
+                            self.write([x, y, z], rock);
+                        }
+                    }
+                }
+                for y in WORLD_MIN_Y + 1..-12.min(height) {
+                    let deep = match self.block([x, y, z]) {
+                        COAL_ORE => DEEPSLATE_COAL_ORE,
+                        IRON_ORE => DEEPSLATE_IRON_ORE,
+                        GOLD_ORE => DEEPSLATE_GOLD_ORE,
+                        LAPIS_ORE => DEEPSLATE_LAPIS_ORE,
+                        _ => continue,
+                    };
+                    self.write([x, y, z], deep);
+                }
+                if height >= WORLD_MAX_Y || self.block([x, height + 1, z]) != AIR {
+                    continue;
+                }
+                let ground = self.block([x, height, z]);
+                let roll = coordinate_hash(seed ^ 0xF1F1, i64::from(x), i64::from(z)) % 1000;
+                let kind = noise(seed ^ 0xF1F2, fx / 45.0, fz / 45.0);
+                let plant = if ground == GRASS && roll < 14 {
+                    Some(if kind < -0.45 {
+                        ALLIUM
+                    } else if kind < -0.2 {
+                        AZURE_BLUET
+                    } else if kind < 0.0 {
+                        RED_TULIP
+                    } else if kind < 0.15 {
+                        ORANGE_TULIP
+                    } else if kind < 0.3 {
+                        WHITE_TULIP
+                    } else if kind < 0.45 {
+                        PINK_TULIP
+                    } else if kind < 0.6 {
+                        BLUE_ORCHID
+                    } else {
+                        LILY_OF_THE_VALLEY
+                    })
+                } else if ground == GRASS && roll < 70 {
+                    Some(if roll.is_multiple_of(5) {
+                        FERN
+                    } else {
+                        SHORT_GRASS
+                    })
+                } else if ground == GRASS && roll >= 990 {
+                    Some(if roll.is_multiple_of(2) {
+                        BROWN_MUSHROOM
+                    } else {
+                        RED_MUSHROOM
+                    })
+                } else if ground == SAND && column.biome == Biome::Desert && roll < 12 {
+                    Some(DEAD_BUSH)
+                } else {
+                    None
+                };
+                if let Some(plant) = plant {
+                    self.write([x, height + 1, z], plant);
+                }
+            }
         }
     }
     fn plant(&mut self, tree: Tree) {
@@ -172,8 +566,29 @@ pub struct World {
     pub seed: u64,
     pub chunks: HashMap<[i32; 2], Arc<Chunk>>,
     /// Edits outlive loaded chunk data and are replayed when a chunk is inserted.
-    pub edits: HashMap<[i32; 3], u8>,
+    pub edits: HashMap<[i32; 3], BlockId>,
     pub dirty: HashSet<[i32; 3]>,
+    /// Клетки, рядом с которыми менялась жидкость; их обрабатывает `fluids::tick`.
+    pub fluid_active: HashSet<[i32; 3]>,
+    /// Горящие клетки; их обрабатывает `fire::tick`.
+    pub fire_active: HashSet<[i32; 3]>,
+    /// Саженцы, которые могут вырасти; их обрабатывает `growth::tick`.
+    pub grow_active: HashSet<[i32; 3]>,
+    /// Клетки для `nature::tick`: падение, опора, листва, бетон.
+    pub nature_active: HashSet<[i32; 3]>,
+    /// Самопроизвольные разрушения, ждущие обработки клиентом (выпадение предметов).
+    pub nature_events: Vec<crate::nature::NatureEvent>,
+    /// Падающие блоки (песок, гравий, наковальни…).
+    pub falling: Vec<crate::nature::Falling>,
+    /// Зажжённый динамит с горящим фитилём.
+    pub primed: Vec<crate::mechanics::PrimedTnt>,
+    /// Разрушенные взрывом блоки для анимации разлёта.
+    pub debris: Vec<crate::mechanics::Debris>,
+    entity_counter: u64,
+    /// Динамит, который сейчас взорвётся; его обрабатывает `mechanics::run_blasts`.
+    pub blasts: Vec<[i32; 3]>,
+    /// Состояние редстоуна: клетки, таймеры, события.
+    pub rs: crate::redstone::Redstone,
 }
 impl World {
     #[must_use]
@@ -183,10 +598,26 @@ impl World {
             chunks: HashMap::new(),
             edits: HashMap::new(),
             dirty: HashSet::new(),
+            fluid_active: HashSet::new(),
+            fire_active: HashSet::new(),
+            grow_active: HashSet::new(),
+            nature_active: HashSet::new(),
+            nature_events: Vec::new(),
+            falling: Vec::new(),
+            primed: Vec::new(),
+            debris: Vec::new(),
+            entity_counter: 0,
+            blasts: Vec::new(),
+            rs: crate::redstone::Redstone::default(),
         }
     }
+    /// Новый номер для падающего блока или горящего динамита.
+    pub fn next_entity_id(&mut self) -> u64 {
+        self.entity_counter += 1;
+        self.entity_counter
+    }
     #[must_use]
-    pub fn block(&self, position: [i32; 3]) -> u8 {
+    pub fn block(&self, position: [i32; 3]) -> BlockId {
         self.chunks
             .get(&[
                 section_coordinate(position[0]),
@@ -195,7 +626,8 @@ impl World {
             .map_or(AIR, |chunk| chunk.block(position))
     }
     /// Returns true only when a valid, loaded, breakable block actually changed.
-    pub fn set(&mut self, position: [i32; 3], id: u8) -> bool {
+    pub fn set(&mut self, position: [i32; 3], id: BlockId) -> bool {
+        let id = crate::canonical(id);
         if !valid_world_height(position[1]) || usize::from(id) >= BLOCKS.len() {
             return false;
         }
@@ -212,6 +644,9 @@ impl World {
         }
         Arc::make_mut(chunk).write(position, id);
         self.edits.insert(position, id);
+        self.wake_fluids(position);
+        self.wake_special(position, id);
+        self.wake_nature(position);
         let section = position.map(section_coordinate);
         // AO samples diagonals too: an edit at a section corner can affect
         // eight sections, not just the three face-adjacent neighbors.
@@ -230,7 +665,55 @@ impl World {
         }
         true
     }
+    /// Будит клетку и её соседей для `nature::tick`.
+    fn wake_nature(&mut self, position: [i32; 3]) {
+        if self.nature_active.len() > 20_000 {
+            return;
+        }
+        self.nature_active.insert(position);
+        for d in [
+            [1, 0, 0],
+            [-1, 0, 0],
+            [0, 1, 0],
+            [0, -1, 0],
+            [0, 0, 1],
+            [0, 0, -1],
+        ] {
+            self.nature_active
+                .insert([position[0] + d[0], position[1] + d[1], position[2] + d[2]]);
+        }
+    }
+    /// Огонь и саженцы живут сами по себе: их сразу берут в работу.
+    fn wake_special(&mut self, position: [i32; 3], id: BlockId) {
+        if is_fire(id) {
+            self.fire_active.insert(position);
+        }
+        if crate::growth::is_sapling(id) {
+            self.grow_active.insert(position);
+        }
+        if crate::redstone::is_component(id) {
+            self.rs.cells.insert(position);
+        }
+    }
+    /// Будит жидкость вокруг клетки, если в ней самой или рядом есть жидкость.
+    fn wake_fluids(&mut self, position: [i32; 3]) {
+        let mut cells = vec![position];
+        for axis in 0..3 {
+            for step in [-1, 1] {
+                let mut cell = position;
+                cell[axis] += step;
+                cells.push(cell);
+            }
+        }
+        if cells.iter().any(|cell| is_fluid(self.block(*cell))) {
+            self.fluid_active.extend(cells);
+        }
+    }
     pub fn insert(&mut self, mut chunk: Chunk) {
+        let mut settled = Vec::new();
+        let mut burning = Vec::new();
+        let mut saplings = Vec::new();
+        let mut components = Vec::new();
         for (&position, &id) in &self.edits {
             if [
                 section_coordinate(position[0]),
@@ -241,8 +724,24 @@ impl World {
                 && chunk.block(position) != BEDROCK
             {
                 chunk.write(position, id);
+                if is_fluid(id) {
+                    settled.push(position);
+                }
+                if is_fire(id) {
+                    burning.push(position);
+                }
+                if crate::growth::is_sapling(id) {
+                    saplings.push(position);
+                }
+                if crate::redstone::is_component(id) {
+                    components.push(position);
+                }
             }
         }
+        self.fluid_active.extend(settled);
+        self.fire_active.extend(burning);
+        self.grow_active.extend(saplings);
+        self.rs.cells.extend(components);
         if let Some(old) = self.chunks.remove(&chunk.position) {
             self.dirty_chunk(&old);
         }
@@ -288,7 +787,7 @@ struct TerrainColumn {
     biome: Biome,
 }
 impl TerrainColumn {
-    fn surface_block(&self, y: i32) -> u8 {
+    fn surface_block(&self, y: i32) -> BlockId {
         match self.biome {
             Biome::Ocean => {
                 if y == self.height {
@@ -519,7 +1018,12 @@ mod tests {
         assert!(!a.sections.is_empty());
         for section in a.sections.values() {
             assert!(section.blocks.iter().any(|&id| id != AIR));
-            assert!(section.blocks.iter().all(|&id| id < BLOCKS.len() as u8));
+            assert!(
+                section
+                    .blocks
+                    .iter()
+                    .all(|&id| id < BLOCKS.len() as BlockId)
+            );
         }
         for x in -16..0 {
             for z in -16..0 {
@@ -582,7 +1086,7 @@ mod tests {
         world.insert(Chunk::generate(1, [0, 0]));
         assert!(!world.set([0, -65, 0], STONE));
         assert!(!world.set([0, 321, 0], STONE));
-        assert!(!world.set([0, 70, 0], 26));
+        assert!(!world.set([0, 70, 0], BLOCKS.len() as BlockId));
         assert!(!world.set([0, -64, 0], AIR));
         assert!(!world.set([0, -64, 0], STONE));
         assert_eq!(world.block([0, -64, 0]), BEDROCK);

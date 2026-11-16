@@ -5,13 +5,18 @@ mod app_icon;
 mod block_audio;
 mod console;
 mod control_input;
+mod fluids_client;
 mod footsteps;
 mod graphics_assets;
+mod hand;
 mod inventory_client;
 mod inventory_render;
 mod item_icons;
 mod item_textures;
 mod mining_client;
+mod mob_skins;
+mod mobs_client;
+mod pixel_icons;
 mod player;
 mod session;
 mod settings;
@@ -19,6 +24,7 @@ mod streaming;
 mod survival_client;
 mod tool_textures;
 mod ui;
+mod world_fx;
 
 use bevy::{
     app::AppExit,
@@ -43,7 +49,7 @@ fn main() {
                 title: concat!(
                     "Voxel Sandbox — ",
                     env!("CARGO_PKG_VERSION"),
-                    " · добыча и крафт"
+                    " · блоки, мобы и пиксели"
                 )
                 .into(),
                 resolution: (1280, 720).into(),
@@ -71,6 +77,7 @@ fn main() {
     .add_systems(Startup, setup)
     .add_systems(Update, survival_client::reload_config.before(actions))
     .add_systems(Update, app_icon::set_icon)
+    .add_systems(Update, graphics_assets::apply_style.after(actions))
     .add_systems(
         Update,
         (
@@ -89,8 +96,12 @@ fn main() {
     console::plugin(&mut app);
     inventory_client::plugin(&mut app);
     mining_client::plugin(&mut app);
+    mobs_client::plugin(&mut app);
+    fluids_client::plugin(&mut app);
+    hand::plugin(&mut app);
     item_icons::plugin(&mut app);
     inventory_render::plugin(&mut app);
+    world_fx::plugin(&mut app);
     ui::plugin(&mut app);
     app.run();
 }
@@ -107,7 +118,7 @@ fn setup(
     mut volume: ResMut<bevy::audio::GlobalVolume>,
 ) {
     stream.textures = graphics_assets::load_face_textures();
-    let loaded = graphics_assets::load_atlas().and_then(|atlas| {
+    let loaded = graphics_assets::load_atlas_for(game.settings.pixel_textures).and_then(|atlas| {
         let baked = game_render::bake_atlas_icons(&atlas, &stream.textures)?;
         let handles =
             game_render::create_materials_from_atlas(&mut images, &mut materials, &atlas)?;
@@ -116,6 +127,7 @@ fn setup(
     match loaded {
         Ok((baked, handles)) => {
             icons.handles = baked.into_iter().map(|image| images.add(image)).collect();
+            icons.pixel = Some(game.settings.pixel_textures);
             stream.materials = handles;
         }
         Err(error) => {
@@ -200,6 +212,8 @@ fn save(game: &mut Game) -> bool {
     let Some(id) = game.world_id.as_ref() else {
         return true;
     };
+    // Блоки в полёте и горящий динамит перед записью возвращаются в мир.
+    game_core::nature::land_all(&mut game.world);
     match save_world(&settings::save_root(), id, &game.save_data()) {
         Ok(()) => {
             game.status = "Мир сохранён".into();
@@ -229,6 +243,7 @@ fn open(
     game.world.edits = data.edits.into_iter().collect();
     game.world_id = Some(id);
     inventory_client::reset_session(game, false);
+    inventory_client::restore_graves(game, &data.graves);
     game.name_input = data.name;
     game.feet = Vec3::from_array(data.player);
     game.velocity = Vec3::ZERO;
@@ -342,6 +357,7 @@ fn actions(
                     pitch: -0.15,
                     time: 240.,
                     edits: Vec::new(),
+                    graves: Vec::new(),
                 };
                 match save_world(&settings::save_root(), &id, &data) {
                     Ok(()) => {
@@ -424,9 +440,42 @@ fn actions(
                 };
                 game.screen(mode);
             }
-            Action::SelectSlot(slot) => {
-                game.selected = slot.min(8);
+            Action::CatalogTab(tab) => {
+                game.catalog_tab = tab.min(ui::CATALOG_TAB_COUNT - 1);
+                game.catalog_scroll = 0;
                 game.ui_dirty = true;
+            }
+            Action::ScrollCatalog(rows) => {
+                let tab = game_core::creative::Tab::from_index(game.catalog_tab);
+                let count =
+                    game_core::creative::items(&game.content, tab, &game.catalog_search).len();
+                let max = game_core::creative::max_scroll(count);
+                let next = (game.catalog_scroll as i64 + i64::from(rows)).clamp(0, max as i64);
+                if next as usize != game.catalog_scroll {
+                    game.catalog_scroll = next as usize;
+                    game.ui_dirty = true;
+                }
+            }
+            Action::SearchInput(text) => {
+                if game.catalog_search.chars().count() < 40 {
+                    game.catalog_search.push_str(&text);
+                    game.catalog_scroll = 0;
+                    game.ui_dirty = true;
+                }
+            }
+            Action::SearchBackspace => {
+                game.catalog_search.pop();
+                game.catalog_scroll = 0;
+                game.ui_dirty = true;
+            }
+            Action::TrashCursor => {
+                if game.game_mode == game_core::survival::GameMode::Creative {
+                    game.inventory.cursor = None;
+                    game.ui_dirty = true;
+                }
+            }
+            Action::Stonecut(output) => {
+                inventory_client::stonecut(&mut game, output);
             }
             Action::RandomSeed => {
                 game.seed_input = SystemTime::now()
@@ -459,6 +508,9 @@ fn actions(
                     }
                     Action::CycleResolution => {
                         game.settings.resolution = (game.settings.resolution + 1) % 3
+                    }
+                    Action::ToggleTextures => {
+                        game.settings.pixel_textures = !game.settings.pixel_textures
                     }
                     _ => {}
                 }

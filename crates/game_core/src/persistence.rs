@@ -12,7 +12,15 @@ use std::{
 /// Increase when the save schema changes, with an explicit migration before loading it.
 pub const CURRENT_FORMAT_VERSION: u32 = 2;
 /// Generation must remain deterministic for every supported generator version.
-pub const CURRENT_GENERATOR_VERSION: u32 = 2;
+pub const CURRENT_GENERATOR_VERSION: u32 = 6;
+
+/// Могила игрока: вещи по слотам (имя предмета, количество).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Grave {
+    pub position: [i32; 3],
+    pub slots: Vec<Option<(String, u16)>>,
+}
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -27,7 +35,10 @@ pub struct SaveData {
     pub yaw: f32,
     pub pitch: f32,
     pub time: f64,
-    pub edits: Vec<([i32; 3], u8)>,
+    pub edits: Vec<([i32; 3], crate::BlockId)>,
+    /// Содержимое могил; старые сохранения его не знают.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub graves: Vec<Grave>,
 }
 
 impl Default for SaveData {
@@ -43,6 +54,7 @@ impl Default for SaveData {
             pitch: 0.0,
             time: 0.0,
             edits: Vec::new(),
+            graves: Vec::new(),
         }
     }
 }
@@ -217,6 +229,21 @@ fn validate_data(data: &SaveData) -> Result<(), String> {
     if !data.time.is_finite() || data.time < 0.0 {
         return Err("World time must be finite and nonnegative".to_owned());
     }
+    if data.graves.len() > 1024 {
+        return Err("Too many graves".to_owned());
+    }
+    for grave in &data.graves {
+        if !crate::valid_world_height(grave.position[1])
+            || grave.slots.len() > 64
+            || grave
+                .slots
+                .iter()
+                .flatten()
+                .any(|(id, count)| id.is_empty() || id.len() > 128 || *count == 0 || *count > 999)
+        {
+            return Err(format!("Invalid grave at {:?}", grave.position));
+        }
+    }
     let mut positions = HashSet::with_capacity(data.edits.len());
     for &(position, block) in &data.edits {
         if !crate::valid_world_height(position[1]) {
@@ -331,7 +358,7 @@ struct LegacySaveData {
     yaw: f32,
     pitch: f32,
     time: f64,
-    edits: Vec<([i32; 3], u8)>,
+    edits: Vec<([i32; 3], crate::BlockId)>,
 }
 fn migrate_legacy(payload: &str) -> Result<SaveData, String> {
     let old: LegacySaveData = serde_json::from_str(payload).map_err(|error| error.to_string())?;
@@ -352,6 +379,7 @@ fn migrate_legacy(payload: &str) -> Result<SaveData, String> {
         pitch: old.pitch,
         time: old.time,
         edits: old.edits,
+        graves: Vec::new(),
     };
     validate_data(&data)?;
     Ok(data)
@@ -549,7 +577,7 @@ mod tests {
         let root = TestRoot::new();
         let mut value = serde_json::to_value(example()).unwrap();
         assert_eq!(value["format_version"], 2);
-        assert_eq!(value["generator_version"], 2);
+        assert_eq!(value["generator_version"], CURRENT_GENERATOR_VERSION);
         value["ore_config"]["ores"][0]["veins"] = 1.into();
         let data: SaveData = serde_json::from_value(value.clone()).unwrap();
         save_world(&root.0, "snapshot", &data).unwrap();
@@ -559,9 +587,11 @@ mod tests {
             loaded.ore_config.clone(),
         )
         .unwrap();
-        let current_defaults =
-            crate::ores::WorldGenerator::from_snapshot(2, Some(crate::ores::OreConfig::default()))
-                .unwrap();
+        let current_defaults = crate::ores::WorldGenerator::from_snapshot(
+            CURRENT_GENERATOR_VERSION,
+            Some(crate::ores::OreConfig::default()),
+        )
+        .unwrap();
         assert_ne!(
             generator.generate(data.seed, [-1, 0]),
             current_defaults.generate(data.seed, [-1, 0])
@@ -822,5 +852,30 @@ mod tests {
         assert!(save_world(&root.0, "world", &data).is_err());
         assert!(primary.is_dir());
         assert_eq!(fs::read(backup).unwrap(), old_backup);
+    }
+
+    #[test]
+    fn graves_roundtrip_and_old_saves_without_them_still_load() {
+        let mut data = example();
+        data.graves = vec![Grave {
+            position: [1, 70, -2],
+            slots: vec![Some(("voxium:apple".into(), 3)), None],
+        }];
+        validate_data(&data).unwrap();
+        let json = serde_json::to_string(&data).unwrap();
+        assert_eq!(serde_json::from_str::<SaveData>(&json).unwrap(), data);
+        let plain = serde_json::to_string(&example()).unwrap();
+        assert!(!plain.contains("graves"));
+        assert!(
+            serde_json::from_str::<SaveData>(&plain)
+                .unwrap()
+                .graves
+                .is_empty()
+        );
+        let mut bad = data.clone();
+        bad.graves[0].slots[0] = Some(("".into(), 1));
+        assert!(validate_data(&bad).is_err());
+        bad.graves[0].slots[0] = Some(("x".into(), 0));
+        assert!(validate_data(&bad).is_err());
     }
 }
