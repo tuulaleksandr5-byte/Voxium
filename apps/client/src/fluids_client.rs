@@ -92,6 +92,7 @@ fn tick_fire_and_growth(
 }
 
 /// Кнопки, нажимные плиты, взрывы динамита и опасные блоки.
+#[allow(clippy::too_many_arguments)]
 fn tick_mechanics(
     time: Res<Time<Real>>,
     mut game: ResMut<Game>,
@@ -267,61 +268,6 @@ fn update_overlay(game: Res<Game>, mut overlay: Single<&mut BackgroundColor, Wit
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn overlay_tints_only_when_the_eye_is_inside_a_fluid() {
-        assert_eq!(overlay_color(game_core::STONE), Color::NONE);
-        assert_eq!(overlay_color(game_core::AIR), Color::NONE);
-        assert_ne!(overlay_color(game_core::WATER), Color::NONE);
-        assert_ne!(overlay_color(game_core::FLOW_WATER_3), Color::NONE);
-        let lava = overlay_color(game_core::LAVA).to_srgba();
-        let water = overlay_color(game_core::WATER).to_srgba();
-        assert!(lava.red > lava.blue && water.blue > water.red);
-        assert!(lava.alpha > water.alpha, "лава непрозрачнее воды");
-    }
-
-    #[test]
-    fn the_clock_runs_a_bounded_number_of_steps_per_frame() {
-        let mut game = Game {
-            mode: Mode::Playing,
-            world_id: Some("fluids".into()),
-            ..Default::default()
-        };
-        for cx in -1..=1 {
-            for cz in -1..=1 {
-                game.world.chunks.insert(
-                    [cx, cz],
-                    std::sync::Arc::new(game_core::Chunk {
-                        position: [cx, cz],
-                        sections: Default::default(),
-                    }),
-                );
-            }
-        }
-        game.world.set([0, 60, 0], game_core::STONE);
-        game.world.set([0, 61, 0], game_core::WATER);
-        let mut app = App::new();
-        app.add_plugins(MinimalPlugins)
-            .insert_resource(game)
-            .init_resource::<FluidClock>()
-            .insert_resource(Time::<Real>::default())
-            .add_systems(Update, tick_fluids);
-        // Огромный кадр не вызывает лавину шагов: накопление ограничено четырьмя тиками.
-        app.world_mut()
-            .resource_mut::<Time<Real>>()
-            .advance_by(std::time::Duration::from_secs(30));
-        app.update();
-        let clock = app.world().resource::<FluidClock>();
-        assert!(clock.tick <= 4, "{}", clock.tick);
-        assert!(clock.tick >= 1);
-        let game = app.world().resource::<Game>();
-        assert_eq!(game.world.block([1, 61, 0]), game_core::FLOW_WATER_7);
-    }
-}
-
 /// Наковальня на лету бьёт игрока и мобов под собой: 2 урона за блок падения, до 40.
 fn strike_with_anvils(
     game: &mut Game,
@@ -377,5 +323,60 @@ fn strike_with_anvils(
     }
     for (id, damage, from) in struck_mobs {
         game.mobs.hit(id, damage, from.to_array());
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn overlay_tints_only_when_the_eye_is_inside_a_fluid() {
+        assert_eq!(overlay_color(game_core::STONE), Color::NONE);
+        assert_eq!(overlay_color(game_core::AIR), Color::NONE);
+        assert_ne!(overlay_color(game_core::WATER), Color::NONE);
+        assert_ne!(overlay_color(game_core::FLOW_WATER_3), Color::NONE);
+        let lava = overlay_color(game_core::LAVA).to_srgba();
+        let water = overlay_color(game_core::WATER).to_srgba();
+        assert!(lava.red > lava.blue && water.blue > water.red);
+        assert!(lava.alpha > water.alpha, "лава непрозрачнее воды");
+    }
+
+    #[test]
+    fn the_clock_runs_a_bounded_number_of_steps_per_frame() {
+        let mut game = Game {
+            mode: Mode::Playing,
+            world_id: Some("fluids".into()),
+            ..Default::default()
+        };
+        for cx in -1..=1 {
+            for cz in -1..=1 {
+                game.world.chunks.insert(
+                    [cx, cz],
+                    std::sync::Arc::new(game_core::Chunk {
+                        position: [cx, cz],
+                        sections: Default::default(),
+                    }),
+                );
+            }
+        }
+        game.world.set([0, 60, 0], game_core::STONE);
+        game.world.set([0, 61, 0], game_core::WATER);
+        let mut app = App::new();
+        app.add_plugins(MinimalPlugins)
+            .insert_resource(game)
+            .init_resource::<FluidClock>()
+            .insert_resource(Time::<Real>::default())
+            .add_systems(Update, tick_fluids);
+        // Огромный кадр не вызывает лавину шагов: накопление ограничено четырьмя тиками.
+        app.world_mut()
+            .resource_mut::<Time<Real>>()
+            .advance_by(std::time::Duration::from_secs(30));
+        app.update();
+        let clock = app.world().resource::<FluidClock>();
+        assert!(clock.tick <= 4, "{}", clock.tick);
+        assert!(clock.tick >= 1);
+        let game = app.world().resource::<Game>();
+        assert_eq!(game.world.block([1, 61, 0]), game_core::FLOW_WATER_7);
     }
 }

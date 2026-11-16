@@ -993,8 +993,7 @@ mod tests {
         );
         let top = (2..=13)
             .map(|y| w.block([0, GROUND + y, 0]))
-            .filter(|b| is_bamboo(*b))
-            .last()
+            .rfind(|b| is_bamboo(*b))
             .unwrap();
         assert_eq!(top, BAMBOO_LARGE);
         let smalls = (2..=13)

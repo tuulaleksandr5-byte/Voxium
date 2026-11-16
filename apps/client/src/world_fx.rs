@@ -370,6 +370,7 @@ fn spawn_explosions(
     }
 }
 
+#[allow(clippy::type_complexity)]
 fn animate_particles(
     mut commands: Commands,
     time: Res<Time<Real>>,

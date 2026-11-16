@@ -669,20 +669,6 @@ fn draw_chunk_grid(feet: Vec3, gizmos: &mut Gizmos) {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    #[test]
-    fn standing_waits_for_neighbor_chunk_collision_data() {
-        let mut world = World::new(0);
-        world.insert(game_core::Chunk::generate(0, [0, 0]));
-        let feet = [15.8, 240., 8.5];
-        assert!(!can_stand(feet, |p| collision_block(&world, p)));
-        world.insert(game_core::Chunk::generate(0, [1, 0]));
-        assert!(can_stand(feet, |p| collision_block(&world, p)));
-    }
-}
-
 /// Приземление с высоты мнёт грядку под ногами: чем выше прыжок, тем вероятнее.
 fn trample_farmland(game: &mut crate::session::Game, fall: f32) {
     if fall <= 0.5 {
@@ -699,5 +685,19 @@ fn trample_farmland(game: &mut crate::session::Game, fall: f32) {
     let chance = f64::from((fall - 0.5).min(1.0));
     if (roll % 1000) as f64 / 1000.0 < chance && game_core::nature::trample(&mut game.world, cell) {
         game.revision += 1;
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn standing_waits_for_neighbor_chunk_collision_data() {
+        let mut world = World::new(0);
+        world.insert(game_core::Chunk::generate(0, [0, 0]));
+        let feet = [15.8, 240., 8.5];
+        assert!(!can_stand(feet, |p| collision_block(&world, p)));
+        world.insert(game_core::Chunk::generate(0, [1, 0]));
+        assert!(can_stand(feet, |p| collision_block(&world, p)));
     }
 }
